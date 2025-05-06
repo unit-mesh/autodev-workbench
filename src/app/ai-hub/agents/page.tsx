@@ -51,12 +51,12 @@ const ToolInitialAvatar = ({ title } : { title: string; }) => {
   );
 };
 
-// 模拟代理数据 - 实际项目中可能从API获取
+// 模拟智能体数据 - 实际项目中可能从API获取
 const mockAgents = [
   {
     id: 1,
     title: 'GitLab Agent',
-    description: '自动化管理代码仓库、合并请求和CI/CD管道的智能代理',
+    description: '自动化管理代码仓库、合并请求和CI/CD管道的智能智能体',
     type: 'devops',
     image: '/images/agents/gitlab.jpg',
   },
@@ -127,7 +127,7 @@ export default function AgentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // 筛选后的代理
+  // 筛选后的智能体
   const filteredAgents = mockAgents.filter(agent => {
     const matchesSearch = agent.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'all' || agent.type === activeCategory;
@@ -139,7 +139,7 @@ export default function AgentsPage() {
       {/* 页面标题区域 */}
       <div className="my-8 lg:my-12 max-w-4xl mx-auto text-center">
         <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-slate-800 relative inline-block">
-          开发工具代理
+          开发工具智能体
           <div className="absolute -top-4 -right-8 w-12 h-12 text-blue-500 opacity-40 rotate-12">
             <Terminal size={48} strokeWidth={1} />
           </div>
@@ -152,7 +152,7 @@ export default function AgentsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="搜索代理..."
+            placeholder="搜索智能体..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -165,7 +165,7 @@ export default function AgentsPage() {
           </button>
           <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             <Plus size={16} />
-            <span>创建代理</span>
+            <span>创建智能体</span>
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      {/* 代理卡片网格 - 使用首字母图标代替图片 */}
+      {/* 智能体卡片网格 - 使用首字母图标代替图片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {filteredAgents.map((agent) => (
           <div
@@ -221,7 +221,7 @@ export default function AgentsPage() {
 
             <div className="p-4 flex-grow flex flex-col">
               <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-grow">
-                {agent.description || '这个代理帮助自动化开发和部署流程，提高团队工作效率。'}
+                {agent.description || '这个智能体帮助自动化开发和部署流程，提高团队工作效率。'}
               </p>
 
               {agent.author && (
@@ -270,28 +270,28 @@ export default function AgentsPage() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
             <Search className="text-gray-400" size={24} />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-1">未找到匹配代理</h3>
-          <p className="text-gray-600 mb-4">请尝试使用不同的搜索词或浏览全部代理</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">未找到匹配智能体</h3>
+          <p className="text-gray-600 mb-4">请尝试使用不同的搜索词或浏览全部智能体</p>
           <button
             onClick={() => setSearchTerm('')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            查看所有代理
+            查看所有智能体
           </button>
         </div>
       )}
 
-      {/* 创建自定义代理区域 */}
+      {/* 创建自定义智能体区域 */}
       <div className="mt-16 max-w-5xl mx-auto w-full bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 lg:p-8 flex flex-col md:flex-row items-center gap-6">
         <div className="flex-grow">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">创建您自己的工具代理</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">创建您自己的工具智能体</h2>
           <p className="text-gray-600">
-            需要集成更多工具？创建自定义代理以自动化您的开发流程并提高团队效率
+            需要集成更多工具？创建自定义智能体以自动化您的开发流程并提高团队效率
           </p>
         </div>
         <button className="whitespace-nowrap px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
           <Plus size={18} />
-          创建自定义代理
+          创建自定义智能体
         </button>
       </div>
     </div>
