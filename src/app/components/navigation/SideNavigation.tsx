@@ -17,7 +17,7 @@ import {
 
 const navigationStructure = {
   platform: {
-    name: '平台能力',
+    name: '平台知识',
     icon: Building2,
     items: [
       {
@@ -208,8 +208,9 @@ function NavigationItem({ item, level = 0 }: { item: NavigationItem; level?: num
 }
 
 export function SideNavigation() {
-  // Initialize with all sections expanded
-  const initialExpandedState = Object.keys(navigationStructure).reduce((acc, key) => {
+  // const strings = Object.keys(navigationStructure);
+  const strings: string[] = [];
+  const initialExpandedState = strings.reduce((acc, key) => {
     acc[key] = true;
     return acc;
   }, {} as Record<string, boolean>);
