@@ -1,8 +1,6 @@
 # AutoDev Work
 
-AutoDev Work is an intelligent development platform that combines AI capabilities with development workflows to enhance
-productivity and streamline the software development process. This platform serves as a comprehensive solution for
-modern development teams, integrating AI tools, knowledge management, and workflow automation.
+> AutoDev Work provides contextual intelligence to empower AI Copilots such as AutoDev.
 
 ## Overview
 
