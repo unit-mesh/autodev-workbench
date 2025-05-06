@@ -19,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-white flex flex-col">
           <TopNavigation />
-          <div className="flex">
-            <SideNavigation />
+          <div className="flex flex-1">
+            <div className="w-64 shrink-0 border-r border-gray-200">
+              <SideNavigation />
+            </div>
             <main className="flex-1 p-6">
               {children}
             </main>
