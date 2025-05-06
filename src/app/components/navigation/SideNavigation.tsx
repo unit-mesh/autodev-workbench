@@ -1,106 +1,56 @@
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  ChevronDown,
-  ChevronRight,
   Building2,
   Brain,
-  Users,
   Wrench,
   BarChart3,
   BookOpen,
 } from 'lucide-react';
 
-const navigationStructure = {
-  platform: {
-    name: '平台知识',
+const navigationItems = [
+  {
+    section: '平台知识',
     icon: Building2,
     items: [
-      {
-        name: '服务目录 & 所有权',
-        items: [
-          { name: '服务列表', href: '/platform/services' },
-          { name: '所属团队视图', href: '/platform/team-view' },
-        ],
-      },
-      {
-        name: 'API 模式与契约',
-        items: [
-          { name: 'API 浏览器', href: '/platform/api-browser' },
-          { name: 'API 合规检查', href: '/platform/api-compliance' },
-        ],
-      },
-      {
-        name: 'DevOps 配置',
-        items: [
-          { name: 'IaC 模块管理', href: '/platform/iac' },
-          { name: '环境模板配置', href: '/platform/environment-templates' },
-          { name: '流水线模板', href: '/platform/pipeline-templates' },
-          { name: '项目初始化器', href: '/platform/project-initializer' },
-        ],
-      },
-      {
-        name: '知识文档 & 标准',
-        icon: BookOpen,
-        items: [
-          { name: 'TechDocs 集成', href: '/platform/techdocs' },
-          { name: '编码规范中心', href: '/platform/coding-standards' },
-        ],
-      },
+      { name: '平台上下文', href: '/platform/context' },
+      { name: '组件 & APIs', href: '/platform/framework' },
+      { name: '技术文档', href: '/platform/techdocs' },
+      { name: '编码规范中心', href: '/platform/coding-standards' },
     ],
   },
-  aiHub: {
-    name: '智能中枢',
+  {
+    section: '智能中枢',
     icon: Brain,
     items: [
-      { name: '智能体注册与管理', href: '/ai-hub/agents' },
-      { name: 'Rules', href: '/ai-hub/rules' },
-      {
-        name: '组件',
-        items: [
-          { name: '服务目录上下文', href: '/ai-hub/components/service-catalog' },
-          { name: 'API 契约上下文', href: '/ai-hub/components/api-contracts' },
-        ],
-      },
+      { name: '智能体', href: '/ai-hub/agents' },
+      { name: '项目规则', href: '/ai-hub/rules' },
       { name: '向量数据库', href: '/ai-hub/vector-db' },
     ],
   },
-  aiTools: {
-    name: 'AI 工具',
+  {
+    section: 'AI 工具',
     icon: Wrench,
     items: [
-      { name: 'Figma → Code 实验室', href: '/ai-tools/figma-code' },
-      { name: '黄金路径创建器', href: '/ai-tools/golden-path' },
-      { name: 'IDE 插件配置', href: '/ai-tools/ide-plugins' },
+      { name: 'IDE 插件', href: '/ai-tools/ide-plugins' },
+      { name: '应用生成', href: '/ai-tools/golden-path' },
       { name: 'CLI 工具下载', href: '/ai-tools/cli' },
     ],
   },
-  metrics: {
-    name: '度量分析',
+  {
+    section: '度量分析',
     icon: BarChart3,
     items: [
-      {
-        name: 'AI 使用情况',
-        items: [
-          { name: '响应质量', href: '/metrics/ai-quality' },
-          { name: '调用次数', href: '/metrics/ai-usage' },
-        ],
-      },
-      {
-        name: '研发生产力',
-        items: [
-          { name: 'DORA 指标面板', href: '/metrics/dora' },
-          { name: 'DevEx 问卷结果', href: '/metrics/devex' },
-        ],
-      }
+      { name: '指标面板', href: '/metrics/dora' },
+      { name: 'AI 质量分析', href: '/metrics/ai-quality' },
     ],
   },
-  docs: {
-    name: '文档中心',
+  {
+    section: '文档中心',
     icon: BookOpen,
     items: [
       { name: '快速开始', href: '/docs/quickstart' },
@@ -108,108 +58,51 @@ const navigationStructure = {
       { name: '常见问题（FAQ）', href: '/docs/faq' },
     ],
   },
-};
-
-type NavigationItem = {
-  name: string;
-  href?: string;
-  items?: NavigationItem[];
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type NavigationSection = {
-  name: string;
-  icon: React.ElementType;
-  items: NavigationItem[];
-};
-
-function NavigationItem({ item, level = 0 }: { item: NavigationItem; level?: number }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
-  const hasChildren = item.items && item.items.length > 0;
-
-  return (
-    <div>
-      <div
-        className={cn(
-          'flex items-center px-3 py-2 text-sm font-medium rounded-md',
-          pathname === item.href
-            ? 'bg-gray-100 text-gray-900'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-          level > 0 && 'pl-6'
-        )}
-      >
-        {hasChildren ? (
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center flex-1"
-          >
-            {isOpen ? (
-              <ChevronDown className="h-4 w-4 mr-2" />
-            ) : (
-              <ChevronRight className="h-4 w-4 mr-2" />
-            )}
-            {item.name}
-          </button>
-        ) : (
-          <Link href={item.href || '#'} className="flex items-center flex-1">
-            {item.name}
-          </Link>
-        )}
-      </div>
-      {hasChildren && isOpen && (
-        <div className="mt-1">
-          {item.items?.map((child, index) => (
-            <NavigationItem key={index} item={child} level={level + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+];
 
 export function SideNavigation() {
-  const strings = Object.keys(navigationStructure);
-  const initialExpandedState = strings.reduce((acc, key) => {
-    acc[key] = true;
-    return acc;
-  }, {} as Record<string, boolean>);
-
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(initialExpandedState);
-
-  const toggleSection = (key: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+  const pathname = usePathname();
 
   return (
     <nav className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
       <div className="px-4 py-6">
-        {Object.entries(navigationStructure).map(([key, section]) => (
-          <div key={key} className="mb-6">
-            <div
-              className="flex items-center px-3 mb-2 cursor-pointer"
-              onClick={() => toggleSection(key)}
-            >
-              {expandedSections[key] ? (
-                <ChevronDown className="h-4 w-4 mr-2 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 mr-2 text-gray-500" />
-              )}
-              <section.icon className="h-5 w-5 text-gray-500 mr-2" />
-              <h3 className="text-sm font-semibold text-gray-900">{section.name}</h3>
-            </div>
-            {expandedSections[key] && (
+        {navigationItems.map((section, sectionIndex) => {
+          const isSectionActive = section.items.some(item => pathname === item.href);
+
+          return (
+            <div key={sectionIndex} className="mb-6">
+              <div className={cn(
+                "flex items-center px-3 mb-2",
+                isSectionActive && "text-blue-800"
+              )}>
+                <section.icon className={cn(
+                  "h-5 w-5 mr-2",
+                  isSectionActive ? "text-gray-700" : "text-gray-500"
+                )} />
+                <h3 className={cn(
+                  "text-md font-semibold",
+                  isSectionActive ? "text-blue-800" : "text-gray-600"
+                )}>{section.section}</h3>
+              </div>
               <div className="ml-2">
-                {section.items.map((item, index) => (
-                  <NavigationItem key={index} item={item} />
+                {section.items.map((item, itemIndex) => (
+                  <Link
+                    key={itemIndex}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center px-3 py-2 text-sm font-medium rounded-md',
+                      pathname === item.href
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    )}
+                  >
+                    {item.name}
+                  </Link>
                 ))}
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </nav>
   );

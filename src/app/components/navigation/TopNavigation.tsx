@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const navigationItems = [
 	{ name: '首页', href: '/' },
-	{ name: '知识管理', href: '/platform' },
+	{ name: '平台知识', href: '/platform' },
 	{ name: '智能中枢', href: '/ai-hub' },
 	{ name: 'AI 工具', href: '/ai-tools' },
 	{ name: '度量分析', href: '/metrics' }
