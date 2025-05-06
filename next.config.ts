@@ -1,7 +1,6 @@
-import type { NextConfig } from "next";
+const nextConfig = {
+	trailingSlash: false,
+	assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+module.exports = nextConfig
