@@ -208,21 +208,49 @@ function NavigationItem({ item, level = 0 }: { item: NavigationItem; level?: num
 }
 
 export function SideNavigation() {
+  // Initialize with all sections expanded
+  const initialExpandedState = Object.keys(navigationStructure).reduce((acc, key) => {
+    acc[key] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(initialExpandedState);
+
+  const toggleSection = (key: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
   return (
     <nav className="w-64 bg-white border-r border-gray-200 h-screen overflow-y-auto">
       <div className="px-4 py-6">
         {Object.entries(navigationStructure).map(([key, section]) => (
           <div key={key} className="mb-6">
-            <div className="flex items-center px-3 mb-2">
+            <div
+              className="flex items-center px-3 mb-2 cursor-pointer"
+              onClick={() => toggleSection(key)}
+            >
+              {expandedSections[key] ? (
+                <ChevronDown className="h-4 w-4 mr-2 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 mr-2 text-gray-500" />
+              )}
               <section.icon className="h-5 w-5 text-gray-500 mr-2" />
               <h3 className="text-sm font-semibold text-gray-900">{section.name}</h3>
             </div>
-            {section.items.map((item, index) => (
-              <NavigationItem key={index} item={item} />
-            ))}
+            {expandedSections[key] && (
+              <div className="ml-2">
+                {section.items.map((item, index) => (
+                  <NavigationItem key={index} item={item} />
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
     </nav>
   );
 }
+
