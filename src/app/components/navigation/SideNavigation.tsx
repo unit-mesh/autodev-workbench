@@ -35,21 +35,17 @@ const navigationStructure = {
         ],
       },
       {
-        name: '基础设施配置',
+        name: 'DevOps 配置',
         items: [
           { name: 'IaC 模块管理', href: '/platform/iac' },
           { name: '环境模板配置', href: '/platform/environment-templates' },
-        ],
-      },
-      {
-        name: 'CI/CD & 黄金路径',
-        items: [
           { name: '流水线模板', href: '/platform/pipeline-templates' },
           { name: '项目初始化器', href: '/platform/project-initializer' },
         ],
       },
       {
         name: '知识文档 & 标准',
+        icon: BookOpen,
         items: [
           { name: 'TechDocs 集成', href: '/platform/techdocs' },
           { name: '编码规范中心', href: '/platform/coding-standards' },
@@ -62,54 +58,22 @@ const navigationStructure = {
     icon: Brain,
     items: [
       { name: '智能体注册与管理', href: '/ai-hub/agents' },
+      { name: 'Rules', href: '/ai-hub/rules' },
       {
-        name: '上下文服务配置',
+        name: '组件',
         items: [
-          { name: '服务目录上下文', href: '/ai-hub/context/service-catalog' },
-          { name: 'API 契约上下文', href: '/ai-hub/context/api-contracts' },
+          { name: '服务目录上下文', href: '/ai-hub/components/service-catalog' },
+          { name: 'API 契约上下文', href: '/ai-hub/components/api-contracts' },
         ],
       },
-      { name: '策略与权限控制', href: '/ai-hub/policies' },
-      { name: '向量数据库接入', href: '/ai-hub/vector-db' },
-    ],
-  },
-  workPatterns: {
-    name: '工作方式',
-    icon: Users,
-    items: [
-      {
-        name: 'Team AI 面板',
-        items: [
-          { name: '当前团队对话协同空间', href: '/work-patterns/team-ai' },
-          { name: '任务自动化记录', href: '/work-patterns/automation-logs' },
-        ],
-      },
-      {
-        name: '生命周期问答',
-        items: [
-          { name: '问答历史', href: '/work-patterns/qa-history' },
-          { name: 'CI/CD & 异常问题入口', href: '/work-patterns/issues' },
-        ],
-      },
-      {
-        name: '知识导航视图',
-        items: [
-          { name: '工件追踪关系图', href: '/work-patterns/artifact-tracking' },
-          { name: '数字孪生视角', href: '/work-patterns/digital-twin' },
-        ],
-      },
+      { name: '向量数据库', href: '/ai-hub/vector-db' },
     ],
   },
   aiTools: {
     name: 'AI 工具',
     icon: Wrench,
     items: [
-      {
-        name: '低代码设计器',
-        items: [
-          { name: 'Figma → Code 实验室', href: '/ai-tools/figma-code' },
-        ],
-      },
+      { name: 'Figma → Code 实验室', href: '/ai-tools/figma-code' },
       { name: '黄金路径创建器', href: '/ai-tools/golden-path' },
       { name: 'IDE 插件配置', href: '/ai-tools/ide-plugins' },
       { name: 'CLI 工具下载', href: '/ai-tools/cli' },
@@ -132,8 +96,7 @@ const navigationStructure = {
           { name: 'DORA 指标面板', href: '/metrics/dora' },
           { name: 'DevEx 问卷结果', href: '/metrics/devex' },
         ],
-      },
-      { name: '策略合规报告', href: '/metrics/compliance' },
+      }
     ],
   },
   docs: {
@@ -141,8 +104,6 @@ const navigationStructure = {
     icon: BookOpen,
     items: [
       { name: '快速开始', href: '/docs/quickstart' },
-      { name: '架构概览', href: '/docs/architecture' },
-      { name: 'Agent 开发指南', href: '/docs/agent-development' },
       { name: 'API 文档', href: '/docs/api' },
       { name: '常见问题（FAQ）', href: '/docs/faq' },
     ],
@@ -208,8 +169,7 @@ function NavigationItem({ item, level = 0 }: { item: NavigationItem; level?: num
 }
 
 export function SideNavigation() {
-  // const strings = Object.keys(navigationStructure);
-  const strings: string[] = [];
+  const strings = Object.keys(navigationStructure);
   const initialExpandedState = strings.reduce((acc, key) => {
     acc[key] = true;
     return acc;
