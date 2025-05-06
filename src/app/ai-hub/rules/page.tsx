@@ -16,6 +16,40 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 
+// 预定义的颜色组合（背景色和文字色）
+const colorCombinations = [
+  { bg: 'bg-blue-500', text: 'text-white' },
+  { bg: 'bg-indigo-500', text: 'text-white' },
+  { bg: 'bg-purple-500', text: 'text-white' },
+  { bg: 'bg-pink-500', text: 'text-white' },
+  { bg: 'bg-red-500', text: 'text-white' },
+  { bg: 'bg-orange-500', text: 'text-white' },
+  { bg: 'bg-yellow-500', text: 'text-black' },
+  { bg: 'bg-green-500', text: 'text-white' },
+  { bg: 'bg-teal-500', text: 'text-white' },
+  { bg: 'bg-cyan-500', text: 'text-white' },
+];
+
+// 为框架生成首字母头像的组件
+const FrameworkInitialAvatar = ({ title, size = 'full' }) => {
+  const initial = title.charAt(0).toUpperCase();
+  
+  // 使用名称的首字母的 charCode 作为颜色选择的基础，确保同一框架总是获得相同颜色
+  const colorIndex = initial.charCodeAt(0) % colorCombinations.length;
+  const { bg, text } = colorCombinations[colorIndex];
+  
+  return (
+    <div className={cn(
+      "flex items-center justify-center w-full h-full", 
+      bg, 
+      text,
+      "font-bold text-4xl"
+    )}>
+      {initial}
+    </div>
+  );
+};
+
 // 模拟规则数据 - 实际项目中可能从API获取
 const mockRules = [
   {
@@ -148,7 +182,7 @@ export default function RulesPage() {
         </div>
       </div>
 
-      {/* 规则卡片网格 - 完全重新设计的卡片 */}
+      {/* 规则卡片网格 - 使用首字母图标代替图片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {filteredRules.map((rule) => (
           <div 
@@ -156,21 +190,20 @@ export default function RulesPage() {
             className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-lg hover:border-blue-200 flex flex-col"
           >
             <div className="aspect-[16/9] relative bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
-              {rule.image && (
-                <Image
-                  src={rule.image}
-                  alt={rule.title}
-                  fill
-                  className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-500"
-                />
-              )}
-              <div className="absolute top-0 right-0 p-2">
+              {/* 使用首字母组件替代图片 */}
+              <div className="absolute inset-0 z-10">
+                <FrameworkInitialAvatar title={rule.title} />
+              </div>
+              
+              {/* 框架名称覆盖在首字母上 */}
+              <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/70 to-transparent z-20">
+                <h3 className="text-white font-bold text-lg truncate pr-10">{rule.title}</h3>
+              </div>
+              
+              <div className="absolute top-0 right-0 p-2 z-20">
                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors">
                   <Star size={16} />
                 </button>
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/70 to-transparent">
-                <h3 className="text-white font-bold text-lg truncate pr-10">{rule.title}</h3>
               </div>
             </div>
             
@@ -182,12 +215,10 @@ export default function RulesPage() {
               {rule.author && (
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative h-6 w-6 rounded-full overflow-hidden">
-                    <Image 
-                      src={rule.author.avatar}
-                      alt={rule.author.name}
-                      fill
-                      className="object-cover"
-                    />
+                    {/* 作者头像也可以使用首字母替代 */}
+                    <div className={`bg-gray-200 text-gray-700 w-full h-full flex items-center justify-center text-xs font-medium`}>
+                      {rule.author.name.charAt(0)}
+                    </div>
                     {rule.author.verified && (
                       <div className="absolute right-0 bottom-0 w-2 h-2 bg-blue-500 rounded-full ring-1 ring-white"></div>
                     )}
