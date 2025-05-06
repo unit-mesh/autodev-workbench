@@ -24,7 +24,9 @@ jobs:
         run: npm run build
 
       - name: Setup custom domain
-        run: echo "autodev.work" > ./dist/CNAME
+        run: |
+          mkdir -p ./dist
+          echo "autodev.work" > ./dist/CNAME
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
