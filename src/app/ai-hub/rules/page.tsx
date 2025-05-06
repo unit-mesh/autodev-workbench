@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { 
-  Package, 
-  Plus, 
-  Search, 
-  Filter, 
-  Code, 
+import {
+  Package,
+  Plus,
+  Search,
+  Filter,
+  Code,
   Star,
   ArrowUpRight
 } from 'lucide-react';
@@ -28,17 +28,17 @@ const colorCombinations = [
 ];
 
 // 为框架生成首字母头像的组件
-const FrameworkInitialAvatar = ({ title, size = 'full' }) => {
+const FrameworkInitialAvatar = ({ title } : { title: string; }) => {
   const initial = title.charAt(0).toUpperCase();
-  
+
   // 使用名称的首字母的 charCode 作为颜色选择的基础，确保同一框架总是获得相同颜色
   const colorIndex = initial.charCodeAt(0) % colorCombinations.length;
   const { bg, text } = colorCombinations[colorIndex];
-  
+
   return (
     <div className={cn(
-      "flex items-center justify-center w-full h-full", 
-      bg, 
+      "flex items-center justify-center w-full h-full",
+      bg,
       text,
       "font-bold text-4xl"
     )}>
@@ -113,9 +113,9 @@ const mockRules = [
 export default function RulesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  
+
   // 筛选后的规则
-  const filteredRules = mockRules.filter(rule => 
+  const filteredRules = mockRules.filter(rule =>
     rule.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -130,7 +130,7 @@ export default function RulesPage() {
           </div>
         </h1>
       </div>
-      
+
       {/* 搜索和筛选区域 */}
       <div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-5xl mx-auto w-full">
         <div className="relative flex-grow">
@@ -154,7 +154,7 @@ export default function RulesPage() {
           </button>
         </div>
       </div>
-      
+
       {/* 分类标签 */}
       <div className="mb-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-wrap gap-2">
@@ -164,14 +164,14 @@ export default function RulesPage() {
               onClick={() => setActiveCategory(category)}
               className={cn(
                 "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                activeCategory === category 
-                  ? "bg-blue-100 text-blue-800 border border-blue-200" 
+                activeCategory === category
+                  ? "bg-blue-100 text-blue-800 border border-blue-200"
                   : "bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200"
               )}
             >
-              {category === 'all' ? '全部' : 
+              {category === 'all' ? '全部' :
                category === 'framework' ? '框架规则' :
-               category === 'language' ? '语言规则' : 
+               category === 'language' ? '语言规则' :
                category === 'best-practice' ? '最佳实践' :
                category === 'code-style' ? '代码风格' : '安全规则'}
             </button>
@@ -182,8 +182,8 @@ export default function RulesPage() {
       {/* 规则卡片网格 - 使用首字母图标代替图片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {filteredRules.map((rule) => (
-          <div 
-            key={rule.id} 
+          <div
+            key={rule.id}
             className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-lg hover:border-blue-200 flex flex-col"
           >
             <div className="aspect-[16/9] relative bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
@@ -191,24 +191,24 @@ export default function RulesPage() {
               <div className="absolute inset-0 z-10">
                 <FrameworkInitialAvatar title={rule.title} />
               </div>
-              
+
               {/* 框架名称覆盖在首字母上 */}
               <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/70 to-transparent z-20">
                 <h3 className="text-white font-bold text-lg truncate pr-10">{rule.title}</h3>
               </div>
-              
+
               <div className="absolute top-0 right-0 p-2 z-20">
                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors">
                   <Star size={16} />
                 </button>
               </div>
             </div>
-            
+
             <div className="p-4 flex-grow flex flex-col">
               <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-grow">
                 {rule.description || '这个规则帮助 AI 更好地理解和遵循特定框架或语言的最佳实践和编码规范。'}
               </p>
-              
+
               {rule.author && (
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative h-6 w-6 rounded-full overflow-hidden">
@@ -223,14 +223,14 @@ export default function RulesPage() {
                   <span className="text-xs text-gray-600">{rule.author.name}</span>
                 </div>
               )}
-              
+
               <div className="flex justify-between items-center mt-auto pt-2 border-t border-gray-100">
                 <span className="text-xs text-gray-500 flex items-center gap-1">
                   <Package size={14} />
                   框架规则
                 </span>
-                <Link 
-                  href={`#rule-${rule.id}`} 
+                <Link
+                  href={`#rule-${rule.id}`}
                   className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:underline"
                 >
                   查看详情
@@ -241,7 +241,7 @@ export default function RulesPage() {
           </div>
         ))}
       </div>
-      
+
       {/* 空状态 */}
       {filteredRules.length === 0 && (
         <div className="text-center py-16 max-w-lg mx-auto">
@@ -250,7 +250,7 @@ export default function RulesPage() {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">未找到匹配规则</h3>
           <p className="text-gray-600 mb-4">请尝试使用不同的搜索词或浏览全部规则</p>
-          <button 
+          <button
             onClick={() => setSearchTerm('')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >

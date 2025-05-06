@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { 
-  Package, 
-  Plus, 
-  Search, 
-  Filter, 
+import {
+  Package,
+  Plus,
+  Search,
+  Filter,
   Terminal,
   Star,
   ArrowUpRight,
@@ -32,17 +32,17 @@ const colorCombinations = [
 ];
 
 // 为工具生成首字母头像的组件
-const ToolInitialAvatar = ({ title, size = 'full' }) => {
+const ToolInitialAvatar = ({ title } : { title: string; }) => {
   const initial = title.charAt(0).toUpperCase();
-  
+
   // 使用名称的首字母的 charCode 作为颜色选择的基础，确保同一工具总是获得相同颜色
   const colorIndex = initial.charCodeAt(0) % colorCombinations.length;
   const { bg, text } = colorCombinations[colorIndex];
-  
+
   return (
     <div className={cn(
-      "flex items-center justify-center w-full h-full", 
-      bg, 
+      "flex items-center justify-center w-full h-full",
+      bg,
       text,
       "font-bold text-4xl"
     )}>
@@ -126,7 +126,7 @@ const mockAgents = [
 export default function AgentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  
+
   // 筛选后的代理
   const filteredAgents = mockAgents.filter(agent => {
     const matchesSearch = agent.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -145,7 +145,7 @@ export default function AgentsPage() {
           </div>
         </h1>
       </div>
-      
+
       {/* 搜索和筛选区域 */}
       <div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-5xl mx-auto w-full">
         <div className="relative flex-grow">
@@ -169,7 +169,7 @@ export default function AgentsPage() {
           </button>
         </div>
       </div>
-      
+
       {/* 分类标签 */}
       <div className="mb-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-wrap gap-2">
@@ -179,14 +179,14 @@ export default function AgentsPage() {
               onClick={() => setActiveCategory(category)}
               className={cn(
                 "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                activeCategory === category 
-                  ? "bg-blue-100 text-blue-800 border border-blue-200" 
+                activeCategory === category
+                  ? "bg-blue-100 text-blue-800 border border-blue-200"
                   : "bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200"
               )}
             >
-              {category === 'all' ? '全部' : 
+              {category === 'all' ? '全部' :
                category === 'devops' ? 'DevOps工具' :
-               category === 'development' ? '开发工具' : 
+               category === 'development' ? '开发工具' :
                category === 'monitoring' ? '监控工具' :
                category === 'security' ? '安全工具' : '内部工具'}
             </button>
@@ -197,8 +197,8 @@ export default function AgentsPage() {
       {/* 代理卡片网格 - 使用首字母图标代替图片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {filteredAgents.map((agent) => (
-          <div 
-            key={agent.id} 
+          <div
+            key={agent.id}
             className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-lg hover:border-blue-200 flex flex-col"
           >
             <div className="aspect-[16/9] relative bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
@@ -206,24 +206,24 @@ export default function AgentsPage() {
               <div className="absolute inset-0 z-10">
                 <ToolInitialAvatar title={agent.title} />
               </div>
-              
+
               {/* 工具名称覆盖在首字母上 */}
               <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/70 to-transparent z-20">
                 <h3 className="text-white font-bold text-lg truncate pr-10">{agent.title}</h3>
               </div>
-              
+
               <div className="absolute top-0 right-0 p-2 z-20">
                 <button className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors">
                   <Star size={16} />
                 </button>
               </div>
             </div>
-            
+
             <div className="p-4 flex-grow flex flex-col">
               <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-grow">
                 {agent.description || '这个代理帮助自动化开发和部署流程，提高团队工作效率。'}
               </p>
-              
+
               {agent.author && (
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative h-6 w-6 rounded-full overflow-hidden">
@@ -238,21 +238,21 @@ export default function AgentsPage() {
                   <span className="text-xs text-gray-600">{agent.author.name}</span>
                 </div>
               )}
-              
+
               <div className="flex justify-between items-center mt-auto pt-2 border-t border-gray-100">
                 <span className="text-xs text-gray-500 flex items-center gap-1">
-                  {agent.type === 'devops' ? <GitBranch size={14} /> : 
+                  {agent.type === 'devops' ? <GitBranch size={14} /> :
                    agent.type === 'development' ? <Package size={14} /> :
                    agent.type === 'monitoring' ? <Server size={14} /> :
                    agent.type === 'security' ? <Shield size={14} /> :
                    <Database size={14} />}
-                  {agent.type === 'devops' ? 'DevOps工具' : 
+                  {agent.type === 'devops' ? 'DevOps工具' :
                    agent.type === 'development' ? '开发工具' :
                    agent.type === 'monitoring' ? '监控工具' :
                    agent.type === 'security' ? '安全工具' : '内部工具'}
                 </span>
-                <Link 
-                  href={`#agent-${agent.id}`} 
+                <Link
+                  href={`#agent-${agent.id}`}
                   className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:underline"
                 >
                   查看详情
@@ -263,7 +263,7 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
-      
+
       {/* 空状态 */}
       {filteredAgents.length === 0 && (
         <div className="text-center py-16 max-w-lg mx-auto">
@@ -272,7 +272,7 @@ export default function AgentsPage() {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">未找到匹配代理</h3>
           <p className="text-gray-600 mb-4">请尝试使用不同的搜索词或浏览全部代理</p>
-          <button 
+          <button
             onClick={() => setSearchTerm('')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >

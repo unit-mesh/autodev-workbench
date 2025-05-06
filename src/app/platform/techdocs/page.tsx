@@ -13,7 +13,9 @@ export default function TechDocs() {
   const [loading, setLoading] = useState(false);
   const [githubUrl, setGithubUrl] = useState('');
   const [docUrl, setDocUrl] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [generatedDocs, setGeneratedDocs] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [existingDocs, setExistingDocs] = useState<any[]>([]);
   const [error, setError] = useState('');
 
@@ -81,14 +83,14 @@ export default function TechDocs() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">技术文档中心</h1>
-      
+
       <Tabs defaultValue="generate" className="w-full">
         <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="generate">生成项目文档</TabsTrigger>
           <TabsTrigger value="standards">生成文档规范</TabsTrigger>
           <TabsTrigger value="existing">现有文档</TabsTrigger>
         </TabsList>
-        
+
         {/* 生成项目文档 */}
         <TabsContent value="generate">
           <Card>
@@ -124,7 +126,7 @@ export default function TechDocs() {
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* 生成文档规范 */}
         <TabsContent value="standards">
           <Card>
@@ -160,7 +162,7 @@ export default function TechDocs() {
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* 现有文档 */}
         <TabsContent value="existing">
           <Card>
@@ -174,7 +176,7 @@ export default function TechDocs() {
               <Button onClick={fetchExistingDocs} disabled={loading} className="mb-4">
                 {loading ? '加载中...' : '刷新文档列表'}
               </Button>
-              
+
               {existingDocs.length > 0 ? (
                 <div className="border rounded-md">
                   <div className="grid grid-cols-3 gap-4 p-4 font-medium bg-gray-50">
@@ -204,8 +206,7 @@ export default function TechDocs() {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      {/* 显示生成的文档 */}
+
       {generatedDocs && (
         <div className="mt-8 border rounded-lg p-6 bg-white">
           <h2 className="text-xl font-bold mb-4">{generatedDocs.title}</h2>
@@ -214,7 +215,7 @@ export default function TechDocs() {
           </div>
         </div>
       )}
-      
+
       {/* 错误提示 */}
       {error && (
         <Alert variant="destructive" className="mt-4">
