@@ -11,15 +11,61 @@ export default function Home() {
   }
 
   return (
-    <div className="p-8">
-      <PlatformEngFlow onClickSection={handleSectionClick} />
-      {activeSection && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full">
-          Selected: {activeSection}
+    <div className="max-w-7xl mx-auto">
+      <div className="text-center py-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          欢迎使用 AutoDev Work
+        </h1>
+        <p className="text-xl text-gray-600 mb-8">
+          AI 驱动的智能开发平台，助力团队提升研发效能
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">平台知识</h2>
+          <p className="text-gray-600">
+            统一管理服务目录、API 契约、基础设施配置等平台核心能力
+          </p>
         </div>
-      )}
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">智能中枢</h2>
+          <p className="text-gray-600">
+            智能体注册与管理，上下文服务配置，策略与权限控制
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">工作方式</h2>
+          <p className="text-gray-600">
+            Team AI 面板，生命周期问答，知识导航视图
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">AI 工具</h2>
+          <p className="text-gray-600">
+            低代码设计器，黄金路径创建器，IDE 插件配置
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">度量分析</h2>
+          <p className="text-gray-600">
+            AI 使用情况，研发生产力，策略合规报告
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">文档中心</h2>
+          <p className="text-gray-600">
+            快速开始，架构概览，开发指南，API 文档
+          </p>
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
 type PlatformEngFlowProps = {
