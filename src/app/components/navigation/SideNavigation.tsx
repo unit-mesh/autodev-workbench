@@ -45,8 +45,7 @@ const navigationItems = [
     section: '度量分析',
     icon: BarChart3,
     items: [
-      { name: '指标面板', href: '/metrics/dora' },
-      { name: 'AI 质量分析', href: '/metrics/ai-quality' },
+      { name: '洞察分析', href: '/metrics/insights' },
     ],
   },
   {
