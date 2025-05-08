@@ -21,7 +21,7 @@ const navigationItems = [
       { name: '平台上下文', href: '/platform/context' },
       { name: '组件 & APIs', href: '/platform/framework' },
       { name: '技术文档', href: '/platform/techdocs' },
-      { name: '编码规范中心', href: '/platform/coding-standards' },
+      { name: '规范中心', href: '/platform/coding-standards' },
     ],
   },
   {

@@ -524,7 +524,7 @@ export default function CodingStandardsPage() {
 			{/* 页面标题区域 */}
 			<div className="my-8 lg:my-12 max-w-4xl mx-auto text-center">
 				<h1 className="text-4xl lg:text-5xl font-bold mb-4 text-slate-800 relative inline-block">
-					编码规范中心
+					规范中心
 					<div className="absolute -top-4 -right-8 w-12 h-12 text-blue-500 opacity-40 rotate-12">
 						<BookOpen size={48} strokeWidth={1}/>
 					</div>

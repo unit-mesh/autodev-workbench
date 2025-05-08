@@ -86,9 +86,9 @@ export default function PlatformPage() {
           </div>
         </div>
 
-        {/* 编码规范中心 */}
+        {/* 规范中心 */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">编码规范中心</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">规范中心</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-gray-50 rounded-md">
               <h3 className="font-medium text-gray-900 mb-2">编码规范</h3>
@@ -105,7 +105,7 @@ export default function PlatformPage() {
           </div>
           <div className="mt-4 text-right">
             <Link href="/platform/coding-standards" className="inline-flex items-center text-blue-600 hover:text-blue-800">
-              访问编码规范中心 <ArrowRight className="h-4 w-4 ml-1" />
+              访问规范中心 <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
           </div>
         </div>
