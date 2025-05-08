@@ -25,6 +25,8 @@ module.exports = defineConfig({
       tsconfig: "tsconfig.json",
       importHelpers: true,
       sourceMap: false,
+      declaration: true,
+      declarationDir: "./dist/types",
     }),
     copy({
       targets: [
@@ -39,6 +41,11 @@ module.exports = defineConfig({
         {
           src: 'src/code-search/schemas/indexes/*.scm',
           dest: 'dist/semantic',
+        },
+        // 如果需要，可以将类型文件复制到其他位置
+        {
+          src: 'dist/types/**/*',
+          dest: 'dist/types',
         },
       ],
     }),
