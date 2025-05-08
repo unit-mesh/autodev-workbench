@@ -1,9 +1,14 @@
 {
     "compilerOptions": {
         "target": "ES2020",
-        "module": "NodeNext",
+        "module": "ESNext",
         "outDir": "./bin",
         "noEmit": true,
-        "checkJs": true
+        "checkJs": true,
+        "importHelpers": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true
     }
 }
