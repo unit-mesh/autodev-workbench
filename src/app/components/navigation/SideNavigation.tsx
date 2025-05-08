@@ -36,9 +36,8 @@ const navigationItems = [
     section: 'AI 工具',
     icon: Wrench,
     items: [
-      { name: 'IDE 插件', href: '/ai-tools/ide-plugins' },
-      { name: '应用生成', href: '/ai-tools/golden-path' },
-      { name: 'CLI 工具下载', href: '/ai-tools/cli' },
+      { name: '后端应用生成', href: '/ai-tools/golden-path' },
+      { name: '前端 UI 页面', href: '/ai-tools/frontend' },
     ],
   },
   {

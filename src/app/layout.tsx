@@ -25,7 +25,7 @@ export default function RootLayout({
             <div className="w-64 shrink-0 border-r border-gray-200">
               <SideNavigation />
             </div>
-            <main className="flex-1 p-6">
+            <main className="flex-1">
               {children}
             </main>
           </div>
