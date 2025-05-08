@@ -1,2 +1,7 @@
 packages:
-  - 'packages/*' 
+  - packages/*
+onlyBuiltDependencies:
+  - onnxruntime-node
+  - protobufjs
+  - sharp
+  - sqlite3
