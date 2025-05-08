@@ -69,6 +69,11 @@
   --foreground: #171717;
 }
 
+.brand {
+  font-family: sans-serif;
+  color: #3b4151;
+}
+
 .icon-circle {
   display: inline-flex;
   align-items: center;
