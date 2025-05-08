@@ -18,6 +18,7 @@
   "dependencies": {
     "@langchain/anthropic": "^0.1.21",
     "@langchain/core": "^0.1.59",
+    "@modelcontextprotocol/sdk": "^1.11.0",
     "@mozilla/readability": "0.6.0",
     "@octokit/rest": "^20.1.1",
     "@unit-mesh/treesitter-artifacts": "^1.6.3",
