@@ -3,8 +3,13 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "autodev-work": "./bin/autodev-work.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "start": "node bin/autodev-work.js"
   },
   "keywords": [],
   "dependencies": {
@@ -46,5 +51,12 @@
   },
   "author": "Phodal HUANG<h@phodal.com>",
   "license": "MIT",
-  "packageManager": "pnpm@10.10.0"
+  "packageManager": "pnpm@10.10.0",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.40.2",
+    "typescript": "^5.8.3"
+  }
 }
