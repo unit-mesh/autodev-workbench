@@ -8,12 +8,9 @@ import {
   Plus,
   Search,
   Filter,
-  BookOpen,
   Star,
   ArrowUpRight,
-  Globe,
   Building2,
-  Code,
   FileText,
   Shield,
   PieChart,
@@ -326,4 +323,4 @@ export default function VectorDBPage() {
       </div>
     </div>
   );
-} 
+}
