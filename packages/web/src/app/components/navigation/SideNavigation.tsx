@@ -18,10 +18,17 @@ const navigationItems = [
     icon: Building2,
     items: [
       { name: '服务目录', href: '/platform/service-catalog' },
-      { name: '平台上下文', href: '/platform/context' },
       { name: '组件 & APIs', href: '/platform/framework' },
       { name: '技术文档', href: '/platform/techdocs' },
       { name: '规范中心', href: '/platform/coding-standards' },
+    ],
+  },
+  {
+    section: '知识中枢',
+    icon: Brain,
+    items: [
+      { name: '平台上下文', href: '/knowledge/context' },
+      { name: '知识链接', href: '/knowledge/concept-linking' },
     ],
   },
   {
