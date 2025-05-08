@@ -1,6 +1,6 @@
 {
-  "name": "@autodev/work",
-  "version": "0.0.2",
+  "name": "@autodev/context-worker",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
   "bin": {

@@ -21,6 +21,154 @@ importers:
         specifier: ^5
         version: 5.8.3
 
+  packages/context-worker:
+    dependencies:
+      '@langchain/anthropic':
+        specifier: ^0.1.21
+        version: 0.1.21(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4))
+      '@langchain/core':
+        specifier: ^0.1.59
+        version: 0.1.63(openai@4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4))
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.11.0
+        version: 1.11.0
+      '@mozilla/readability':
+        specifier: 0.6.0
+        version: 0.6.0
+      '@octokit/rest':
+        specifier: ^20.1.1
+        version: 20.1.2
+      '@unit-mesh/treesitter-artifacts':
+        specifier: ^1.6.3
+        version: 1.6.3
+      '@xenova/transformers':
+        specifier: ^2.17.1
+        version: 2.17.2
+      cheerio:
+        specifier: ^1.0.0-rc.12
+        version: 1.0.0
+      csv-parse:
+        specifier: ^5.5.5
+        version: 5.6.0
+      graphology:
+        specifier: ^0.26.0
+        version: 0.26.0(graphology-types@0.24.8)
+      graphology-types:
+        specifier: ^0.24.8
+        version: 0.24.8
+      iconv-lite:
+        specifier: ^0.6.3
+        version: 0.6.3
+      ignore:
+        specifier: ^5.3.1
+        version: 5.3.2
+      inquirer:
+        specifier: ^12.6.0
+        version: 12.6.0(@types/node@20.17.45)
+      inversify:
+        specifier: ^6.0.2
+        version: 6.2.2(reflect-metadata@0.2.2)
+      isbinaryfile:
+        specifier: ^5.0.2
+        version: 5.0.4
+      js-tiktoken:
+        specifier: ^1.0.11
+        version: 1.0.20
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
+      jsdom:
+        specifier: ^24.0.0
+        version: 24.1.3
+      llama-tokenizer-js:
+        specifier: ^1.1.3
+        version: 1.2.2
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      lru-cache:
+        specifier: ^10.2.2
+        version: 10.4.3
+      monaco-vscode-textmate-theme-converter:
+        specifier: ^0.1.7
+        version: 0.1.7(tslib@2.8.1)
+      node-fetch:
+        specifier: ^3.3.2
+        version: 3.3.2
+      node-machine-id:
+        specifier: ^1.1.12
+        version: 1.1.12
+      ollama:
+        specifier: ^0.5.1
+        version: 0.5.15
+      onnxruntime-common:
+        specifier: 1.17.3
+        version: 1.17.3
+      onnxruntime-node:
+        specifier: 1.17.3
+        version: 1.17.3
+      openai:
+        specifier: ^4.51.0
+        version: 4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      sqlite:
+        specifier: ^5.1.1
+        version: 5.1.1
+      sqlite3:
+        specifier: ^5.1.7
+        version: 5.1.7
+      tokenizers:
+        specifier: ^0.13.3
+        version: 0.13.3
+      vectordb:
+        specifier: ^0.5.0
+        version: 0.5.0(@apache-arrow/ts@14.0.2)(apache-arrow@14.0.2)
+      velocityjs:
+        specifier: ^2.0.6
+        version: 2.1.5
+      vscode-gradle:
+        specifier: ^3.10.1
+        version: 3.10.1
+      web-tree-sitter:
+        specifier: ^0.22.2
+        version: 0.22.6
+    devDependencies:
+      '@rollup/plugin-commonjs':
+        specifier: ^28.0.3
+        version: 28.0.3(rollup@4.40.2)
+      '@rollup/plugin-json':
+        specifier: ^6.1.0
+        version: 6.1.0(rollup@4.40.2)
+      '@rollup/plugin-node-resolve':
+        specifier: ^16.0.1
+        version: 16.0.1(rollup@4.40.2)
+      '@rollup/plugin-typescript':
+        specifier: ^12.1.2
+        version: 12.1.2(rollup@4.40.2)(tslib@2.8.1)(typescript@5.8.3)
+      '@types/node':
+        specifier: ^20.17.45
+        version: 20.17.45
+      '@vitest/coverage-v8':
+        specifier: ^1.0.4
+        version: 1.6.1(vitest@1.6.1(@types/node@20.17.45)(jsdom@24.1.3)(lightningcss@1.29.2))
+      rollup:
+        specifier: ^4.40.2
+        version: 4.40.2
+      rollup-plugin-copy:
+        specifier: ^3.5.0
+        version: 3.5.0
+      rollup-plugin-string-import:
+        specifier: ^1.2.5
+        version: 1.2.5(rollup@4.40.2)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^1.0.4
+        version: 1.6.1(@types/node@20.17.45)(jsdom@24.1.3)(lightningcss@1.29.2)
+
   packages/web:
     dependencies:
       '@ai-sdk/openai':
@@ -210,154 +358,6 @@ importers:
       typescript:
         specifier: ^5
         version: 5.8.3
-
-  packages/work:
-    dependencies:
-      '@langchain/anthropic':
-        specifier: ^0.1.21
-        version: 0.1.21(encoding@0.1.13)(openai@4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4))
-      '@langchain/core':
-        specifier: ^0.1.59
-        version: 0.1.63(openai@4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4))
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.11.0
-        version: 1.11.0
-      '@mozilla/readability':
-        specifier: 0.6.0
-        version: 0.6.0
-      '@octokit/rest':
-        specifier: ^20.1.1
-        version: 20.1.2
-      '@unit-mesh/treesitter-artifacts':
-        specifier: ^1.6.3
-        version: 1.6.3
-      '@xenova/transformers':
-        specifier: ^2.17.1
-        version: 2.17.2
-      cheerio:
-        specifier: ^1.0.0-rc.12
-        version: 1.0.0
-      csv-parse:
-        specifier: ^5.5.5
-        version: 5.6.0
-      graphology:
-        specifier: ^0.26.0
-        version: 0.26.0(graphology-types@0.24.8)
-      graphology-types:
-        specifier: ^0.24.8
-        version: 0.24.8
-      iconv-lite:
-        specifier: ^0.6.3
-        version: 0.6.3
-      ignore:
-        specifier: ^5.3.1
-        version: 5.3.2
-      inquirer:
-        specifier: ^12.6.0
-        version: 12.6.0(@types/node@20.17.45)
-      inversify:
-        specifier: ^6.0.2
-        version: 6.2.2(reflect-metadata@0.2.2)
-      isbinaryfile:
-        specifier: ^5.0.2
-        version: 5.0.4
-      js-tiktoken:
-        specifier: ^1.0.11
-        version: 1.0.20
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      jsdom:
-        specifier: ^24.0.0
-        version: 24.1.3
-      llama-tokenizer-js:
-        specifier: ^1.1.3
-        version: 1.2.2
-      lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
-      lru-cache:
-        specifier: ^10.2.2
-        version: 10.4.3
-      monaco-vscode-textmate-theme-converter:
-        specifier: ^0.1.7
-        version: 0.1.7(tslib@2.8.1)
-      node-fetch:
-        specifier: ^3.3.2
-        version: 3.3.2
-      node-machine-id:
-        specifier: ^1.1.12
-        version: 1.1.12
-      ollama:
-        specifier: ^0.5.1
-        version: 0.5.15
-      onnxruntime-common:
-        specifier: 1.17.3
-        version: 1.17.3
-      onnxruntime-node:
-        specifier: 1.17.3
-        version: 1.17.3
-      openai:
-        specifier: ^4.51.0
-        version: 4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      sqlite:
-        specifier: ^5.1.1
-        version: 5.1.1
-      sqlite3:
-        specifier: ^5.1.7
-        version: 5.1.7
-      tokenizers:
-        specifier: ^0.13.3
-        version: 0.13.3
-      vectordb:
-        specifier: ^0.5.0
-        version: 0.5.0(@apache-arrow/ts@14.0.2)(apache-arrow@14.0.2)
-      velocityjs:
-        specifier: ^2.0.6
-        version: 2.1.5
-      vscode-gradle:
-        specifier: ^3.10.1
-        version: 3.10.1
-      web-tree-sitter:
-        specifier: ^0.22.2
-        version: 0.22.6
-    devDependencies:
-      '@rollup/plugin-commonjs':
-        specifier: ^28.0.3
-        version: 28.0.3(rollup@4.40.2)
-      '@rollup/plugin-json':
-        specifier: ^6.1.0
-        version: 6.1.0(rollup@4.40.2)
-      '@rollup/plugin-node-resolve':
-        specifier: ^16.0.1
-        version: 16.0.1(rollup@4.40.2)
-      '@rollup/plugin-typescript':
-        specifier: ^12.1.2
-        version: 12.1.2(rollup@4.40.2)(tslib@2.8.1)(typescript@5.8.3)
-      '@types/node':
-        specifier: ^20.17.45
-        version: 20.17.45
-      '@vitest/coverage-v8':
-        specifier: ^1.0.4
-        version: 1.6.1(vitest@1.6.1(@types/node@20.17.45)(jsdom@24.1.3)(lightningcss@1.29.2))
-      rollup:
-        specifier: ^4.40.2
-        version: 4.40.2
-      rollup-plugin-copy:
-        specifier: ^3.5.0
-        version: 3.5.0
-      rollup-plugin-string-import:
-        specifier: ^1.2.5
-        version: 1.2.5(rollup@4.40.2)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-      vitest:
-        specifier: ^1.0.4
-        version: 1.6.1(@types/node@20.17.45)(jsdom@24.1.3)(lightningcss@1.29.2)
 
 packages:
 
