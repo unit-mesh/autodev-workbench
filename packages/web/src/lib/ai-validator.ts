@@ -63,6 +63,7 @@ Respond in the following JSON format:
     const validConcepts: string[] = []
     const invalidConcepts: { term: string; reason: string }[] = []
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     response.results.forEach((result: any) => {
       if (result.isValid) {
         validConcepts.push(result.term)

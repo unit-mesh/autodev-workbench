@@ -26,7 +26,7 @@ export function ConceptList({
   if (concepts.length === 0) {
     return (
       <div className="border rounded-md p-4 bg-muted/40 text-center text-muted-foreground">
-        No concepts extracted yet. Click "Extract Concepts" to analyze the code.
+        No concepts extracted yet. Click &#34;Extract Concepts&#34; to analyze the code.
       </div>
     )
   }

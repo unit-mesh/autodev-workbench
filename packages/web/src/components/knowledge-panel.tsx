@@ -8,6 +8,7 @@ import { ExternalLink, FileText, MessageSquare } from "lucide-react"
 
 interface KnowledgePanelProps {
   concept: string | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[]
   isLoading: boolean
 }
@@ -43,7 +44,7 @@ export function KnowledgePanel({ concept, items, isLoading }: KnowledgePanelProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No results for "{concept}"</CardTitle>
+          <CardTitle>No results for &#34;{concept}&#34;</CardTitle>
           <CardDescription>No knowledge items found for this concept.</CardDescription>
         </CardHeader>
       </Card>
@@ -84,6 +85,7 @@ export function KnowledgePanel({ concept, items, isLoading }: KnowledgePanelProp
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function KnowledgeItem({ item }: { item: any }) {
   return (
     <Card>
