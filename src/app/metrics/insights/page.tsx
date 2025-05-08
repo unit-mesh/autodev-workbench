@@ -4,8 +4,6 @@ import React from 'react'
 import {
   Activity,
   ArrowRight,
-  CheckCircle,
-  ChevronDown,
   Code2,
   Eye,
   FileSearch,
@@ -544,4 +542,4 @@ export default function SPAREInsights() {
       </div>
     </div>
   );
-}; 
+};

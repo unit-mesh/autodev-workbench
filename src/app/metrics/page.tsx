@@ -2,19 +2,11 @@
 
 import React from 'react'
 import {
-  Activity,
-  ArrowRight,
   CheckCircle,
-  ChevronDown,
   Code2,
   Eye,
-  FileSearch,
-  GitBranch,
   Heart,
-  Lightbulb,
-  RefreshCw,
   Shield,
-  Target,
   Zap
 } from 'lucide-react'
 

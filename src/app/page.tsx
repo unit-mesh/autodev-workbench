@@ -143,7 +143,7 @@ const PlatformEngFlow = ({ onClickSection }: PlatformEngFlowProps) => {
               <g onClick={() => handleSectionClick('standard-api')} style={clickableStyle}>
                 <rect id="Rectangle-platformapi" stroke="#0000FF" fillOpacity="0.2" fill="#0000FF" fillRule="nonzero" x="340" y="35" width="140" height="54" rx="5"></rect>
                 <text id="平台-API-label" fill="#0000FF" fontFamily="PingFangSC-Regular, PingFang SC" fontSize="14" fontWeight="normal">
-                    <tspan x="355" y="68">标准化"智能 API"</tspan>
+                    <tspan x="355" y="68">标准化&#34;智能 API&#34;</tspan>
                 </text>
               </g>
 							</g>
