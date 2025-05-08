@@ -54,7 +54,7 @@ const navigationItems = [
     items: [
       { name: '快速开始', href: '/docs/quickstart' },
       { name: 'API 文档', href: '/docs/api' },
-      { name: '常见问题（FAQ）', href: '/docs/faq' },
+      // { name: '常见问题（FAQ）', href: '/docs/faq' },
     ],
   },
 ];
