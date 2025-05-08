@@ -346,6 +346,9 @@ importers:
       rollup-plugin-copy:
         specifier: ^3.5.0
         version: 3.5.0
+      rollup-plugin-string-import:
+        specifier: ^1.2.5
+        version: 1.2.5(rollup@4.40.2)
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -5395,6 +5398,11 @@ packages:
     resolution: {integrity: sha512-wI8D5dvYovRMx/YYKtUNt3Yxaw4ORC9xo6Gt9t22kveWz1enG9QrhVlagzwrxSC455xD1dHMKhIJkbsQ7d48BA==}
     engines: {node: '>=8.3'}
 
+  rollup-plugin-string-import@1.2.5:
+    resolution: {integrity: sha512-soVwp0sWcAaN1tFthAGGBx5eQy94iAo2xozYVxyKH/WNHZiN2dJjUTlfdJkZWNXQY5e4333/lbImapski70tdA==}
+    peerDependencies:
+      rollup: 4.20.0
+
   rollup@4.40.2:
     resolution: {integrity: sha512-tfUOg6DTP4rhQ3VjOO6B4wyrJnGOX85requAXvqYTHsOgb2TFJdZ3aWpT8W2kPoypSGP7dZUyzxJ9ee4buM5Fg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -6029,6 +6037,7 @@ packages:
 
   vectordb@0.5.0:
     resolution: {integrity: sha512-Srafar7DuFWfQPl3I1o5jrjAF95JtbqY4Mo0o3g6oi++787mNwwZT96t8KUIDyXM7kPXelrBvi8SnB/hHu2kXg==}
+    cpu: [x64, arm64]
     os: [darwin, linux, win32]
     deprecated: Use @lancedb/lancedb instead.
     peerDependencies:
@@ -11799,6 +11808,11 @@ snapshots:
       fs-extra: 8.1.0
       globby: 10.0.1
       is-plain-object: 3.0.1
+
+  rollup-plugin-string-import@1.2.5(rollup@4.40.2):
+    dependencies:
+      '@rollup/pluginutils': 5.1.4(rollup@4.40.2)
+      rollup: 4.40.2
 
   rollup@4.40.2:
     dependencies:

@@ -62,10 +62,11 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^20.17.45",
+    "@vitest/coverage-v8": "^1.0.4",
     "rollup": "^4.40.2",
     "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-string-import": "^1.2.5",
     "typescript": "^5.8.3",
-    "vitest": "^1.0.4",
-    "@vitest/coverage-v8": "^1.0.4"
+    "vitest": "^1.0.4"
   }
 }

@@ -4,6 +4,7 @@ const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const commonjs = require("@rollup/plugin-commonjs").default;
 const json = require("@rollup/plugin-json").default;
 const copy = require("rollup-plugin-copy");
+const importAsString = require("rollup-plugin-string-import").default;
 
 module.exports = defineConfig({
   input: "src/main.ts",
@@ -21,6 +22,9 @@ module.exports = defineConfig({
     }),
     commonjs(),
     json(),
+    importAsString({
+      include: ['**/*.scm'],
+    }),
     typescript({
       tsconfig: "tsconfig.json",
       importHelpers: true,
@@ -41,11 +45,6 @@ module.exports = defineConfig({
         {
           src: 'src/code-search/schemas/indexes/*.scm',
           dest: 'dist/semantic',
-        },
-        // 如果需要，可以将类型文件复制到其他位置
-        {
-          src: 'dist/types/**/*',
-          dest: 'dist/types',
         },
       ],
     }),
