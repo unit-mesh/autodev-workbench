@@ -29,7 +29,7 @@ const navigationItems = [
     items: [
       { name: '智能体', href: '/ai-hub/agents' },
       { name: '项目规则', href: '/ai-hub/rules' },
-      { name: '向量数据库', href: '/ai-hub/vector-db' },
+      { name: '向量知识库', href: '/ai-hub/vector-db' },
     ],
   },
   {

@@ -66,7 +66,6 @@ export default function AIHubPage() {
           </div>
         </div>
 
-        {/* 向量数据库接入 */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">向量数据库接入</h2>
           <div className="space-y-4">
@@ -87,4 +86,4 @@ export default function AIHubPage() {
       </div>
     </div>
   );
-} 
+}
