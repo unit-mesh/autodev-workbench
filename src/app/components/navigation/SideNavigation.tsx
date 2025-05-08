@@ -17,6 +17,7 @@ const navigationItems = [
     section: '平台知识',
     icon: Building2,
     items: [
+      { name: '服务目录', href: '/platform/service-catalog' },
       { name: '平台上下文', href: '/platform/context' },
       { name: '组件 & APIs', href: '/platform/framework' },
       { name: '技术文档', href: '/platform/techdocs' },
