@@ -1,6 +1,6 @@
 import Parser from 'web-tree-sitter';
 
-const WASM_FILE_PATH_TEMPLATE = 'dist/tree-sitter-wasms/tree-sitter-{language}.wasm';
+const WASM_FILE_PATH_TEMPLATE = 'tree-sitter-wasms/tree-sitter-{language}.wasm';
 
 function formatWasmFileName(template: string, languageId: string) {
 	return template.replace('{language}', languageId);
@@ -15,7 +15,6 @@ export type TreeSitterLoaderOptions = {
 export class TreeSitterLoader {
 	private _initPromise?: Promise<void>;
 
-	// TODO use lru cache?
 	private _parsersCache = new Map<string, Promise<Parser>>();
 
 	constructor(private options: TreeSitterLoaderOptions) {}
@@ -41,7 +40,6 @@ export class TreeSitterLoader {
 		const result = parser.parse(input);
 
 		parser.delete();
-
 		return result;
 	}
 
@@ -76,11 +74,8 @@ export class TreeSitterLoader {
 
 	protected async initLanguageParser(languageId: string) {
 		const language = await this.loadLanguage(languageId);
-
 		const parser = new Parser();
-
 		parser.setLanguage(language);
-
 		return parser;
 	}
 
@@ -99,7 +94,8 @@ export class TreeSitterLoader {
 			languageId = 'c_sharp';
 		}
 
-		return readFile(formatWasmFileName(pathTemplate || WASM_FILE_PATH_TEMPLATE, languageId));
+		let path = formatWasmFileName(pathTemplate || WASM_FILE_PATH_TEMPLATE, languageId);
+		return readFile(path);
 	}
 
 	dispose() {

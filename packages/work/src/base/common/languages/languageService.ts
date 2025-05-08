@@ -32,7 +32,6 @@ export class LanguageServiceProvider implements ILanguageServiceProvider {
 		this._loader = new TreeSitterLoader({
 			readFile: path => {
 				return new Promise((resolve, reject) => {
-					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const fs = require('fs');
 					fs.readFile(path, (err: Error, data: Buffer) => {
 						if (err) {
@@ -51,7 +50,7 @@ export class LanguageServiceProvider implements ILanguageServiceProvider {
 	}
 
 	async parse(identifier: LanguageIdentifier, input: string) {
-		if (this.isSupportLanguage(identifier)) {
+		if (!this.isSupportLanguage(identifier)) {
 			return;
 		}
 
