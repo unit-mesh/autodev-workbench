@@ -8,7 +8,7 @@ const copy = require("rollup-plugin-copy");
 module.exports = defineConfig({
   input: "src/main.ts",
   output: {
-    file: "bin/autodev-work.js",
+    file: "dist/autodev-work.js",
     format: "cjs",
   },
   onwarn(warning, warn) {
@@ -30,15 +30,15 @@ module.exports = defineConfig({
       targets: [
         {
           src: 'node_modules/@unit-mesh/treesitter-artifacts/wasm/*.wasm',
-          dest: 'bin/tree-sitter-wasms',
+          dest: 'dist/tree-sitter-wasms',
         },
         {
           src: 'node_modules/web-tree-sitter/*.wasm',
-          dest: 'bin',
+          dest: 'dist',
         },
         {
           src: 'src/code-search/schemas/indexes/*.scm',
-          dest: 'bin/semantic',
+          dest: 'dist/semantic',
         },
       ],
     }),

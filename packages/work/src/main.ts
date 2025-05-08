@@ -1,4 +1,3 @@
-import inquirer from "inquirer";
 import { InstantiationService } from "./base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "./base/common/languages/languageService";
 
@@ -6,16 +5,13 @@ import { ILanguageServiceProvider, LanguageServiceProvider } from "./base/common
 const instantiationService = new InstantiationService();
 instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider)
 
+async function main() {
+	const languageServiceProvider = instantiationService.get(ILanguageServiceProvider);
+	await languageServiceProvider.ready()
+	console.log("Language service is ready");
+	let tree = await languageServiceProvider.parse('javascript', 'console.log("Hello, World!");');
+	console.log(tree);
+}
 
-inquirer
-	.prompt({
-		type: "input",
-		name: "name",
-		message: "What is your name?",
-	})
-	.then(async (answer) => {
-		const languageServiceProvider = instantiationService.get(ILanguageServiceProvider);
-		let tree = await languageServiceProvider.parse('javascript', 'console.log("Hello, World!");');
-
-	});
+main().then(r => {});
 

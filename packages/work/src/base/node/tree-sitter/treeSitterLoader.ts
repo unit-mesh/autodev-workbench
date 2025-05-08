@@ -1,4 +1,5 @@
 import Parser from 'web-tree-sitter';
+import * as Path from "node:path";
 
 const WASM_FILE_PATH_TEMPLATE = 'tree-sitter-wasms/tree-sitter-{language}.wasm';
 
@@ -94,7 +95,16 @@ export class TreeSitterLoader {
 			languageId = 'c_sharp';
 		}
 
-		let path = formatWasmFileName(pathTemplate || WASM_FILE_PATH_TEMPLATE, languageId);
+		const wasmPath = pathTemplate || (() => {
+			const isDev = process.env.NODE_ENV === 'development';
+			if (isDev) {
+				return Path.resolve(process.cwd(), "..", "node_modules", "@unit-mesh", "treesitter-artifacts", "wasm", "tree-sitter-{language}.wasm");
+			} else {
+				return Path.resolve(process.cwd(), "dist", WASM_FILE_PATH_TEMPLATE);
+			}
+		})();
+
+		let path = formatWasmFileName(pathTemplate || wasmPath, languageId);
 		return readFile(path);
 	}
 

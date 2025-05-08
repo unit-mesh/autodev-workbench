@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "outDir": "./bin",
+    "outDir": "./dist",
     "noEmit": true,
     "checkJs": true,
     "importHelpers": true,
