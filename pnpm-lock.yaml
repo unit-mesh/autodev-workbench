@@ -220,8 +220,8 @@ importers:
         specifier: ^0.1.59
         version: 0.1.63(openai@4.97.0(encoding@0.1.13)(ws@8.18.2)(zod@3.24.4))
       '@mozilla/readability':
-        specifier: ^0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
       '@octokit/rest':
         specifier: ^20.1.1
         version: 20.1.2
@@ -238,10 +238,10 @@ importers:
         specifier: ^5.5.5
         version: 5.6.0
       graphology:
-        specifier: ^0.25.4
-        version: 0.25.4(graphology-types@0.24.8)
+        specifier: ^0.26.0
+        version: 0.26.0(graphology-types@0.24.8)
       graphology-types:
-        specifier: ^0.24.7
+        specifier: ^0.24.8
         version: 0.24.8
       iconv-lite:
         specifier: ^0.6.3
@@ -334,6 +334,9 @@ importers:
       '@rollup/plugin-typescript':
         specifier: ^12.1.2
         version: 12.1.2(rollup@4.40.2)(tslib@2.8.1)(typescript@5.8.3)
+      '@types/node':
+        specifier: ^20.17.45
+        version: 20.17.45
       rollup:
         specifier: ^4.40.2
         version: 4.40.2
@@ -826,8 +829,8 @@ packages:
   '@mongodb-js/saslprep@1.2.2':
     resolution: {integrity: sha512-EB0O3SCSNRUFk66iRCpI+cXzIjdswfCs7F6nOC3RAGJ7xr5YhaicvsRwJ9eyzYvYRlCSDUO/c7g4yNulxKC1WA==}
 
-  '@mozilla/readability@0.5.0':
-    resolution: {integrity: sha512-Z+CZ3QaosfFaTqvhQsIktyGrjFjSC0Fa4EMph4mqKnWhmyoGICsV/8QK+8HpXut6zV7zwfWwqDmEjtk1Qf6EgQ==}
+  '@mozilla/readability@0.6.0':
+    resolution: {integrity: sha512-juG5VWh4qAivzTAeMzvY9xs9HY5rAcr2E4I7tiSSCokRFi7XIZCAu92ZkSTsIj1OPceCifL3cpfteP3pDT9/QQ==}
     engines: {node: '>=14.0.0'}
 
   '@napi-rs/wasm-runtime@0.2.9':
@@ -3561,8 +3564,8 @@ packages:
   graphology-types@0.24.8:
     resolution: {integrity: sha512-hDRKYXa8TsoZHjgEaysSRyPdT6uB78Ci8WnjgbStlQysz7xR52PInxNsmnB7IBOM1BhikxkNyCVEFgmPKnpx3Q==}
 
-  graphology@0.25.4:
-    resolution: {integrity: sha512-33g0Ol9nkWdD6ulw687viS8YJQBxqG5LWII6FI6nul0pq6iM2t5EKquOTFDbyTblRB3O9I+7KX4xI8u5ffekAQ==}
+  graphology@0.26.0:
+    resolution: {integrity: sha512-8SSImzgUUYC89Z042s+0r/vMibY7GX/Emz4LDO5e7jYXhuoWfHISPFJYjpRLUSJGq6UQ6xlenvX1p/hJdfXuXg==}
     peerDependencies:
       graphology-types: '>=0.24.0'
 
@@ -4463,9 +4466,6 @@ packages:
   object.values@1.2.1:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
-
-  obliterator@2.0.5:
-    resolution: {integrity: sha512-42CPE9AhahZRsMNslczq0ctAEtqk8Eka26QofnqC346BZdHDySk3LWka23LI7ULIw11NmltpiLagIq8gBozxTw==}
 
   ollama@0.5.15:
     resolution: {integrity: sha512-TSaZSJyP7MQJFjSmmNsoJiriwa3U+/UJRw6+M8aucs5dTsaWNZsBIGpDb5rXnW6nXxJBB/z79gZY8IaiIQgelQ==}
@@ -5596,7 +5596,6 @@ packages:
 
   vectordb@0.5.0:
     resolution: {integrity: sha512-Srafar7DuFWfQPl3I1o5jrjAF95JtbqY4Mo0o3g6oi++787mNwwZT96t8KUIDyXM7kPXelrBvi8SnB/hHu2kXg==}
-    cpu: [x64, arm64]
     os: [darwin, linux, win32]
     deprecated: Use @lancedb/lancedb instead.
     peerDependencies:
@@ -6268,7 +6267,7 @@ snapshots:
     dependencies:
       sparse-bitfield: 3.0.3
 
-  '@mozilla/readability@0.5.0': {}
+  '@mozilla/readability@0.6.0': {}
 
   '@napi-rs/wasm-runtime@0.2.9':
     dependencies:
@@ -9386,11 +9385,10 @@ snapshots:
 
   graphology-types@0.24.8: {}
 
-  graphology@0.25.4(graphology-types@0.24.8):
+  graphology@0.26.0(graphology-types@0.24.8):
     dependencies:
       events: 3.3.0
       graphology-types: 0.24.8
-      obliterator: 2.0.5
 
   guid-typescript@1.0.9: {}
 
@@ -10342,8 +10340,6 @@ snapshots:
       call-bound: 1.0.4
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
-
-  obliterator@2.0.5: {}
 
   ollama@0.5.15:
     dependencies:
