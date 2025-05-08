@@ -9,7 +9,10 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "node bin/autodev-work.js"
+    "start": "node bin/autodev-work.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "dependencies": {
@@ -61,6 +64,8 @@
     "@types/node": "^20.17.45",
     "rollup": "^4.40.2",
     "rollup-plugin-copy": "^3.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^1.0.4",
+    "@vitest/coverage-v8": "^1.0.4"
   }
 }
