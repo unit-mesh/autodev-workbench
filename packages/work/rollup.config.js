@@ -10,6 +10,10 @@ module.exports = defineConfig({
     file: "bin/autodev-work.js",
     format: "cjs",
   },
+  onwarn(warning, warn) {
+    if (warning.code === 'EVAL') return;
+    warn(warning);
+  },
   plugins: [
     nodeResolve({
       preferBuiltins: true,
