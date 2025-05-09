@@ -5,6 +5,7 @@ import path from "path";
 import { CodeFile, CodeStructure, StructureType } from "./codemodel/CodeElement";
 import { promisify } from "util";
 import fs from "fs";
+import { inferLanguage } from "./base/common/languages/languages";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -166,21 +167,6 @@ export class CodeAnalyzer {
 		await this.serviceProvider.ready();
 	}
 
-	public getLanguageFromExt(ext: string): string | null {
-		switch (ext.toLowerCase()) {
-			case '.java':
-				return 'java';
-			case '.ts':
-			case '.js':
-			case '.tsx':
-				return 'typescript';
-			case '.go':
-				return 'go';
-			default:
-				return null;
-		}
-	}
-
 	public async analyzeDirectory(dirPath: string): Promise<CodeAnalysisResult> {
 		const files = await this.fileScanner.scanDirectory(dirPath);
 		const interfaceMap = new Map();
@@ -189,12 +175,12 @@ export class CodeAnalyzer {
 		const extensionMap = new Map(); // 新增：保存继承关系
 		let totalProcessed = 0;
 
-		// First pass: collect all interfaces and classes
 		for (const file of files) {
-			const ext = path.extname(file);
-			const language = this.getLanguageFromExt(ext);
-
-			if (!language) continue;
+			const language = inferLanguage(file);
+			if (!language) {
+				console.warn(`${file} is not a supported language, skipping...`);
+				continue;
+			}
 
 			try {
 				const content = await this.fileScanner.readFileContent(file);
@@ -277,7 +263,7 @@ export class CodeAnalyzer {
 		}
 
 		// 修改返回分析结果而不是直接显示
-		const interfaceResults = this.getImplementationResults(interfaceMap, implementationMap);
+		const interfaceResults = this.getImplementationResults(interfaceMap, implementationMap, classMap);
 		const extensionResults = this.getExtensionResults(classMap, extensionMap);
 
 		return {
@@ -332,7 +318,7 @@ export class CodeAnalyzer {
 	}
 
 	// 重命名并修改以返回数据结构
-	private getImplementationResults(interfaceMap: Map<string, any>, implementationMap: Map<string, any[]>): {
+	private getImplementationResults(interfaceMap: Map<string, any>, implementationMap: Map<string, any[]>, classMap: Map<string, any>): {
 		interfaces: InterfaceImplementation[];
 		multiImplementers: MultiImplementation[];
 		stats: {
@@ -815,8 +801,6 @@ export class CodeAnalyzer {
 			let content = '';
 			content += `接口: ${intf.interfaceName}\n`;
 			content += `文件: ${intf.interfaceFile}\n`;
-			content += `包: ${intf.package}\n`;
-			content += `方法数: ${intf.methodCount}\n\n`;
 
 			// 添加接口代码
 			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
@@ -845,84 +829,7 @@ export class CodeAnalyzer {
 			generatedFiles.push(filePath);
 		}
 
-		// 生成继承层次结构的学习资料
-		await this.generateInheritanceHierarchyMaterial(result.extensionAnalysis, outputDir, generatedFiles);
-
 		return generatedFiles;
-	}
-
-	/**
-	 * 生成继承层次结构的学习资料
-	 */
-	private async generateInheritanceHierarchyMaterial(
-		extensionAnalysis: CodeAnalysisResult['extensionAnalysis'],
-		outputDir: string,
-		generatedFiles: string[]
-	): Promise<void> {
-		const hierarchy = extensionAnalysis.hierarchy;
-
-		if (hierarchy.deepestClasses.length === 0) return;
-
-		let content = `继承层次最深的类 (深度: ${hierarchy.maxDepth})\n\n`;
-
-		for (const cls of hierarchy.deepestClasses) {
-			if (!cls.classFile) continue; // 跳过没有文件路径的类
-
-			content += `类名: ${cls.className}\n`;
-			content += `文件: ${cls.classFile}\n\n`;
-
-			if (cls.position) {
-				const classCode = await this.readCodeSection(cls.classFile, cls.position);
-				content += "=== 类定义 ===\n\n";
-				content += classCode;
-				content += "\n\n";
-			}
-
-			// 查找该类的父类关系
-			const parentRelations = this.findClassParentRelations(cls.className, extensionAnalysis.extensions);
-			if (parentRelations.length > 0) {
-				content += "=== 继承链 ===\n\n";
-				parentRelations.forEach((parent, index) => {
-					const indent = "  ".repeat(index);
-					content += `${indent}↑ 继承自: ${parent}\n`;
-				});
-				content += "\n";
-			}
-		}
-
-		const fileName = "继承层次最深的类.txt";
-		const filePath = path.join(outputDir, fileName);
-		await fs.promises.writeFile(filePath, content);
-		generatedFiles.push(filePath);
-	}
-
-	/**
-	 * 查找类的所有父类关系链
-	 */
-	private findClassParentRelations(className: string, extensions: ClassExtension[]): string[] {
-		const parentClasses: string[] = [];
-
-		// 简化类名以便匹配
-		const simpleName = className.includes('.') ? className.split('.').pop()! : className;
-
-		// 查找该类是哪个类的子类
-		for (const ext of extensions) {
-			for (const child of ext.children) {
-				const childSimpleName = child.className.includes('.')
-					? child.className.split('.').pop()!
-					: child.className;
-
-				if (childSimpleName === simpleName) {
-					parentClasses.push(ext.parentName);
-					// 递归查找父类的父类
-					const grandParents = this.findClassParentRelations(ext.parentName, extensions);
-					parentClasses.push(...grandParents);
-					break;
-				}
-			}
-		}
-
-		return parentClasses;
 	}
 
 	/**
@@ -965,9 +872,6 @@ export class CodeAnalyzer {
 		}
 	}
 
-	/**
-	 * 生成安全的文件名
-	 */
 	private sanitizeFileName(filename: string): string {
 		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
