@@ -3,7 +3,6 @@
 > AutoDev Context provides contextual intelligence to empower AI Copilots such as AutoDev.
 
 [![CI/CD Pipeline](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml)
-[![Deploy Next.js site to Pages](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml)
 ![NPM Version](https://img.shields.io/npm/v/%40autodev%2Fcontext-worker)
 
 ## Overview
