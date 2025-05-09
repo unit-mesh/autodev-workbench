@@ -6,7 +6,6 @@
 [![Deploy Next.js site to Pages](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml)
 ![NPM Version](https://img.shields.io/npm/v/%40autodev%2Fcontext-worker)
 
-
 ## Overview
 
 Architecture
@@ -25,3 +24,11 @@ AutoDev Work provides a unified platform for development teams to:
 - **Metrics & Analytics**: Track and analyze development performance and productivity metrics
 - **API/Components Marketplace**: Access a marketplace of reusable components and libraries to accelerate development
 - **Documentation**: Maintain comprehensive documentation with AI-assisted content generation and management
+
+## Usage
+
+### AutoDev Context Worker
+
+```bash
+npx @autodev/context-worker@latest
+```

@@ -219,13 +219,6 @@ export class CodeAnalyzer {
 
 					await fs.promises.writeFile(docFilePath, content);
 					generatedFiles.push(docFilePath);
-
-					if (block.language && block.language !== 'plaintext') {
-						const codeFileName = this.sanitizeFileName(`${sourceFileName}-code-${index}.${block.language}`);
-						const codeFilePath = path.join(markdownDir, codeFileName);
-						await fs.promises.writeFile(codeFilePath, block.code);
-						generatedFiles.push(codeFilePath);
-					}
 				}
 			}
 		}
