@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
+import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
 
 class CommandLineParser {
 	public parse(): { dirPath: string } {
@@ -93,7 +94,7 @@ class InterfaceAnalyzerApp {
 		}
 
 		console.log(`正在扫描目录: ${targetDir}`);
-		let result = await this.codeAnalyzer.analyzeDirectory(targetDir);
+		let result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory(targetDir);
 		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
