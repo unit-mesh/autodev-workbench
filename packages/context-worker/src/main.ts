@@ -94,7 +94,8 @@ class InterfaceAnalyzerApp {
 
 		console.log(`正在扫描目录: ${targetDir}`);
 		let result = await this.codeAnalyzer.analyzeDirectory(targetDir);
-		console.log(JSON.stringify(result, null, 2));
+		const outputFilePath = path.join(targetDir, 'analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 	}
 }
 
