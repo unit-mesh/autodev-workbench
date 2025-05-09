@@ -83,6 +83,24 @@ export interface InheritanceHierarchy {
 	}>;
 }
 
+export interface CodeBlock {
+    filePath: string;
+    title: string;
+    heading: string;
+    language: string;
+    internalLanguage: string;
+    code: string;
+    context: {
+        before: string;
+        after: string;
+    };
+}
+
+export interface MarkdownAnalysisResult {
+    codeBlocks: CodeBlock[];
+    totalCount: number;
+}
+
 export interface CodeAnalysisResult {
 	interfaceAnalysis: {
 		interfaces: InterfaceImplementation[];
@@ -104,4 +122,5 @@ export interface CodeAnalysisResult {
 			multiExtendedClassCount: number;
 		};
 	};
+	markdownAnalysis?: MarkdownAnalysisResult;
 }

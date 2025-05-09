@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
+import { inferLanguage } from "../../base/common/languages/languages";
 import { StructurerProviderManager } from "../../code-context/StructurerProviderManager";
 import { InstantiationService } from "../../base/common/instantiation/instantiationService";
 import { CodeFile } from "../../codemodel/CodeElement";
@@ -11,6 +12,7 @@ import { CodeCollector } from "../CodeCollector";
 import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
 import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
+import { MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -18,12 +20,14 @@ export class CodeAnalyzer {
 	private fileScanner: FileSystemScanner;
 	private codeCollector: CodeCollector;
 	private analyzers: ICodeAnalyzer[];
+	private markdownAnalyser: MarkdownAnalyser;
 
 	constructor(instantiationService: InstantiationService) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
 		this.structurerManager = StructurerProviderManager.getInstance();
 		this.fileScanner = new FileSystemScanner();
 		this.codeCollector = new CodeCollector();
+		this.markdownAnalyser = new MarkdownAnalyser();
 
 		// 初始化各个分析器
 		this.analyzers = [
@@ -37,22 +41,39 @@ export class CodeAnalyzer {
 	}
 
 	public async analyzeDirectory(dirPath: string): Promise<CodeAnalysisResult> {
-		// 1. 收集目录中的所有代码文件
+		// 1. 收集目录中的所有文件
 		const files = await this.fileScanner.scanDirectory(dirPath);
 
-		// 2. 解析代码结构
-		await this.collectCodeStructures(files);
+		// 2. 将文件分为 Markdown 文件和代码文件
+		const markdownFiles: string[] = [];
+		const codeFiles: string[] = [];
 
-		// 3. 使用各个分析器分析代码
+		for (const file of files) {
+			if (path.extname(file).toLowerCase() === '.md') {
+				markdownFiles.push(file);
+			} else {
+				codeFiles.push(file);
+			}
+		}
+
+		// 3. 解析代码结构
+		await this.collectCodeStructures(codeFiles);
+
+		// 4. 使用各个分析器分析代码
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
 			this.analyzers[1].analyze(this.codeCollector)
 		]);
 
-		// 4. 组合分析结果
+		// 5. 分析 Markdown 文件
+		const markdownAnalysisResult = await this.analyzeMarkdownFiles(markdownFiles);
+
+		console.log(markdownAnalysisResult)
+		// 6. 组合分析结果
 		return {
 			interfaceAnalysis,
-			extensionAnalysis
+			extensionAnalysis,
+			markdownAnalysis: markdownAnalysisResult
 		};
 	}
 
@@ -77,6 +98,65 @@ export class CodeAnalyzer {
 				console.error(`处理文件 ${file} 时出错:`, error);
 			}
 		}
+	}
+
+	/**
+	 * 分析 Markdown 文件并提取代码块
+	 */
+	private async analyzeMarkdownFiles(markdownFiles: string[]): Promise<any> {
+		const allCodeBlocks: any[] = [];
+
+		for (const file of markdownFiles) {
+			try {
+				const content = await this.fileScanner.readFileContent(file);
+				const codeDocuments = await this.markdownAnalyser.parse(content);
+
+				// 处理每个提取出的代码块
+				for (const doc of codeDocuments) {
+					// 尝试从代码块语言推断编程语言
+					const language = inferLanguage(`.${doc.language}`);
+
+					// 保存提取的代码块信息
+					allCodeBlocks.push({
+						filePath: file,
+						title: doc.title,
+						heading: doc.lastTitle,
+						language: doc.language,
+						internalLanguage: language,
+						code: doc.code,
+						context: {
+							before: doc.beforeString,
+							after: doc.afterString
+						}
+					});
+
+					// 如果是支持的编程语言，可以尝试进一步分析代码结构
+					if (language && doc.code) {
+						try {
+							const structurer = this.structurerManager.getStructurer(language);
+							if (structurer) {
+								await structurer.init(this.serviceProvider);
+								// 使用一个虚拟文件路径以避免冲突
+								const virtualFilePath = `${file}#${doc.title}.${doc.language}`;
+								const codeFile: CodeFile = await structurer.parseFile(doc.code, virtualFilePath);
+
+								// 将代码结构添加到收集器中
+								this.codeCollector.addCodeFile(virtualFilePath, codeFile);
+							}
+						} catch (error) {
+							console.warn(`无法分析 Markdown 文件 ${file} 中的代码块:`, error);
+						}
+					}
+				}
+			} catch (error) {
+				console.error(`处理 Markdown 文件 ${file} 时出错:`, error);
+			}
+		}
+
+		return {
+			codeBlocks: allCodeBlocks,
+			totalCount: allCodeBlocks.length
+		};
 	}
 
 	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir: string): Promise<string[]> {
