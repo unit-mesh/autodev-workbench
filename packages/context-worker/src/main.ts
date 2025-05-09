@@ -7,7 +7,7 @@ import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
 import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
-import { CodeAnalyzer } from "./analyzer/CodeAnalyzer";
+import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 
 class CommandLineParser {
 	public parse(): { dirPath: string } {
@@ -94,7 +94,7 @@ class InterfaceAnalyzerApp {
 
 		console.log(`正在扫描目录: ${targetDir}`);
 		let result = await this.codeAnalyzer.analyzeDirectory(targetDir);
-		const outputFilePath = path.join(targetDir, 'analysis_result.json');
+		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		await this.codeAnalyzer.generateLearningMaterials(result, "materials");
