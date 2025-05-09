@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CodeEditor } from "@/components/code-editor"
 import { ConceptList } from "@/components/concept-list"
 import { KnowledgePanel } from "@/components/knowledge-panel"
@@ -8,6 +8,7 @@ import { extractConcepts } from "@/lib/concept-extractor"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const sampleCode = `/**
  * PaymentProcessor handles all payment gateway interactions
@@ -30,7 +31,7 @@ class PaymentProcessor {
   }
 }`
 
-export default function Home() {
+export default function Concept() {
 	const [code, setCode] = useState(sampleCode)
 	const [concepts, setConcepts] = useState<string[]>([])
 	const [validConcepts, setValidConcepts] = useState<string[]>([])
@@ -41,6 +42,32 @@ export default function Home() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [isValidating, setIsValidating] = useState(false)
 	const [useAI, setUseAI] = useState(true)
+	// Add state for context data
+	const [contextData, setContextData] = useState<any[]>([])
+	const [isLoadingContext, setIsLoadingContext] = useState(false)
+
+	// Function to fetch context data
+	const fetchContextData = async () => {
+		setIsLoadingContext(true)
+		try {
+			const response = await fetch("/api/context")
+			if (response.ok) {
+				const data = await response.json()
+				setContextData(data)
+			} else {
+				console.error("Failed to fetch context data")
+			}
+		} catch (error) {
+			console.error("Error fetching context data:", error)
+		} finally {
+			setIsLoadingContext(false)
+		}
+	}
+
+	// Fetch context data on component mount
+	useEffect(() => {
+		fetchContextData()
+	}, [])
 
 	const handleExtractConcepts = async () => {
 		const extractedConcepts = await extractConcepts(code)
@@ -120,6 +147,41 @@ export default function Home() {
 							</div>
 						</div>
 					</div>
+
+					{/* Add Context Display Section */}
+					<div className="mt-6">
+						<div className="flex items-center justify-between mb-2">
+							<h2 className="text-lg font-semibold">Code Context</h2>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={fetchContextData}
+								disabled={isLoadingContext}
+							>
+								{isLoadingContext ? "Loading..." : "Refresh Context"}
+							</Button>
+						</div>
+						<div className="max-h-80 overflow-y-auto">
+							{contextData.length > 0 ? (
+								contextData.map((item, index) => (
+									<Card key={item.id || index} className="mb-4">
+										<CardHeader className="py-2">
+											<CardTitle className="text-sm font-medium">{item.path}</CardTitle>
+										</CardHeader>
+										<CardContent className="py-2">
+											<div className="text-sm max-h-40 overflow-y-auto whitespace-pre-wrap">
+												{item.content}
+											</div>
+										</CardContent>
+									</Card>
+								))
+							) : (
+								<div className="text-center p-4 text-gray-500">
+									{isLoadingContext ? "Loading context data..." : "No context data available"}
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
 
 				<div className="space-y-6">
@@ -144,3 +206,4 @@ export default function Home() {
 		</main>
 	)
 }
+

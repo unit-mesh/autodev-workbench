@@ -316,38 +316,33 @@ export class CodeAnalyzer {
 
 		// Markdown Analysis
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
-			const fileGroups: { [key: string]: CodeBlock[] } = {};
+			// Process each code block individually instead of grouping by file
 			for (const block of result.markdownAnalysis.codeBlocks) {
-				if (!fileGroups[block.filePath]) {
-					fileGroups[block.filePath] = [];
+				let content = `=== Code Block from ${block.filePath} ===\n\n`;
+
+				content += `Language: ${block.language}\n`;
+				if (block.heading) {
+					content += `Chapter: ${block.heading}\n`;
 				}
-				fileGroups[block.filePath].push(block);
-			}
+				content += `\n`;
 
-			for (const [filePath, blocks] of Object.entries(fileGroups)) {
-				let content = `=== Code Blocks from ${filePath} ===\n\n`;
-
-				for (const block of blocks) {
-					content += `Language: ${block.language}\n`;
-					if (block.heading) {
-						content += `Chapter: ${block.heading}\n`;
-					}
-					content += `\n`;
-
-					if (block.context.before && block.context.before.trim()) {
-						content += block.context.before + "\n";
-					}
-					content += "```" + block.language + "\n";
-					content += block.code;
-					content += "\n```\n\n";
-					if (block.context.after && block.context.after.trim()) {
-						content += block.context.after + "\n";
-					}
-					content += '\n';
+				if (block.context.before && block.context.before.trim()) {
+					content += block.context.before + "\n";
 				}
+				content += "```" + block.language + "\n";
+				content += block.code;
+				content += "\n```\n\n";
+				if (block.context.after && block.context.after.trim()) {
+					content += block.context.after + "\n";
+				}
+
+				// Create a unique path for each code block
+				const blockPath = block.heading
+					? `${block.filePath}#${block.heading}`
+					: `${block.filePath}#code-block-${Math.random().toString(36).substring(2, 9)}`;
 
 				items.push({
-					path: filePath,
+					path: blockPath,
 					content
 				});
 			}

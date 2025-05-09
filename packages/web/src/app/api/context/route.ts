@@ -1,5 +1,34 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/postgres';
+
+export async function GET() {
+  const client = createClient();
+  await client.connect();
+
+  try {
+    // Fetch the most recent code analysis results
+    const result = await client.sql`
+      SELECT * FROM "CodeAnalysis"
+      ORDER BY "createdAt" DESC
+      LIMIT 50
+    `;
+
+    return NextResponse.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching code analysis results:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Failed to fetch code analysis results',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  } finally {
+    await client.end();
+  }
+}
+
 export async function POST(request: Request) {
   const client = createClient();
   await client.connect();
