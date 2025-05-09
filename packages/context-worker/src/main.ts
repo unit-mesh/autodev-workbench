@@ -1,189 +1,106 @@
 import { InstantiationService, providerContainer } from "./base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "./base/common/languages/languageService";
-import { StructurerProviderManager } from "./code-context/StructurerProviderManager";
 import { IStructurerProvider } from "./ProviderTypes";
 import { JavaStructurerProvider } from "./code-context/java/JavaStructurerProvider";
 import { TypeScriptStructurer } from "./code-context/typescript/TypeScriptStructurer";
 import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
-import { StructureType } from "./codemodel/CodeElement";
 import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
 import inquirer from 'inquirer';
+import { CodeAnalyzer } from "./CodeAnalyzer";
 
-const readdir = promisify(fs.readdir);
-const readFile = promisify(fs.readFile);
+class CommandLineParser {
+	public parse(): { dirPath: string } {
+		const args = process.argv.slice(2);
+		let dirPath = process.cwd(); // Default to current directory
 
-const instantiationService = new InstantiationService();
-instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider)
-
-providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
-providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
-providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
-
-function getLanguageFromExt(ext: string): string | null {
-	switch (ext.toLowerCase()) {
-		case '.java':
-			return 'java';
-		case '.ts':
-		case '.js':
-		case '.tsx':
-			return 'typescript';
-		case '.go':
-			return 'go';
-		default:
-			return null;
-	}
-}
-
-async function scanDirectory(dirPath: string): Promise<string[]> {
-	const entries = await readdir(dirPath, { withFileTypes: true });
-	const files = await Promise.all(entries.map(async (entry) => {
-		const fullPath = path.join(dirPath, entry.name);
-		if (entry.isDirectory()) {
-			return scanDirectory(fullPath);
-		} else {
-			return [fullPath];
-		}
-	}));
-	return files.flat();
-}
-
-// 解析命令行参数
-function parseArgs(): { dirPath: string } {
-	const args = process.argv.slice(2);
-	let dirPath = process.cwd(); // 默认为当前目录
-
-	for (let i = 0; i < args.length; i++) {
-		if (args[i] === '--path' || args[i] === '-p') {
-			if (i + 1 < args.length) {
-				dirPath = args[i + 1];
-				// 转换为绝对路径
-				if (!path.isAbsolute(dirPath)) {
-					dirPath = path.resolve(process.cwd(), dirPath);
-				}
-				i++; // 跳过下一个参数
-			}
-		}
-	}
-
-	return { dirPath };
-}
-
-async function getInputFromUser(): Promise<{ dirPath: string }> {
-	const answers = await inquirer.prompt([
-		{
-			type: 'input',
-			name: 'dirPath',
-			message: '请输入要扫描的目录路径:',
-			default: process.cwd(),
-			validate: (input) => {
-				const fullPath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
-				if (fs.existsSync(fullPath)) {
-					return true;
-				}
-				return '请输入有效的目录路径';
-			}
-		}
-	]);
-
-	// 转换为绝对路径
-	const dirPath = path.isAbsolute(answers.dirPath)
-		? answers.dirPath
-		: path.resolve(process.cwd(), answers.dirPath);
-
-	return { dirPath };
-}
-
-async function main(dirPath?: string) {
-	const serviceProvider = instantiationService.get(ILanguageServiceProvider);
-	await serviceProvider.ready()
-	const structurerManager = StructurerProviderManager.getInstance();
-
-	let targetDir: string;
-	if (dirPath) {
-		targetDir = dirPath;
-	} else {
-		const args = parseArgs();
-		if (args.dirPath !== process.cwd()) {
-			targetDir = args.dirPath;
-		} else {
-			const input = await getInputFromUser();
-			targetDir = input.dirPath;
-		}
-	}
-
-	console.log(`正在扫描目录: ${targetDir}`);
-	const files = await scanDirectory(targetDir);
-
-	const interfaceMap = new Map();
-	let totalProcessed = 0;
-
-	for (const file of files) {
-		const ext = path.extname(file);
-		const language = getLanguageFromExt(ext);
-
-		if (!language) continue;
-
-		try {
-			const content = await readFile(file, 'utf-8');
-			const structurer = structurerManager.getStructurer(language);
-			await structurer.init(serviceProvider);
-			const codeFile = await structurer.parseFile(content, file);
-			totalProcessed++;
-
-			if (codeFile.classes) {
-				const fileInterfaces = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
-				for (const intf of fileInterfaces) {
-					const key = intf.canonicalName || `${intf.package}.${intf.name}`;
-					if (!interfaceMap.has(key) ||
-					    (intf.methods && interfaceMap.get(key).interface.methods &&
-						 intf.methods.length > interfaceMap.get(key).interface.methods.length)) {
-						interfaceMap.set(key, {
-							file: file,
-							interface: intf
-						});
+		for (let i = 0; i < args.length; i++) {
+			if (args[i] === '--path' || args[i] === '-p') {
+				if (i + 1 < args.length) {
+					dirPath = args[i + 1];
+					// Convert to absolute path
+					if (!path.isAbsolute(dirPath)) {
+						dirPath = path.resolve(process.cwd(), dirPath);
 					}
+					i++; // Skip next argument
 				}
 			}
-		} catch (error) {
-			console.error(`处理文件 ${file} 时出错:`, error);
 		}
+
+		return { dirPath };
+	}
+}
+
+class UserInputHandler {
+	public async getDirectoryPath(): Promise<{ dirPath: string }> {
+		const answers = await inquirer.prompt([
+			{
+				type: 'input',
+				name: 'dirPath',
+				message: '请输入要扫描的目录路径:',
+				default: process.cwd(),
+				validate: (input) => {
+					const fullPath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
+					if (fs.existsSync(fullPath)) {
+						return true;
+					}
+					return '请输入有效的目录路径';
+				}
+			}
+		]);
+
+		const dirPath = path.isAbsolute(answers.dirPath)
+			? answers.dirPath
+			: path.resolve(process.cwd(), answers.dirPath);
+
+		return { dirPath };
+	}
+}
+
+class InterfaceAnalyzerApp {
+	private instantiationService: InstantiationService;
+	private codeAnalyzer: CodeAnalyzer;
+	private commandLineParser: CommandLineParser;
+	private userInputHandler: UserInputHandler;
+
+	constructor() {
+		this.instantiationService = new InstantiationService();
+		this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
+
+		providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
+		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
+
+		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService);
+		this.commandLineParser = new CommandLineParser();
+		this.userInputHandler = new UserInputHandler();
 	}
 
-	const uniqueInterfaces = Array.from(interfaceMap.values());
+	public async run(dirPath?: string): Promise<void> {
+		await this.codeAnalyzer.initialize();
 
-	uniqueInterfaces.sort((a, b) => {
-		const packageCompare = (a.interface.package || '').localeCompare(b.interface.package || '');
-		if (packageCompare !== 0) return packageCompare;
-		return a.interface.name.localeCompare(b.interface.name);
-	});
-
-	let currentPackage = '';
-	uniqueInterfaces.forEach(item => {
-		const intf = item.interface;
-		if (intf.package !== currentPackage) {
-			currentPackage = intf.package || '';
-			console.log(`\n包: ${currentPackage || '(默认包)'}`);
+		let targetDir: string;
+		if (dirPath) {
+			targetDir = dirPath;
+		} else {
+			const args = this.commandLineParser.parse();
+			if (args.dirPath !== process.cwd()) {
+				targetDir = args.dirPath;
+			} else {
+				const input = await this.userInputHandler.getDirectoryPath();
+				targetDir = input.dirPath;
+			}
 		}
 
-		const methodCount = intf.methods ? intf.methods.length : 0;
-		console.log(`- ${intf.name} (${methodCount} 个方法, 位于 ${item.file})`);
-	});
-
-	console.log(`\n接口统计:`);
-	console.log(`- 总接口数: ${uniqueInterfaces.length}`);
-	console.log(`- 总方法数: ${uniqueInterfaces.reduce((sum, item) => 
-		sum + (item.interface.methods ? item.interface.methods.length : 0), 0)}`);
+		console.log(`正在扫描目录: ${targetDir}`);
+		await this.codeAnalyzer.analyzeDirectory(targetDir);
+	}
 }
 
-// 允许通过命令行或程序内调用
+const app = new InterfaceAnalyzerApp();
+
 if (require.main === module) {
-	// 直接运行脚本时执行
-	main().then(r => {
-	}).catch(err => console.error("错误:", err));
+	app.run().catch(err => console.error("错误:", err));
 } else {
-	// 作为模块导入时，导出 main 函数
-	module.exports = { main };
+	module.exports = { main: app.run.bind(app) };
 }
-
