@@ -33,18 +33,8 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 			imports: [],
 			classes: [],
 		};
-		let classObj: CodeStructure = {
-			type: StructureType.Class,
-			canonicalName: '',
-			constant: [],
-			extends: [],
-			methods: [],
-			name: '',
-			package: '',
-			implements: [],
-			start: { row: 0, column: 0 },
-			end: { row: 0, column: 0 },
-		};
+
+		let classObj: CodeStructure = this.createEmptyClassStructure();
 
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
@@ -55,6 +45,8 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 					codeFile.imports.push(text);
 					break;
 				case 'class-name':
+					// 创建新的类对象
+					classObj = this.createEmptyClassStructure();
 					classObj.name = text;
 					classObj.type = StructureType.Class;
 					const classNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
@@ -69,6 +61,7 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 					classObj.methods.push(this.createFunction(capture.node, text));
 					break;
 				case 'interface-name':
+					classObj = this.createEmptyClassStructure();
 					classObj.name = text;
 					classObj.type = StructureType.Interface;
 					const interfaceNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
@@ -94,6 +87,71 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 			}
 		}
 
+		// 合并重复的类
+		this.mergeClasses(codeFile);
+
 		return Promise.resolve(codeFile);
+	}
+
+	// 创建空的类结构对象
+	private createEmptyClassStructure(): CodeStructure {
+		return {
+			type: StructureType.Class,
+			canonicalName: '',
+			constant: [],
+			extends: [],
+			methods: [],
+			name: '',
+			package: '',
+			implements: [],
+			start: { row: 0, column: 0 },
+			end: { row: 0, column: 0 },
+		};
+	}
+
+	// 合并重复的类
+	private mergeClasses(codeFile: CodeFile): void {
+		const uniqueClasses: CodeStructure[] = [];
+		const classMap = new Map<string, CodeStructure>();
+
+		for (const classObj of codeFile.classes) {
+			const className = classObj.name;
+
+			if (classMap.has(className)) {
+				// 合并属性到现有类
+				const existingClass = classMap.get(className)!;
+
+				// 合并方法
+				if (classObj.methods && classObj.methods.length > 0) {
+					existingClass.methods = [...(existingClass.methods || []), ...classObj.methods];
+				}
+
+				// 合并字段
+				if (classObj.fields && classObj.fields.length > 0) {
+					existingClass.fields = [...(existingClass.fields || []), ...classObj.fields];
+				}
+
+				// 合并常量
+				if (classObj.constant && classObj.constant.length > 0) {
+					existingClass.constant = [...(existingClass.constant || []), ...classObj.constant];
+				}
+
+				// 更新其他可能需要合并的属性
+				if (classObj.implements && classObj.implements.length > 0) {
+					existingClass.implements = [...(existingClass.implements || []), ...classObj.implements];
+				}
+
+				if (classObj.extends && classObj.extends.length > 0) {
+					existingClass.extends = [...(existingClass.extends || []), ...classObj.extends];
+				}
+			} else {
+				// 添加新类到映射表
+				classMap.set(className, classObj);
+				uniqueClasses.push(classObj);
+			}
+		}
+
+		// 更新代码文件中的类数组
+		codeFile.classes = uniqueClasses;
 	}
 }

@@ -2,7 +2,7 @@ import { ILanguageServiceProvider } from "./base/common/languages/languageServic
 import { StructurerProviderManager } from "./code-context/StructurerProviderManager";
 import { InstantiationService } from "./base/common/instantiation/instantiationService";
 import path from "path";
-import { CodeStructure, StructureType } from "./codemodel/CodeElement";
+import { CodeFile, CodeStructure, StructureType } from "./codemodel/CodeElement";
 import { promisify } from "util";
 import fs from "fs";
 
@@ -80,7 +80,8 @@ export class CodeAnalyzer {
 				const content = await this.fileScanner.readFileContent(file);
 				const structurer = this.structurerManager.getStructurer(language);
 				await structurer.init(this.serviceProvider);
-				const codeFile = await structurer.parseFile(content, file);
+				const codeFile: CodeFile = await structurer.parseFile(content, file);
+				console.log(codeFile)
 				totalProcessed++;
 
 				if (codeFile.classes) {
