@@ -16,7 +16,7 @@ export class CodeCollector {
 	public addCodeFile(filePath: string, codeFile: CodeFile): void {
 		if (!codeFile.classes) return;
 
-		const fileInterfaces = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
+		const fileInterfaces: CodeStructure[] = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
 		for (const intf of fileInterfaces) {
 			const key = intf.canonicalName || `${intf.package}.${intf.name}`;
 			if (!this.interfaceMap.has(key) ||

@@ -5,7 +5,9 @@
 - 构建项目级知识图谱：将解析出的代码实体（类、函数、变量等）及其关系（调用、继承、实现、引用等），并围绕领域模型构建知识图谱， 标注实体的语义和上下文信息。
 - ……
 
-run:
+### AutoDev Context Worker
+
+AutoDev Context Worker 是一个用于深度解析和分析代码的工具，旨在为开发者提供更好的上下文理解和智能化的代码处理能力。它可以帮助开发者更高效地理解和使用代码库。
 
 ```bash
 npx @autodev/context-worker@latest

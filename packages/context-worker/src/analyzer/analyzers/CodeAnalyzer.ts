@@ -152,10 +152,12 @@ export class CodeAnalyzer {
 			content += `接口: ${intf.interfaceName}\n`;
 			content += `文件: ${intf.interfaceFile}\n`;
 
+			const lang = inferLanguage(intf.interfaceFile) || ""
+
 			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
-			content += "=== 接口定义 ===\n\n";
+			content += "接口定义：\n\n```" + lang + "\n";
 			content += interfaceCode;
-			content += "\n\n";
+			content += "```\n\n";
 			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
 
 			for (const impl of intf.implementations) {
@@ -164,8 +166,9 @@ export class CodeAnalyzer {
 
 				if (impl.position) {
 					const implCode = await this.readCodeSection(impl.classFile, impl.position);
-					content += implCode;
-					content += "\n\n";
+					content += "```" + lang + "\n";
+					content += "" + implCode;
+					content += "\n```\n";
 				}
 			}
 
