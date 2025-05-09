@@ -106,7 +106,11 @@ class InterfaceAnalyzerApp {
 
 	private async uploadResult(result: CodeAnalysisResult, apiUrl: string): Promise<void> {
 		try {
-			const textResult = this.codeAnalyzer.convertToList(result);
+			const textResult = await this.codeAnalyzer.convertToList(result);
+
+			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
+			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
+
 			const response = await fetch(apiUrl, {
 				method: 'POST',
 				headers: {

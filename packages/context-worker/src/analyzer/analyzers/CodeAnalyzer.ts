@@ -273,21 +273,36 @@ export class CodeAnalyzer {
 		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
 
-	public convertToList(result: CodeAnalysisResult): { path: string; content: string }[] {
+	public async convertToList(result: CodeAnalysisResult): Promise<{ path: string; content: string }[]> {
 		const items: { path: string; content: string }[] = [];
 
-		// Interface Analysis
 		for (const intf of result.interfaceAnalysis.interfaces) {
-			if (intf.implementations.length === 0) continue; // Skip interfaces without implementations
+			if (intf.implementations.length === 0) continue; // 跳过没有实现的接口
 
 			let content = '';
 			content += `接口: ${intf.interfaceName}\n`;
-			content += `文件: ${intf.interfaceFile}\n\n`;
+			content += `文件: ${intf.interfaceFile}\n`;
+
+			const lang = inferLanguage(intf.interfaceFile) || "";
+
+			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
+			const escapedInterfaceCode = this.escapeCodeForMarkdown(interfaceCode);
+			content += "接口定义：\n\n```" + lang + "\n";
+			content += escapedInterfaceCode;
+			content += "```\n\n";
 			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
 
 			for (const impl of intf.implementations) {
 				content += `实现类: ${impl.className}\n`;
 				content += `文件: ${impl.classFile}\n\n`;
+
+				if (impl.position) {
+					const implCode = await this.readCodeSection(impl.classFile, impl.position);
+					const escapedImplCode = this.escapeCodeForMarkdown(implCode);
+					content += "```" + lang + "\n";
+					content += escapedImplCode;
+					content += "\n```\n";
+				}
 			}
 
 			items.push({
@@ -296,16 +311,34 @@ export class CodeAnalyzer {
 			});
 		}
 
-		// Extension Analysis
 		for (const ext of result.extensionAnalysis.extensions) {
 			let content = '';
 			content += `父类: ${ext.parentName}\n`;
 			content += `文件: ${ext.parentFile}\n\n`;
+
+			const lang = inferLanguage(ext.parentFile) || "";
+
+			if (ext.position) {
+				const parentCode = await this.readCodeSection(ext.parentFile, ext.position);
+				const escapedParentCode = this.escapeCodeForMarkdown(parentCode);
+				content += "父类定义：\n\n```" + lang + "\n";
+				content += escapedParentCode;
+				content += "```\n\n";
+			}
+
 			content += `=== 子类 (${ext.children.length}) ===\n\n`;
 
 			for (const child of ext.children) {
 				content += `子类: ${child.className}\n`;
 				content += `文件: ${child.classFile}\n\n`;
+
+				if (child.position) {
+					const childCode = await this.readCodeSection(child.classFile, child.position);
+					const escapedChildCode = this.escapeCodeForMarkdown(childCode);
+					content += "```" + lang + "\n";
+					content += escapedChildCode;
+					content += "\n```\n";
+				}
 			}
 
 			items.push({
@@ -316,24 +349,27 @@ export class CodeAnalyzer {
 
 		// Markdown Analysis
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
-			// Process each code block individually instead of grouping by file
 			for (const block of result.markdownAnalysis.codeBlocks) {
-				let content = `=== Code Block from ${block.filePath} ===\n\n`;
+				let content = '';
 
-				content += `Language: ${block.language}\n`;
+				content += `Source: ${block.filePath}\n`;
 				if (block.heading) {
 					content += `Chapter: ${block.heading}\n`;
 				}
-				content += `\n`;
+				content += `Language: ${block.language}\n\n`;
+				content += `Content：\n\n`;
 
 				if (block.context.before && block.context.before.trim()) {
-					content += block.context.before + "\n";
+					content += block.context.before;
 				}
+
+				const escapedBlockCode = this.escapeCodeForMarkdown(block.code);
 				content += "```" + block.language + "\n";
-				content += block.code;
+				content += escapedBlockCode;
 				content += "\n```\n\n";
+
 				if (block.context.after && block.context.after.trim()) {
-					content += block.context.after + "\n";
+					content += block.context.after;
 				}
 
 				// Create a unique path for each code block
@@ -350,5 +386,16 @@ export class CodeAnalyzer {
 
 		return items;
 	}
-}
 
+	/**
+	 * Escape code content for safe inclusion in Markdown code blocks
+	 */
+	private escapeCodeForMarkdown(code: string): string {
+		// If code contains triple backticks, use alternative approach
+		if (code.includes("```")) {
+			// Strategy: Replace each ` with \` to escape it
+			return code.replace(/`/g, "\\`");
+		}
+		return code;
+	}
+}
