@@ -7,41 +7,55 @@ export async function POST(request: Request) {
   try {
     const data = await request.json()
 
-    if (!data || !data.path || !data.content) {
+    if (!data || !Array.isArray(data)) {
       return NextResponse.json(
-        { error: 'Invalid data' },
+        { error: 'Invalid data format. Expected an array of analysis results' },
         { status: 400 }
       );
     }
 
-    // Store the data in the database using SQL
-    const result = await client.sql`
-      INSERT INTO "CodeAnalysis" (
-        id, 
-        path,
-        content,
-        "createdAt", 
-        "updatedAt"
-      ) VALUES (
-        gen_random_uuid(), 
-        ${data.path},
-        ${data.content},
-        NOW(), 
-        NOW()
-      ) RETURNING id
-    `;
+    // Validate each item in the array
+    for (const item of data) {
+      if (!item.path || !item.content) {
+        return NextResponse.json(
+          { error: 'Each item must contain path and content fields' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Store each item in the database
+    const results = [];
+    for (const item of data) {
+      const result = await client.sql`
+        INSERT INTO "CodeAnalysis" (
+          id, 
+          path,
+          content,
+          "createdAt", 
+          "updatedAt"
+        ) VALUES (
+          gen_random_uuid(), 
+          ${item.path},
+          ${item.content},
+          NOW(), 
+          NOW()
+        ) RETURNING id
+      `;
+      results.push(result.rows[0].id);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Code analysis result stored successfully',
-      id: result.rows[0].id
+      message: 'Code analysis results stored successfully',
+      ids: results
     });
   } catch (error) {
-    console.error('Error processing code analysis result:', error);
+    console.error('Error processing code analysis results:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to process code analysis result',
+        message: 'Failed to process code analysis results',
         error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
