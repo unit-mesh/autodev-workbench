@@ -1,6 +1,6 @@
-# AutoDev Work
+# AutoDev Context
 
-> AutoDev Work provides contextual intelligence to empower AI Copilots such as AutoDev.
+> AutoDev Context provides contextual intelligence to empower AI Copilots such as AutoDev.
 
 [![CI/CD Pipeline](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml)
 [![Deploy Next.js site to Pages](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml)
@@ -26,6 +26,8 @@ AutoDev Work provides a unified platform for development teams to:
 - **Documentation**: Maintain comprehensive documentation with AI-assisted content generation and management
 
 ## Usage
+
+### AutoDev Context Web
 
 ### AutoDev Context Worker
 
