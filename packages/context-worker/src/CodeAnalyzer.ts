@@ -154,6 +154,7 @@ export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
 	private structurerManager: StructurerProviderManager;
 	private fileScanner: FileSystemScanner;
+	private classHierarchyMap = new Map<string, { className: string, childInfo: any }[]>();
 
 	constructor(instantiationService: InstantiationService) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
@@ -503,7 +504,7 @@ export class CodeAnalyzer {
 		// 记录每个类继承的父类数量，用于分析多重继承
 		const classToParentsMap = new Map<string, Set<string>>();
 		// 记录继承层次结构
-		const classHierarchyMap = new Map<string, string[]>();
+		this.classHierarchyMap.clear();
 
 		for (const item of classes) {
 			const cls = item.class;
@@ -521,11 +522,14 @@ export class CodeAnalyzer {
 				}
 				classToParentsMap.get(childKey)!.add(classKey);
 
-				// 记录继承层次
-				if (!classHierarchyMap.has(classKey)) {
-					classHierarchyMap.set(classKey, []);
+				// 记录继承层次 - 改进存储格式，保存完整的子类信息
+				if (!this.classHierarchyMap.has(classKey)) {
+					this.classHierarchyMap.set(classKey, []);
 				}
-				classHierarchyMap.get(classKey)!.push(child.className);
+				this.classHierarchyMap.get(classKey)!.push({
+					className: child.className,
+					childInfo: child
+				});
 			});
 
 			// 只处理被继承的类
@@ -608,7 +612,7 @@ export class CodeAnalyzer {
 		});
 
 		// 分析继承层次
-		const hierarchyResult = this.analyzeInheritanceHierarchyData(classHierarchyMap, classMap);
+		const hierarchyResult = this.analyzeInheritanceHierarchyData(this.classHierarchyMap, classMap);
 
 		return {
 			extensions: extensionResults,
@@ -625,17 +629,17 @@ export class CodeAnalyzer {
 	}
 
 	// 修改为返回数据的版本
-	private analyzeInheritanceHierarchyData(hierarchyMap: Map<string, string[]>, classMap: Map<string, any>): InheritanceHierarchy {
+	private analyzeInheritanceHierarchyData(hierarchyMap: Map<string, { className: string, childInfo: any }[]>, classMap: Map<string, any>): InheritanceHierarchy {
 		// 查找根类（没有父类的类）
 		const allClasses = new Set<string>();
 		const allChildClasses = new Set<string>();
 
 		// 收集所有类和子类
-		for (const [parentClass, childClasses] of hierarchyMap.entries()) {
+		for (const [parentClass, childInfoArray] of hierarchyMap.entries()) {
 			allClasses.add(parentClass);
-			childClasses.forEach(child => {
-				allClasses.add(child);
-				allChildClasses.add(child);
+			childInfoArray.forEach(child => {
+				allClasses.add(child.className);
+				allChildClasses.add(child.className);
 			});
 		}
 
@@ -643,9 +647,9 @@ export class CodeAnalyzer {
 		const rootClasses = Array.from(allClasses).filter(cls => !allChildClasses.has(cls));
 
 		// 对于每个根类，计算最大继承深度
-		const classDepths = new Map<string, number>();
+		const classDepths = new Map<string, { depth: number, childInfo?: any }>();
 		for (const rootClass of rootClasses) {
-			this.calculateInheritanceDepth(rootClass, hierarchyMap, classDepths, 0);
+			this.calculateInheritanceDepthWithInfo(rootClass, hierarchyMap, classDepths, 0);
 		}
 
 		// 找出最大深度和相应的类
@@ -655,30 +659,46 @@ export class CodeAnalyzer {
 		};
 
 		if (classDepths.size > 0) {
-			const maxDepth = Math.max(...Array.from(classDepths.values()));
+			const maxDepth = Math.max(...Array.from(classDepths.values()).map(info => info.depth));
 			const classesWithMaxDepth = Array.from(classDepths.entries())
-				.filter(([_, depth]) => depth === maxDepth)
-				.map(([className, _]) => className);
+				.filter(([_, info]) => info.depth === maxDepth);
 
 			result.maxDepth = maxDepth;
 
-			classesWithMaxDepth.forEach(className => {
-				const classInfo = Array.from(classMap.values())
-					.find(info => info.class.name === className || info.class.canonicalName === className);
+			classesWithMaxDepth.forEach(([className, info]) => {
+				// 1. 首先尝试从子类信息中获取文件路径
+				if (info.childInfo && info.childInfo.classFile) {
+					result.deepestClasses.push({
+						className: className.includes('.') ? className.split('.').pop()! : className,
+						classFile: info.childInfo.classFile,
+						position: info.childInfo.class ? {
+							start: info.childInfo.class.start,
+							end: info.childInfo.class.end
+						} : undefined
+					});
+					return;
+				}
+				
+				// 2. 尝试从classMap中查找类信息 - 使用多种匹配策略
+				const classInfo = this.findClassInfoByName(className, classMap);
+				
 				if (classInfo) {
 					result.deepestClasses.push({
 						className: classInfo.class.name,
 						classFile: classInfo.file,
-						// 添加类的位置信息
 						position: {
 							start: classInfo.class.start,
 							end: classInfo.class.end
 						}
 					});
 				} else {
+					// 3. 如果都找不到，尝试提取包名和类名
+					const parts = className.split('.');
+					const simpleName = parts.length > 0 ? parts[parts.length - 1] : className;
+					
 					result.deepestClasses.push({
-						className: className,
-						classFile: ''
+						className: simpleName,
+						classFile: this.tryFindClassFile(simpleName, classMap) || ''
 					});
 				}
 			});
@@ -687,33 +707,88 @@ export class CodeAnalyzer {
 		return result;
 	}
 
-	// 递归计算继承深度 (保持不变)
-	private calculateInheritanceDepth(
+	// 改进的递归计算继承深度，保存子类信息
+	private calculateInheritanceDepthWithInfo(
 		className: string,
-		hierarchyMap: Map<string, string[]>,
-		depthMap: Map<string, number>,
+		hierarchyMap: Map<string, { className: string, childInfo: any }[]>,
+		depthMap: Map<string, { depth: number, childInfo?: any }>,
 		currentDepth: number
 	): number {
 		// 如果已经计算过这个类的深度，直接返回
 		if (depthMap.has(className)) {
-			return depthMap.get(className)!;
+			return depthMap.get(className)!.depth;
 		}
 
 		const children = hierarchyMap.get(className) || [];
 		if (children.length === 0) {
 			// 叶子节点
-			depthMap.set(className, currentDepth);
+			depthMap.set(className, { depth: currentDepth });
 			return currentDepth;
 		}
 
 		// 递归计算所有子类的深度，并返回最大值
 		let maxChildDepth = currentDepth;
+		let childWithMaxDepth;
+		
 		for (const child of children) {
-			const childDepth = this.calculateInheritanceDepth(child, hierarchyMap, depthMap, currentDepth + 1);
-			maxChildDepth = Math.max(maxChildDepth, childDepth);
+			const childDepth = this.calculateInheritanceDepthWithInfo(
+				child.className, 
+				hierarchyMap, 
+				depthMap, 
+				currentDepth + 1
+			);
+			
+			if (childDepth > maxChildDepth) {
+				maxChildDepth = childDepth;
+				childWithMaxDepth = child.childInfo;
+			}
 		}
 
-		depthMap.set(className, maxChildDepth);
+		depthMap.set(className, { 
+			depth: maxChildDepth,
+			childInfo: childWithMaxDepth
+		});
 		return maxChildDepth;
+	}
+	
+	// 辅助方法：通过类名查找类信息
+	private findClassInfoByName(className: string, classMap: Map<string, any>): any {
+		// 直接使用类名作为键查找
+		if (classMap.has(className)) {
+			return classMap.get(className);
+		}
+		
+		// 尝试提取简单类名并查找
+		const simpleName = className.includes('.') ? className.split('.').pop()! : className;
+		
+		// 查找类名匹配的所有类
+		for (const [key, value] of classMap.entries()) {
+			// 检查类名完全匹配
+			if (value.class.name === simpleName) {
+				return value;
+			}
+			
+			// 检查规范名称匹配
+			if (value.class.canonicalName === className) {
+				return value;
+			}
+			
+			// 检查键是否以类名结尾
+			if (key.endsWith(`.${simpleName}`)) {
+				return value;
+			}
+		}
+		
+		return null;
+	}
+	
+	// 辅助方法：尝试查找类文件
+	private tryFindClassFile(className: string, classMap: Map<string, any>): string | null {
+		for (const [_, value] of classMap.entries()) {
+			if (value.class.name === className) {
+				return value.file;
+			}
+		}
+		return null;
 	}
 }
