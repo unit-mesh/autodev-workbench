@@ -9,6 +9,7 @@ import { StructureType } from "./codemodel/CodeElement";
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
+import inquirer from 'inquirer';
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -20,7 +21,6 @@ providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
 providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
 providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
 
-// 获取文件扩展名对应的语言
 function getLanguageFromExt(ext: string): string | null {
 	switch (ext.toLowerCase()) {
 		case '.java':
@@ -70,20 +70,52 @@ function parseArgs(): { dirPath: string } {
 	return { dirPath };
 }
 
+async function getInputFromUser(): Promise<{ dirPath: string }> {
+	const answers = await inquirer.prompt([
+		{
+			type: 'input',
+			name: 'dirPath',
+			message: '请输入要扫描的目录路径:',
+			default: process.cwd(),
+			validate: (input) => {
+				const fullPath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
+				if (fs.existsSync(fullPath)) {
+					return true;
+				}
+				return '请输入有效的目录路径';
+			}
+		}
+	]);
+
+	// 转换为绝对路径
+	const dirPath = path.isAbsolute(answers.dirPath)
+		? answers.dirPath
+		: path.resolve(process.cwd(), answers.dirPath);
+
+	return { dirPath };
+}
+
 async function main(dirPath?: string) {
 	const serviceProvider = instantiationService.get(ILanguageServiceProvider);
 	await serviceProvider.ready()
-	console.log("Language service is ready");
-
 	const structurerManager = StructurerProviderManager.getInstance();
 
-	// 使用提供的路径或者命令行参数中的路径
-	const targetDir = dirPath || parseArgs().dirPath;
-	console.log(`正在扫描目录: ${targetDir}`);
+	let targetDir: string;
+	if (dirPath) {
+		targetDir = dirPath;
+	} else {
+		const args = parseArgs();
+		if (args.dirPath !== process.cwd()) {
+			targetDir = args.dirPath;
+		} else {
+			const input = await getInputFromUser();
+			targetDir = input.dirPath;
+		}
+	}
 
+	console.log(`正在扫描目录: ${targetDir}`);
 	const files = await scanDirectory(targetDir);
 
-	// 使用Map存储接口，按canonicalName去重
 	const interfaceMap = new Map();
 	let totalProcessed = 0;
 
@@ -103,10 +135,7 @@ async function main(dirPath?: string) {
 			if (codeFile.classes) {
 				const fileInterfaces = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
 				for (const intf of fileInterfaces) {
-					// 使用canonicalName作为唯一标识，如果没有则使用包名+接口名
 					const key = intf.canonicalName || `${intf.package}.${intf.name}`;
-
-					// 如果接口已存在，且新接口的方法更多，则替换
 					if (!interfaceMap.has(key) ||
 					    (intf.methods && interfaceMap.get(key).interface.methods &&
 						 intf.methods.length > interfaceMap.get(key).interface.methods.length)) {
@@ -124,7 +153,6 @@ async function main(dirPath?: string) {
 
 	const uniqueInterfaces = Array.from(interfaceMap.values());
 
-	// 按包名和接口名排序
 	uniqueInterfaces.sort((a, b) => {
 		const packageCompare = (a.interface.package || '').localeCompare(b.interface.package || '');
 		if (packageCompare !== 0) return packageCompare;
@@ -143,7 +171,6 @@ async function main(dirPath?: string) {
 		console.log(`- ${intf.name} (${methodCount} 个方法, 位于 ${item.file})`);
 	});
 
-	// 统计信息
 	console.log(`\n接口统计:`);
 	console.log(`- 总接口数: ${uniqueInterfaces.length}`);
 	console.log(`- 总方法数: ${uniqueInterfaces.reduce((sum, item) => 
