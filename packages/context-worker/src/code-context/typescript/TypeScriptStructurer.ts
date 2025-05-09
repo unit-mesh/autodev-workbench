@@ -57,6 +57,20 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 						codeFile.classes.push(classObj);
 					}
 					break;
+				case 'extend-name':
+					// 将扩展的类名添加到当前类的extends数组中
+					if (codeFile.classes.length > 0) {
+						let currentClass = codeFile.classes[codeFile.classes.length - 1];
+						currentClass.extends.push(text);
+					}
+					break;
+				case 'implements-name':
+					// 将实现的接口名添加到当前类的implements数组中
+					if (codeFile.classes.length > 0) {
+						let currentClass = codeFile.classes[codeFile.classes.length - 1];
+						currentClass.implements.push(text);
+					}
+					break;
 				case 'class-method-name':
 					classObj.methods.push(this.createFunction(capture.node, text));
 					break;

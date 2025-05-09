@@ -83,12 +83,30 @@ export class TypeScriptProfile implements LanguageProfile {
 
     (class_declaration
       name: (type_identifier) @class-name
+      (class_heritage 
+        (extends_clause (identifier) @extend-name)?
+        (implements_clause (type_identifier) @implements-name)?
+      )?
       body: (class_body
         (method_definition
           name: (property_identifier) @class-method-name
           parameters: (formal_parameters (required_parameter)? @parameter)
         )
-      )
+      )?
+    )
+
+    (abstract_class_declaration
+      name: (type_identifier) @class-name
+      (class_heritage 
+        (extends_clause (identifier) @extend-name)?
+        (implements_clause (type_identifier) @implements-name)?
+      )?
+      body: (class_body
+        (method_definition
+          name: (property_identifier) @class-method-name
+          parameters: (formal_parameters (required_parameter)? @parameter)
+        )
+      )?
     )
 
 	  (interface_declaration
