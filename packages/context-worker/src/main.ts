@@ -93,7 +93,8 @@ class InterfaceAnalyzerApp {
 		}
 
 		console.log(`正在扫描目录: ${targetDir}`);
-		await this.codeAnalyzer.analyzeDirectory(targetDir);
+		let result = await this.codeAnalyzer.analyzeDirectory(targetDir);
+		console.log(JSON.stringify(result, null, 2));
 	}
 }
 

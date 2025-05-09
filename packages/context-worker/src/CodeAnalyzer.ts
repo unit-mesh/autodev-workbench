@@ -32,6 +32,124 @@ class FileSystemScanner {
 	}
 }
 
+// 修改接口定义以包含位置信息
+export interface InterfaceImplementation {
+	interfaceName: string;
+	interfaceFile: string;
+	methodCount: number;
+	package: string;
+	// 添加位置信息
+	position: {
+		start: { row: number, column: number },
+		end: { row: number, column: number }
+	};
+	implementations: Array<{
+		className: string;
+		classFile: string;
+		// 添加实现类的位置信息
+		position?: {
+			start: { row: number, column: number },
+			end: { row: number, column: number }
+		};
+	}>;
+}
+
+export interface MultiImplementation {
+	className: string;
+	classFile: string;
+	// 添加类的位置信息
+	position?: {
+		start: { row: number, column: number },
+		end: { row: number, column: number }
+	};
+	interfaceCount: number;
+	interfaces: Array<{
+		interfaceName: string;
+		interfaceFile: string;
+		// 添加接口的位置信息
+		position?: {
+			start: { row: number, column: number },
+			end: { row: number, column: number }
+		};
+	}>;
+}
+
+export interface ClassExtension {
+	parentName: string;
+	parentFile: string;
+	package: string;
+	// 添加父类的位置信息
+	position: {
+		start: { row: number, column: number },
+		end: { row: number, column: number }
+	};
+	children: Array<{
+		className: string;
+		classFile: string;
+		// 添加子类的位置信息
+		position?: {
+			start: { row: number, column: number },
+			end: { row: number, column: number }
+		};
+	}>;
+}
+
+export interface MultiExtension {
+	className: string;
+	classFile: string;
+	// 添加类的位置信息
+	position?: {
+		start: { row: number, column: number },
+		end: { row: number, column: number }
+	};
+	parentCount: number;
+	parents: Array<{
+		parentName: string;
+		parentFile: string;
+		// 添加父类的位置信息
+		position?: {
+			start: { row: number, column: number },
+			end: { row: number, column: number }
+		};
+	}>;
+}
+
+export interface InheritanceHierarchy {
+	maxDepth: number;
+	deepestClasses: Array<{
+		className: string;
+		classFile: string;
+		// 添加类的位置信息
+		position?: {
+			start: { row: number, column: number },
+			end: { row: number, column: number }
+		};
+	}>;
+}
+
+export interface CodeAnalysisResult {
+	interfaceAnalysis: {
+		interfaces: InterfaceImplementation[];
+		multiImplementers: MultiImplementation[];
+		stats: {
+			totalInterfaces: number;
+			implementedInterfaces: number;
+			unimplementedInterfaces: number;
+			multiImplementerCount: number;
+		};
+	};
+	extensionAnalysis: {
+		extensions: ClassExtension[];
+		multiExtensions: MultiExtension[];
+		hierarchy: InheritanceHierarchy;
+		stats: {
+			extendedClassCount: number;
+			totalExtensionRelations: number;
+			multiExtendedClassCount: number;
+		};
+	};
+}
+
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
 	private structurerManager: StructurerProviderManager;
@@ -62,7 +180,7 @@ export class CodeAnalyzer {
 		}
 	}
 
-	public async analyzeDirectory(dirPath: string): Promise<void> {
+	public async analyzeDirectory(dirPath: string): Promise<CodeAnalysisResult> {
 		const files = await this.fileScanner.scanDirectory(dirPath);
 		const interfaceMap = new Map();
 		const classMap = new Map();
@@ -82,7 +200,6 @@ export class CodeAnalyzer {
 				const structurer = this.structurerManager.getStructurer(language);
 				await structurer.init(this.serviceProvider);
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
-				console.log(codeFile)
 				totalProcessed++;
 
 				if (codeFile.classes) {
@@ -118,7 +235,7 @@ export class CodeAnalyzer {
 		// Second pass: find interfaces that are implemented by classes and classes that are extended
 		for (const [className, classInfo] of classMap) {
 			const cls = classInfo.class;
-			
+
 			// 处理接口实现关系
 			if (cls.implements && cls.implements.length > 0) {
 				for (const interfaceName of cls.implements) {
@@ -137,13 +254,13 @@ export class CodeAnalyzer {
 					}
 				}
 				}
-			
+
 			// 处理类继承关系
 			if (cls.extends && cls.extends.length > 0) {
 				for (const parentClassName of cls.extends) {
 					// 尝试不同方式匹配父类
 					const parentClassKey = this.findClassKey(parentClassName, cls.package, classMap);
-					
+
 					if (parentClassKey && classMap.has(parentClassKey)) {
 						if (!extensionMap.has(parentClassKey)) {
 							extensionMap.set(parentClassKey, []);
@@ -158,8 +275,14 @@ export class CodeAnalyzer {
 			}
 		}
 
-		this.displayImplementationResults(interfaceMap, implementationMap);
-		this.displayExtensionResults(classMap, extensionMap); // 新增：显示继承关系
+		// 修改返回分析结果而不是直接显示
+		const interfaceResults = this.getImplementationResults(interfaceMap, implementationMap);
+		const extensionResults = this.getExtensionResults(classMap, extensionMap);
+
+		return {
+			interfaceAnalysis: interfaceResults,
+			extensionAnalysis: extensionResults
+		};
 	}
 
 	private findInterfaceKey(interfaceName: string, classPackage: string, interfaceMap: Map<string, any>): string | null {
@@ -183,7 +306,7 @@ export class CodeAnalyzer {
 
 		return null;
 	}
-	
+
 	// 新增：查找父类的方法
 	private findClassKey(parentClassName: string, classPackage: string, classMap: Map<string, any>): string | null {
 		// 尝试直接使用全名查找
@@ -207,9 +330,17 @@ export class CodeAnalyzer {
 		return null;
 	}
 
-	private displayImplementationResults(interfaceMap: Map<string, any>, implementationMap: Map<string, any[]>): void {
-		console.log(`\n接口实现关系分析:`);
-
+	// 重命名并修改以返回数据结构
+	private getImplementationResults(interfaceMap: Map<string, any>, implementationMap: Map<string, any[]>): {
+		interfaces: InterfaceImplementation[];
+		multiImplementers: MultiImplementation[];
+		stats: {
+			totalInterfaces: number;
+			implementedInterfaces: number;
+			unimplementedInterfaces: number;
+			multiImplementerCount: number;
+		};
+	} {
 		const interfaces = Array.from(interfaceMap.values());
 		interfaces.sort((a, b) => {
 			const packageCompare = (a.interface.package || '').localeCompare(b.interface.package || '');
@@ -217,8 +348,8 @@ export class CodeAnalyzer {
 			return a.interface.name.localeCompare(b.interface.name);
 		});
 
-		let currentPackage = '';
 		let implementedCount = 0;
+		const interfaceResults: InterfaceImplementation[] = [];
 		// 记录每个类实现的接口数量，用于分析多接口实现
 		const classToInterfacesMap = new Map<string, Set<string>>();
 
@@ -226,7 +357,7 @@ export class CodeAnalyzer {
 			const intf = item.interface;
 			const interfaceKey = intf.canonicalName || `${intf.package}.${intf.name}`;
 			const implementations = implementationMap.get(interfaceKey) || [];
-			
+
 			// 对实现类进行去重处理
 			const uniqueImplementations = this.deduplicateImplementations(implementations);
 
@@ -239,77 +370,127 @@ export class CodeAnalyzer {
 				classToInterfacesMap.get(classKey)!.add(interfaceKey);
 			});
 
-			if (intf.package !== currentPackage) {
-				currentPackage = intf.package || '';
-				console.log(`\n包: ${currentPackage || '(默认包)'}`);
-			}
-
 			const methodCount = intf.methods ? intf.methods.length : 0;
-			console.log(`- 接口: ${intf.name} (${methodCount} 个方法, 位于 ${item.file})`);
+
+			// 创建接口实现结果对象
+			const interfaceResult: InterfaceImplementation = {
+				interfaceName: intf.name,
+				interfaceFile: item.file,
+				methodCount: methodCount,
+				package: intf.package || '',
+				// 添加接口位置信息
+				position: {
+					start: intf.start,
+					end: intf.end
+				},
+				implementations: []
+			};
 
 			if (uniqueImplementations.length > 0) {
 				implementedCount++;
-				console.log(`  实现类 (${uniqueImplementations.length}):`);
-				uniqueImplementations.forEach(impl => {
-					console.log(`  - ${impl.className} (位于 ${impl.classFile})`);
-				});
-			} else {
-				console.log(`  无实现类`);
+				interfaceResult.implementations = uniqueImplementations.map(impl => ({
+					className: impl.className,
+					classFile: impl.classFile,
+					// 添加实现类位置信息
+					position: impl.class ? {
+						start: impl.class.start,
+						end: impl.class.end
+					} : undefined
+				}));
 			}
+
+			interfaceResults.push(interfaceResult);
 		});
 
-		// 显示多接口实现情况
-		console.log(`\n多接口实现分析:`);
-		let multiImplCount = 0;
-		
+		// 分析多接口实现情况
+		const multiImplementers: MultiImplementation[] = [];
+
 		// 将类按实现的接口数量排序
 		const sortedClasses = Array.from(classToInterfacesMap.entries())
 			.filter(([_, interfaces]) => interfaces.size > 1)
 			.sort((a, b) => b[1].size - a[1].size);
-		
-		sortedClasses.forEach(([classKey, interfaces]) => {
-			if (interfaces.size > 1) {
-				multiImplCount++;
+
+		sortedClasses.forEach(([classKey, interfaceSet]) => {
+			if (interfaceSet.size > 1) {
 				const [className, classFile] = classKey.split(':');
-				console.log(`- 类: ${className} (位于 ${classFile}) 实现了 ${interfaces.size} 个接口:`);
-				
-				// 显示该类实现的所有接口
-				Array.from(interfaces).forEach(interfaceKey => {
+
+				// 查找类对象以获取位置信息
+				const classObj = Array.from(classMap.values())
+					.find(item => item.class.name === className || 
+						   (item.class.canonicalName && item.class.canonicalName === className));
+
+				// 创建多接口实现结果对象
+				const multiImplementer: MultiImplementation = {
+					className: className,
+					classFile: classFile,
+					// 添加类的位置信息
+					position: classObj ? {
+						start: classObj.class.start,
+						end: classObj.class.end
+					} : undefined,
+					interfaceCount: interfaceSet.size,
+					interfaces: []
+				};
+
+				// 添加接口信息
+				Array.from(interfaceSet).forEach(interfaceKey => {
 					const interfaceInfo = interfaceMap.get(interfaceKey);
 					if (interfaceInfo) {
-						console.log(`  - ${interfaceInfo.interface.name} (位于 ${interfaceInfo.file})`);
+						multiImplementer.interfaces.push({
+							interfaceName: interfaceInfo.interface.name,
+							interfaceFile: interfaceInfo.file,
+							// 添加接口位置信息
+							position: {
+								start: interfaceInfo.interface.start,
+								end: interfaceInfo.interface.end
+							}
+						});
 					}
 				});
+
+				multiImplementers.push(multiImplementer);
 			}
 		});
 
-		console.log(`\n统计信息:`);
-		console.log(`- 总接口数: ${interfaces.length}`);
-		console.log(`- 有实现的接口数: ${implementedCount}`);
-		console.log(`- 无实现的接口数: ${interfaces.length - implementedCount}`);
-		console.log(`- 实现多个接口的类数: ${multiImplCount}`);
+		return {
+			interfaces: interfaceResults,
+			multiImplementers: multiImplementers,
+			stats: {
+				totalInterfaces: interfaces.length,
+				implementedInterfaces: implementedCount,
+				unimplementedInterfaces: interfaces.length - implementedCount,
+				multiImplementerCount: multiImplementers.length
+			}
+		};
 	}
-	
+
 	// 辅助方法：去除重复的实现类
 	private deduplicateImplementations(implementations: any[]): any[] {
 		const uniqueMap = new Map<string, any>();
-		
+
 		for (const impl of implementations) {
 			// 使用实现类名和文件路径的组合作为唯一标识
 			const key = `${impl.className}:${impl.classFile}`;
-			
+
 			if (!uniqueMap.has(key)) {
 				uniqueMap.set(key, impl);
 			}
 		}
-		
+
 		return Array.from(uniqueMap.values());
 	}
-	
-	// 同样为 displayExtensionResults 方法也添加去重逻辑
-	private displayExtensionResults(classMap: Map<string, any>, extensionMap: Map<string, any[]>): void {
-		console.log(`\n类继承关系分析:`);
 
+	// 重命名并修改以返回数据结构
+	private getExtensionResults(classMap: Map<string, any>, extensionMap: Map<string, any[]>): {
+		extensions: ClassExtension[];
+		multiExtensions: MultiExtension[];
+		hierarchy: InheritanceHierarchy;
+		stats: {
+			extendedClassCount: number;
+			totalExtensionRelations: number;
+			multiExtendedClassCount: number;
+		};
+	} {
 		const classes = Array.from(classMap.values());
 		classes.sort((a, b) => {
 			const packageCompare = (a.class.package || '').localeCompare(b.class.package || '');
@@ -317,8 +498,8 @@ export class CodeAnalyzer {
 			return a.class.name.localeCompare(b.class.name);
 		});
 
-		let currentPackage = '';
 		let extendedCount = 0;
+		const extensionResults: ClassExtension[] = [];
 		// 记录每个类继承的父类数量，用于分析多重继承
 		const classToParentsMap = new Map<string, Set<string>>();
 		// 记录继承层次结构
@@ -328,7 +509,7 @@ export class CodeAnalyzer {
 			const cls = item.class;
 			const classKey = cls.canonicalName || `${cls.package}.${cls.name}`;
 			const childClasses = extensionMap.get(classKey) || [];
-			
+
 			// 对子类进行去重处理
 			const uniqueChildClasses = this.deduplicateImplementations(childClasses);
 
@@ -339,7 +520,7 @@ export class CodeAnalyzer {
 					classToParentsMap.set(childKey, new Set());
 				}
 				classToParentsMap.get(childKey)!.add(classKey);
-				
+
 				// 记录继承层次
 				if (!classHierarchyMap.has(classKey)) {
 					classHierarchyMap.set(classKey, []);
@@ -347,68 +528,108 @@ export class CodeAnalyzer {
 				classHierarchyMap.get(classKey)!.push(child.className);
 			});
 
-			// 只显示被继承的类
+			// 只处理被继承的类
 			if (uniqueChildClasses.length === 0) continue;
 
-			if (cls.package !== currentPackage) {
-				currentPackage = cls.package || '';
-				console.log(`\n包: ${currentPackage || '(默认包)'}`);
-			}
-
 			extendedCount++;
-			console.log(`- 父类: ${cls.name} (位于 ${item.file})`);
-			console.log(`  子类 (${uniqueChildClasses.length}):`);
-			
-			uniqueChildClasses.forEach(child => {
-				console.log(`  - ${child.className} (位于 ${child.classFile})`);
-			});
+
+			// 创建类继承结果对象
+			const extensionResult: ClassExtension = {
+				parentName: cls.name,
+				parentFile: item.file,
+				package: cls.package || '',
+				// 添加父类位置信息
+				position: {
+					start: cls.start,
+					end: cls.end
+				},
+				children: uniqueChildClasses.map(child => ({
+					className: child.className,
+					classFile: child.classFile,
+					// 添加子类位置信息
+					position: child.class ? {
+						start: child.class.start,
+						end: child.class.end
+					} : undefined
+				}))
+			};
+
+			extensionResults.push(extensionResult);
 		}
 
-		// 显示多重继承情况（如果有的话）
-		console.log(`\n多重继承分析:`);
-		let multiExtendCount = 0;
-		
+		// 分析多重继承情况
+		const multiExtensions: MultiExtension[] = [];
+
 		// 将类按继承的父类数量排序
 		const sortedClasses = Array.from(classToParentsMap.entries())
 			.filter(([_, parents]) => parents.size > 1)
 			.sort((a, b) => b[1].size - a[1].size);
-		
+
 		sortedClasses.forEach(([classKey, parents]) => {
 			if (parents.size > 1) {
-				multiExtendCount++;
 				const [className, classFile] = classKey.split(':');
-				console.log(`- 类: ${className} (位于 ${classFile}) 继承自 ${parents.size} 个父类:`);
-				
-				// 显示该类的所有父类
+
+				// 查找类对象以获取位置信息
+				const classObj = Array.from(classMap.values())
+					.find(item => item.class.name === className || 
+						   (item.class.canonicalName && item.class.canonicalName === className));
+
+				// 创建多重继承结果对象
+				const multiExtension: MultiExtension = {
+					className: className,
+					classFile: classFile,
+					// 添加类的位置信息
+					position: classObj ? {
+						start: classObj.class.start,
+						end: classObj.class.end
+					} : undefined,
+					parentCount: parents.size,
+					parents: []
+				};
+
+				// 添加父类信息，包括位置
 				Array.from(parents).forEach(parentKey => {
 					const parentInfo = classMap.get(parentKey);
 					if (parentInfo) {
-						console.log(`  - ${parentInfo.class.name} (位于 ${parentInfo.file})`);
+						multiExtension.parents.push({
+							parentName: parentInfo.class.name,
+							parentFile: parentInfo.file,
+							// 添加父类位置信息
+							position: {
+								start: parentInfo.class.start,
+								end: parentInfo.class.end
+							}
+						});
 					}
 				});
+
+				multiExtensions.push(multiExtension);
 			}
 		});
 
-		// 显示继承层次最深的类
-		if (classHierarchyMap.size > 0) {
-			console.log(`\n继承层次分析:`);
-			this.analyzeInheritanceHierarchy(classHierarchyMap, classMap);
-		}
+		// 分析继承层次
+		const hierarchyResult = this.analyzeInheritanceHierarchyData(classHierarchyMap, classMap);
 
-		console.log(`\n继承统计信息:`);
-		console.log(`- 被继承的类数: ${extendedCount}`);
-		console.log(`- 继承关系总数: ${Array.from(extensionMap.values())
-			.map(children => this.deduplicateImplementations(children).length)
-			.reduce((sum, count) => sum + count, 0)}`);
-		console.log(`- 多重继承的类数: ${multiExtendCount}`);
+		return {
+			extensions: extensionResults,
+			multiExtensions: multiExtensions,
+			hierarchy: hierarchyResult,
+			stats: {
+				extendedClassCount: extendedCount,
+				totalExtensionRelations: Array.from(extensionMap.values())
+					.map(children => this.deduplicateImplementations(children).length)
+					.reduce((sum, count) => sum + count, 0),
+				multiExtendedClassCount: multiExtensions.length
+			}
+		};
 	}
-	
-	// 分析并显示继承层次结构
-	private analyzeInheritanceHierarchy(hierarchyMap: Map<string, string[]>, classMap: Map<string, any>): void {
+
+	// 修改为返回数据的版本
+	private analyzeInheritanceHierarchyData(hierarchyMap: Map<string, string[]>, classMap: Map<string, any>): InheritanceHierarchy {
 		// 查找根类（没有父类的类）
 		const allClasses = new Set<string>();
 		const allChildClasses = new Set<string>();
-		
+
 		// 收集所有类和子类
 		for (const [parentClass, childClasses] of hierarchyMap.entries()) {
 			allClasses.add(parentClass);
@@ -417,91 +638,82 @@ export class CodeAnalyzer {
 				allChildClasses.add(child);
 			});
 		}
-		
+
 		// 找出根类（不是任何类的子类）
 		const rootClasses = Array.from(allClasses).filter(cls => !allChildClasses.has(cls));
-		
+
 		// 对于每个根类，计算最大继承深度
 		const classDepths = new Map<string, number>();
 		for (const rootClass of rootClasses) {
 			this.calculateInheritanceDepth(rootClass, hierarchyMap, classDepths, 0);
 		}
-		
-		// 找出最大深度并显示
+
+		// 找出最大深度和相应的类
+		const result: InheritanceHierarchy = {
+			maxDepth: 0,
+			deepestClasses: []
+		};
+
 		if (classDepths.size > 0) {
 			const maxDepth = Math.max(...Array.from(classDepths.values()));
 			const classesWithMaxDepth = Array.from(classDepths.entries())
 				.filter(([_, depth]) => depth === maxDepth)
 				.map(([className, _]) => className);
-			
-			console.log(`- 最大继承深度: ${maxDepth}`);
-			console.log(`- 继承层次最深的类:`);
+
+			result.maxDepth = maxDepth;
+
 			classesWithMaxDepth.forEach(className => {
 				const classInfo = Array.from(classMap.values())
 					.find(info => info.class.name === className || info.class.canonicalName === className);
 				if (classInfo) {
-					console.log(`  - ${classInfo.class.name} (位于 ${classInfo.file})`);
+					result.deepestClasses.push({
+						className: classInfo.class.name,
+						classFile: classInfo.file,
+						// 添加类的位置信息
+						position: {
+							start: classInfo.class.start,
+							end: classInfo.class.end
+						}
+					});
 				} else {
-					console.log(`  - ${className}`);
+					result.deepestClasses.push({
+						className: className,
+						classFile: ''
+					});
 				}
 			});
 		}
+
+		return result;
 	}
-	
-	// 递归计算继承深度
+
+	// 递归计算继承深度 (保持不变)
 	private calculateInheritanceDepth(
-		className: string, 
-		hierarchyMap: Map<string, string[]>, 
-		depthMap: Map<string, number>, 
+		className: string,
+		hierarchyMap: Map<string, string[]>,
+		depthMap: Map<string, number>,
 		currentDepth: number
 	): number {
 		// 如果已经计算过这个类的深度，直接返回
 		if (depthMap.has(className)) {
 			return depthMap.get(className)!;
 		}
-		
+
 		const children = hierarchyMap.get(className) || [];
 		if (children.length === 0) {
 			// 叶子节点
 			depthMap.set(className, currentDepth);
 			return currentDepth;
 		}
-		
+
 		// 递归计算所有子类的深度，并返回最大值
 		let maxChildDepth = currentDepth;
 		for (const child of children) {
 			const childDepth = this.calculateInheritanceDepth(child, hierarchyMap, depthMap, currentDepth + 1);
 			maxChildDepth = Math.max(maxChildDepth, childDepth);
 		}
-		
+
 		depthMap.set(className, maxChildDepth);
 		return maxChildDepth;
-	}
-
-	private displayResults(interfaceMap: Map<string, any>): void {
-		const uniqueInterfaces = Array.from(interfaceMap.values());
-
-		uniqueInterfaces.sort((a, b) => {
-			const packageCompare = (a.interface.package || '').localeCompare(b.interface.package || '');
-			if (packageCompare !== 0) return packageCompare;
-			return a.interface.name.localeCompare(b.interface.name);
-		});
-
-		let currentPackage = '';
-		uniqueInterfaces.forEach(item => {
-			const intf = item.interface;
-			if (intf.package !== currentPackage) {
-				currentPackage = intf.package || '';
-				console.log(`\n包: ${currentPackage || '(默认包)'}`);
-			}
-
-			const methodCount = intf.methods ? intf.methods.length : 0;
-			console.log(`- ${intf.name} (${methodCount} 个方法, 位于 ${item.file})`);
-		});
-
-		console.log(`\n接口统计:`);
-		console.log(`- 总接口数: ${uniqueInterfaces.length}`);
-		console.log(`- 总方法数: ${uniqueInterfaces.reduce((sum, item) =>
-			sum + (item.interface.methods ? item.interface.methods.length : 0), 0)}`);
 	}
 }
