@@ -6,6 +6,14 @@ import { CodeFile, CodeStructure, StructureType } from "./codemodel/CodeElement"
 import { promisify } from "util";
 import fs from "fs";
 import { inferLanguage } from "./base/common/languages/languages";
+import {
+	ClassExtension,
+	CodeAnalysisResult,
+	InheritanceHierarchy,
+	InterfaceImplementation,
+	MultiExtension,
+	MultiImplementation
+} from "./CodeAnalysisResult";
 
 const readdir = promisify(fs.readdir);
 const readFile = promisify(fs.readFile);
@@ -31,124 +39,6 @@ class FileSystemScanner {
 	public async readFileContent(filePath: string): Promise<string> {
 		return readFile(filePath, 'utf-8');
 	}
-}
-
-// 修改接口定义以包含位置信息
-export interface InterfaceImplementation {
-	interfaceName: string;
-	interfaceFile: string;
-	methodCount: number;
-	package: string;
-	// 添加位置信息
-	position: {
-		start: { row: number, column: number },
-		end: { row: number, column: number }
-	};
-	implementations: Array<{
-		className: string;
-		classFile: string;
-		// 添加实现类的位置信息
-		position?: {
-			start: { row: number, column: number },
-			end: { row: number, column: number }
-		};
-	}>;
-}
-
-export interface MultiImplementation {
-	className: string;
-	classFile: string;
-	// 添加类的位置信息
-	position?: {
-		start: { row: number, column: number },
-		end: { row: number, column: number }
-	};
-	interfaceCount: number;
-	interfaces: Array<{
-		interfaceName: string;
-		interfaceFile: string;
-		// 添加接口的位置信息
-		position?: {
-			start: { row: number, column: number },
-			end: { row: number, column: number }
-		};
-	}>;
-}
-
-export interface ClassExtension {
-	parentName: string;
-	parentFile: string;
-	package: string;
-	// 添加父类的位置信息
-	position: {
-		start: { row: number, column: number },
-		end: { row: number, column: number }
-	};
-	children: Array<{
-		className: string;
-		classFile: string;
-		// 添加子类的位置信息
-		position?: {
-			start: { row: number, column: number },
-			end: { row: number, column: number }
-		};
-	}>;
-}
-
-export interface MultiExtension {
-	className: string;
-	classFile: string;
-	// 添加类的位置信息
-	position?: {
-		start: { row: number, column: number },
-		end: { row: number, column: number }
-	};
-	parentCount: number;
-	parents: Array<{
-		parentName: string;
-		parentFile: string;
-		// 添加父类的位置信息
-		position?: {
-			start: { row: number, column: number },
-			end: { row: number, column: number }
-		};
-	}>;
-}
-
-export interface InheritanceHierarchy {
-	maxDepth: number;
-	deepestClasses: Array<{
-		className: string;
-		classFile: string;
-		// 添加类的位置信息
-		position?: {
-			start: { row: number, column: number },
-			end: { row: number, column: number }
-		};
-	}>;
-}
-
-export interface CodeAnalysisResult {
-	interfaceAnalysis: {
-		interfaces: InterfaceImplementation[];
-		multiImplementers: MultiImplementation[];
-		stats: {
-			totalInterfaces: number;
-			implementedInterfaces: number;
-			unimplementedInterfaces: number;
-			multiImplementerCount: number;
-		};
-	};
-	extensionAnalysis: {
-		extensions: ClassExtension[];
-		multiExtensions: MultiExtension[];
-		hierarchy: InheritanceHierarchy;
-		stats: {
-			extendedClassCount: number;
-			totalExtensionRelations: number;
-			multiExtendedClassCount: number;
-		};
-	};
 }
 
 export class CodeAnalyzer {
