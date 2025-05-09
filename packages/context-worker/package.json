@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "autodev-work": "./dist/autodev-work.js"
+    "autodev": "./dist/autodev-context-worker.js"
   },
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "node bin/autodev-work.js",
+    "start": "node dist/autodev-context-worker.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
