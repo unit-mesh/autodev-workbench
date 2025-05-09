@@ -11,6 +11,7 @@ module.exports = defineConfig({
   output: {
     file: "dist/autodev-context-worker.js",
     format: "cjs",
+    banner: "#!/usr/bin/env node",
   },
   onwarn(warning, warn) {
     if (warning.code === 'EVAL') return;
