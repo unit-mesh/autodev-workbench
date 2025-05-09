@@ -7,6 +7,13 @@ export async function POST(request: Request) {
   try {
     const data = await request.json()
 
+    if (!data || !data.path || !data.content) {
+      return NextResponse.json(
+        { error: 'Invalid data' },
+        { status: 400 }
+      );
+    }
+
     // Store the data in the database using SQL
     const result = await client.sql`
       INSERT INTO "CodeAnalysis" (

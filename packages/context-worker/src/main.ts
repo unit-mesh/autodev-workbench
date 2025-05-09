@@ -77,7 +77,7 @@ class UserInputHandler {
 			? answers.dirPath
 			: path.resolve(process.cwd(), answers.dirPath);
 
-		return { 
+		return {
 			dirPath,
 			upload: answers.upload,
 			apiUrl: answers.apiUrl
@@ -106,7 +106,7 @@ class InterfaceAnalyzerApp {
 
 	private async uploadResult(result: CodeAnalysisResult, apiUrl: string): Promise<void> {
 		try {
-			const textResult = this.codeAnalyzer.convertToText(result);
+			const textResult = this.codeAnalyzer.convertToList(result);
 			const response = await fetch(apiUrl, {
 				method: 'POST',
 				headers: {
@@ -120,7 +120,7 @@ class InterfaceAnalyzerApp {
 				console.log('分析结果上传成功!');
 				console.log(`ID: ${data.id}`);
 			} else {
-				console.error('上传失败:', data.message);
+				console.error('上传失败:', data);
 			}
 		} catch (error) {
 			console.error('上传过程中发生错误:', error);
@@ -156,9 +156,11 @@ class InterfaceAnalyzerApp {
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (shouldUpload) {
+			console.log(`正在上传分析结果到 ${apiUrl}`);
 			await this.uploadResult(result, apiUrl);
 		}
 
+		console.log(`分析结果已保存到 ${outputFilePath}`);
 		await this.codeAnalyzer.generateLearningMaterials(result, "materials");
 	}
 }

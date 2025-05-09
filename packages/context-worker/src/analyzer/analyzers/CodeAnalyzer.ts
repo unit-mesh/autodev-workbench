@@ -273,10 +273,8 @@ export class CodeAnalyzer {
 		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
 
-	public convertToText(result: CodeAnalysisResult): { path: string; content: string } {
+	public convertToList(result: CodeAnalysisResult): { path: string; content: string } {
 		let content = '';
-
-		// Interface Analysis
 		content += '=== Interface Analysis ===\n\n';
 		for (const intf of result.interfaceAnalysis.interfaces) {
 			if (intf.implementations.length === 0) continue;
