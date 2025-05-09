@@ -96,6 +96,8 @@ class InterfaceAnalyzerApp {
 		let result = await this.codeAnalyzer.analyzeDirectory(targetDir);
 		const outputFilePath = path.join(targetDir, 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+
+		await this.codeAnalyzer.generateLearningMaterials(result, "materials");
 	}
 }
 

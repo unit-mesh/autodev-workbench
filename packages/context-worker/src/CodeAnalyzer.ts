@@ -254,7 +254,7 @@ export class CodeAnalyzer {
 						});
 					}
 				}
-				}
+			}
 
 			// 处理类继承关系
 			if (cls.extends && cls.extends.length > 0) {
@@ -417,8 +417,8 @@ export class CodeAnalyzer {
 
 				// 查找类对象以获取位置信息
 				const classObj = Array.from(classMap.values())
-					.find(item => item.class.name === className || 
-						   (item.class.canonicalName && item.class.canonicalName === className));
+					.find(item => item.class.name === className ||
+						(item.class.canonicalName && item.class.canonicalName === className));
 
 				// 创建多接口实现结果对象
 				const multiImplementer: MultiImplementation = {
@@ -575,8 +575,8 @@ export class CodeAnalyzer {
 
 				// 查找类对象以获取位置信息
 				const classObj = Array.from(classMap.values())
-					.find(item => item.class.name === className || 
-						   (item.class.canonicalName && item.class.canonicalName === className));
+					.find(item => item.class.name === className ||
+						(item.class.canonicalName && item.class.canonicalName === className));
 
 				// 创建多重继承结果对象
 				const multiExtension: MultiExtension = {
@@ -629,7 +629,10 @@ export class CodeAnalyzer {
 	}
 
 	// 修改为返回数据的版本
-	private analyzeInheritanceHierarchyData(hierarchyMap: Map<string, { className: string, childInfo: any }[]>, classMap: Map<string, any>): InheritanceHierarchy {
+	private analyzeInheritanceHierarchyData(hierarchyMap: Map<string, {
+		className: string,
+		childInfo: any
+	}[]>, classMap: Map<string, any>): InheritanceHierarchy {
 		// 查找根类（没有父类的类）
 		const allClasses = new Set<string>();
 		const allChildClasses = new Set<string>();
@@ -678,10 +681,10 @@ export class CodeAnalyzer {
 					});
 					return;
 				}
-				
+
 				// 2. 尝试从classMap中查找类信息 - 使用多种匹配策略
 				const classInfo = this.findClassInfoByName(className, classMap);
-				
+
 				if (classInfo) {
 					result.deepestClasses.push({
 						className: classInfo.class.name,
@@ -695,7 +698,7 @@ export class CodeAnalyzer {
 					// 3. 如果都找不到，尝试提取包名和类名
 					const parts = className.split('.');
 					const simpleName = parts.length > 0 ? parts[parts.length - 1] : className;
-					
+
 					result.deepestClasses.push({
 						className: simpleName,
 						classFile: this.tryFindClassFile(simpleName, classMap) || ''
@@ -729,59 +732,59 @@ export class CodeAnalyzer {
 		// 递归计算所有子类的深度，并返回最大值
 		let maxChildDepth = currentDepth;
 		let childWithMaxDepth;
-		
+
 		for (const child of children) {
 			const childDepth = this.calculateInheritanceDepthWithInfo(
-				child.className, 
-				hierarchyMap, 
-				depthMap, 
+				child.className,
+				hierarchyMap,
+				depthMap,
 				currentDepth + 1
 			);
-			
+
 			if (childDepth > maxChildDepth) {
 				maxChildDepth = childDepth;
 				childWithMaxDepth = child.childInfo;
 			}
 		}
 
-		depthMap.set(className, { 
+		depthMap.set(className, {
 			depth: maxChildDepth,
 			childInfo: childWithMaxDepth
 		});
 		return maxChildDepth;
 	}
-	
+
 	// 辅助方法：通过类名查找类信息
 	private findClassInfoByName(className: string, classMap: Map<string, any>): any {
 		// 直接使用类名作为键查找
 		if (classMap.has(className)) {
 			return classMap.get(className);
 		}
-		
+
 		// 尝试提取简单类名并查找
 		const simpleName = className.includes('.') ? className.split('.').pop()! : className;
-		
+
 		// 查找类名匹配的所有类
 		for (const [key, value] of classMap.entries()) {
 			// 检查类名完全匹配
 			if (value.class.name === simpleName) {
 				return value;
 			}
-			
+
 			// 检查规范名称匹配
 			if (value.class.canonicalName === className) {
 				return value;
 			}
-			
+
 			// 检查键是否以类名结尾
 			if (key.endsWith(`.${simpleName}`)) {
 				return value;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	// 辅助方法：尝试查找类文件
 	private tryFindClassFile(className: string, classMap: Map<string, any>): string | null {
 		for (const [_, value] of classMap.entries()) {
@@ -790,5 +793,182 @@ export class CodeAnalyzer {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 根据代码分析结果生成学习资料，包含接口及其实现类的代码
+	 * @param result 代码分析结果
+	 * @param outputDir 输出目录路径
+	 * @returns 生成的文件列表
+	 */
+	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir: string): Promise<string[]> {
+		if (!fs.existsSync(outputDir)) {
+			fs.mkdirSync(outputDir, { recursive: true });
+		}
+
+		const generatedFiles: string[] = [];
+
+		// 处理接口及其实现类
+		for (const intf of result.interfaceAnalysis.interfaces) {
+			if (intf.implementations.length === 0) continue; // 跳过没有实现的接口
+
+			let content = '';
+			content += `接口: ${intf.interfaceName}\n`;
+			content += `文件: ${intf.interfaceFile}\n`;
+			content += `包: ${intf.package}\n`;
+			content += `方法数: ${intf.methodCount}\n\n`;
+
+			// 添加接口代码
+			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
+			content += "=== 接口定义 ===\n\n";
+			content += interfaceCode;
+			content += "\n\n";
+
+			// 添加每个实现类的代码
+			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
+
+			for (const impl of intf.implementations) {
+				content += `实现类: ${impl.className}\n`;
+				content += `文件: ${impl.classFile}\n\n`;
+
+				if (impl.position) {
+					const implCode = await this.readCodeSection(impl.classFile, impl.position);
+					content += implCode;
+					content += "\n\n";
+				}
+			}
+
+			// 写入文件
+			const fileName = this.sanitizeFileName(`${intf.interfaceName}_实现.txt`);
+			const filePath = path.join(outputDir, fileName);
+			await fs.promises.writeFile(filePath, content);
+			generatedFiles.push(filePath);
+		}
+
+		// 生成继承层次结构的学习资料
+		await this.generateInheritanceHierarchyMaterial(result.extensionAnalysis, outputDir, generatedFiles);
+
+		return generatedFiles;
+	}
+
+	/**
+	 * 生成继承层次结构的学习资料
+	 */
+	private async generateInheritanceHierarchyMaterial(
+		extensionAnalysis: CodeAnalysisResult['extensionAnalysis'],
+		outputDir: string,
+		generatedFiles: string[]
+	): Promise<void> {
+		const hierarchy = extensionAnalysis.hierarchy;
+
+		if (hierarchy.deepestClasses.length === 0) return;
+
+		let content = `继承层次最深的类 (深度: ${hierarchy.maxDepth})\n\n`;
+
+		for (const cls of hierarchy.deepestClasses) {
+			if (!cls.classFile) continue; // 跳过没有文件路径的类
+
+			content += `类名: ${cls.className}\n`;
+			content += `文件: ${cls.classFile}\n\n`;
+
+			if (cls.position) {
+				const classCode = await this.readCodeSection(cls.classFile, cls.position);
+				content += "=== 类定义 ===\n\n";
+				content += classCode;
+				content += "\n\n";
+			}
+
+			// 查找该类的父类关系
+			const parentRelations = this.findClassParentRelations(cls.className, extensionAnalysis.extensions);
+			if (parentRelations.length > 0) {
+				content += "=== 继承链 ===\n\n";
+				parentRelations.forEach((parent, index) => {
+					const indent = "  ".repeat(index);
+					content += `${indent}↑ 继承自: ${parent}\n`;
+				});
+				content += "\n";
+			}
+		}
+
+		const fileName = "继承层次最深的类.txt";
+		const filePath = path.join(outputDir, fileName);
+		await fs.promises.writeFile(filePath, content);
+		generatedFiles.push(filePath);
+	}
+
+	/**
+	 * 查找类的所有父类关系链
+	 */
+	private findClassParentRelations(className: string, extensions: ClassExtension[]): string[] {
+		const parentClasses: string[] = [];
+
+		// 简化类名以便匹配
+		const simpleName = className.includes('.') ? className.split('.').pop()! : className;
+
+		// 查找该类是哪个类的子类
+		for (const ext of extensions) {
+			for (const child of ext.children) {
+				const childSimpleName = child.className.includes('.')
+					? child.className.split('.').pop()!
+					: child.className;
+
+				if (childSimpleName === simpleName) {
+					parentClasses.push(ext.parentName);
+					// 递归查找父类的父类
+					const grandParents = this.findClassParentRelations(ext.parentName, extensions);
+					parentClasses.push(...grandParents);
+					break;
+				}
+			}
+		}
+
+		return parentClasses;
+	}
+
+	/**
+	 * 从文件中读取指定位置的代码段
+	 */
+	private async readCodeSection(
+		filePath: string,
+		position: { start: { row: number, column: number }, end: { row: number, column: number } }
+	): Promise<string> {
+		try {
+			const fileContent = await this.fileScanner.readFileContent(filePath);
+			const lines = fileContent.split('\n');
+
+			// 确保行索引在有效范围内
+			const startRow = Math.max(0, position.start.row);
+			const endRow = Math.min(lines.length - 1, position.end.row);
+
+			// 提取指定行范围的代码
+			const codeLines = lines.slice(startRow, endRow + 1);
+
+			// 处理第一行和最后一行的列
+			if (codeLines.length > 0) {
+				// 只有在有足够字符的情况下才截取列
+				if (codeLines[0].length > position.start.column) {
+					codeLines[0] = codeLines[0].substring(position.start.column);
+				}
+
+				if (codeLines.length > 1) {
+					const lastIndex = codeLines.length - 1;
+					if (codeLines[lastIndex].length > position.end.column) {
+						codeLines[lastIndex] = codeLines[lastIndex].substring(0, position.end.column);
+					}
+				}
+			}
+
+			return codeLines.join('\n');
+		} catch (error) {
+			console.error(`无法读取文件 ${filePath} 中的代码段:`, error);
+			return `// 无法读取代码段 (${filePath}, 行 ${position.start.row}-${position.end.row})`;
+		}
+	}
+
+	/**
+	 * 生成安全的文件名
+	 */
+	private sanitizeFileName(filename: string): string {
+		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
 }
