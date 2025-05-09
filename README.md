@@ -6,9 +6,16 @@
 [![Deploy Next.js site to Pages](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/nextjs.yml)
 ![NPM Version](https://img.shields.io/npm/v/%40autodev%2Fcontext-worker)
 
-![](docs/arch.svg)
 
 ## Overview
+
+Architecture
+
+![](docs/arch.svg)
+
+Architecture (English)
+
+![](docs/arch-en.svg)
 
 AutoDev Work provides a unified platform for development teams to:
 
