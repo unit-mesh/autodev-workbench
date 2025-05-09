@@ -106,12 +106,13 @@ class InterfaceAnalyzerApp {
 
 	private async uploadResult(result: CodeAnalysisResult, apiUrl: string): Promise<void> {
 		try {
+			const textResult = this.codeAnalyzer.convertToText(result);
 			const response = await fetch(apiUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(result)
+				body: JSON.stringify(textResult)
 			});
 
 			const data = await response.json();

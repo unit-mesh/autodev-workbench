@@ -272,4 +272,67 @@ export class CodeAnalyzer {
 	private sanitizeFileName(filename: string): string {
 		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
+
+	public convertToText(result: CodeAnalysisResult): { path: string; content: string } {
+		let content = '';
+
+		// Interface Analysis
+		content += '=== Interface Analysis ===\n\n';
+		for (const intf of result.interfaceAnalysis.interfaces) {
+			if (intf.implementations.length === 0) continue;
+
+			content += `接口: ${intf.interfaceName}\n`;
+			content += `文件: ${intf.interfaceFile}\n\n`;
+			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
+
+			for (const impl of intf.implementations) {
+				content += `实现类: ${impl.className}\n`;
+				content += `文件: ${impl.classFile}\n\n`;
+			}
+			content += '\n';
+		}
+
+		// Extension Analysis
+		content += '=== Extension Analysis ===\n\n';
+		for (const ext of result.extensionAnalysis.extensions) {
+			content += `父类: ${ext.parentName}\n`;
+			content += `文件: ${ext.parentFile}\n\n`;
+			content += `=== 子类 (${ext.children.length}) ===\n\n`;
+
+			for (const child of ext.children) {
+				content += `子类: ${child.className}\n`;
+				content += `文件: ${child.classFile}\n\n`;
+			}
+			content += '\n';
+		}
+
+		// Markdown Analysis
+		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
+			content += '=== Markdown Code Blocks ===\n\n';
+			for (const block of result.markdownAnalysis.codeBlocks) {
+				content += `Source: ${block.filePath}\n`;
+				if (block.heading) {
+					content += `Chapter: ${block.heading}\n`;
+				}
+				content += `Language: ${block.language}\n\n`;
+				content += `Content：\n\n`;
+
+				if (block.context.before && block.context.before.trim()) {
+					content += block.context.before;
+				}
+				content += "```" + block.language + "\n";
+				content += block.code;
+				content += "\n```\n\n";
+				if (block.context.after && block.context.after.trim()) {
+					content += block.context.after;
+				}
+				content += '\n';
+			}
+		}
+
+		return {
+			path: result.interfaceAnalysis.interfaces[0]?.interfaceFile || 'unknown',
+			content
+		};
+	}
 }

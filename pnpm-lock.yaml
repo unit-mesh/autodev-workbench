@@ -41,9 +41,6 @@ importers:
       '@unit-mesh/treesitter-artifacts':
         specifier: ^1.6.3
         version: 1.6.3
-      '@vercel/postgres':
-        specifier: ^0.10.0
-        version: 0.10.0
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0

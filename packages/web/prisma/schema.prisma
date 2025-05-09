@@ -15,15 +15,8 @@ datasource db {
 
 model CodeAnalysis {
   id        String   @id @default(cuid())
+  path      String
+  content   String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Interface Analysis
-  interfaceAnalysis Json
-
-  // Extension Analysis
-  extensionAnalysis Json
-
-  // Markdown Analysis (optional)
-  markdownAnalysis Json?
 }
