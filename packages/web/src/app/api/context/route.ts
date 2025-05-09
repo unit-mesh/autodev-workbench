@@ -1,11 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client'
-
-const connectionString = `${process.env.DATABASE_URL}`
-
-const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
+import { createClient } from '@vercel/postgres';
 
 interface Position {
   start: { row: number; column: number };
@@ -113,22 +107,35 @@ interface CodeAnalysisResult {
 }
 
 export async function POST(request: Request) {
+  const client = createClient();
+  await client.connect();
+
   try {
     const data = await request.json() as CodeAnalysisResult;
 
-    // Store the data in the database
-    const result = await prisma.codeAnalysis.create({
-      data: {
-        interfaceAnalysis: data.interfaceAnalysis,
-        extensionAnalysis: data.extensionAnalysis,
-        markdownAnalysis: data.markdownAnalysis
-      }
-    });
+    // Store the data in the database using SQL
+    const result = await client.sql`
+      INSERT INTO "CodeAnalysis" (
+        id, 
+        "createdAt", 
+        "updatedAt", 
+        "interfaceAnalysis", 
+        "extensionAnalysis", 
+        "markdownAnalysis"
+      ) VALUES (
+        gen_random_uuid(), 
+        NOW(), 
+        NOW(), 
+        ${JSON.stringify(data.interfaceAnalysis)}, 
+        ${JSON.stringify(data.extensionAnalysis)}, 
+        ${data.markdownAnalysis ? JSON.stringify(data.markdownAnalysis) : null}
+      ) RETURNING id
+    `;
 
     return NextResponse.json({
       success: true,
       message: 'Code analysis result stored successfully',
-      id: result.id
+      id: result.rows[0].id
     });
   } catch (error) {
     console.error('Error processing code analysis result:', error);
@@ -140,5 +147,7 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
+  } finally {
+    await client.end();
   }
 }
