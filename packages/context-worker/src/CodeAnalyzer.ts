@@ -2,7 +2,7 @@ import { ILanguageServiceProvider } from "./base/common/languages/languageServic
 import { StructurerProviderManager } from "./code-context/StructurerProviderManager";
 import { InstantiationService } from "./base/common/instantiation/instantiationService";
 import path from "path";
-import { StructureType } from "./codemodel/CodeElement";
+import { CodeStructure, StructureType } from "./codemodel/CodeElement";
 import { promisify } from "util";
 import fs from "fs";
 
@@ -23,6 +23,7 @@ class FileSystemScanner {
 				return [fullPath];
 			}
 		}));
+
 		return files.flat();
 	}
 
@@ -64,8 +65,11 @@ export class CodeAnalyzer {
 	public async analyzeDirectory(dirPath: string): Promise<void> {
 		const files = await this.fileScanner.scanDirectory(dirPath);
 		const interfaceMap = new Map();
+		const classMap = new Map();
+		const implementationMap = new Map();
 		let totalProcessed = 0;
 
+		// First pass: collect all interfaces and classes
 		for (const file of files) {
 			const ext = path.extname(file);
 			const language = this.getLanguageFromExt(ext);
@@ -80,7 +84,8 @@ export class CodeAnalyzer {
 				totalProcessed++;
 
 				if (codeFile.classes) {
-					const fileInterfaces = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
+					// Collect interfaces
+					const fileInterfaces: CodeStructure[] = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
 					for (const intf of fileInterfaces) {
 						const key = intf.canonicalName || `${intf.package}.${intf.name}`;
 						if (!interfaceMap.has(key) ||
@@ -92,13 +97,110 @@ export class CodeAnalyzer {
 							});
 						}
 					}
+
+					// Collect classes
+					const fileClasses = codeFile.classes.filter(cls => cls.type === StructureType.Class);
+					for (const cls of fileClasses) {
+						const key = cls.canonicalName || `${cls.package}.${cls.name}`;
+						classMap.set(key, {
+							file: file,
+							class: cls
+						});
+					}
 				}
 			} catch (error) {
 				console.error(`处理文件 ${file} 时出错:`, error);
 			}
 		}
 
-		this.displayResults(interfaceMap);
+		// Second pass: find interfaces that are implemented by classes
+		for (const [className, classInfo] of classMap) {
+			const cls = classInfo.class;
+			if (cls.implements && cls.implements.length > 0) {
+				for (const interfaceName of cls.implements) {
+					// Try different ways to match the interface
+					const interfaceKey = this.findInterfaceKey(interfaceName, cls.package, interfaceMap);
+
+					if (interfaceKey && interfaceMap.has(interfaceKey)) {
+						if (!implementationMap.has(interfaceKey)) {
+							implementationMap.set(interfaceKey, []);
+						}
+						implementationMap.get(interfaceKey).push({
+							className: className,
+							classFile: classInfo.file,
+							class: cls
+						});
+					}
+				}
+			}
+		}
+
+		this.displayImplementationResults(interfaceMap, implementationMap);
+	}
+
+	private findInterfaceKey(interfaceName: string, classPackage: string, interfaceMap: Map<string, any>): string | null {
+		// Try with full name if it's already fully qualified
+		if (interfaceMap.has(interfaceName)) {
+			return interfaceName;
+		}
+
+		// Try with class's package + interface name
+		const packagedName = `${classPackage}.${interfaceName}`;
+		if (interfaceMap.has(packagedName)) {
+			return packagedName;
+		}
+
+		// Try to find by short name match
+		for (const [key, value] of interfaceMap.entries()) {
+			if (key.endsWith(`.${interfaceName}`) || value.interface.name === interfaceName) {
+				return key;
+			}
+		}
+
+		return null;
+	}
+
+	private displayImplementationResults(interfaceMap: Map<string, any>, implementationMap: Map<string, any[]>): void {
+		console.log(`\n接口实现关系分析:`);
+
+		const interfaces = Array.from(interfaceMap.values());
+		interfaces.sort((a, b) => {
+			const packageCompare = (a.interface.package || '').localeCompare(b.interface.package || '');
+			if (packageCompare !== 0) return packageCompare;
+			return a.interface.name.localeCompare(b.interface.name);
+		});
+
+		let currentPackage = '';
+		let implementedCount = 0;
+
+		interfaces.forEach((item: any) => {
+			const intf = item.interface;
+			const interfaceKey = intf.canonicalName || `${intf.package}.${intf.name}`;
+			const implementations = implementationMap.get(interfaceKey) || [];
+
+			if (intf.package !== currentPackage) {
+				currentPackage = intf.package || '';
+				console.log(`\n包: ${currentPackage || '(默认包)'}`);
+			}
+
+			const methodCount = intf.methods ? intf.methods.length : 0;
+			console.log(`- 接口: ${intf.name} (${methodCount} 个方法, 位于 ${item.file})`);
+
+			if (implementations.length > 0) {
+				implementedCount++;
+				console.log(`  实现类 (${implementations.length}):`);
+				implementations.forEach(impl => {
+					console.log(`  - ${impl.className} (位于 ${impl.classFile})`);
+				});
+			} else {
+				console.log(`  无实现类`);
+			}
+		});
+
+		console.log(`\n统计信息:`);
+		console.log(`- 总接口数: ${interfaces.length}`);
+		console.log(`- 有实现的接口数: ${implementedCount}`);
+		console.log(`- 无实现的接口数: ${interfaces.length - implementedCount}`);
 	}
 
 	private displayResults(interfaceMap: Map<string, any>): void {
