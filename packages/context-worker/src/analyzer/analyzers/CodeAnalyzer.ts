@@ -6,7 +6,7 @@ import { inferLanguage } from "../../base/common/languages/languages";
 import { StructurerProviderManager } from "../../code-context/StructurerProviderManager";
 import { InstantiationService } from "../../base/common/instantiation/instantiationService";
 import { CodeFile } from "../../codemodel/CodeElement";
-import { CodeAnalysisResult } from "../CodeAnalysisResult";
+import { CodeAnalysisResult, CodeBlock } from "../CodeAnalysisResult";
 import { FileSystemScanner } from "../FileSystemScanner";
 import { CodeCollector } from "../CodeCollector";
 import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
@@ -41,10 +41,8 @@ export class CodeAnalyzer {
 	}
 
 	public async analyzeDirectory(dirPath: string): Promise<CodeAnalysisResult> {
-		// 1. 收集目录中的所有文件
 		const files = await this.fileScanner.scanDirectory(dirPath);
 
-		// 2. 将文件分为 Markdown 文件和代码文件
 		const markdownFiles: string[] = [];
 		const codeFiles: string[] = [];
 
@@ -56,20 +54,14 @@ export class CodeAnalyzer {
 			}
 		}
 
-		// 3. 解析代码结构
 		await this.collectCodeStructures(codeFiles);
 
-		// 4. 使用各个分析器分析代码
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
 			this.analyzers[1].analyze(this.codeCollector)
 		]);
 
-		// 5. 分析 Markdown 文件
 		const markdownAnalysisResult = await this.analyzeMarkdownFiles(markdownFiles);
-
-		console.log(markdownAnalysisResult)
-		// 6. 组合分析结果
 		return {
 			interfaceAnalysis,
 			extensionAnalysis,
@@ -91,7 +83,6 @@ export class CodeAnalyzer {
 				await structurer.init(this.serviceProvider);
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
 
-				// 将代码结构添加到收集器中
 				this.codeCollector.addCodeFile(file, codeFile);
 
 			} catch (error) {
@@ -100,9 +91,6 @@ export class CodeAnalyzer {
 		}
 	}
 
-	/**
-	 * 分析 Markdown 文件并提取代码块
-	 */
 	private async analyzeMarkdownFiles(markdownFiles: string[]): Promise<any> {
 		const allCodeBlocks: any[] = [];
 
@@ -111,12 +99,8 @@ export class CodeAnalyzer {
 				const content = await this.fileScanner.readFileContent(file);
 				const codeDocuments = await this.markdownAnalyser.parse(content);
 
-				// 处理每个提取出的代码块
 				for (const doc of codeDocuments) {
-					// 尝试从代码块语言推断编程语言
 					const language = inferLanguage(`.${doc.language}`);
-
-					// 保存提取的代码块信息
 					allCodeBlocks.push({
 						filePath: file,
 						title: doc.title,
@@ -130,17 +114,13 @@ export class CodeAnalyzer {
 						}
 					});
 
-					// 如果是支持的编程语言，可以尝试进一步分析代码结构
 					if (language && doc.code) {
 						try {
 							const structurer = this.structurerManager.getStructurer(language);
 							if (structurer) {
 								await structurer.init(this.serviceProvider);
-								// 使用一个虚拟文件路径以避免冲突
 								const virtualFilePath = `${file}#${doc.title}.${doc.language}`;
 								const codeFile: CodeFile = await structurer.parseFile(doc.code, virtualFilePath);
-
-								// 将代码结构添加到收集器中
 								this.codeCollector.addCodeFile(virtualFilePath, codeFile);
 							}
 						} catch (error) {
@@ -172,13 +152,10 @@ export class CodeAnalyzer {
 			content += `接口: ${intf.interfaceName}\n`;
 			content += `文件: ${intf.interfaceFile}\n`;
 
-			// 添加接口代码
 			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
 			content += "=== 接口定义 ===\n\n";
 			content += interfaceCode;
 			content += "\n\n";
-
-			// 添加每个实现类的代码
 			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
 
 			for (const impl of intf.implementations) {
@@ -196,6 +173,61 @@ export class CodeAnalyzer {
 			const filePath = path.join(outputDir, fileName);
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
+		}
+
+		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
+			const markdownDir = path.join(outputDir, 'markdown_code');
+			if (!fs.existsSync(markdownDir)) {
+				fs.mkdirSync(markdownDir, { recursive: true });
+			}
+
+			const fileGroups: { [key: string]: CodeBlock[] } = {};
+			for (const block of result.markdownAnalysis.codeBlocks) {
+				const sourceFileName = path.basename(block.filePath, path.extname(block.filePath));
+				if (!fileGroups[sourceFileName]) {
+					fileGroups[sourceFileName] = [];
+				}
+				fileGroups[sourceFileName].push(block);
+			}
+
+			for (const [sourceFileName, blocks] of Object.entries(fileGroups)) {
+				for (let i = 0; i < blocks.length; i++) {
+					const block = blocks[i];
+					const index = i + 1;
+
+					const docFileName = this.sanitizeFileName(`${sourceFileName}-${index}.txt`);
+					const docFilePath = path.join(markdownDir, docFileName);
+
+					let content = '';
+
+					content += `Source: ${block.filePath}\n`;
+					if (block.heading) {
+						content += `Chapter: ${block.heading}\n`;
+					}
+					content += `Language: ${block.language}\n\n`;
+					content += `Content：\n\n`;
+
+					if (block.context.before && block.context.before.trim()) {
+						content += block.context.before;
+					}
+					content += "```" + block.language + "\n";
+					content += block.code;
+					content += "\n```\n\n";
+					if (block.context.after && block.context.after.trim()) {
+						content += block.context.after;
+					}
+
+					await fs.promises.writeFile(docFilePath, content);
+					generatedFiles.push(docFilePath);
+
+					if (block.language && block.language !== 'plaintext') {
+						const codeFileName = this.sanitizeFileName(`${sourceFileName}-code-${index}.${block.language}`);
+						const codeFilePath = path.join(markdownDir, codeFileName);
+						await fs.promises.writeFile(codeFilePath, block.code);
+						generatedFiles.push(codeFilePath);
+					}
+				}
+			}
 		}
 
 		return generatedFiles;
