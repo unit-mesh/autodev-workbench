@@ -1,11 +1,10 @@
-import { ILanguageServiceProvider } from "./base/common/languages/languageService";
-import { StructurerProviderManager } from "./code-context/StructurerProviderManager";
-import { InstantiationService } from "./base/common/instantiation/instantiationService";
+import { ILanguageServiceProvider } from "../base/common/languages/languageService";
+import { StructurerProviderManager } from "../code-context/StructurerProviderManager";
+import { InstantiationService } from "../base/common/instantiation/instantiationService";
 import path from "path";
-import { CodeFile, CodeStructure, StructureType } from "./codemodel/CodeElement";
-import { promisify } from "util";
+import { CodeFile, CodeStructure, StructureType } from "../codemodel/CodeElement";
 import fs from "fs";
-import { inferLanguage } from "./base/common/languages/languages";
+import { inferLanguage } from "../base/common/languages/languages";
 import {
 	ClassExtension,
 	CodeAnalysisResult,
@@ -14,32 +13,7 @@ import {
 	MultiExtension,
 	MultiImplementation
 } from "./CodeAnalysisResult";
-
-const readdir = promisify(fs.readdir);
-const readFile = promisify(fs.readFile);
-
-/**
- * Handles file system operations for scanning directories and files
- */
-class FileSystemScanner {
-	public async scanDirectory(dirPath: string): Promise<string[]> {
-		const entries = await readdir(dirPath, { withFileTypes: true });
-		const files = await Promise.all(entries.map(async (entry) => {
-			const fullPath = path.join(dirPath, entry.name);
-			if (entry.isDirectory()) {
-				return this.scanDirectory(fullPath);
-			} else {
-				return [fullPath];
-			}
-		}));
-
-		return files.flat();
-	}
-
-	public async readFileContent(filePath: string): Promise<string> {
-		return readFile(filePath, 'utf-8');
-	}
-}
+import { FileSystemScanner } from "./FileSystemScanner";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -109,7 +83,6 @@ export class CodeAnalyzer {
 			}
 		}
 
-		// Second pass: find interfaces that are implemented by classes and classes that are extended
 		for (const [className, classInfo] of classMap) {
 			const cls = classInfo.class;
 

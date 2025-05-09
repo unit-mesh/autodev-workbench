@@ -7,7 +7,7 @@ import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
 import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
-import { CodeAnalyzer } from "./CodeAnalyzer";
+import { CodeAnalyzer } from "./analyzer/CodeAnalyzer";
 
 class CommandLineParser {
 	public parse(): { dirPath: string } {
