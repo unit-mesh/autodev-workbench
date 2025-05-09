@@ -7,13 +7,16 @@ import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
 import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
+import fetch from 'node-fetch';
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
 
 class CommandLineParser {
-	public parse(): { dirPath: string } {
+	public parse(): { dirPath: string; upload: boolean; apiUrl?: string } {
 		const args = process.argv.slice(2);
 		let dirPath = process.cwd(); // Default to current directory
+		let upload = false;
+		let apiUrl = 'http://localhost:3000/api/context';
 
 		for (let i = 0; i < args.length; i++) {
 			if (args[i] === '--path' || args[i] === '-p') {
@@ -25,15 +28,22 @@ class CommandLineParser {
 					}
 					i++; // Skip next argument
 				}
+			} else if (args[i] === '--upload' || args[i] === '-u') {
+				upload = true;
+			} else if (args[i] === '--api-url') {
+				if (i + 1 < args.length) {
+					apiUrl = args[i + 1];
+					i++; // Skip next argument
+				}
 			}
 		}
 
-		return { dirPath };
+		return { dirPath, upload, apiUrl };
 	}
 }
 
 class UserInputHandler {
-	public async getDirectoryPath(): Promise<{ dirPath: string }> {
+	public async getDirectoryPath(): Promise<{ dirPath: string; upload: boolean; apiUrl: string }> {
 		const answers = await inquirer.prompt([
 			{
 				type: 'input',
@@ -47,6 +57,19 @@ class UserInputHandler {
 					}
 					return '请输入有效的目录路径';
 				}
+			},
+			{
+				type: 'confirm',
+				name: 'upload',
+				message: '是否要上传分析结果到服务器?',
+				default: false
+			},
+			{
+				type: 'input',
+				name: 'apiUrl',
+				message: '请输入API地址:',
+				default: 'http://localhost:3000/api/context',
+				when: (answers) => answers.upload
 			}
 		]);
 
@@ -54,7 +77,11 @@ class UserInputHandler {
 			? answers.dirPath
 			: path.resolve(process.cwd(), answers.dirPath);
 
-		return { dirPath };
+		return { 
+			dirPath,
+			upload: answers.upload,
+			apiUrl: answers.apiUrl
+		};
 	}
 }
 
@@ -77,19 +104,48 @@ class InterfaceAnalyzerApp {
 		this.userInputHandler = new UserInputHandler();
 	}
 
+	private async uploadResult(result: CodeAnalysisResult, apiUrl: string): Promise<void> {
+		try {
+			const response = await fetch(apiUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(result)
+			});
+
+			const data = await response.json();
+			if (data.success) {
+				console.log('分析结果上传成功!');
+				console.log(`ID: ${data.id}`);
+			} else {
+				console.error('上传失败:', data.message);
+			}
+		} catch (error) {
+			console.error('上传过程中发生错误:', error);
+		}
+	}
+
 	public async run(dirPath?: string): Promise<void> {
 		await this.codeAnalyzer.initialize();
 
 		let targetDir: string;
+		let shouldUpload = false;
+		let apiUrl = 'http://localhost:3000/api/context';
+
 		if (dirPath) {
 			targetDir = dirPath;
 		} else {
 			const args = this.commandLineParser.parse();
 			if (args.dirPath !== process.cwd()) {
 				targetDir = args.dirPath;
+				shouldUpload = args.upload;
+				apiUrl = args.apiUrl || apiUrl;
 			} else {
 				const input = await this.userInputHandler.getDirectoryPath();
 				targetDir = input.dirPath;
+				shouldUpload = input.upload;
+				apiUrl = input.apiUrl;
 			}
 		}
 
@@ -97,6 +153,10 @@ class InterfaceAnalyzerApp {
 		let result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory(targetDir);
 		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+
+		if (shouldUpload) {
+			await this.uploadResult(result, apiUrl);
+		}
 
 		await this.codeAnalyzer.generateLearningMaterials(result, "materials");
 	}
