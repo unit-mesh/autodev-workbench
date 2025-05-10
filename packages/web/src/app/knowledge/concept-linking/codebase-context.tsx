@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, FileText, RefreshCw, Code } from "lucide-react"
@@ -212,7 +212,7 @@ export function CodebaseContext() {
                 <Card key={item.id || index} className="border-slate-200 dark:border-slate-700 shadow-sm h-full flex flex-col">
                   <CardHeader className="p-3 bg-slate-50 dark:bg-slate-800/50">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[90%]">
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-normal break-words">
                         {displayTitle}
                       </div>
                       {/* AI生成按钮：仅无title时显示 */}
@@ -220,7 +220,7 @@ export function CodebaseContext() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 px-2"
+                          className="h-7 px-2 ml-2 flex-shrink-0"
                           disabled={generatingIds.includes(item.id)}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -248,12 +248,14 @@ export function CodebaseContext() {
                     ) : (
                       <div className="text-sm text-slate-500 italic">No description available</div>
                     )}
+                  </CardContent>
 
-                    {/* Code content in dialog */}
-                    {(codeBlocks || item.code || item.content) && (
+                  {/* Move View Code button to footer */}
+                  {(codeBlocks || item.code || item.content) && (
+                    <CardFooter className="p-3 pt-0 mt-auto">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="mt-3 w-full">
+                          <Button variant="outline" size="sm" className="w-full">
                             <Code className="h-4 w-4 mr-2" />
                             View Code
                           </Button>
@@ -301,8 +303,8 @@ export function CodebaseContext() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                    )}
-                  </CardContent>
+                    </CardFooter>
+                  )}
                 </Card>
               )
             })}
