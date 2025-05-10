@@ -17,11 +17,11 @@ async function generateAIAnalysis(path: string, content: string): Promise<CodeAn
   const answer = await reply([
     {
       role: "user",
-      content: `分析以下代码文件的内容，生成代码分析信息。
+      content: `分析以下代码文件的内容，生成英语的代码分析信息。
 要求如下：      
 1. 请根据代码内容分析其主要功能和用途
-2. 生成一个简短的标题，突出代码的主要功能
-3. 生成一段描述，说明代码的具体实现和用途
+2. 生成一个简短的语的标题，突出代码的主要功能
+3. 生成一段语的描述，说明代码的具体实现和用途
 4. 识别代码使用的编程语言
 
 请按照以下格式返回（JSON格式）：
