@@ -4,10 +4,17 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, FileText, RefreshCw } from "lucide-react"
+import { Loader2, FileText, RefreshCw, Code } from "lucide-react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { toast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export function CodebaseContext() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,8 +196,7 @@ export function CodebaseContext() {
           Available codebase concept for concept validation
         </p>
       </div>
-
-      <div className="max-h-[500px] overflow-y-auto">
+      <div className="overflow-y-auto">
         {isLoadingContext ? (
           <div className="flex flex-col items-center justify-center p-8 text-slate-500">
             <Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-3"/>
@@ -200,77 +206,101 @@ export function CodebaseContext() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {contextData.map((item, index) => {
               const codeBlocks = item.content ? extractCodeBlock(item.content) : null
+              const displayTitle = item.title || item.path || item.source || "Unknown source";
 
               return (
                 <Card key={item.id || index} className="border-slate-200 dark:border-slate-700 shadow-sm h-full flex flex-col">
-                  <CardHeader className="p-3 bg-slate-50 dark:bg-slate-800/50 max-h-[120px] overflow-hidden">
+                  <CardHeader className="p-3 bg-slate-50 dark:bg-slate-800/50">
                     <div className="flex items-center justify-between">
-                      <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate max-w-[70%]">
-                        {item.path || item.source || "Unknown source"}
+                      <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[90%]">
+                        {displayTitle}
                       </div>
-                      {item.language && (
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {item.language}
-                        </Badge>
+                      {/* AI生成按钮：仅无title时显示 */}
+                      {!item.title && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2"
+                          disabled={generatingIds.includes(item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAIGenerateOne(item.id);
+                          }}
+                        >
+                          {generatingIds.includes(item.id) ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : null}
+                          {generatingIds.includes(item.id) ? "生成中..." : "AI生成"}
+                        </Button>
                       )}
                     </div>
-                    {item.title && <div className="mt-1 font-medium text-sm truncate">{item.title}</div>}
-                    {item.description && (
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 overflow-hidden">
-                        {item.description}
-                      </div>
-                    )}
-                    {/* AI生成按钮：仅无title时显示 */}
-                    {!item.title && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="mt-2 h-7"
-                        disabled={generatingIds.includes(item.id)}
-                        onClick={() => handleAIGenerateOne(item.id)}
-                      >
-                        {generatingIds.includes(item.id) ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        ) : null}
-                        {generatingIds.includes(item.id) ? "AI生成中..." : "AI生成"}
-                      </Button>
+                    {item.language && (
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {item.language}
+                      </Badge>
                     )}
                   </CardHeader>
-                  <CardContent className="p-3 bg-white dark:bg-slate-800 flex-1 overflow-hidden max-h-[300px] overflow-y-auto">
-                    {codeBlocks ? (
-                      codeBlocks.map((block, blockIndex) => (
-                        <div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
-                          <SyntaxHighlighter
-                            language={block.language}
-                            style={vscDarkPlus}
-                            customStyle={{
-                              fontSize: "0.875rem",
-                              maxHeight: "200px",
-                              overflow: "auto",
-                            }}
-                          >
-                            {block.code}
-                          </SyntaxHighlighter>
-                        </div>
-                      ))
-                    ) : item.code ? (
-                      <SyntaxHighlighter
-                        language={getLanguageFromContext(item)}
-                        style={vscDarkPlus}
-                        customStyle={{
-                          margin: 0,
-                          borderRadius: "0.375rem",
-                          fontSize: "0.875rem",
-                          maxHeight: "200px",
-                          overflow: "auto",
-                        }}
-                      >
-                        {item.code}
-                      </SyntaxHighlighter>
-                    ) : (
-                      <div className="text-sm whitespace-pre-wrap overflow-y-auto max-h-[200px]">
-                        {item.content || "No content available"}
+                  <CardContent className="p-3 bg-white dark:bg-slate-800 flex-1 overflow-hidden">
+                    {item.description ? (
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {item.description}
                       </div>
+                    ) : (
+                      <div className="text-sm text-slate-500 italic">No description available</div>
+                    )}
+
+                    {/* Code content in dialog */}
+                    {(codeBlocks || item.code || item.content) && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="mt-3 w-full">
+                            <Code className="h-4 w-4 mr-2" />
+                            View Code
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+                          <DialogHeader>
+                            <DialogTitle>{displayTitle}</DialogTitle>
+                          </DialogHeader>
+                          <div className="overflow-y-auto max-h-[calc(80vh-100px)]">
+                            {codeBlocks ? (
+                              codeBlocks.map((block, blockIndex) => (
+                                <div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
+                                  <SyntaxHighlighter
+                                    language={block.language}
+                                    style={vscDarkPlus}
+                                    customStyle={{
+                                      fontSize: "0.875rem",
+                                      maxHeight: "400px",
+                                      overflow: "auto",
+                                    }}
+                                  >
+                                    {block.code}
+                                  </SyntaxHighlighter>
+                                </div>
+                              ))
+                            ) : item.code ? (
+                              <SyntaxHighlighter
+                                language={getLanguageFromContext(item)}
+                                style={vscDarkPlus}
+                                customStyle={{
+                                  margin: 0,
+                                  borderRadius: "0.375rem",
+                                  fontSize: "0.875rem",
+                                  maxHeight: "400px",
+                                  overflow: "auto",
+                                }}
+                              >
+                                {item.code}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <div className="text-sm whitespace-pre-wrap overflow-y-auto max-h-[400px]">
+                                {item.content || "No content available"}
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </CardContent>
                 </Card>

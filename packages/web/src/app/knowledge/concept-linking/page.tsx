@@ -34,9 +34,7 @@ export default function Concept() {
           </div>
 
           <div className="grid gap-6">
-            <div className="grid gap-6">
-              <CodebaseContext />
-            </div>
+            <CodebaseContext />
 
             <ConceptLinking useAI={useAI} />
           </div>
