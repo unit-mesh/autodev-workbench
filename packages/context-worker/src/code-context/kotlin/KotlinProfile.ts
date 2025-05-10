@@ -35,19 +35,7 @@ export class KotlinProfile implements LanguageProfile {
 			  (identifier) @package-name)
 
 			(import_header
-			  (identifier) @import-name)
-
-      (function_declaration
-        (user_type (type_identifier) @method-returnType)?
-        (simple_identifier) @method-name
-        (function_value_parameters
-          (parameter
-            (simple_identifier) @method-param.value
-            (user_type (type_identifier)) @method-param.type
-          )?
-          @method-params)
-        (function_body) @method-body
-      )?
+			  (identifier) @import-name)?
 
 			(class_declaration
 		    (type_identifier) @class-name
