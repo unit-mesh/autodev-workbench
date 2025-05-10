@@ -148,36 +148,14 @@ export class CodeAnalyzer {
 		for (const intf of result.interfaceAnalysis.interfaces) {
 			if (intf.implementations.length === 0) continue; // 跳过没有实现的接口
 
-			let content = '';
-			content += `接口: ${intf.interfaceName}\n`;
-			content += `文件: ${intf.interfaceFile}\n`;
-
-			const lang = inferLanguage(intf.interfaceFile) || ""
-
-			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
-			content += "接口定义：\n\n```" + lang + "\n";
-			content += interfaceCode;
-			content += "```\n\n";
-			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
-
-			for (const impl of intf.implementations) {
-				content += `实现类: ${impl.className}\n`;
-				content += `文件: ${impl.classFile}\n\n`;
-
-				if (impl.position) {
-					const implCode = await this.readCodeSection(impl.classFile, impl.position);
-					content += "```" + lang + "\n";
-					content += "" + implCode;
-					content += "\n```\n";
-				}
-			}
-
+			const content = await this.generateInterfaceContent(intf);
 			const fileName = this.sanitizeFileName(`${intf.interfaceName}_实现.txt`);
 			const filePath = path.join(outputDir, fileName);
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
 		}
 
+		// Process markdown blocks
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
 			const markdownDir = path.join(outputDir, 'markdown_code');
 			if (!fs.existsSync(markdownDir)) {
@@ -198,27 +176,9 @@ export class CodeAnalyzer {
 					const block = blocks[i];
 					const index = i + 1;
 
+					const content = this.generateMarkdownBlockContent(block);
 					const docFileName = this.sanitizeFileName(`${sourceFileName}-${index}.txt`);
 					const docFilePath = path.join(markdownDir, docFileName);
-
-					let content = '';
-
-					content += `Source: ${block.filePath}\n`;
-					if (block.heading) {
-						content += `Chapter: ${block.heading}\n`;
-					}
-					content += `Language: ${block.language}\n\n`;
-					content += `Content：\n\n`;
-
-					if (block.context.before && block.context.before.trim()) {
-						content += block.context.before;
-					}
-					content += "```" + block.language + "\n";
-					content += block.code;
-					content += "\n```\n\n";
-					if (block.context.after && block.context.after.trim()) {
-						content += block.context.after;
-					}
 
 					await fs.promises.writeFile(docFilePath, content);
 					generatedFiles.push(docFilePath);
@@ -227,6 +187,140 @@ export class CodeAnalyzer {
 		}
 
 		return generatedFiles;
+	}
+
+	public async convertToList(result: CodeAnalysisResult): Promise<{ path: string; content: string }[]> {
+		const items: { path: string; content: string }[] = [];
+
+		for (const intf of result.interfaceAnalysis.interfaces) {
+			if (intf.implementations.length === 0) continue;
+			const content = await this.generateInterfaceContent(intf, true);
+			items.push({
+				path: intf.interfaceFile,
+				content
+			});
+		}
+
+		for (const ext of result.extensionAnalysis.extensions) {
+			const content = await this.generateExtensionContent(ext, true);
+			items.push({
+				path: ext.parentFile,
+				content
+			});
+		}
+
+		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
+			for (const block of result.markdownAnalysis.codeBlocks) {
+				const content = this.generateMarkdownBlockContent(block, true);
+
+				// Create a unique path for each code block
+				const blockPath = block.heading
+					? `${block.filePath}#${block.heading}`
+					: `${block.filePath}#code-block-${Math.random().toString(36).substring(2, 9)}`;
+
+				items.push({
+					path: blockPath,
+					content
+				});
+			}
+		}
+
+		return items;
+	}
+
+	/**
+	 * Generate content for an interface and its implementations
+	 */
+	private async generateInterfaceContent(intf: any, escapeForMarkdown: boolean = false): Promise<string> {
+		let content = '';
+		content += `接口: ${intf.interfaceName}\n`;
+		content += `文件: ${intf.interfaceFile}\n`;
+
+		const lang = inferLanguage(intf.interfaceFile) || "";
+
+		const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
+		const codeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(interfaceCode) : interfaceCode;
+		content += "接口定义：\n\n```" + lang + "\n";
+		content += codeToUse;
+		content += "```\n\n";
+		content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
+
+		for (const impl of intf.implementations) {
+			content += `实现类: ${impl.className}\n`;
+			content += `文件: ${impl.classFile}\n\n`;
+
+			if (impl.position) {
+				const implCode = await this.readCodeSection(impl.classFile, impl.position);
+				const implCodeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(implCode) : implCode;
+				content += "```" + lang + "\n";
+				content += implCodeToUse;
+				content += "\n```\n";
+			}
+		}
+
+		return content;
+	}
+
+	/**
+	 * Generate content for a class extension hierarchy
+	 */
+	private async generateExtensionContent(ext: any, escapeForMarkdown: boolean = false): Promise<string> {
+		let content = '';
+		content += `父类: ${ext.parentName}\n`;
+		content += `文件: ${ext.parentFile}\n\n`;
+
+		const lang = inferLanguage(ext.parentFile) || "";
+
+		if (ext.position) {
+			const parentCode = await this.readCodeSection(ext.parentFile, ext.position);
+			const codeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(parentCode) : parentCode;
+			content += "父类定义：\n\n```" + lang + "\n";
+			content += codeToUse;
+			content += "```\n\n";
+		}
+
+		content += `=== 子类 (${ext.children.length}) ===\n\n`;
+
+		for (const child of ext.children) {
+			content += `子类: ${child.className}\n`;
+			content += `文件: ${child.classFile}\n\n`;
+
+			if (child.position) {
+				const childCode = await this.readCodeSection(child.classFile, child.position);
+				const childCodeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(childCode) : childCode;
+				content += "```" + lang + "\n";
+				content += childCodeToUse;
+				content += "\n```\n";
+			}
+		}
+
+		return content;
+	}
+
+	private generateMarkdownBlockContent(block: CodeBlock, escapeForMarkdown: boolean = false): string {
+		let content = '';
+
+		content += `Source: ${block.filePath}\n`;
+		if (block.heading) {
+			content += `Chapter: ${block.heading}\n`;
+		}
+		content += `Language: ${block.language}\n\n`;
+		content += `Content：\n\n`;
+
+		if (block.context.before && block.context.before.trim()) {
+			content += block.context.before;
+		}
+
+		const codeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(block.code) : block.code;
+		content += "```" + block.language + "\n";
+		content += codeToUse;
+		content += "\n```\n\n";
+
+		if (block.context.after && block.context.after.trim()) {
+			content += block.context.after;
+		}
+
+		return content;
 	}
 
 	/**
@@ -273,120 +367,6 @@ export class CodeAnalyzer {
 		return filename.replace(/[<>:"/\\|?*]/g, '_');
 	}
 
-	public async convertToList(result: CodeAnalysisResult): Promise<{ path: string; content: string }[]> {
-		const items: { path: string; content: string }[] = [];
-
-		for (const intf of result.interfaceAnalysis.interfaces) {
-			if (intf.implementations.length === 0) continue; // 跳过没有实现的接口
-
-			let content = '';
-			content += `接口: ${intf.interfaceName}\n`;
-			content += `文件: ${intf.interfaceFile}\n`;
-
-			const lang = inferLanguage(intf.interfaceFile) || "";
-
-			const interfaceCode = await this.readCodeSection(intf.interfaceFile, intf.position);
-			const escapedInterfaceCode = this.escapeCodeForMarkdown(interfaceCode);
-			content += "接口定义：\n\n```" + lang + "\n";
-			content += escapedInterfaceCode;
-			content += "```\n\n";
-			content += `=== 实现类 (${intf.implementations.length}) ===\n\n`;
-
-			for (const impl of intf.implementations) {
-				content += `实现类: ${impl.className}\n`;
-				content += `文件: ${impl.classFile}\n\n`;
-
-				if (impl.position) {
-					const implCode = await this.readCodeSection(impl.classFile, impl.position);
-					const escapedImplCode = this.escapeCodeForMarkdown(implCode);
-					content += "```" + lang + "\n";
-					content += escapedImplCode;
-					content += "\n```\n";
-				}
-			}
-
-			items.push({
-				path: intf.interfaceFile,
-				content
-			});
-		}
-
-		for (const ext of result.extensionAnalysis.extensions) {
-			let content = '';
-			content += `父类: ${ext.parentName}\n`;
-			content += `文件: ${ext.parentFile}\n\n`;
-
-			const lang = inferLanguage(ext.parentFile) || "";
-
-			if (ext.position) {
-				const parentCode = await this.readCodeSection(ext.parentFile, ext.position);
-				const escapedParentCode = this.escapeCodeForMarkdown(parentCode);
-				content += "父类定义：\n\n```" + lang + "\n";
-				content += escapedParentCode;
-				content += "```\n\n";
-			}
-
-			content += `=== 子类 (${ext.children.length}) ===\n\n`;
-
-			for (const child of ext.children) {
-				content += `子类: ${child.className}\n`;
-				content += `文件: ${child.classFile}\n\n`;
-
-				if (child.position) {
-					const childCode = await this.readCodeSection(child.classFile, child.position);
-					const escapedChildCode = this.escapeCodeForMarkdown(childCode);
-					content += "```" + lang + "\n";
-					content += escapedChildCode;
-					content += "\n```\n";
-				}
-			}
-
-			items.push({
-				path: ext.parentFile,
-				content
-			});
-		}
-
-		// Markdown Analysis
-		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
-			for (const block of result.markdownAnalysis.codeBlocks) {
-				let content = '';
-
-				content += `Source: ${block.filePath}\n`;
-				if (block.heading) {
-					content += `Chapter: ${block.heading}\n`;
-				}
-				content += `Language: ${block.language}\n\n`;
-				content += `Content：\n\n`;
-
-				if (block.context.before && block.context.before.trim()) {
-					content += block.context.before;
-				}
-
-				const escapedBlockCode = this.escapeCodeForMarkdown(block.code);
-				content += "```" + block.language + "\n";
-				content += escapedBlockCode;
-				content += "\n```\n\n";
-
-				if (block.context.after && block.context.after.trim()) {
-					content += block.context.after;
-				}
-
-				// Create a unique path for each code block
-				const blockPath = block.heading
-					? `${block.filePath}#${block.heading}`
-					: `${block.filePath}#code-block-${Math.random().toString(36).substring(2, 9)}`;
-
-				items.push({
-					path: blockPath,
-					content
-				});
-			}
-		}
-
-		return items;
-	}
-
 	/**
 	 * Escape code content for safe inclusion in Markdown code blocks
 	 */
@@ -399,3 +379,4 @@ export class CodeAnalyzer {
 		return code;
 	}
 }
+
