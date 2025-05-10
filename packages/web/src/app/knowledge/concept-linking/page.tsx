@@ -135,7 +135,7 @@ export default function Concept() {
 		}
 	}
 
-	// Function to detect language from context item
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const getLanguageFromContext = (item: any) => {
 		if (item.language) return item.language.toLowerCase()
 		if (item.path) {
@@ -223,118 +223,115 @@ export default function Concept() {
 
 					<div className="grid gap-6">
 						<div className="grid gap-6">
-							{/* Context Section - Left Side */}
-							<div className="lg:col-span-2">
-								<Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden h-full">
-									<CardHeader
-										className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
-										<div className="flex justify-between items-center">
-											<div className="flex items-center gap-2">
-												<FileText className="h-5 w-5 text-purple-500"/>
-												<CardTitle className="text-lg">Context</CardTitle>
-											</div>
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={fetchContextData}
-												disabled={isLoadingContext}
-												className="h-8"
-											>
-												{isLoadingContext ? (
-													<Loader2 className="h-3 w-3 animate-spin"/>
-												) : (
-													<RefreshCw className="h-3 w-3 mr-1"/>
-												)}
-												{isLoadingContext ? "Loading..." : "Refresh Context"}
-											</Button>
+							<Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden w-full max-w-[100%]">
+								<CardHeader
+									className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+									<div className="flex justify-between items-center">
+										<div className="flex items-center gap-2">
+											<FileText className="h-5 w-5 text-purple-500"/>
+											<CardTitle className="text-lg">Context</CardTitle>
 										</div>
-										<CardDescription className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-											Available code context for concept validation
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="p-0">
-										<div className="max-h-[500px] overflow-y-auto">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={fetchContextData}
+											disabled={isLoadingContext}
+											className="h-8"
+										>
 											{isLoadingContext ? (
-												<div className="flex flex-col items-center justify-center p-8 text-slate-500">
-													<Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-3"/>
-													<p>Loading context data...</p>
-												</div>
-											) : contextData.length > 0 ? (
-												contextData.map((item, index) => {
-													const codeBlocks = item.content ? extractCodeBlock(item.content) : null
-
-													return (
-														<div
-															key={item.id || index}
-															className={`border-b border-slate-200 dark:border-slate-700 ${
-																index === contextData.length - 1 ? "border-b-0" : ""
-															}`}
-														>
-															<div className="p-3 bg-slate-50 dark:bg-slate-800/50">
-																<div className="flex items-center justify-between">
-																	<div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
-																		{item.path || item.source || "Unknown source"}
-																	</div>
-																	{item.language && (
-																		<Badge variant="outline" className="text-xs">
-																			{item.language}
-																		</Badge>
-																	)}
-																</div>
-																{item.title && <div className="mt-1 font-medium text-sm">{item.title}</div>}
-																{item.description && (
-																	<div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-																		{item.description}
-																	</div>
-																)}
-															</div>
-															<div className="p-3 bg-white dark:bg-slate-800">
-																{codeBlocks ? (
-																	codeBlocks.map((block, blockIndex) => (
-																		<div key={blockIndex} className="mb-3 last:mb-0">
-																			<SyntaxHighlighter
-																				language={block.language}
-																				style={vscDarkPlus}
-																				customStyle={{
-																					margin: 0,
-																					borderRadius: "0.375rem",
-																					fontSize: "0.875rem",
-																				}}
-																			>
-																				{block.code}
-																			</SyntaxHighlighter>
-																		</div>
-																	))
-																) : item.code ? (
-																	<SyntaxHighlighter
-																		language={getLanguageFromContext(item)}
-																		style={vscDarkPlus}
-																		customStyle={{
-																			margin: 0,
-																			borderRadius: "0.375rem",
-																			fontSize: "0.875rem",
-																		}}
-																	>
-																		{item.code}
-																	</SyntaxHighlighter>
-																) : (
-																	<div className="text-sm whitespace-pre-wrap">
-																		{item.content || "No content available"}
-																	</div>
-																)}
-															</div>
-														</div>
-													)
-												})
+												<Loader2 className="h-3 w-3 animate-spin"/>
 											) : (
-												<div className="text-center p-8 text-slate-500">
-													<p>No context data available</p>
-												</div>
+												<RefreshCw className="h-3 w-3 mr-1"/>
 											)}
-										</div>
-									</CardContent>
-								</Card>
-							</div>
+											{isLoadingContext ? "Loading..." : "Refresh Context"}
+										</Button>
+									</div>
+									<CardDescription className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+										Available code context for concept validation
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="p-0">
+									<div className="max-h-[500px] overflow-y-auto">
+										{isLoadingContext ? (
+											<div className="flex flex-col items-center justify-center p-8 text-slate-500">
+												<Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-3"/>
+												<p>Loading context data...</p>
+											</div>
+										) : contextData.length > 0 ? (
+											contextData.map((item, index) => {
+												const codeBlocks = item.content ? extractCodeBlock(item.content) : null
+
+												return (
+													<div
+														key={item.id || index}
+														className={`border-b border-slate-200 dark:border-slate-700 ${
+															index === contextData.length - 1 ? "border-b-0" : ""
+														}`}
+													>
+														<div className="p-3 bg-slate-50 dark:bg-slate-800/50">
+															<div className="flex items-center justify-between">
+																<div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+																	{item.path || item.source || "Unknown source"}
+																</div>
+																{item.language && (
+																	<Badge variant="outline" className="text-xs">
+																		{item.language}
+																	</Badge>
+																)}
+															</div>
+															{item.title && <div className="mt-1 font-medium text-sm">{item.title}</div>}
+															{item.description && (
+																<div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+																	{item.description}
+																</div>
+															)}
+														</div>
+														<div className="p-3 bg-white dark:bg-slate-800">
+															{codeBlocks ? (
+																codeBlocks.map((block, blockIndex) => (
+																	<div key={blockIndex} className="mb-3 last:mb-0">
+																		<SyntaxHighlighter
+																			language={block.language}
+																			style={vscDarkPlus}
+																			customStyle={{
+																				margin: 0,
+																				borderRadius: "0.375rem",
+																				fontSize: "0.875rem",
+																			}}
+																		>
+																			{block.code}
+																		</SyntaxHighlighter>
+																	</div>
+																))
+															) : item.code ? (
+																<SyntaxHighlighter
+																	language={getLanguageFromContext(item)}
+																	style={vscDarkPlus}
+																	customStyle={{
+																		margin: 0,
+																		borderRadius: "0.375rem",
+																		fontSize: "0.875rem",
+																	}}
+																>
+																	{item.code}
+																</SyntaxHighlighter>
+															) : (
+																<div className="text-sm whitespace-pre-wrap">
+																	{item.content || "No content available"}
+																</div>
+															)}
+														</div>
+													</div>
+												)
+											})
+										) : (
+											<div className="text-center p-8 text-slate-500">
+												<p>No context data available</p>
+											</div>
+										)}
+									</div>
+								</CardContent>
+							</Card>
 						</div>
 
 						<div className="grid grid-cols-2 gap-6">
