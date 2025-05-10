@@ -26,8 +26,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 const models = [
+  { name: "DeekSeek", value: "deepseek" },
   { name: "GPT-4o", value: "gpt-4o" },
-  { name: "GPT-4o-mini", value: "gpt-4o-mini" },
   { name: "GLM-4", value: "glm-4" },
   { name: "GLM-4-Air", value: "glm-4-air" },
 ]
