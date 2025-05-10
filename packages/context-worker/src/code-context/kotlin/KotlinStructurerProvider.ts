@@ -5,8 +5,9 @@ import Parser, { SyntaxNode } from 'web-tree-sitter';
 import { TextRange } from '../../code-search/scope-graph/model/TextRange';
 import { ScopeGraph } from '../../code-search/scope-graph/ScopeGraph';
 import { CodeFile, CodeFunction, CodeStructure, CodeVariable, StructureType } from '../../codemodel/CodeElement';
-import { LanguageProfile, LanguageProfileUtil } from '../base/LanguageProfile';
+import { LanguageProfile } from '../base/LanguageProfile';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
+import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 
 @injectable()
 export class KotlinStructurerProvider extends BaseStructurerProvider {

@@ -5,8 +5,9 @@ import { TextRange } from '../../code-search/scope-graph/model/TextRange';
 import { ScopeGraph } from '../../code-search/scope-graph/ScopeGraph';
 import { BaseStructurerProvider } from "../base/StructurerProvider";
 import { LanguageIdentifier } from "../../base/common/languages/languages";
-import { LanguageProfile, LanguageProfileUtil } from "../base/LanguageProfile";
+import { LanguageProfile } from "../base/LanguageProfile";
 import { CodeFile } from "../../codemodel/CodeElement";
+import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 
 export class GoStructurerProvider extends BaseStructurerProvider {
 	protected langId: LanguageIdentifier = 'go';

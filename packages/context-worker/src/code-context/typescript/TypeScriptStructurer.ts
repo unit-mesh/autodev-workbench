@@ -3,8 +3,8 @@ import Parser, { Language } from 'web-tree-sitter';
 
 import { TypeScriptProfile } from './TypeScriptProfile';
 import { BaseStructurerProvider } from "../base/StructurerProvider";
-import { LanguageProfileUtil } from '../base/LanguageProfile';
 import { CodeFile, CodeStructure, StructureType } from "../../codemodel/CodeElement";
+import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 
 @injectable()
 export class TypeScriptStructurer extends BaseStructurerProvider {

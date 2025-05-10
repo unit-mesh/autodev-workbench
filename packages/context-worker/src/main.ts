@@ -1,16 +1,17 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import inquirer from 'inquirer';
+import fetch from 'node-fetch';
+
 import { InstantiationService, providerContainer } from "./base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "./base/common/languages/languageService";
 import { IStructurerProvider } from "./ProviderTypes";
 import { JavaStructurerProvider } from "./code-context/java/JavaStructurerProvider";
 import { TypeScriptStructurer } from "./code-context/typescript/TypeScriptStructurer";
 import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
-import * as fs from 'fs';
-import * as path from 'path';
-import inquirer from 'inquirer';
-import fetch from 'node-fetch';
+import { KotlinStructurerProvider } from "./code-context/kotlin/KotlinStructurerProvider";
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
-import { KotlinStructurerProvider } from "./code-context/kotlin/KotlinStructurerProvider";
 
 class CommandLineParser {
 	public parse(): { dirPath: string; upload: boolean; apiUrl?: string } {

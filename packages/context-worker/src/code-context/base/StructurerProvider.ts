@@ -4,11 +4,12 @@ import Parser, { Query, SyntaxNode } from 'web-tree-sitter';
 import { ImportWithRefs } from '../../code-search/scope-graph/model/ImportWithRefs';
 import { TextRange } from '../../code-search/scope-graph/model/TextRange';
 import { ScopeGraph } from '../../code-search/scope-graph/ScopeGraph';
-import { LanguageProfile, LanguageProfileUtil } from './LanguageProfile';
+import { LanguageProfile } from './LanguageProfile';
 import { CodeFile, CodeFunction, CodeStructure, CodeVariable } from "../../codemodel/CodeElement";
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { PositionElement } from "../../codemodel/PositionElement";
 import { LanguageIdentifier } from "../../base/common/languages/languages";
+import { LanguageProfileUtil } from "./LanguageProfileUtil";
 
 export interface StructurerProvider {
 	/**

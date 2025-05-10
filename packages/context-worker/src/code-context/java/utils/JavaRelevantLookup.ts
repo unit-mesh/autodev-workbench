@@ -1,5 +1,6 @@
 import { TreeSitterFile } from "../../../ast/TreeSitterFile";
-import { LanguageProfileUtil } from "../../base/LanguageProfile";
+
+import { LanguageProfileUtil } from "../../base/LanguageProfileUtil";
 
 export class JavaRelevantLookup {
 	tsfile: TreeSitterFile;

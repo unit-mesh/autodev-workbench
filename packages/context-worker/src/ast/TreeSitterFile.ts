@@ -1,10 +1,11 @@
 import Parser, { Language, Tree } from 'web-tree-sitter';
 import { ILanguageServiceProvider } from "../base/common/languages/languageService";
 import { isLargerThan500kb } from "../base/common/files/files";
-import { LanguageProfile, LanguageProfileUtil } from "../code-context/base/LanguageProfile";
+import { LanguageProfile } from "../code-context/base/LanguageProfile";
 import { LanguageIdentifier } from '../base/common/languages/languages';
 import { ScopeGraph } from '../code-search/scope-graph/ScopeGraph';
 import { ScopeBuilder } from "../code-search/scope-graph/ScopeBuilder";
+import { LanguageProfileUtil } from "../code-context/base/LanguageProfileUtil";
 
 const graphCache: Map<TreeSitterFile, ScopeGraph> = new Map();
 
