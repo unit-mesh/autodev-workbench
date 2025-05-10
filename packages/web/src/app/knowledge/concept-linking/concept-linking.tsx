@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { CodeEditor } from "@/components/code-editor"
 import { ConceptList } from "@/components/concept-list"
 import { KnowledgePanel } from "@/components/knowledge-panel"
-import { extractConcepts } from "@/lib/concept-extractor"
+import { englishExtractConcepts } from "@/lib/concept-extractor"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -54,7 +54,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
       setConcepts(data)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      const results = await extractConcepts(code);
+      const results = await englishExtractConcepts(code);
       setConcepts(results)
     }
   }
@@ -62,7 +62,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const [extractedConcepts, setExtractedConcepts] = useState<string[]>([])
   useEffect(() => {
     fetchExtractedConcepts(code)
-  }, [code, setExtractedConcepts])
+  }, [setExtractedConcepts])
 
   const handleExtractConcepts = async () => {
     setIsValidating(true)

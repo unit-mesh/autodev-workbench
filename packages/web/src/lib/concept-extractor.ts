@@ -1,4 +1,4 @@
-export async function extractConcepts(code: string): Promise<string[]> {
+export async function englishExtractConcepts(code: string): Promise<string[]> {
 	const classRegex = /class\s+(\w+)/g
 	const classes = Array.from(code.matchAll(classRegex)).map((match) => match[1])
 
