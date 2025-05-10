@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, FileText, RefreshCw } from "lucide-react"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { toast } from "@/hooks/use-toast"
 
 export function CodebaseContext() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,12 +49,31 @@ export function CodebaseContext() {
         if (updated.ok) {
           const [updatedItem] = await updated.json()
           setContextData((prev) => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item))
+          toast({
+            title: "成功",
+            description: "AI生成成功",
+            variant: "default"
+          })
+        } else {
+          toast({
+            title: "错误",
+            description: "获取更新数据失败",
+            variant: "destructive"
+          })
         }
       } else {
-        console.error("Failed to generate AI description for one item")
+        toast({
+          title: "错误",
+          description: "AI生成失败",
+          variant: "destructive"
+        })
       }
     } catch (error) {
-      console.error("Error generating AI description for one item:", error)
+      toast({
+        title: "错误",
+        description: "AI生成出错",
+        variant: "destructive"
+      })
     } finally {
       setGeneratingIds((prev) => prev.filter(_id => _id !== id))
     }

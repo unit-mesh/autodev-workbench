@@ -10,6 +10,7 @@ import inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
+import { KotlinStructurerProvider } from "./code-context/kotlin/KotlinStructurerProvider";
 
 class CommandLineParser {
 	public parse(): { dirPath: string; upload: boolean; apiUrl?: string } {
@@ -96,6 +97,7 @@ class InterfaceAnalyzerApp {
 		this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
 		providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
 		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
 
