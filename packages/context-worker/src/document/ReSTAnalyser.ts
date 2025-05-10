@@ -76,8 +76,8 @@ export class ReSTAnalyser implements DocumentAnalyser {
 					}
 
 					// Get context lines before and after the code block
-					const beforeLineCount = 10;
-					const afterLineCount = 10;
+					const beforeLineCount = 20;
+					const afterLineCount = 20;
 
 					const beforeStart = Math.max(0, codeBlockStartLine - beforeLineCount);
 					const beforeEnd = codeBlockStartLine;

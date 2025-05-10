@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
-import { MarkdownCodeBlock } from './utils/StreamingMarkdownCodeBlock';
 
 export interface CodeDocument {
 	title: string;
@@ -73,8 +72,8 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 			}
 
 			// Get context lines before and after the code block
-			const beforeLineCount = 10; // Number of lines to include before
-			const afterLineCount = 10;  // Number of lines to include after
+			const beforeLineCount = 20; // Number of lines to include before
+			const afterLineCount = 20;  // Number of lines to include after
 
 			const beforeStart = Math.max(0, startLine - beforeLineCount - 1);
 			const beforeEnd = startLine - 1;

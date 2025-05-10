@@ -100,6 +100,12 @@ export class CodeAnalyzer {
 				const codeDocuments = await this.markdownAnalyser.parse(content);
 
 				for (const doc of codeDocuments) {
+					// Skip code blocks that are 6 lines or fewer
+					const codeLineCount = doc.code ? doc.code.split('\n').length : 0;
+					if (codeLineCount <= 6) {
+						continue;
+					}
+
 					const language = inferLanguage(`.${doc.language}`);
 					allCodeBlocks.push({
 						filePath: file,

@@ -68,10 +68,11 @@ export function CodebaseContext() {
           variant: "destructive"
         })
       }
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       toast({
         title: "错误",
-        description: "AI生成出错",
+        description: "AI生成出错: " + error,
         variant: "destructive"
       })
     } finally {

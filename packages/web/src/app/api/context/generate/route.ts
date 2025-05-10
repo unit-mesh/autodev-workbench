@@ -1,6 +1,5 @@
 /// AI Generate
-
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/postgres';
 import { reply } from "@/app/api/_utils/reply";
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
