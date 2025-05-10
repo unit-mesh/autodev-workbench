@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import "globalthis/polyfill";
-import { cutAll, cutForSearch, load } from "nodejieba";
+import { cutForSearch, load } from "nodejieba";
 
 async function initJieba() {
   load();
