@@ -98,6 +98,12 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						}
 					}
 					break;
+				case 'extend-name':
+					classObj.extends.push(text);
+					break;
+				case 'implements-name':
+					classObj.implements.push(text);
+					break;
 				case 'method-returnType':
 					methodReturnType = text;
 					break;
@@ -128,6 +134,22 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					lastField.name = text;
 					fields.push({ ...lastField });
 					lastField = this.initVariable();
+					break;
+				case 'constructor-param-name':
+					// 处理构造函数参数，可以选择添加到字段中
+					const paramName = text;
+					const constructorParam = this.initVariable();
+					constructorParam.name = paramName;
+					// 暂存参数，等待类型信息
+					lastField = constructorParam;
+					break;
+				case 'constructor-param-type':
+					// 如果之前处理了构造函数参数名，则设置其类型
+					if (lastField.name && !lastField.type) {
+						lastField.type = text;
+						fields.push({ ...lastField });
+						lastField = this.initVariable();
+					}
 					break;
 				default:
 					break;
