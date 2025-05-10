@@ -67,27 +67,6 @@ export class KotlinProfile implements LanguageProfile {
             (function_body)? @method-body
           )?
         )?
-
-      (class_declaration
-        (type_identifier) @interface-name
-        (class_body
-          (property_declaration
-            (binding_pattern_kind)?
-            (variable_declaration
-              (simple_identifier) @interface-property-name
-              (user_type (type_identifier)) @interface-property-type
-            )
-          )?
-          (getter
-            (function_body)?
-          )?
-          (function_declaration
-            (simple_identifier) @interface-method-name
-            (function_value_parameters)?
-            (function_body)? @interface-method-body
-          )?
-        )
-      )?
   `);
 	methodIOQuery = new MemoizedQuery(`
 		(function_declaration
