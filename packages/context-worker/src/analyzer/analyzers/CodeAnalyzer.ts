@@ -195,18 +195,12 @@ export class CodeAnalyzer {
 		for (const intf of result.interfaceAnalysis.interfaces) {
 			if (intf.implementations.length === 0) continue;
 			const content = await this.generateInterfaceContent(intf, true);
-			items.push({
-				path: intf.interfaceFile,
-				content
-			});
+			items.push({ path: intf.interfaceFile, content });
 		}
 
 		for (const ext of result.extensionAnalysis.extensions) {
 			const content = await this.generateExtensionContent(ext, true);
-			items.push({
-				path: ext.parentFile,
-				content
-			});
+			items.push({ path: ext.parentFile, content });
 		}
 
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
@@ -218,10 +212,7 @@ export class CodeAnalyzer {
 					? `${block.filePath}#${block.heading}`
 					: `${block.filePath}#code-block-${Math.random().toString(36).substring(2, 9)}`;
 
-				items.push({
-					path: blockPath,
-					content
-				});
+				items.push({ path: blockPath, content });
 			}
 		}
 
