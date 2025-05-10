@@ -2,8 +2,8 @@ packages:
   - packages/*
 ignoredBuiltDependencies:
   - esbuild
-  - nodejieba
 onlyBuiltDependencies:
+  - nodejieba
   - onnxruntime-node
   - protobufjs
   - sharp
