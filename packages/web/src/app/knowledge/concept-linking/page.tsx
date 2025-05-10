@@ -42,7 +42,7 @@ export default function Concept() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [isValidating, setIsValidating] = useState(false)
 	const [useAI, setUseAI] = useState(true)
-	// Add state for context data
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const [contextData, setContextData] = useState<any[]>([])
 	const [isLoadingContext, setIsLoadingContext] = useState(false)
 
