@@ -1,7 +1,7 @@
-import { injectable } from "inversify/lib/esm";
-import { BaseStructurerProvider } from "../base/StructurerProvider";
+import { injectable } from 'inversify';
 import Parser, { SyntaxNode } from 'web-tree-sitter';
 
+import { BaseStructurerProvider } from "../base/StructurerProvider";
 import { TextRange } from '../../code-search/scope-graph/model/TextRange';
 import { ScopeGraph } from '../../code-search/scope-graph/ScopeGraph';
 import { CodeFile, CodeFunction, CodeStructure, CodeVariable, StructureType } from '../../codemodel/CodeElement';
