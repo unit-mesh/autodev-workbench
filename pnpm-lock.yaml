@@ -292,8 +292,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       nodejieba:
-        specifier: ^3.4.4
-        version: 3.4.4
+        specifier: 3.4.3
+        version: 3.4.3
       prisma:
         specifier: ^6.7.0
         version: 6.7.0(typescript@5.8.3)
@@ -4494,8 +4494,8 @@ packages:
   node-machine-id@1.1.12:
     resolution: {integrity: sha512-QNABxbrPa3qEIfrE6GOJ7BYIuignnJw7iQ2YPbc3Nla1HzRJjXzZOiikfF8m7eAMfichLt3M4VgLOetqgDmgGQ==}
 
-  nodejieba@3.4.4:
-    resolution: {integrity: sha512-yqx89UYqTQoIL04reK6cRWBGpzUEeahwX65Qrj8+6d4FN/DOE3h26gBD2KmLAY5lTEQt0Uc42uZqKjlNUuIReA==}
+  nodejieba@3.4.3:
+    resolution: {integrity: sha512-OZnhxsy25k5XRBqI2UUjSu6k3a1+5U9PGm/JMWs949D2HCLfwdt9XIJ0B4YF2ZVQakNKqBUR37Vn5L/9lf4gYg==}
     engines: {node: '>= 10.20.0'}
 
   nopt@5.0.0:
@@ -10579,7 +10579,7 @@ snapshots:
 
   node-machine-id@1.1.12: {}
 
-  nodejieba@3.4.4:
+  nodejieba@3.4.3:
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.11
       node-addon-api: 3.2.1
