@@ -6,9 +6,19 @@ export async function GET() {
   await client.connect();
 
   try {
-    // Fetch the most recent code analysis results
+    // Fetch the most recent code analysis results with all fields
     const result = await client.sql`
-      SELECT * FROM "CodeAnalysis"
+      SELECT 
+        id,
+        path,
+        content,
+        title,
+        description,
+        source,
+        language,
+        "createdAt",
+        "updatedAt"
+      FROM "CodeAnalysis"
       ORDER BY "createdAt" DESC
       LIMIT 50
     `;

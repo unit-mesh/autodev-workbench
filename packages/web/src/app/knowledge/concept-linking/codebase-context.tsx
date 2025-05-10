@@ -12,6 +12,7 @@ export function CodebaseContext() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [contextData, setContextData] = useState<any[]>([])
   const [isLoadingContext, setIsLoadingContext] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   // Function to fetch context data
   const fetchContextData = async () => {
@@ -28,6 +29,23 @@ export function CodebaseContext() {
       console.error("Error fetching context data:", error)
     } finally {
       setIsLoadingContext(false)
+    }
+  }
+
+  // AI 生成描述
+  const handleAIGenerate = async () => {
+    setIsGenerating(true)
+    try {
+      const response = await fetch("/api/context/generate", { method: "POST" })
+      if (response.ok) {
+        await fetchContextData()
+      } else {
+        console.error("Failed to generate AI descriptions")
+      }
+    } catch (error) {
+      console.error("Error generating AI descriptions:", error)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -107,20 +125,34 @@ export function CodebaseContext() {
             <FileText className="h-5 w-5 text-purple-500"/>
             <h2 className="text-lg font-semibold">Codebase Context</h2>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchContextData}
-            disabled={isLoadingContext}
-            className="h-8"
-          >
-            {isLoadingContext ? (
-              <Loader2 className="h-3 w-3 animate-spin"/>
-            ) : (
-              <RefreshCw className="h-3 w-3 mr-1"/>
-            )}
-            {isLoadingContext ? "Loading..." : "Refresh Context"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchContextData}
+              disabled={isLoadingContext || isGenerating}
+              className="h-8"
+            >
+              {isLoadingContext ? (
+                <Loader2 className="h-3 w-3 animate-spin"/>
+              ) : (
+                <RefreshCw className="h-3 w-3 mr-1"/>
+              )}
+              {isLoadingContext ? "Loading..." : "Refresh Context"}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleAIGenerate}
+              disabled={isGenerating || isLoadingContext}
+              className="h-8"
+            >
+              {isGenerating ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1"/>
+              ) : null}
+              {isGenerating ? "AI 生成中..." : "AI 生成"}
+            </Button>
+          </div>
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
           Available codebase concept for concept validation

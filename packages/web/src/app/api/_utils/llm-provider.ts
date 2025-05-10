@@ -14,7 +14,7 @@ export function configureModelProvider(): LlmProvider {
     baseURL: "https://open.bigmodel.cn/api/paas/v4",
     apiKey: process.env.GLM_TOKEN,
   });
-  fullModel = "glm-4";
+  fullModel = "glm-4-air";
   quickModel = "glm-4-air";
   // } else {
   //   openai = createOpenAI({
