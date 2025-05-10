@@ -1,11 +1,6 @@
 import { reply } from "@/app/api/_utils/reply"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
-export interface ValidationResult {
-  isValid: boolean
-  reason: string
-}
-
 export interface ConceptValidationResults {
   validConcepts: string[]
   invalidConcepts: { term: string; reason: string }[]
