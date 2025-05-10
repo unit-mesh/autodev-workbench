@@ -13,7 +13,7 @@ export class KotlinProfile implements LanguageProfile {
 	scopeQuery = new MemoizedQuery(kotlinscm);
 	hoverableQuery = new MemoizedQuery(`
       [(simple_identifier)
-       (type_identifier)] @hoverable
+       (user_type (type_identifier))] @hoverable
     `);
 	methodQuery = new MemoizedQuery(`
       (function_declaration
@@ -21,7 +21,7 @@ export class KotlinProfile implements LanguageProfile {
     `);
 	classQuery = new MemoizedQuery(`
       (class_declaration
-        (type_identifier) @name.definition.class) @definition.class
+        (user_type (type_identifier)) @name.definition.class) @definition.class
     `);
 	blockCommentQuery = new MemoizedQuery(`
 		((block_comment) @block_comment
@@ -38,12 +38,12 @@ export class KotlinProfile implements LanguageProfile {
 			  (identifier) @import-name)
 
       (function_declaration
-        type: (_) @method-returnType
+        (user_type (type_identifier) @method-returnType)?
         (simple_identifier) @method-name
         (function_value_parameters
           (parameter
             (simple_identifier) @method-param.value
-            (type_identifier) @method-param.type
+            (user_type (type_identifier)) @method-param.type
           )?
           @method-params)
         (function_body) @method-body
@@ -54,14 +54,14 @@ export class KotlinProfile implements LanguageProfile {
         (primary_constructor
           (class_parameter
             (simple_identifier) @field-name
-            (type_identifier) @field-type
+            (user_type (type_identifier)) @field-type
           )?
         )?
         (class_body
           (property_declaration
             (variable_declaration
               (simple_identifier) @field-name
-              (type_identifier) @field-type
+              (user_type (type_identifier)) @field-type
             )
           )?
         )
@@ -74,7 +74,7 @@ export class KotlinProfile implements LanguageProfile {
         (function_value_parameters
           (parameter
             (simple_identifier) @method-param.value
-            (type_identifier) @method-param.type
+            (user_type (type_identifier)) @method-param.type
           )?
           @method-params)
         (function_body) @method-body
@@ -84,7 +84,7 @@ export class KotlinProfile implements LanguageProfile {
 		(property_declaration
 			(variable_declaration
 				(simple_identifier) @field-name
-				(type_identifier) @field-type
+				(user_type (type_identifier)) @field-type
 			)
 		) @field-declaration
 	`);
