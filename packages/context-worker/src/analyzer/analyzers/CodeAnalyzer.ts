@@ -189,30 +189,34 @@ export class CodeAnalyzer {
 		return generatedFiles;
 	}
 
-	public async convertToList(result: CodeAnalysisResult): Promise<{ path: string; content: string }[]> {
+	public async convertToList(result: CodeAnalysisResult, targetDir: string): Promise<{ path: string; content: string }[]> {
 		const items: { path: string; content: string }[] = [];
 
 		for (const intf of result.interfaceAnalysis.interfaces) {
 			if (intf.implementations.length === 0) continue;
 			const content = await this.generateInterfaceContent(intf, true);
-			items.push({ path: intf.interfaceFile, content });
+			const relativePath = path.relative(targetDir, intf.interfaceFile);
+			items.push({ path: relativePath, content });
 		}
 
 		for (const ext of result.extensionAnalysis.extensions) {
 			const content = await this.generateExtensionContent(ext, true);
-			items.push({ path: ext.parentFile, content });
+			const relativePath = path.relative(targetDir, ext.parentFile);
+			items.push({ path: relativePath, content });
 		}
 
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
 			for (const block of result.markdownAnalysis.codeBlocks) {
 				const content = this.generateMarkdownBlockContent(block, true);
 
-				// Create a unique path for each code block
-				const blockPath = block.heading
-					? `${block.filePath}#${block.heading}`
-					: `${block.filePath}#code-block-${Math.random().toString(36).substring(2, 9)}`;
+				const blockIdentifier = block.heading
+					? `#${block.heading}`
+					: `#code-block-${Math.random().toString(36).substring(2, 9)}`;
 
-				items.push({ path: blockPath, content });
+				// Get the relative path for the file and append the block identifier
+				const relativePath = path.relative(targetDir, block.filePath) + blockIdentifier;
+
+				items.push({ path: relativePath, content });
 			}
 		}
 

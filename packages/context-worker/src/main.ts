@@ -104,9 +104,9 @@ class InterfaceAnalyzerApp {
 		this.userInputHandler = new UserInputHandler();
 	}
 
-	private async uploadResult(result: CodeAnalysisResult, apiUrl: string): Promise<void> {
+	private async uploadResult(result: CodeAnalysisResult, apiUrl: string, targetDir: string): Promise<void> {
 		try {
-			const textResult = await this.codeAnalyzer.convertToList(result);
+			const textResult = await this.codeAnalyzer.convertToList(result, targetDir);
 
 			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
 			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
@@ -161,7 +161,7 @@ class InterfaceAnalyzerApp {
 
 		if (shouldUpload) {
 			console.log(`正在上传分析结果到 ${apiUrl}`);
-			await this.uploadResult(result, apiUrl);
+			await this.uploadResult(result, apiUrl, targetDir);
 		}
 
 		console.log(`分析结果已保存到 ${outputFilePath}`);
