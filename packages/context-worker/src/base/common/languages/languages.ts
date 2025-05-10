@@ -25,6 +25,7 @@ export const SUPPORTED_LANGUAGES: LanguageIdentifier[] = [
 	'java',
 	'kotlin',
 	'python',
+	'kt',
 	'rust',
 	'javascript',
 	'javascriptreact',
@@ -55,7 +56,7 @@ const SupportLanguagesList: LanguageItem[] = [
 	{ languageId: 'java', fileExts: ['.java'] },
 	{
 		languageId: 'kotlin',
-		fileExts: ['.kt, .kts, .ktm'],
+		fileExts: ['.kt', '.kts', '.ktm'],
 	},
 	{ languageId: 'python', fileExts: ['.py'] },
 	{
@@ -77,26 +78,27 @@ const SupportLanguagesList: LanguageItem[] = [
 	},
 ];
 
-const retrieveCache = new Map<string, string>();
-
 /**
  * Infer the language of a file based on its filename.
  *
  * @param filename - The filename to infer the language from.
  * @returns The inferred language or undefined if the language could not be inferred.
  */
+
+const extsToLanguage = new Map<string, LanguageIdentifier>();
+SupportLanguagesList.forEach(item => {
+	item.fileExts.forEach(ext => {
+		extsToLanguage.set(ext, item.languageId);
+	});
+});
+
 export function inferLanguage(filename: string): string {
 	const extname = path.extname(filename);
+	const languageId = extsToLanguage.get(extname.toLowerCase());
 
-	if (retrieveCache.has(extname)) {
-		return retrieveCache.get(extname)!;
+	if (!languageId) {
+		return '';
 	}
-
-	const found = SupportLanguagesList.find(item => item.fileExts.some(ext => filename.endsWith(ext)));
-
-	const languageId = found?.languageId || '';
-
-	retrieveCache.set(extname, languageId);
 
 	return languageId;
 }
