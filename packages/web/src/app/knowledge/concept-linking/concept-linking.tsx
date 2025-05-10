@@ -67,11 +67,10 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const handleExtractConcepts = async () => {
     setIsValidating(true)
     await fetchExtractedConcepts(code)
-    setConcepts(extractedConcepts)
     setSelectedConcept(null)
     setKnowledgeItems([])
 
-    if (useAI && extractedConcepts.length > 0) {
+    if (useAI && concepts.length > 0) {
       try {
         const response = await fetch("/api/validate-concepts", {
           method: "POST",
@@ -79,7 +78,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            concepts: extractedConcepts,
+            concepts: concepts,
             codeContext: code,
           }),
         })
