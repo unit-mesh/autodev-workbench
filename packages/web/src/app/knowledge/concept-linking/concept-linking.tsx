@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CodeEditor } from "@/components/code-editor"
 import { ConceptList } from "@/components/concept-list"
 import { KnowledgePanel } from "@/components/knowledge-panel"
@@ -41,10 +41,32 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const [knowledgeItems, setKnowledgeItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
+  const fetchExtractedConcepts = async (code: string) => {
+    try {
+      const response = await fetch("/api/extract-concepts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      })
+      const data = await response.json()
+      setConcepts(data)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      const results = await extractConcepts(code);
+      setConcepts(results)
+    }
+  }
+
+  const [extractedConcepts, setExtractedConcepts] = useState<string[]>([])
+  useEffect(() => {
+    fetchExtractedConcepts(code)
+  }, [code, setExtractedConcepts])
 
   const handleExtractConcepts = async () => {
     setIsValidating(true)
-    const extractedConcepts = await extractConcepts(code)
+    await fetchExtractedConcepts(code)
     setConcepts(extractedConcepts)
     setSelectedConcept(null)
     setKnowledgeItems([])

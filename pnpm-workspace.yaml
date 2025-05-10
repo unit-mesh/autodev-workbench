@@ -2,6 +2,7 @@ packages:
   - packages/*
 ignoredBuiltDependencies:
   - esbuild
+  - nodejieba
 onlyBuiltDependencies:
   - onnxruntime-node
   - protobufjs
