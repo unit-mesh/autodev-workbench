@@ -40,19 +40,11 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 			imports: [],
 			classes: [],
 		};
-		let classObj: CodeStructure = {
-			type: StructureType.Class,
-			canonicalName: '',
-			constant: [],
-			extends: [],
-			methods: [],
-			name: '',
-			package: '',
-			implements: [],
-			start: { row: 0, column: 0 },
-			end: { row: 0, column: 0 },
-		};
+		let classObj: CodeStructure = this.createEmptyStructure(StructureType.Class);
+		let interfaceObj: CodeStructure = this.createEmptyStructure(StructureType.Interface);
+
 		let isLastNode = false;
+		let isInInterface = false;
 		const methods: CodeFunction[] = [];
 		let methodReturnType = '';
 		let methodName = '';
@@ -73,23 +65,20 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'class-name':
 					if (classObj.name !== '') {
+						classObj.fields = fields.slice();
+						classObj.methods = methods.slice();
 						codeFile.classes.push({ ...classObj });
-						classObj = {
-							type: StructureType.Class,
-							canonicalName: '',
-							package: codeFile.package,
-							implements: [],
-							constant: [],
-							extends: [],
-							methods: [],
-							name: '',
-							start: { row: 0, column: 0 },
-							end: { row: 0, column: 0 },
-						};
+
+						// 重置字段和方法
+						methods.length = 0;
+						fields.length = 0;
 					}
 
+					classObj = this.createEmptyStructure(StructureType.Class);
 					classObj.name = text;
-					classObj.canonicalName = codeFile.package + '.' + classObj.name;
+					classObj.canonicalName = codeFile.package ? codeFile.package + '.' + classObj.name : classObj.name;
+					isInInterface = false;
+
 					const classNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
 					if (classNode !== null) {
 						this.insertLocation(classNode, classObj);
@@ -98,28 +87,52 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						}
 					}
 					break;
+				case 'interface-name':
+					if (interfaceObj.name !== '') {
+						interfaceObj.fields = fields.slice();
+						interfaceObj.methods = methods.slice();
+						codeFile.classes.push({ ...interfaceObj });
+
+						// 重置字段和方法
+						methods.length = 0;
+						fields.length = 0;
+					}
+
+					interfaceObj = this.createEmptyStructure(StructureType.Interface);
+					interfaceObj.name = text;
+					interfaceObj.canonicalName = codeFile.package ? codeFile.package + '.' + interfaceObj.name : interfaceObj.name;
+					isInInterface = true;
+
+					const interfaceNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
+					if (interfaceNode !== null) {
+						this.insertLocation(interfaceNode, interfaceObj);
+						if (!isLastNode) {
+							isLastNode = true;
+						}
+					}
+					break;
 				case 'extend-name':
-					classObj.extends.push(text);
+					if (isInInterface) {
+						interfaceObj.extends.push(text);
+					} else {
+						classObj.extends.push(text);
+					}
 					break;
 				case 'implements-name':
 					classObj.implements.push(text);
 					break;
-				case 'method-returnType':
-					methodReturnType = text;
-					break;
 				case 'method-name':
+				case 'interface-method-name':
 					methodName = text;
 					break;
 				case 'method-body':
+				case 'interface-method-body':
 					if (methodName !== '') {
 						const methodNode = capture.node;
 						const methodObj = this.createFunction(capture.node, methodName);
 						if (methodReturnType !== '') {
 							methodObj.returnType = methodReturnType;
-						}
-						if (methodNode !== null) {
-							this.insertLocation(methodNode, classObj);
-						}
+							}
 
 						methods.push(methodObj);
 					}
@@ -127,28 +140,22 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					methodReturnType = '';
 					methodName = '';
 					break;
-				case 'field-type':
-					lastField.type = text;
-					break;
 				case 'field-name':
-					lastField.name = text;
-					fields.push({ ...lastField });
+				case 'interface-property-name':
 					lastField = this.initVariable();
+					lastField.name = text;
 					break;
-				case 'constructor-param-name':
-					// 处理构造函数参数，可以选择添加到字段中
-					const paramName = text;
-					const constructorParam = this.initVariable();
-					constructorParam.name = paramName;
-					// 暂存参数，等待类型信息
-					lastField = constructorParam;
-					break;
-				case 'constructor-param-type':
-					// 如果之前处理了构造函数参数名，则设置其类型
-					if (lastField.name && !lastField.type) {
+				case 'field-type':
+				case 'interface-property-type':
+					if (lastField.name) {
 						lastField.type = text;
 						fields.push({ ...lastField });
 						lastField = this.initVariable();
+					}
+					break;
+				case 'field-value':
+					if (lastField.name) {
+						lastField.type = text;
 					}
 					break;
 				default:
@@ -156,13 +163,34 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 			}
 		}
 
-		classObj.fields = fields;
-		classObj.methods = methods;
-
-		if (isLastNode && classObj.name !== '') {
+		// 处理最后一个类或接口
+		if (isInInterface && interfaceObj.name !== '') {
+			interfaceObj.fields = fields;
+			interfaceObj.methods = methods;
+			codeFile.classes.push({ ...interfaceObj });
+		} else if (!isInInterface && classObj.name !== '') {
+			classObj.fields = fields;
+			classObj.methods = methods;
 			codeFile.classes.push({ ...classObj });
 		}
 
 		return this.combineSimilarClasses(codeFile);
+	}
+
+	// 创建空的结构对象
+	private createEmptyStructure(type: StructureType): CodeStructure {
+		return {
+			type: type,
+			canonicalName: '',
+			constant: [],
+			extends: [],
+			methods: [],
+			name: '',
+			package: '',
+			implements: [],
+			fields: [],
+			end: { row: 0, column: 0 },
+			start: { row: 0, column: 0 }
+		}
 	}
 }

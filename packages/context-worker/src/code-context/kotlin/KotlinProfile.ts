@@ -21,7 +21,7 @@ export class KotlinProfile implements LanguageProfile {
     `);
 	classQuery = new MemoizedQuery(`
       (class_declaration
-        (user_type (type_identifier)) @name.definition.class) @definition.class
+        (type_identifier) @name.definition.class) @definition.class
     `);
 	blockCommentQuery = new MemoizedQuery(`
 		((block_comment) @block_comment
@@ -32,7 +32,7 @@ export class KotlinProfile implements LanguageProfile {
 	`);
 	structureQuery = new MemoizedQuery(`
 			(package_header
-			  (identifier) @package-name)
+			  (identifier) @package-name)?
 
 			(import_header
 			  (identifier) @import-name)?
@@ -41,7 +41,7 @@ export class KotlinProfile implements LanguageProfile {
 		    (type_identifier) @class-name
 		    (delegation_specifier
 		      (user_type
-		        (type_identifier) @extend-name)
+		        (type_identifier)) @extend-name)
 		    )?
         (primary_constructor
           (class_parameter
@@ -51,22 +51,43 @@ export class KotlinProfile implements LanguageProfile {
         )?
         (class_body
           (property_declaration
+            (modifiers
+              (member_modifier)?)? 
+            (binding_pattern_kind)?
             (variable_declaration
               (simple_identifier) @field-name
               (user_type (type_identifier)) @field-type
             )
           )?
-          (secondary_constructor
-            (function_value_parameters
-              (parameter
-                (simple_identifier) @constructor-param-name
-                (user_type (type_identifier)) @constructor-param-type
-              )?
-            )?
-            (constructor_delegation_call)?
+          (function_declaration
+            (modifiers
+              (member_modifier)?)? 
+            (simple_identifier) @method-name
+            (function_value_parameters)?
+            (function_body)? @method-body
+          )?
+        )?
+
+      (class_declaration
+        (type_identifier) @interface-name
+        (class_body
+          (property_declaration
+            (binding_pattern_kind)?
+            (variable_declaration
+              (simple_identifier) @interface-property-name
+              (user_type (type_identifier)) @interface-property-type
+            )
+          )?
+          (getter
+            (function_body)?
+          )?
+          (function_declaration
+            (simple_identifier) @interface-method-name
+            (function_value_parameters)?
+            (function_body)? @interface-method-body
           )?
         )
-		  )
+      )?
   `);
 	methodIOQuery = new MemoizedQuery(`
 		(function_declaration
@@ -83,11 +104,34 @@ export class KotlinProfile implements LanguageProfile {
 
 	fieldQuery = new MemoizedQuery(`
 		(property_declaration
+			(modifiers (member_modifier))?
+			(binding_pattern_kind)?
 			(variable_declaration
 				(simple_identifier) @field-name
 				(user_type (type_identifier)) @field-type
 			)
+			(integer_literal | string_literal | boolean_literal)? @field-value
 		) @field-declaration
+	`);
+
+	interfaceQuery = new MemoizedQuery(`
+		(class_declaration
+			(type_identifier) @interface-name
+			(class_body
+				(property_declaration
+					(binding_pattern_kind)?
+					(variable_declaration
+						(simple_identifier) @interface-property-name
+						(user_type (type_identifier)) @interface-property-type
+					)
+				)?
+				(function_declaration
+					(simple_identifier) @interface-method-name
+					(function_value_parameters)?
+					(function_body)? @interface-method-body
+				)?
+			)
+		)
 	`);
 	namespaces = [
 		[

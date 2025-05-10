@@ -21,7 +21,7 @@
     "@octokit/rest": "^20.1.1",
     "@types/inquirer": "^9.0.8",
     "@types/node-fetch": "^2.6.12",
-    "@unit-mesh/treesitter-artifacts": "^1.6.3",
+    "@unit-mesh/treesitter-artifacts": "^1.6.4",
     "cheerio": "^1.0.0-rc.12",
     "csv-parse": "^5.5.5",
     "graphology": "^0.26.0",

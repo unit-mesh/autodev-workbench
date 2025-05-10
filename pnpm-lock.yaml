@@ -39,8 +39,8 @@ importers:
         specifier: ^2.6.12
         version: 2.6.12
       '@unit-mesh/treesitter-artifacts':
-        specifier: ^1.6.3
-        version: 1.6.3
+        specifier: ^1.6.4
+        version: 1.6.4
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0
@@ -2351,8 +2351,8 @@ packages:
     resolution: {integrity: sha512-1rYQTCLFFzOI5Nl0c8LUpJT8HxpwVRn9E4CkMsYfuN6ctmQqExjSTzzSk0Tz2apmXy7WU6/6fyaZVVA/thPN+w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@unit-mesh/treesitter-artifacts@1.6.3':
-    resolution: {integrity: sha512-OMkBUjzLsldVZPjGM5O94wNgek2qP+4KLZ/z8mU0K50C7jobw6P7Qjj2C6sUTfN8KG5Y3K+gFDX92WIOuexu2A==}
+  '@unit-mesh/treesitter-artifacts@1.6.4':
+    resolution: {integrity: sha512-b4wfjoyO6K34Gu4UhM+ENIUGnVDBMOSjmCn007gOxURatJShDATisWFZYHiD1k8lonqRZgijGAlU1SDM4NNvBA==}
     engines: {node: '>=18.0.0'}
 
   '@unrs/resolver-binding-darwin-arm64@1.7.2':
@@ -7831,7 +7831,7 @@ snapshots:
       '@typescript-eslint/types': 8.32.0
       eslint-visitor-keys: 4.2.0
 
-  '@unit-mesh/treesitter-artifacts@1.6.3': {}
+  '@unit-mesh/treesitter-artifacts@1.6.4': {}
 
   '@unrs/resolver-binding-darwin-arm64@1.7.2':
     optional: true
