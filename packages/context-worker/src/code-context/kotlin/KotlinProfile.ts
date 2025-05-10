@@ -47,7 +47,7 @@ export class KotlinProfile implements LanguageProfile {
           )?
           @method-params)
         (function_body) @method-body
-      )
+      )?
 
 			(class_declaration
 		    (type_identifier) @class-name
