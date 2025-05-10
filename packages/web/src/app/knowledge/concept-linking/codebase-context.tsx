@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, FileText, RefreshCw } from "lucide-react"
@@ -100,13 +100,12 @@ export function CodebaseContext() {
   }
 
   return (
-    <Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden w-full max-w-[100%]">
-      <CardHeader
-        className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+    <div className="w-full max-w-[100%]">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-t-lg shadow-sm mb-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-purple-500"/>
-            <CardTitle className="text-lg">Codebase Context</CardTitle>
+            <h2 className="text-lg font-semibold">Codebase Context</h2>
           </div>
           <Button
             variant="outline"
@@ -123,57 +122,53 @@ export function CodebaseContext() {
             {isLoadingContext ? "Loading..." : "Refresh Context"}
           </Button>
         </div>
-        <CardDescription className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
           Available codebase concept for concept validation
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="max-h-[500px] overflow-y-auto">
-          {isLoadingContext ? (
-            <div className="flex flex-col items-center justify-center p-8 text-slate-500">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-3"/>
-              <p>Loading context data...</p>
-            </div>
-          ) : contextData.length > 0 ? (
-            contextData.map((item, index) => {
+        </p>
+      </div>
+
+      <div className="max-h-[500px] overflow-y-auto">
+        {isLoadingContext ? (
+          <div className="flex flex-col items-center justify-center p-8 text-slate-500">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-3"/>
+            <p>Loading context data...</p>
+          </div>
+        ) : contextData.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {contextData.map((item, index) => {
               const codeBlocks = item.content ? extractCodeBlock(item.content) : null
 
               return (
-                <div
-                  key={item.id || index}
-                  className={`border-b border-slate-200 dark:border-slate-700 ${
-                    index === contextData.length - 1 ? "border-b-0" : ""
-                  }`}
-                >
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50">
+                <Card key={item.id || index} className="border-slate-200 dark:border-slate-700 shadow-sm h-full flex flex-col">
+                  <CardHeader className="p-3 bg-slate-50 dark:bg-slate-800/50 max-h-[120px] overflow-hidden">
                     <div className="flex items-center justify-between">
-                      <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                      <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate max-w-[70%]">
                         {item.path || item.source || "Unknown source"}
                       </div>
                       {item.language && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs shrink-0">
                           {item.language}
                         </Badge>
                       )}
                     </div>
-                    {item.title && <div className="mt-1 font-medium text-sm">{item.title}</div>}
+                    {item.title && <div className="mt-1 font-medium text-sm truncate">{item.title}</div>}
                     {item.description && (
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 overflow-hidden">
                         {item.description}
                       </div>
                     )}
-                  </div>
-                  <div className="p-3 bg-white dark:bg-slate-800">
+                  </CardHeader>
+                  <CardContent className="p-3 bg-white dark:bg-slate-800 flex-1 overflow-hidden max-h-[300px] overflow-y-auto">
                     {codeBlocks ? (
                       codeBlocks.map((block, blockIndex) => (
-                        <div key={blockIndex} className="mb-3 last:mb-0">
+                        <div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
                           <SyntaxHighlighter
                             language={block.language}
                             style={vscDarkPlus}
                             customStyle={{
-                              margin: 0,
-                              borderRadius: "0.375rem",
                               fontSize: "0.875rem",
+                              maxHeight: "200px",
+                              overflow: "auto",
                             }}
                           >
                             {block.code}
@@ -188,26 +183,29 @@ export function CodebaseContext() {
                           margin: 0,
                           borderRadius: "0.375rem",
                           fontSize: "0.875rem",
+                          maxHeight: "200px",
+                          overflow: "auto",
                         }}
                       >
                         {item.code}
                       </SyntaxHighlighter>
                     ) : (
-                      <div className="text-sm whitespace-pre-wrap">
+                      <div className="text-sm whitespace-pre-wrap overflow-y-auto max-h-[200px]">
                         {item.content || "No content available"}
                       </div>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )
-            })
-          ) : (
-            <div className="text-center p-8 text-slate-500">
-              <p>No context data available</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            })}
+          </div>
+        ) : (
+          <div className="text-center p-8 text-slate-500">
+            <p>No context data available</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
+
