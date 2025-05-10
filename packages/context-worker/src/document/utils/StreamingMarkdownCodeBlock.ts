@@ -126,7 +126,7 @@ export class StreamingMarkdownCodeBlock {
 
     const trimmedCode = codeBuilder.slice(startIndex, endIndex + 1).join("\n");
     const language = languageId || "plaintext";
-    
+
     // if content is not empty, but code is empty, then it's a markdown
     if (!trimmedCode.trim()) {
       return new StreamingMarkdownCodeBlock(
@@ -141,6 +141,7 @@ export class StreamingMarkdownCodeBlock {
     return new StreamingMarkdownCodeBlock(language, trimmedCode, codeClosed, startIndex, endIndex);
   }
 }
+
 
 export class MarkdownCodeBlock {
   language: string;

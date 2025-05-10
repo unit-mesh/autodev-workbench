@@ -13,6 +13,7 @@ export function CodebaseContext() {
   const [contextData, setContextData] = useState<any[]>([])
   const [isLoadingContext, setIsLoadingContext] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generatingIds, setGeneratingIds] = useState<string[]>([])
 
   // Function to fetch context data
   const fetchContextData = async () => {
@@ -32,20 +33,29 @@ export function CodebaseContext() {
     }
   }
 
-  // AI 生成描述
-  const handleAIGenerate = async () => {
-    setIsGenerating(true)
+  // 单条AI生成
+  const handleAIGenerateOne = async (id: string) => {
+    setGeneratingIds((prev) => [...prev, id])
     try {
-      const response = await fetch("/api/context/generate", { method: "POST" })
+      const response = await fetch("/api/context/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      })
       if (response.ok) {
-        await fetchContextData()
+        // 只刷新该条数据
+        const updated = await fetch(`/api/context?id=${id}`)
+        if (updated.ok) {
+          const [updatedItem] = await updated.json()
+          setContextData((prev) => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item))
+        }
       } else {
-        console.error("Failed to generate AI descriptions")
+        console.error("Failed to generate AI description for one item")
       }
     } catch (error) {
-      console.error("Error generating AI descriptions:", error)
+      console.error("Error generating AI description for one item:", error)
     } finally {
-      setIsGenerating(false)
+      setGeneratingIds((prev) => prev.filter(_id => _id !== id))
     }
   }
 
@@ -143,7 +153,7 @@ export function CodebaseContext() {
             <Button
               variant="default"
               size="sm"
-              onClick={handleAIGenerate}
+              onClick={() => setIsGenerating(true)}
               disabled={isGenerating || isLoadingContext}
               className="h-8"
             >
@@ -188,6 +198,21 @@ export function CodebaseContext() {
                       <div className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 overflow-hidden">
                         {item.description}
                       </div>
+                    )}
+                    {/* AI生成按钮：仅无title时显示 */}
+                    {!item.title && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="mt-2 h-7"
+                        disabled={generatingIds.includes(item.id)}
+                        onClick={() => handleAIGenerateOne(item.id)}
+                      >
+                        {generatingIds.includes(item.id) ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : null}
+                        {generatingIds.includes(item.id) ? "AI生成中..." : "AI生成"}
+                      </Button>
                     )}
                   </CardHeader>
                   <CardContent className="p-3 bg-white dark:bg-slate-800 flex-1 overflow-hidden max-h-[300px] overflow-y-auto">

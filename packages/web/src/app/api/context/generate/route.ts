@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@vercel/postgres';
 import { reply } from "@/app/api/_utils/reply";
+import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
 export const maxDuration = 60;
 
@@ -40,14 +41,17 @@ ${content}
   ]);
 
   try {
-    return JSON.parse(answer) as CodeAnalysis;
+    const text = MarkdownCodeBlock.from(answer)[0].code;
+    const parse = JSON.parse(text);
+    return parse as CodeAnalysis;
   } catch (error) {
     console.error('Error parsing AI response:', error);
+    console.warn(answer)
     throw new Error('Failed to parse AI response');
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const client = createClient();
   await client.connect();
 
@@ -84,11 +88,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in batch generating analysis:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: "Error batch generating analysis", 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      }, 
+      {
+        success: false,
+        error: "Error batch generating analysis",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   } finally {
