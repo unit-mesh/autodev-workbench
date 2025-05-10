@@ -60,6 +60,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.56.3",
     "react-resizable-panels": "^3.0.1",
+    "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.15.3",
     "sonner": "^2.0.3",
     "swagger-ui-react": "^5.21.0",
