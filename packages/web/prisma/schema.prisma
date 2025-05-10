@@ -5,12 +5,13 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  previewFeatures = ["driverAdapters", "postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model CodeAnalysis {
@@ -21,6 +22,7 @@ model CodeAnalysis {
   description String?  @db.Text
   source      String?
   language    String?
+  embedding   Unsupported("vector")?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
