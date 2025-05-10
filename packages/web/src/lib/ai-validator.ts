@@ -1,5 +1,5 @@
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { reply } from "@/app/api/_utils/reply"
+import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
 export interface ValidationResult {
   isValid: boolean
@@ -39,6 +39,7 @@ For each term, determine if it's a valid domain concept or not. A valid domain c
 2. Is not a generic programming term (like "function", "class", "parameter")
 3. Is not a common English word without specific domain meaning
 4. Is not a variable name that doesn't represent a domain concept
+5. Is not a common programming term without specific domain meaning, like "loop", "array", "controller", "service", "result", etc.
 
 Respond in the following JSON format:
 {
@@ -50,16 +51,12 @@ Respond in the following JSON format:
 `
 
   try {
-    const { text } = await generateText({
-      model: openai("gpt-4o"),
-      prompt,
-      temperature: 0.1,
-    })
+    const text = await reply([{
+      role: 'user',
+      content: prompt,
+    }])
 
-    // Parse the JSON response
-    const response = JSON.parse(text)
-
-    // Separate valid and invalid concepts
+    const response = JSON.parse(MarkdownCodeBlock.from(text)[0].code)
     const validConcepts: string[] = []
     const invalidConcepts: { term: string; reason: string }[] = []
 
