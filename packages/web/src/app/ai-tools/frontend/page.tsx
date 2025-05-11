@@ -104,8 +104,6 @@ export default function AIFrontendGenerator() {
 </body>
 </html>
     `
-
-    // If user asks for something specific, we could have different templates
     if (userMessage.includes("登录") || userMessage.includes("login")) {
       aiResponse = "我已经为你生成了一个登录表单。你可以在右侧查看预览和代码。"
       code = `
@@ -203,8 +201,6 @@ export default function AIFrontendGenerator() {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
-      // 这里通常会有 API 调用来验证登录
       console.log('登录尝试:', { email, password });
       alert('登录表单已提交！在实际应用中，这里会发送到服务器验证。');
     });
@@ -244,7 +240,6 @@ export default function AIFrontendGenerator() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      {/* Chat Section - Left Side */}
       <div className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-r border-gray-200 bg-white">
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold flex items-center">
@@ -253,7 +248,6 @@ export default function AIFrontendGenerator() {
           </h2>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
