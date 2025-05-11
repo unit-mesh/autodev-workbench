@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import * as Babel from "@babel/standalone"
 
 export function transpileCode(code: string): string {
