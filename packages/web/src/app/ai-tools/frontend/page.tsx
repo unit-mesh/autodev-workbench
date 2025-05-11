@@ -90,7 +90,7 @@ export default function AIFrontendGenerator() {
 	}
 
 	return (
-		<div className="min-h-screen from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+		<div className="h-full from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
 			<main className="container mx-auto p-4 py-8">
 				<div className="flex flex-col gap-6">
 					<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -105,10 +105,8 @@ export default function AIFrontendGenerator() {
 						</div>
 					</div>
 
-					<div className="grid gap-6">
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							{/* Chat Section */}
-							<Card className="h-[900px] flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<Card className="flex flex-col">
 								<CardHeader>
 									<CardTitle>Chat with AI</CardTitle>
 									<CardDescription>Describe the frontend component you want to create</CardDescription>
@@ -167,7 +165,7 @@ export default function AIFrontendGenerator() {
 							</Card>
 
 							{/* Preview/Code Section */}
-							<Card className="h-[900px] flex flex-col">
+							<Card className="flex flex-col">
 								<CardHeader className="pb-0">
 									<Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
 										<div className="flex justify-between items-center">
@@ -219,7 +217,6 @@ export default function AIFrontendGenerator() {
 								</CardHeader>
 							</Card>
 						</div>
-					</div>
 				</div>
 			</main>
 		</div>

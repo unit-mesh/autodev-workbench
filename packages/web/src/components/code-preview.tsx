@@ -21,15 +21,6 @@ export function CodePreview({ code, language }: CodePreviewProps) {
     setError(null)
 
     try {
-      const iframe = iframeRef.current
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-
-      if (!iframeDoc) {
-        setError("Could not access iframe document")
-        setIsLoading(false)
-        return
-      }
-
       if (language.toLowerCase() === "html") {
         const htmlContent = `
           <!DOCTYPE html>
@@ -52,10 +43,8 @@ export function CodePreview({ code, language }: CodePreviewProps) {
           </html>
         `
 
-        iframeDoc.open()
-        iframeDoc.write(htmlContent)
-        iframeDoc.close()
-        setIsLoading(false)
+        iframeRef.current.srcdoc = htmlContent
+        setTimeout(() => setIsLoading(false), 300)
         return
       }
 
@@ -64,6 +53,9 @@ export function CodePreview({ code, language }: CodePreviewProps) {
         setIsLoading(false)
         return
       }
+
+      const transpiledCode = transpileCode(code)
+      const renderScript = createRenderScript(transpiledCode)
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -99,28 +91,26 @@ export function CodePreview({ code, language }: CodePreviewProps) {
                 <p>Loading preview...</p>
               </div>
             </div>
+            <script>
+              try {
+                ${renderScript}
+              } catch (err) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'preview-error';
+                errorDiv.innerHTML = '<h3>Component Error</h3><p>' + err.message + '</p>';
+                document.body.appendChild(errorDiv);
+                console.error(err);
+              }
+            </script>
           </body>
         </html>
       `
 
-      iframeDoc.open()
-      iframeDoc.write(htmlContent)
-      iframeDoc.close()
+      // Use srcdoc instead of directly accessing the iframe document
+      iframeRef.current.srcdoc = htmlContent
 
-      const transpiledCode = transpileCode(code)
-      const renderScript = createRenderScript(transpiledCode)
-
-      setTimeout(() => {
-        try {
-          const scriptElement = iframeDoc.createElement("script")
-          scriptElement.textContent = renderScript
-          iframeDoc.body.appendChild(scriptElement)
-          setIsLoading(false)
-        } catch (err) {
-          setError(`Error rendering component: ${err instanceof Error ? err.message : String(err)}`)
-          setIsLoading(false)
-        }
-      }, 300)
+      // Set loading to false after a reasonable delay to ensure scripts are loaded
+      setTimeout(() => setIsLoading(false), 600)
     } catch (err) {
       setError(`Error setting up preview: ${err instanceof Error ? err.message : String(err)}`)
       setIsLoading(false)
@@ -151,3 +141,4 @@ export function CodePreview({ code, language }: CodePreviewProps) {
     </div>
   )
 }
+
