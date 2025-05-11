@@ -51,6 +51,7 @@
     "husky": "^9.1.7",
     "input-otp": "^1.4.2",
     "keyword-extractor": "^0.0.28",
+    "lru-cache": "^10.4.3",
     "lucide-react": "^0.509.0",
     "natural": "^8.0.1",
     "next": "15.3.1",

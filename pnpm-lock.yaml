@@ -279,6 +279,9 @@ importers:
       keyword-extractor:
         specifier: ^0.0.28
         version: 0.0.28
+      lru-cache:
+        specifier: ^10.4.3
+        version: 10.4.3
       lucide-react:
         specifier: ^0.509.0
         version: 0.509.0(react@19.1.0)
