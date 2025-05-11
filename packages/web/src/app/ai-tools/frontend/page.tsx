@@ -90,8 +90,9 @@ export default function AIFrontendGenerator() {
 			// Extract code blocks
 			const codeBlocks = extractCodeBlocks(data.text)
 			if (codeBlocks.length > 0) {
-				setGeneratedCode(codeBlocks[0].code)
-				setCodeLanguage(codeBlocks[0].language)
+				const codeBlock = codeBlocks[codeBlocks.length - 1]
+				setGeneratedCode(codeBlock.code)
+				setCodeLanguage(codeBlock.language)
 			}
 		} catch (error) {
 			console.error("Error generating response:", error)
