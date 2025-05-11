@@ -1,319 +1,254 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type React from "react"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { MessageSquare, Code, Play, Send, Loader2 } from "lucide-react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Send, Code, Eye, Loader2 } from "lucide-react"
+import { CodeBlock } from "@/components/code-block"
+import { CodePreview } from "@/components/code-preview"
+import { extractCodeBlocks } from "@/lib/code-highlight"
 
-// Types
-type MessageRole = "user" | "assistant"
-
-interface Message {
-  id: string
-  role: MessageRole
+type Message = {
+  role: "user" | "assistant"
   content: string
 }
 
 export default function AIFrontendGenerator() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "你好！我是 AI 前端代码生成器。请告诉我你想要创建什么样的前端界面，我会为你生成代码。",
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [generatedCode, setGeneratedCode] = useState("<div>预览将在这里显示</div>")
-  const [activeTab, setActiveTab] = useState("preview")
-
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const previewRef = useRef<HTMLIFrameElement>(null)
-
-  // Scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
-
-  // Update preview when code changes
-  useEffect(() => {
-    if (previewRef.current && activeTab === "preview") {
-      const iframe = previewRef.current
-      const document = iframe.contentDocument
-      if (document) {
-        document.open()
-        document.write(generatedCode)
-        document.close()
-      }
-    }
-  }, [generatedCode, activeTab])
-
-  const generateAIResponse = async (userMessage: string) => {
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    let aiResponse = "我已经为你生成了一个简单的按钮组件。你可以在右侧查看预览和代码。"
-    let code = `
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>生成的前端</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f9fafb;
-    }
-    .container {
-      text-align: center;
-    }
-    .button {
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .button:hover {
-      background-color: #2563eb;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>你好，世界！</h1>
-    <p>这是一个由 AI 生成的简单前端界面</p>
-    <button class="button">点击我</button>
-  </div>
-  <script>
-    document.querySelector('.button').addEventListener('click', () => {
-      alert('按钮被点击了！');
-    });
-  </script>
-</body>
-</html>
-    `
-    if (userMessage.includes("登录") || userMessage.includes("login")) {
-      aiResponse = "我已经为你生成了一个登录表单。你可以在右侧查看预览和代码。"
-      code = `
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录表单</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f9fafb;
-    }
-    .login-form {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 400px;
-    }
-    .form-title {
-      margin-top: 0;
-      color: #111827;
-      text-align: center;
-    }
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: #374151;
-      font-size: 0.875rem;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    .submit-button {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .submit-button:hover {
-      background-color: #2563eb;
-    }
-    .form-footer {
-      text-align: center;
-      margin-top: 1rem;
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-    .form-footer a {
-      color: #3b82f6;
-      text-decoration: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="login-form">
-    <h2 class="form-title">登录账户</h2>
-    <form id="login-form">
-      <div class="form-group">
-        <label for="email">邮箱</label>
-        <input type="email" id="email" required>
-      </div>
-      <div class="form-group">
-        <label for="password">密码</label>
-        <input type="password" id="password" required>
-      </div>
-      <button type="submit" class="submit-button">登录</button>
-    </form>
-    <div class="form-footer">
-      还没有账户？<a href="#">注册</a>
-    </div>
-  </div>
-  <script>
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      console.log('登录尝试:', { email, password });
-      alert('登录表单已提交！在实际应用中，这里会发送到服务器验证。');
-    });
-  </script>
-</body>
-</html>
-      `
-    }
-
-    setGeneratedCode(code)
-
-    const newAssistantMessage: Message = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: aiResponse,
-    }
-
-    setMessages((prev) => [...prev, newAssistantMessage])
-    setIsLoading(false)
-  }
+  const [generatedCode, setGeneratedCode] = useState<string>("")
+  const [codeLanguage, setCodeLanguage] = useState<string>("jsx")
+  const [activeTab, setActiveTab] = useState<string>("preview")
+  const [conversationId, setConversationId] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (input.trim() === "" || isLoading) return
+    if (!input.trim()) return
 
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-    }
-
-    setMessages((prev) => [...prev, newUserMessage])
+    // Add user message
+    const userMessage = { role: "user" as const, content: input }
+    setMessages((prev) => [...prev, userMessage])
     setInput("")
+    setIsLoading(true)
 
-    await generateAIResponse(input)
+    try {
+      // Call the chat API
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          conversationId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to generate response")
+      }
+
+      const data = await response.json()
+
+      // Save conversation ID if it's new
+      if (!conversationId && data.conversationId) {
+        setConversationId(data.conversationId)
+      }
+
+      // Add assistant message
+      const assistantMessage = {
+        role: "assistant" as const,
+        content: data.text,
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+
+      // Extract code blocks
+      const codeBlocks = extractCodeBlocks(data.text)
+      if (codeBlocks.length > 0) {
+        setGeneratedCode(codeBlocks[0].code)
+        setCodeLanguage(codeBlocks[0].language)
+      }
+    } catch (error) {
+      console.error("Error generating response:", error)
+      // Add error message
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, there was an error generating a response. Please try again.",
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
   }
+  //
+  // const copyToClipboard = () => {
+  //   navigator.clipboard.writeText(generatedCode)
+  // }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
-      <div className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col border-r border-gray-200 bg-white">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5" />
-            AI 聊天
-          </h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {message.content}
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="p-4 border-t border-gray-200">
-          <form onSubmit={handleSubmit} className="flex space-x-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="描述你想要的前端界面..."
-              className="flex-1 resize-none"
-              rows={2}
-            />
-            <Button type="submit" disabled={isLoading} className="self-end">
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
-        </div>
+    <div className="container mx-auto py-8 px-4">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4">AI Frontend Generator</h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          Chat with our AI to generate frontend code, preview it in real-time, and customize it to your needs.
+        </p>
       </div>
 
-      {/* Preview/Code Section - Right Side */}
-      <div className="w-full md:w-1/2 h-1/2 md:h-full flex flex-col">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="preview" className="flex items-center">
-                <Play className="mr-2 h-4 w-4" />
-                预览
-              </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center">
-                <Code className="mr-2 h-4 w-4" />
-                代码
-              </TabsTrigger>
-            </TabsList>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chat Section */}
+        <Card className="h-[600px] flex flex-col">
+          <CardHeader>
+            <CardTitle>Chat with AI</CardTitle>
+            <CardDescription>Describe the frontend component you want to create</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-grow overflow-hidden">
+            <ScrollArea className="h-[400px] pr-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                  <Code size={48} className="mb-4" />
+                  <p>Start a conversation with the AI to generate frontend code.</p>
+                  <p className="text-sm mt-2">Try: &#34;Create a sign-up form with email and password fields&#34;</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((message, index) => (
+                    <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[80%] rounded-lg p-3 bg-muted">
+                        <div className="flex items-center space-x-2">
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>Generating code...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+          <CardFooter>
+            <form onSubmit={handleSubmit} className="w-full flex space-x-2">
+              <Textarea
+                placeholder="Describe the component you want to create..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-grow resize-none"
+                rows={2}
+                disabled={isLoading}
+              />
+              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+                <Send size={18} />
+              </Button>
+            </form>
+          </CardFooter>
+        </Card>
 
-          <TabsContent value="preview" className="flex-1 p-4 overflow-auto">
-            <Card className="h-full">
-              <CardContent className="p-0 h-full">
-                <iframe ref={previewRef} title="Preview" className="w-full h-full border-0" sandbox="allow-scripts" />
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Preview/Code Section */}
+        <Card className="h-[600px] flex flex-col">
+          <CardHeader className="pb-0">
+            <Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
+              <div className="flex justify-between items-center">
+                <CardTitle>Output</CardTitle>
+                <TabsList>
+                  <TabsTrigger value="preview" className="flex items-center gap-1">
+                    <Eye size={16} />
+                    Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="code" className="flex items-center gap-1">
+                    <Code size={16} />
+                    Code
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-          <TabsContent value="code" className="flex-1 p-4 overflow-auto">
-            <Card className="h-full">
-              <CardContent className="p-4">
-                <pre className="text-sm overflow-auto h-full">
-                  <code>{generatedCode}</code>
-                </pre>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="preview" className="mt-4">
+                <div className="h-[450px] overflow-hidden">
+                  {generatedCode ? (
+                    <CodePreview code={generatedCode} language={codeLanguage} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 border rounded-md p-4">
+                      <Eye size={48} className="mb-4" />
+                      <p>Component preview will appear here</p>
+                      <p className="text-sm mt-2">Start a conversation with the AI to generate content</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="code" className="mt-4">
+                <div className="h-[450px] overflow-hidden">
+                  {generatedCode ? (
+                    <ScrollArea className="h-full">
+                      <CodeBlock code={generatedCode} language={codeLanguage} />
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 border rounded-md p-4">
+                      <Code size={48} className="mb-4" />
+                      <p>Generated code will appear here</p>
+                      <p className="text-sm mt-2">Start a conversation with the AI to generate content</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Features Section */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-center mb-8">Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Powered Generation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Describe what you want in natural language, and our AI will generate the corresponding frontend code for
+                you.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Real-time Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                See your generated components in real-time with our live preview feature. What you see is what you get.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Code Export</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Export the generated code directly to your project or copy it to your clipboard with a single click.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
