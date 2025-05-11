@@ -21,14 +21,6 @@ export function CodePreview({ code, language }: CodePreviewProps) {
     setError(null)
 
     try {
-      // Only try to render JSX/TSX code
-      if (!["jsx", "tsx", "js", "ts"].includes(language.toLowerCase())) {
-        setError(`Cannot preview ${language} code. Only JSX/TSX components can be previewed.`)
-        setIsLoading(false)
-        return
-      }
-
-      // Get the iframe document
       const iframe = iframeRef.current
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
 
@@ -38,7 +30,41 @@ export function CodePreview({ code, language }: CodePreviewProps) {
         return
       }
 
-      // Create HTML content with React and ReactDOM
+      if (language.toLowerCase() === "html") {
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>HTML Preview</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  padding: 0;
+                  margin: 0;
+                }
+              </style>
+            </head>
+            <body>
+              ${code}
+            </body>
+          </html>
+        `
+
+        iframeDoc.open()
+        iframeDoc.write(htmlContent)
+        iframeDoc.close()
+        setIsLoading(false)
+        return
+      }
+
+      if (!["jsx", "tsx", "js", "ts"].includes(language.toLowerCase())) {
+        setError(`Cannot preview ${language} code. Only JSX/TSX components and HTML can be previewed.`)
+        setIsLoading(false)
+        return
+      }
+
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -77,18 +103,13 @@ export function CodePreview({ code, language }: CodePreviewProps) {
         </html>
       `
 
-      // Write the initial HTML
       iframeDoc.open()
       iframeDoc.write(htmlContent)
       iframeDoc.close()
 
-      // Transpile the code
       const transpiledCode = transpileCode(code)
-
-      // Create a script to render the component
       const renderScript = createRenderScript(transpiledCode)
 
-      // Add the script to the iframe
       setTimeout(() => {
         try {
           const scriptElement = iframeDoc.createElement("script")
@@ -99,7 +120,7 @@ export function CodePreview({ code, language }: CodePreviewProps) {
           setError(`Error rendering component: ${err instanceof Error ? err.message : String(err)}`)
           setIsLoading(false)
         }
-      }, 300) // Small delay to ensure React and ReactDOM are loaded
+      }, 300)
     } catch (err) {
       setError(`Error setting up preview: ${err instanceof Error ? err.message : String(err)}`)
       setIsLoading(false)

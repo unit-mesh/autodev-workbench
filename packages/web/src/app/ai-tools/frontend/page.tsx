@@ -108,7 +108,7 @@ export default function AIFrontendGenerator() {
 					<div className="grid gap-6">
 						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 							{/* Chat Section */}
-							<Card className="h-[600px] flex flex-col">
+							<Card className="h-[900px] flex flex-col">
 								<CardHeader>
 									<CardTitle>Chat with AI</CardTitle>
 									<CardDescription>Describe the frontend component you want to create</CardDescription>
@@ -167,7 +167,7 @@ export default function AIFrontendGenerator() {
 							</Card>
 
 							{/* Preview/Code Section */}
-							<Card className="h-[600px] flex flex-col">
+							<Card className="h-[900px] flex flex-col">
 								<CardHeader className="pb-0">
 									<Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
 										<div className="flex justify-between items-center">
