@@ -119,7 +119,7 @@ export default function AIFrontendGenerator() {
 											<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
 												<Code size={48} className="mb-4"/>
 												<p>Start a conversation with the AI to generate frontend code.</p>
-												<p className="text-sm mt-2">Try: "Create a sign-up form with email and password fields"</p>
+												<p className="text-sm mt-2">Try: &#34;Create a sign-up form with email and password fields&#34;</p>
 											</div>
 										) : (
 											<div className="space-y-4">
