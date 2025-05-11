@@ -6,7 +6,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Code, Eye, Loader2 } from 'lucide-react'
 import { CodeBlock } from "@/components/code-block"
@@ -14,9 +13,19 @@ import { CodePreview } from "@/components/code-preview"
 import { extractCodeBlocks } from "@/lib/code-highlight"
 
 type Message = {
-	role: "user" | "assistant"
+	role: "user" | "assistant" | "system"
 	content: string
 }
+
+
+const SYSTEM_PROMPT = `You are an expert frontend developer specializing in React, Next.js, and modern web development.
+Your task is to generate high-quality, working frontend code based on user requests.
+Always provide complete, working code examples that follow best practices.
+When generating code, wrap it in markdown code blocks with the appropriate language tag.
+For example: \`\`\`jsx
+// Your code here
+\`\`\`
+`
 
 export default function AIFrontendGenerator() {
 	const [messages, setMessages] = useState<Message[]>([])
@@ -38,14 +47,24 @@ export default function AIFrontendGenerator() {
 		setIsLoading(true)
 
 		try {
-			// Call the chat API
+			let msgList = [...messages, userMessage];
+			if (messages.length > 0 && messages[0].role !== "system") {
+				msgList = [
+          {
+            role: "system" as const,
+            content: SYSTEM_PROMPT,
+          },
+          ...msgList,
+        ]
+			}
+
 			const response = await fetch("/api/chat", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					messages: [...messages, userMessage],
+					messages: msgList,
 					conversationId,
 				}),
 			})
@@ -106,13 +125,14 @@ export default function AIFrontendGenerator() {
 					</div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							<Card className="flex flex-col">
-								<CardHeader>
-									<CardTitle>Chat with AI</CardTitle>
-									<CardDescription>Describe the frontend component you want to create</CardDescription>
-								</CardHeader>
-								<CardContent className="flex-grow overflow-hidden">
-									<ScrollArea className="h-[400px] pr-4">
+							{/* Chat Section */}
+							<div className="flex flex-col border rounded-lg shadow-sm bg-background">
+								<div className="p-4 border-b">
+									<h2 className="text-lg font-semibold">Chat with AI</h2>
+									<p className="text-sm text-muted-foreground">Describe the frontend component you want to create</p>
+								</div>
+								<div className="flex-grow overflow-hidden p-4">
+									<ScrollArea className="h-[600px] pr-4">
 										{messages.length === 0 ? (
 											<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
 												<Code size={48} className="mb-4"/>
@@ -146,8 +166,8 @@ export default function AIFrontendGenerator() {
 											</div>
 										)}
 									</ScrollArea>
-								</CardContent>
-								<CardFooter>
+									</div>
+								<div className="p-4 border-t">
 									<form onSubmit={handleSubmit} className="w-full flex space-x-2">
 										<Textarea
 											placeholder="Describe the component you want to create..."
@@ -161,15 +181,15 @@ export default function AIFrontendGenerator() {
 											<Send size={18}/>
 										</Button>
 									</form>
-								</CardFooter>
-							</Card>
+									</div>
+							</div>
 
 							{/* Preview/Code Section */}
-							<Card className="flex flex-col">
-								<CardHeader className="pb-0">
+							<div className="flex flex-col border rounded-lg shadow-sm bg-background">
+								<div className="p-4">
 									<Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
 										<div className="flex justify-between items-center">
-											<CardTitle>Output</CardTitle>
+											<h2 className="text-lg font-semibold">Output</h2>
 											<TabsList>
 												<TabsTrigger value="preview" className="flex items-center gap-1">
 													<Eye size={16}/>
@@ -183,7 +203,7 @@ export default function AIFrontendGenerator() {
 										</div>
 
 										<TabsContent value="preview" className="mt-4">
-											<div className="h-[450px] overflow-hidden">
+											<div className="overflow-hidden">
 												{generatedCode ? (
 													<CodePreview code={generatedCode} language={codeLanguage}/>
 												) : (
@@ -198,7 +218,7 @@ export default function AIFrontendGenerator() {
 										</TabsContent>
 
 										<TabsContent value="code" className="mt-4">
-											<div className="h-[450px] overflow-hidden">
+											<div className="overflow-hidden">
 												{generatedCode ? (
 													<ScrollArea className="h-full">
 														<CodeBlock code={generatedCode} language={codeLanguage}/>
@@ -214,11 +234,12 @@ export default function AIFrontendGenerator() {
 											</div>
 										</TabsContent>
 									</Tabs>
-								</CardHeader>
-							</Card>
+									</div>
+							</div>
 						</div>
 				</div>
 			</main>
 		</div>
 	)
 }
+

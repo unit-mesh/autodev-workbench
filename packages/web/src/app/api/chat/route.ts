@@ -1,16 +1,5 @@
-import { openai } from "@ai-sdk/openai"
-import { generateText } from "ai"
 import { createConversation, createMessage, saveGeneratedCode } from "@/lib/db"
 import { reply } from "@/app/api/_utils/reply";
-
-const SYSTEM_PROMPT = `You are an expert frontend developer specializing in React, Next.js, and modern web development.
-Your task is to generate high-quality, working frontend code based on user requests.
-Always provide complete, working code examples that follow best practices.
-When generating code, wrap it in markdown code blocks with the appropriate language tag.
-For example: \`\`\`jsx
-// Your code here
-\`\`\`
-`
 
 export async function POST(req: Request) {
 	try {

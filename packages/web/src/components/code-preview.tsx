@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { transpileCode, createRenderScript } from "@/lib/code-transpiler"
+import { createRenderScript, transpileCode } from "@/lib/code-transpiler"
 import { Loader2 } from "lucide-react"
 
 interface CodePreviewProps {
@@ -22,28 +22,7 @@ export function CodePreview({ code, language }: CodePreviewProps) {
 
     try {
       if (language.toLowerCase() === "html") {
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="UTF-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <title>HTML Preview</title>
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                  padding: 0;
-                  margin: 0;
-                }
-              </style>
-            </head>
-            <body>
-              ${code}
-            </body>
-          </html>
-        `
-
-        iframeRef.current.srcdoc = htmlContent
+        iframeRef.current.srcdoc = code
         setTimeout(() => setIsLoading(false), 300)
         return
       }
@@ -118,7 +97,7 @@ export function CodePreview({ code, language }: CodePreviewProps) {
   }, [code, language])
 
   return (
-    <div className="relative w-full h-full border rounded-md bg-white">
+    <div className="relative w-full h-full overflow-hidden">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
           <div className="flex flex-col items-center">
@@ -137,7 +116,12 @@ export function CodePreview({ code, language }: CodePreviewProps) {
         </div>
       )}
 
-      <iframe ref={iframeRef} className="w-full h-full" sandbox="allow-scripts" title="Component Preview" />
+      <iframe
+        ref={iframeRef}
+        className="w-full h-full bg-transparent"
+        sandbox="allow-scripts"
+        title="Component Preview"
+      />
     </div>
   )
 }
