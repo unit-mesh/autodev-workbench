@@ -135,7 +135,7 @@ export default function AgentsPage() {
   });
 
   return (
-    <div className="flex flex-col bg-gradient-to-b from-slate-50 to-white min-h-screen px-6 lg:px-10 pb-16">
+    <div className="flex flex-col from-slate-50 to-white min-h-screen px-6 lg:px-10 pb-16">
       {/* 页面标题区域 */}
       <div className="my-8 lg:my-12 max-w-4xl mx-auto text-center">
         <h1 className="text-4xl lg:text-5xl font-bold mb-4 text-slate-800 relative inline-block">
