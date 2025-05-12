@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState } from 'react';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from "@/components/ui/tabs";
 import {
   Card,
@@ -193,19 +193,19 @@ export default function FrameworkPage() {
 
   // 过滤API数据
   const filteredApis = mockApis.filter((api) => {
-    const matchesSearch = api.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = api.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          api.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedApiCategory === "all" || api.category === selectedApiCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
   // 过滤组件数据
   const filteredComponents = mockComponents.filter((component) => {
-    const matchesSearch = component.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          component.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedComponentCategory === "all" || component.category === selectedComponentCategory;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -236,7 +236,7 @@ export default function FrameworkPage() {
               className="pl-10"
             />
           </div>
-          
+
           {activeTab === "apis" ? (
             <Select value={selectedApiCategory} onValueChange={setSelectedApiCategory}>
               <SelectTrigger className="w-[180px]">
@@ -354,10 +354,9 @@ export default function FrameworkPage() {
           )}
         </TabsContent>
       </Tabs>
-      
-      {/* AI 生成对话框 */}
+
       <div className="fixed bottom-8 right-8">
-        <Button 
+        <Button
           size="lg"
           className="rounded-full flex items-center gap-2 shadow-lg"
         >

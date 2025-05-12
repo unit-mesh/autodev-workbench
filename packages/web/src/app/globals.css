@@ -86,6 +86,11 @@
   background-color: hsl(var(--background));
 }
 
+.bg-primary {
+  color: var(--foreground);
+  background-color: hsl(var(--background));
+}
+
 .brand {
   font-family: sans-serif;
   color: #3b4151;

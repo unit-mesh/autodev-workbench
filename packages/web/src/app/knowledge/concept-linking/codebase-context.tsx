@@ -129,7 +129,7 @@ export function CodebaseContext() {
 							{isLoadingContext ? "Loading..." : "Refresh Context"}
 						</Button>
 						<Button
-							variant="default"
+							variant="outline"
 							size="sm"
 							onClick={() => setIsGenerating(true)}
 							disabled={isGenerating || isLoadingContext}
