@@ -20,50 +20,53 @@ interface AppConfig {
 	upload: boolean;
 	serverUrl: string;
 	outputDir: string;
+	nonInteractive: boolean;
 }
 
 class CommandLineParser {
 	public parse(): AppConfig {
 		const program = new Command();
-		
+
 		program
 			.name('context-worker')
 			.description('AutoDev Context Worker - Code analysis and context building tool')
 			.version('1.0.0');
-			
+
 		program
 			.option('-p, --path <dir>', 'Directory path to scan', process.cwd())
 			.option('-u, --upload', 'Upload analysis results to server', false)
 			.option('--server-url <url>', 'Server URL for uploading results', 'http://localhost:3000/api/context')
-			.option('-o, --output-dir <dir>', 'Output directory for learning materials', 'materials');
-			
+			.option('-o, --output-dir <dir>', 'Output directory for learning materials', 'materials')
+			.option('-n, --non-interactive', 'Run in non-interactive mode', false);
+
 		program.parse(process.argv);
-		
+
 		const options = program.opts();
-		
+
 		// 将路径转换为绝对路径
 		let dirPath = options.path;
 		if (!path.isAbsolute(dirPath)) {
 			dirPath = path.resolve(process.cwd(), dirPath);
 		}
-		
+
 		return {
 			dirPath,
 			upload: options.upload || false,
 			serverUrl: options.serverUrl,
-			outputDir: options.outputDir
+			outputDir: options.outputDir,
+			nonInteractive: options.nonInteractive || false
 		};
 	}
 }
 
 class UserInputHandler {
-	public async getAppConfig(): Promise<AppConfig> {
+	public async getAppConfig(currentConfig: AppConfig): Promise<AppConfig> {
 		const answers = await inquirer.prompt([
 			{
 				type: 'input',
 				name: 'dirPath',
 				message: '请输入要扫描的目录路径:',
-				default: process.cwd(),
+				default: currentConfig.dirPath,
 				validate: (input) => {
 					const fullPath = path.isAbsolute(input) ? input : path.resolve(process.cwd(), input);
 					if (fs.existsSync(fullPath)) {
@@ -76,20 +79,20 @@ class UserInputHandler {
 				type: 'confirm',
 				name: 'upload',
 				message: '是否要上传分析结果到服务器?',
-				default: false
+				default: currentConfig.upload
 			},
 			{
 				type: 'input',
 				name: 'serverUrl',
 				message: '请输入服务器地址:',
-				default: 'http://localhost:3000/api/context',
+				default: currentConfig.serverUrl,
 				when: (answers) => answers.upload
 			},
 			{
 				type: 'input',
 				name: 'outputDir',
 				message: '请输入分析结果输出目录:',
-				default: 'materials'
+				default: currentConfig.outputDir
 			}
 		]);
 
@@ -97,11 +100,13 @@ class UserInputHandler {
 			? answers.dirPath
 			: path.resolve(process.cwd(), answers.dirPath);
 
+		// 保留serverUrl的值，如果用户没有上传，则不会覆盖原来的值
 		return {
 			dirPath,
 			upload: answers.upload,
-			serverUrl: answers.serverUrl || 'http://localhost:3000/api/context',
-			outputDir: answers.outputDir
+			serverUrl: answers.upload ? answers.serverUrl : currentConfig.serverUrl,
+			outputDir: answers.outputDir,
+			nonInteractive: currentConfig.nonInteractive
 		};
 	}
 }
@@ -157,21 +162,18 @@ class InterfaceAnalyzerApp {
 	public async run(options?: Partial<AppConfig>): Promise<void> {
 		await this.codeAnalyzer.initialize();
 
-		// 首先尝试从命令行参数获取配置
 		const cmdConfig = this.commandLineParser.parse();
-		
-		// 如果提供了参数选项，覆盖命令行配置
-		const mergedConfig: AppConfig = {
+		const initialConfig: AppConfig = {
 			...cmdConfig,
 			...options,
 		};
 
-		// 检查是否需要交互式输入
-		// 只有当命令行没有提供路径且没有通过参数指定路径时，才启用交互式输入
-		let config = mergedConfig;
-		if (cmdConfig.dirPath === process.cwd() && !options?.dirPath) {
-			const userInput = await this.userInputHandler.getAppConfig();
-			config = userInput;
+		let config = initialConfig;
+		const isDefaultPath = cmdConfig.dirPath === process.cwd();
+		const shouldPrompt = !config.nonInteractive && (isDefaultPath && !options?.dirPath);
+
+		if (shouldPrompt) {
+			config = await this.userInputHandler.getAppConfig(config);
 		}
 
 		console.log(`正在扫描目录: ${config.dirPath}`);
