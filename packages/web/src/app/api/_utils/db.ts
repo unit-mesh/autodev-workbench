@@ -1,53 +1,81 @@
-import { neon } from "@neondatabase/serverless"
+import { createClient } from '@vercel/postgres'
 
-// Create a SQL client
-export const sql = neon(process.env.DATABASE_URL!)
-
-// Helper to generate UUIDs
 export function generateId(): string {
   return crypto.randomUUID()
 }
 
 // Conversation helpers
 export async function createConversation(title?: string) {
+  const client = createClient()
   const id = generateId()
-  await sql`
-    INSERT INTO "Conversations" (id, title)
-    VALUES (${id}, ${title || "New Conversation"})
-  `
-  return id
+  try {
+    await client.connect()
+    await client.sql`
+      INSERT INTO "Conversations" (id, title)
+      VALUES (${id}, ${title || "New Conversation"})
+    `
+    return id
+  } finally {
+    await client.end()
+  }
 }
 
 export async function getConversation(id: string) {
-  const conversation = await sql`
-    SELECT * FROM "Conversations" WHERE id = ${id}
-  `
-  return conversation[0] || null
+  const client = createClient()
+  try {
+    await client.connect()
+    const { rows } = await client.sql`
+      SELECT * FROM "Conversations" WHERE id = ${id}
+    `
+    return rows[0] || null
+  } finally {
+    await client.end()
+  }
 }
 
 export async function getConversations() {
-  return sql`
-    SELECT * FROM "Conversations" 
-    ORDER BY "createdAt" DESC
-  `
+  const client = createClient()
+  try {
+    await client.connect()
+    const { rows } = await client.sql`
+      SELECT * FROM "Conversations" 
+      ORDER BY "createdAt" DESC
+    `
+    return rows
+  } finally {
+    await client.end()
+  }
 }
 
 // Message helpers
 export async function createMessage(conversationId: string, role: string, content: string) {
+  const client = createClient()
   const id = generateId()
-  await sql`
-    INSERT INTO "Messages" (id, "conversationId", role, content)
-    VALUES (${id}, ${conversationId}, ${role}, ${content})
-  `
-  return id
+  try {
+    await client.connect()
+    await client.sql`
+      INSERT INTO "Messages" (id, "conversationId", role, content)
+      VALUES (${id}, ${conversationId}, ${role}, ${content})
+    `
+    return id
+  } finally {
+    await client.end()
+  }
 }
 
 export async function getMessages(conversationId: string) {
-  return sql`
-    SELECT * FROM "Messages" 
-    WHERE "conversationId" = ${conversationId}
-    ORDER BY "createdAt" ASC
-  `
+  const client = createClient()
+  try {
+    await client.connect()
+    const { rows } = await client.sql`
+      SELECT * FROM "Messages" 
+      WHERE "conversationId" = ${conversationId}
+      ORDER BY "createdAt" ASC
+    `
+    return rows
+  } finally {
+    await client.end()
+  }
 }
 
 // Generated code helpers
@@ -59,18 +87,31 @@ export async function saveGeneratedCode(
   title?: string,
   description?: string,
 ) {
+  const client = createClient()
   const id = generateId()
-  await sql`
-    INSERT INTO "GeneratedCode" (id, "conversationId", "messageId", code, language, title, description)
-    VALUES (${id}, ${conversationId}, ${messageId}, ${code}, ${language}, ${title}, ${description})
-  `
-  return id
+  try {
+    await client.connect()
+    await client.sql`
+      INSERT INTO "GeneratedCode" (id, "conversationId", "messageId", code, language, title, description)
+      VALUES (${id}, ${conversationId}, ${messageId}, ${code}, ${language}, ${title}, ${description})
+    `
+    return id
+  } finally {
+    await client.end()
+  }
 }
 
 export async function getGeneratedCode(conversationId: string) {
-  return sql`
-    SELECT * FROM "GeneratedCode" 
-    WHERE "conversationId" = ${conversationId}
-    ORDER BY "createdAt" DESC
-  `
+  const client = createClient()
+  try {
+    await client.connect()
+    const { rows } = await client.sql`
+      SELECT * FROM "GeneratedCode" 
+      WHERE "conversationId" = ${conversationId}
+      ORDER BY "createdAt" DESC
+    `
+    return rows
+  } finally {
+    await client.end()
+  }
 }
