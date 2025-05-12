@@ -32,7 +32,33 @@ export class PythonProfile implements LanguageProfile {
 				name: (identifier) @function.identifier
 		) @function
 	`);
-	structureQuery = new MemoizedQuery(``);
+	structureQuery = new MemoizedQuery(`
+		(import_statement
+			name: (dotted_name)? @import-name
+			module_name: (dotted_name)? @module-name
+		)
+		
+		(class_definition
+			name: (identifier) @class-name
+			superclasses: (argument_list
+				(identifier)? @superclass-name
+			)?
+			body: (block
+				(function_definition
+					name: (identifier) @class-method-name
+				)?
+				(expression_statement
+					(assignment
+						left: (identifier) @class-attribute-name
+					)
+				)?
+			)
+		)
+		
+		(function_definition
+			name: (identifier) @function-name
+		)
+	`);
 	namespaces = [['class', 'function', 'parameter', 'variable']];
 	autoSelectInsideParent = [];
 	builtInTypes = [
