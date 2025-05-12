@@ -146,7 +146,7 @@ export default function RequirementsWorkspace({
         <TabsContent value="document" className="flex-1 p-0 m-0">
           <ScrollArea className="flex-1 p-4">
             {documentContent.map((section) => (
-              <Card key={section.id} id={section.id} className="mb-4">
+              <Card key={section.id} id={section.id} className="mb-4 py-0">
                 <CardContent className="p-4">
                   {editingId === section.id ? (
                     <div className="space-y-2">

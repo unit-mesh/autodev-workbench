@@ -91,7 +91,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
                 <Card
                   key={item.id}
                   className={cn(
-                    "cursor-pointer hover:border-blue-200 transition-colors",
+                    "cursor-pointer hover:border-blue-200 transition-colors py-0",
                     activeSource === item.id && "border-blue-500 bg-blue-50",
                   )}
                   onClick={() => onSourceSelect(item.id === activeSource ? null : item.id)}
@@ -125,7 +125,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-2">
               {implicitKnowledge.map((item) => (
-                <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors">
+                <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0">
                   <CardHeader className="p-3 pb-0">
                     <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
                     <Badge variant="secondary" className="text-[10px] h-4 w-fit">

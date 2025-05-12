@@ -45,7 +45,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
         <ScrollArea className="h-48">
           <div className="space-y-2">
             {suggestions.map((suggestion) => (
-              <Card key={suggestion.id} className="bg-blue-50 border-blue-200">
+              <Card key={suggestion.id} className="bg-blue-50 border-blue-200 py-0">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-2">
                     <HelpCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
@@ -88,7 +88,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
             {qualityAlerts.map((alert) => (
               <Card
                 key={alert.id}
-                className="border-amber-200 hover:bg-amber-50 cursor-pointer transition-colors"
+                className="border-amber-200 hover:bg-amber-50 cursor-pointer transition-colors py-0"
                 onClick={() => onAlertClick(alert.relatedReqId)}
               >
                 <CardContent className="p-3">
