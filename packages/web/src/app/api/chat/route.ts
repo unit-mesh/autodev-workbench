@@ -1,4 +1,4 @@
-import { createConversation, createMessage, saveGeneratedCode } from "@/lib/db"
+import { createConversation, createMessage, saveGeneratedCode } from "@/app/api/_utils/db"
 import { reply } from "@/app/api/_utils/reply";
 
 export async function POST(req: Request) {
