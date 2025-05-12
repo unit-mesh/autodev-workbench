@@ -21,7 +21,7 @@ export class KotlinProfile implements LanguageProfile {
     `);
 	classQuery = new MemoizedQuery(`
       (class_declaration
-        (user_type (type_identifier)) @name.definition.class) @definition.class
+        (type_identifier) @name.definition.class) @definition.class
     `);
 	blockCommentQuery = new MemoizedQuery(`
 		((block_comment) @block_comment
@@ -67,28 +67,6 @@ export class KotlinProfile implements LanguageProfile {
             (function_body)? @method-body
           )?
         )?
-		  )
-
-      (class_declaration
-        (type_identifier) @class-name
-        (class_body
-          (property_declaration
-            (binding_pattern_kind)?
-            (variable_declaration
-              (simple_identifier) @interface-property-name
-              (user_type (type_identifier)) @interface-property-type
-            )
-          )?
-          (getter
-            (function_body)?
-          )?
-          (function_declaration
-            (simple_identifier) @interface-method-name
-            (function_value_parameters)?
-            (function_body)? @interface-method-body
-          )?
-        )
-      )?
   `);
 	methodIOQuery = new MemoizedQuery(`
 		(function_declaration
@@ -105,11 +83,34 @@ export class KotlinProfile implements LanguageProfile {
 
 	fieldQuery = new MemoizedQuery(`
 		(property_declaration
+			(modifiers (member_modifier))?
+			(binding_pattern_kind)?
 			(variable_declaration
 				(simple_identifier) @field-name
 				(user_type (type_identifier)) @field-type
 			)
+			(integer_literal | string_literal | boolean_literal)? @field-value
 		) @field-declaration
+	`);
+
+	interfaceQuery = new MemoizedQuery(`
+		(class_declaration
+			(type_identifier) @interface-name
+			(class_body
+				(property_declaration
+					(binding_pattern_kind)?
+					(variable_declaration
+						(simple_identifier) @interface-property-name
+						(user_type (type_identifier)) @interface-property-type
+					)
+				)?
+				(function_declaration
+					(simple_identifier) @interface-method-name
+					(function_value_parameters)?
+					(function_body)? @interface-method-body
+				)?
+			)
+		)
 	`);
 	namespaces = [
 		[
