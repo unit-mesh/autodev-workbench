@@ -358,7 +358,7 @@ export class CodeAnalyzer {
 		if (block.position) {
 			content += `Position: Line ${block.position.start.row}-${block.position.end.row}\n`;
 		}
-		content += `\nContent\n\n`;
+		content += `\nContent:\n\n`;
 
 		try {
 			const fileContent = await this.fileScanner.readFileContent(block.filePath);
@@ -380,7 +380,6 @@ export class CodeAnalyzer {
 					content += afterContext;
 				}
 			} else {
-				// 如果没有位置信息，直接使用代码
 				content += block.code;
 			}
 		} catch (error) {
