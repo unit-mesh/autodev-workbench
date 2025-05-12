@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Code, Eye, Loader2 } from 'lucide-react'
-import { CodeBlock } from "@/components/code-block"
-import { CodePreview } from "@/components/code-preview"
+import { CodeBlock } from "@/components/code/code-block"
+import { CodePreview } from "@/components/code/code-preview"
 import { extractCodeBlocks } from "@/lib/code-highlight"
 
 type Message = {

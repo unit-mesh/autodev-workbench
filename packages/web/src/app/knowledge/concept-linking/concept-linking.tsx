@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CodeEditor } from "@/components/code-editor"
-import { ConceptList } from "@/components/concept-list"
-import { KnowledgePanel } from "@/components/knowledge-panel"
+import { CodeEditor } from "@/components/code/code-editor"
+import { ConceptList } from "@/components/concept/concept-list"
+import { KnowledgePanel } from "@/components/concept/knowledge-panel"
 import { englishExtractConcepts } from "@/lib/concept-extractor"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
