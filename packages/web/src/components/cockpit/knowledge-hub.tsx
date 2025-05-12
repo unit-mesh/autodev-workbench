@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Book, Network, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import KnowledgeGraphPopup from "./knowledge-graph-popup"
 
 interface KnowledgeHubProps {
   activeSource: string | null
@@ -16,6 +17,7 @@ interface KnowledgeHubProps {
 
 export default function KnowledgeHub({ activeSource, onSourceSelect }: KnowledgeHubProps) {
   const [activeTab, setActiveTab] = useState("explicit")
+  const [showKnowledgeGraphPopup, setShowKnowledgeGraphPopup] = useState(false)
 
   const explicitKnowledge = [
     {
@@ -172,12 +174,21 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium text-gray-700">知识图谱浏览器</h3>
-          <Button variant="outline" size="sm" className="h-6 text-[10px]">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-6 text-[10px]"
+            onClick={() => setShowKnowledgeGraphPopup(true)}
+          >
             <Network className="h-3 w-3 mr-1" />
             查看
           </Button>
         </div>
       </div>
+
+      {showKnowledgeGraphPopup && (
+        <KnowledgeGraphPopup onClose={() => setShowKnowledgeGraphPopup(false)} />
+      )}
     </div>
   )
 }
