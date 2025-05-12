@@ -201,7 +201,7 @@ const StandardEditModal: React.FC<StandardEditModalProps> = ({ standard, isOpen,
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-			<div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+			<div className="bg-white rounded-lg shadow-xl w-full max-h-[95vh] overflow-hidden flex flex-col">
 				<div className="flex justify-between items-center p-6 border-b">
 					<div className="flex items-center">
 						<h2 className="text-2xl font-bold text-gray-900">
@@ -217,7 +217,7 @@ const StandardEditModal: React.FC<StandardEditModalProps> = ({ standard, isOpen,
 				</div>
 
 				<div className="p-6 overflow-y-auto flex-grow">
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-1">
 								标题
@@ -474,22 +474,21 @@ export default function CodingStandardsPage() {
 	});
 
 	return (
-		<div className="flex flex-col from-slate-50 to-white min-h-screen">
-			{/* 页面标题区域 */}
-			<div className="my-8 lg:my-12 max-w-6xl mx-auto text-center">
+		<div className="flex flex-col from-slate-50 to-white min-h-screen p-6">
+			<div className="my-4 lg:my-4">
 				<h1 className="text-4xl lg:text-5xl font-bold mb-4 text-slate-800 relative inline-block">
 					规范中心
 					<div className="absolute -top-4 -right-8 w-12 h-12 text-blue-500 opacity-40 rotate-12">
 						<BookOpen size={48} strokeWidth={1}/>
 					</div>
 				</h1>
-				<p className="text-xl text-slate-600 max-w-3xl mx-auto">
+				<p className="text-xl text-slate-600 max-w-3xl">
 					集中管理和维护企业级软件开发的编码规范，提升代码质量与团队协作效率
 				</p>
 			</div>
 
 			{/* 搜索、筛选和管理操作区域 */}
-			<div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-6xl mx-auto w-full">
+			<div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mx-auto w-full">
 				<div className="relative flex-grow">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
 					<input
@@ -547,7 +546,7 @@ export default function CodingStandardsPage() {
 					<span className="ml-3 text-lg text-gray-600">加载规范中...</span>
 				</div>
 			) : (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mx-auto w-full">
 					{filteredStandards.map(standard => {
 						const LanguageIcon = languageIconMap[standard.language]?.icon || Book;
 						const languageColor = languageIconMap[standard.language]?.color || 'text-gray-500';
