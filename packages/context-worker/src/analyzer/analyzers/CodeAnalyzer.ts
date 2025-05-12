@@ -13,6 +13,7 @@ import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
 import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
+import { AppConfig } from "../../types/AppConfig";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -21,27 +22,41 @@ export class CodeAnalyzer {
 	private codeCollector: CodeCollector;
 	private analyzers: ICodeAnalyzer[];
 	private markdownAnalyser: MarkdownAnalyser;
+	private config: AppConfig;
 
-	constructor(instantiationService: InstantiationService) {
+	constructor(instantiationService: InstantiationService, config?: Partial<AppConfig>) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
 		this.structurerManager = StructurerProviderManager.getInstance();
 		this.fileScanner = new FileSystemScanner();
 		this.codeCollector = new CodeCollector();
 		this.markdownAnalyser = new MarkdownAnalyser();
-
+		
 		// 初始化各个分析器
 		this.analyzers = [
 			new InterfaceAnalyzer(),
 			new ClassHierarchyAnalyzer()
 		];
+		
+		// 存储配置
+		this.config = config as AppConfig;
+	}
+
+	/**
+	 * 更新配置
+	 */
+	public updateConfig(config: AppConfig): void {
+		this.config = config;
 	}
 
 	public async initialize(): Promise<void> {
 		await this.serviceProvider.ready();
 	}
 
-	public async analyzeDirectory(dirPath: string): Promise<CodeAnalysisResult> {
-		const files = await this.fileScanner.scanDirectory(dirPath);
+	public async analyzeDirectory(dirPath?: string): Promise<CodeAnalysisResult> {
+		// 使用传入的目录路径或配置中的路径
+		const targetDir = dirPath || this.config.dirPath;
+		
+		const files = await this.fileScanner.scanDirectory(targetDir);
 
 		const markdownFiles: string[] = [];
 		const codeFiles: string[] = [];
@@ -173,9 +188,12 @@ export class CodeAnalyzer {
 		};
 	}
 
-	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir: string): Promise<string[]> {
-		if (!fs.existsSync(outputDir)) {
-			fs.mkdirSync(outputDir, { recursive: true });
+	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir?: string): Promise<string[]> {
+		// 使用传入的输出目录或配置中的输出目录
+		const targetDir = outputDir || this.config.outputDir;
+		
+		if (!fs.existsSync(targetDir)) {
+			fs.mkdirSync(targetDir, { recursive: true });
 		}
 
 		const generatedFiles: string[] = [];
@@ -184,7 +202,7 @@ export class CodeAnalyzer {
 
 			const content = await this.generateInterfaceContent(intf);
 			const fileName = this.sanitizeFileName(`${intf.interfaceName}_实现.txt`);
-			const filePath = path.join(outputDir, fileName);
+			const filePath = path.join(targetDir, fileName);
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
 		}
@@ -195,13 +213,13 @@ export class CodeAnalyzer {
 
 			const content = await this.generateExtensionContent(ext);
 			const fileName = this.sanitizeFileName(`${ext.parentName}_继承.txt`);
-			const filePath = path.join(outputDir, fileName);
+			const filePath = path.join(targetDir, fileName);
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
 		}
 
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
-			const markdownDir = path.join(outputDir, 'markdown_code');
+			const markdownDir = path.join(targetDir, 'markdown_code');
 			if (!fs.existsSync(markdownDir)) {
 				fs.mkdirSync(markdownDir, { recursive: true });
 			}
@@ -233,19 +251,22 @@ export class CodeAnalyzer {
 		return generatedFiles;
 	}
 
-	public async convertToList(result: CodeAnalysisResult, targetDir: string): Promise<{ path: string; content: string }[]> {
+	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{ path: string; content: string }[]> {
+		// 使用传入的目标目录或配置中的扫描目录
+		const scanDir = targetDir || this.config.dirPath;
+		
 		const items: { path: string; content: string }[] = [];
 
 		for (const intf of result.interfaceAnalysis.interfaces) {
 			if (intf.implementations.length === 0) continue;
 			const content = await this.generateInterfaceContent(intf, true);
-			const relativePath = path.relative(targetDir, intf.interfaceFile);
+			const relativePath = path.relative(scanDir, intf.interfaceFile);
 			items.push({ path: relativePath, content });
 		}
 
 		for (const ext of result.extensionAnalysis.extensions) {
 			const content = await this.generateExtensionContent(ext, true);
-			const relativePath = path.relative(targetDir, ext.parentFile);
+			const relativePath = path.relative(scanDir, ext.parentFile);
 			items.push({ path: relativePath, content });
 		}
 
@@ -267,7 +288,7 @@ export class CodeAnalyzer {
 						? `#${block.heading}`
 						: `#code-block-${Math.random().toString(36).substring(2, 9)}`;
 
-					const relativePath = path.relative(targetDir, block.filePath) + blockIdentifier;
+					const relativePath = path.relative(scanDir, block.filePath) + blockIdentifier;
 					items.push({ path: relativePath, content });
 				}
 			}

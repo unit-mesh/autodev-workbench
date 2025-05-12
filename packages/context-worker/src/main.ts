@@ -14,14 +14,7 @@ import { KotlinStructurerProvider } from "./code-context/kotlin/KotlinStructurer
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
 import { PythonStructurer } from "./code-context/python/PythonStructurer";
-
-interface AppConfig {
-	dirPath: string;
-	upload: boolean;
-	serverUrl: string;
-	outputDir: string;
-	nonInteractive: boolean;
-}
+import { AppConfig, DEFAULT_CONFIG } from "./types/AppConfig";
 
 class CommandLineParser {
 	public parse(): AppConfig {
@@ -33,11 +26,12 @@ class CommandLineParser {
 			.version('1.0.0');
 
 		program
-			.option('-p, --path <dir>', 'Directory path to scan', process.cwd())
-			.option('-u, --upload', 'Upload analysis results to server', false)
-			.option('--server-url <url>', 'Server URL for uploading results', 'http://localhost:3000/api/context')
-			.option('-o, --output-dir <dir>', 'Output directory for learning materials', 'materials')
-			.option('-n, --non-interactive', 'Run in non-interactive mode', false);
+			.option('-p, --path <dir>', 'Directory path to scan', DEFAULT_CONFIG.dirPath)
+			.option('-u, --upload', 'Upload analysis results to server', DEFAULT_CONFIG.upload)
+			.option('--server-url <url>', 'Server URL for uploading results', DEFAULT_CONFIG.serverUrl)
+			.option('-o, --output-dir <dir>', 'Output directory for learning materials', DEFAULT_CONFIG.outputDir)
+			.option('-n, --non-interactive', 'Run in non-interactive mode', DEFAULT_CONFIG.nonInteractive)
+			.option('-of, --output-file <file>', 'JSON output file name', DEFAULT_CONFIG.outputJsonFile);
 
 		program.parse(process.argv);
 
@@ -51,10 +45,11 @@ class CommandLineParser {
 
 		return {
 			dirPath,
-			upload: options.upload || false,
-			serverUrl: options.serverUrl,
-			outputDir: options.outputDir,
-			nonInteractive: options.nonInteractive || false
+			upload: options.upload || DEFAULT_CONFIG.upload,
+			serverUrl: options.serverUrl || DEFAULT_CONFIG.serverUrl,
+			outputDir: options.outputDir || DEFAULT_CONFIG.outputDir,
+			nonInteractive: options.nonInteractive || DEFAULT_CONFIG.nonInteractive,
+			outputJsonFile: options.outputFile || DEFAULT_CONFIG.outputJsonFile
 		};
 	}
 }
@@ -93,6 +88,12 @@ class UserInputHandler {
 				name: 'outputDir',
 				message: '请输入分析结果输出目录:',
 				default: currentConfig.outputDir
+			},
+			{
+				type: 'input',
+				name: 'outputJsonFile',
+				message: '请输入JSON结果输出文件名:',
+				default: currentConfig.outputJsonFile
 			}
 		]);
 
@@ -106,7 +107,8 @@ class UserInputHandler {
 			upload: answers.upload,
 			serverUrl: answers.upload ? answers.serverUrl : currentConfig.serverUrl,
 			outputDir: answers.outputDir,
-			nonInteractive: currentConfig.nonInteractive
+			nonInteractive: currentConfig.nonInteractive,
+			outputJsonFile: answers.outputJsonFile
 		};
 	}
 }
@@ -127,19 +129,21 @@ class InterfaceAnalyzerApp {
 		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
 
-		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService);
 		this.commandLineParser = new CommandLineParser();
 		this.userInputHandler = new UserInputHandler();
+
+		// 使用默认配置初始化CodeAnalyzer
+		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);
 	}
 
-	private async uploadResult(result: CodeAnalysisResult, serverUrl: string, targetDir: string): Promise<void> {
+	private async uploadResult(result: CodeAnalysisResult, config: AppConfig): Promise<void> {
 		try {
-			const textResult = await this.codeAnalyzer.convertToList(result, targetDir);
+			const textResult = await this.codeAnalyzer.convertToList(result);
 
 			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
 			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
 
-			const response = await fetch(serverUrl, {
+			const response = await fetch(config.serverUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -176,18 +180,23 @@ class InterfaceAnalyzerApp {
 			config = await this.userInputHandler.getAppConfig(config);
 		}
 
+		// 更新分析器配置
+		this.codeAnalyzer.updateConfig(config);
+
 		console.log(`正在扫描目录: ${config.dirPath}`);
-		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory(config.dirPath);
-		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
+		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
+
+		// 使用配置中的输出文件名
+		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (config.upload) {
 			console.log(`正在上传分析结果到 ${config.serverUrl}`);
-			await this.uploadResult(result, config.serverUrl, config.dirPath);
+			await this.uploadResult(result, config);
 		}
 
 		console.log(`分析结果已保存到 ${outputFilePath}`);
-		await this.codeAnalyzer.generateLearningMaterials(result, config.outputDir);
+		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 }
 
