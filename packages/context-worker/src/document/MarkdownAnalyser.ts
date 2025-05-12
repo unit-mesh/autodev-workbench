@@ -44,7 +44,6 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 		let lastHeading = '';
 		const headings: { [key: number]: string } = {};
 
-		// Extract headings and their positions
 		visit(ast, 'heading', (node: any, index: number, parent: any) => {
 			const headingText = node.children
 				.filter((child: any) => child.type === 'text')
@@ -55,13 +54,11 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 			headings[node.position.start.line] = headingText;
 		});
 
-		// Extract code blocks
 		visit(ast, 'code', (node: any) => {
 			const { lang, value, position } = node;
 			const startLine = position.start.line;
 			const endLine = position.end.line;
 
-			// Find the last heading before this code block
 			let codeLastTitle = '';
 			let maxHeadingLine = 0;
 
@@ -73,25 +70,12 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 				}
 			}
 
-			// Get context lines before and after the code block
-			const beforeLineCount = 20; // Number of lines to include before
-			const afterLineCount = 20;  // Number of lines to include after
-
-			const beforeStart = Math.max(0, startLine - beforeLineCount - 1);
-			const beforeEnd = startLine - 1;
-			const beforeString = lines.slice(beforeStart, beforeEnd).join('\n');
-
-			const afterStart = endLine;
-			const afterEnd = Math.min(lines.length, endLine + afterLineCount);
-			const afterString = lines.slice(afterStart, afterEnd).join('\n');
-
-			// Create a CodeDocument for the code block
 			result.push({
-				title: `Code block at line ${startLine}`,
+				title: `Code block at line ${startLine}-${endLine}`,
 				language: lang || 'plaintext',
 				lastTitle: codeLastTitle,
-				beforeString,
-				afterString,
+				beforeString: '',  // 保留字段但不再填充内容
+				afterString: '',   // 保留字段但不再填充内容
 				code: value,
 				startIndex: position.start.offset,
 				endIndex: position.end.offset

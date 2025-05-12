@@ -112,33 +112,41 @@ export class CodeAnalyzer {
 						continue;
 					}
 
+					// 计算代码块在文件中的精确位置
 					let startRow = 0;
+					let startColumn = 0;
 					if (doc.startIndex !== undefined) {
+						// 计算行号和列号
 						const contentBeforeBlock = content.substring(0, doc.startIndex);
-						startRow = Math.max(0, contentBeforeBlock.split('\n').length - 2);
+						const lines = contentBeforeBlock.split('\n');
+						startRow = lines.length - 1;  // 因为行号从0开始
+						// 计算最后一行的列位置
+						startColumn = lines[lines.length - 1].length;
 					}
 
 					let endRow = 0;
+					let endColumn = 0;
 					if (doc.endIndex !== undefined) {
+						// 计算到代码块结束位置的行号和列号
 						const contentUpToBlock = content.substring(0, doc.endIndex);
-						endRow = Math.min(content.split('\n').length - 1, contentUpToBlock.split('\n').length);
+						const lines = contentUpToBlock.split('\n');
+						endRow = lines.length - 1;
+						// 计算最后一行的列位置
+						endColumn = lines[lines.length - 1].length;
 					}
 
+					// 确保使用原始代码，不做任何修改
 					allCodeBlocks.push({
 						filePath: file,
 						title: doc.title,
 						heading: doc.lastTitle,
 						language: doc.language,
 						internalLanguage: inferLanguage(`.${doc.language}`),
-						code: doc.code,
-						context: {
-							before: doc.beforeString,
-							after: doc.afterString
-						},
-						position: (startRow > 0 || endRow > 0) ? {
-							start: { row: startRow, column: 0 },
-							end: { row: endRow, column: 0 }
-						} : undefined
+						code: doc.code,  // 保留原始代码
+						position: {
+							start: { row: startRow, column: startColumn },
+							end: { row: endRow, column: endColumn }
+						}
 					});
 
 					if (inferLanguage(`.${doc.language}`) && doc.code) {
@@ -350,16 +358,35 @@ export class CodeAnalyzer {
 		if (block.position) {
 			content += `Position: Line ${block.position.start.row}-${block.position.end.row}\n`;
 		}
-		content += `\nContent：\n\n`;
-		if (block.context.before && block.context.before.trim()) {
-			content += block.context.before;
-		}
+		content += `\nContent\n\n`;
 
-		const codeToUse = await this.readCodeSection(block.filePath, block.position);
-		content += codeToUse + "\n";
+		try {
+			const fileContent = await this.fileScanner.readFileContent(block.filePath);
+			const lines = fileContent.split('\n');
+			if (block.position) {
+				const contextLines = 20;
+				const beforeStartRow = Math.max(0, block.position.start.row - contextLines);
+				const beforeContext = lines.slice(beforeStartRow, block.position.start.row).join('\n');
+				if (beforeContext.trim()) {
+					content += beforeContext + '\n';
+				}
 
-		if (block.context.after && block.context.after.trim()) {
-			content += block.context.after;
+				const codeToUse = await this.readCodeSection(block.filePath, block.position);
+				content += codeToUse + '\n';
+
+				const afterEndRow = Math.min(lines.length, block.position.end.row + contextLines);
+				const afterContext = lines.slice(block.position.end.row + 1, afterEndRow).join('\n');
+				if (afterContext.trim()) {
+					content += afterContext;
+				}
+			} else {
+				// 如果没有位置信息，直接使用代码
+				content += block.code;
+			}
+		} catch (error) {
+			console.error(`无法读取文件 ${block.filePath} 中的上下文:`, error);
+			content += `// 无法读取上下文 (${block.filePath})\n`;
+			content += block.code;
 		}
 
 		return content;
@@ -376,16 +403,12 @@ export class CodeAnalyzer {
 			const fileContent = await this.fileScanner.readFileContent(filePath);
 			const lines = fileContent.split('\n');
 
-			// 确保行索引在有效范围内
 			const startRow = Math.max(0, position.start.row);
 			const endRow = Math.min(lines.length - 1, position.end.row);
 
-			// 提取指定行范围的代码
 			const codeLines = lines.slice(startRow, endRow + 1);
 
-			// 处理第一行和最后一行的列
 			if (codeLines.length > 0) {
-				// 只有在有足够字符的情况下才截取列
 				if (codeLines[0].length > position.start.column) {
 					codeLines[0] = codeLines[0].substring(position.start.column);
 				}

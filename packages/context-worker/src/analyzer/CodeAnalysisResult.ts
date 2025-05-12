@@ -90,10 +90,6 @@ export interface CodeBlock {
     language: string;
     internalLanguage: string;
     code: string;
-    context: {
-        before: string;
-        after: string;
-    };
     position?: {
         start: { row: number, column: number },
         end: { row: number, column: number }
