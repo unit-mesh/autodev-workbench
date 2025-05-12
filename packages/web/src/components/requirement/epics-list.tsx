@@ -2,14 +2,13 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, RefreshCw, Loader2, ListTodo } from "lucide-react"
+import { ArrowLeft, RefreshCw, ListTodo } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface EpicsListProps {
   enhancedRequirement: string
   epics: string[]
   onRegenerate: () => Promise<void>
-  onContinue: () => Promise<void>
   onBack: () => void
   isProcessing: boolean
 }
@@ -18,7 +17,6 @@ export default function EpicsList({
   enhancedRequirement,
   epics,
   onRegenerate,
-  onContinue,
   onBack,
   isProcessing,
 }: EpicsListProps) {
@@ -62,19 +60,6 @@ export default function EpicsList({
           <Button variant="outline" onClick={onRegenerate} disabled={isProcessing}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Regenerate
-          </Button>
-          <Button onClick={onContinue} disabled={isProcessing} className="bg-emerald-600 hover:bg-emerald-700">
-            {isProcessing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating PRD...
-              </>
-            ) : (
-              <>
-                Generate PRD
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </>
-            )}
           </Button>
         </div>
       </CardFooter>
