@@ -48,45 +48,12 @@ const statusMapping = {
   "已归档": "ARCHIVED"
 };
 
-// 反向状态映射
 const reverseStatusMapping = {
   "DRAFT": "草稿",
   "PUBLISHED": "已发布",
   "ARCHIVED": "已归档"
 };
 
-// 架构规范分类
-const architectureCategories = [
-  {
-    title: "技术架构规范",
-    value: "technical",
-    children: [
-      { title: "技术栈规范", value: "tech-stack" },
-      { title: "数据库选型规范", value: "database-selection" },
-      { title: "缓存使用规范", value: "caching" },
-    ],
-  },
-  {
-    title: "应用架构规范",
-    value: "application",
-    children: [
-      { title: "分层架构规范", value: "layered-architecture" },
-      { title: "模块化规范", value: "modularization" },
-      { title: "微服务边界划分规范", value: "microservice-boundaries" },
-    ],
-  },
-  {
-    title: "数据架构规范",
-    value: "data",
-    children: [
-      { title: "数据库设计规范", value: "database-design" },
-      { title: "数据字典规范", value: "data-dictionary" },
-      { title: "数据模型标准", value: "data-model" },
-    ],
-  },
-];
-
-// 类别列表
 const categories = [
 	{ id: 'all', name: '全部' },
 	{ id: 'frontend', name: '前端' },
@@ -95,7 +62,6 @@ const categories = [
 	{ id: 'systems', name: '系统开发' },
 ];
 
-// 规范的类型定义
 interface Standard {
   id: number;
   title: string;
@@ -103,7 +69,7 @@ interface Standard {
   language: string;
   category: string | { subcategory: string };
   version: string;
-  lastUpdated: string | Date;
+  lastUpdated: string;
   popularity: number;
   content: string;
   status?: string;
@@ -164,6 +130,7 @@ interface StandardEditModalProps {
 	standard: Standard | null;
 	isOpen: boolean;
 	onClose: () => void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	onSave: (standard: any) => void;
 }
 
@@ -218,7 +185,7 @@ const StandardEditModal: React.FC<StandardEditModalProps> = ({ standard, isOpen,
 				status: statusMapping[formData.status as keyof typeof statusMapping],
 				category: { subcategory: formData.category }, // 转换为后端需要的格式
 			};
-			
+
 			await onSave(data);
 			toast.success(standard ? '规范已更新' : '新规范已创建');
 		} catch (error) {
@@ -396,8 +363,8 @@ export default function CodingStandardsPage() {
 				throw new Error('获取规范失败');
 			}
 			const data = await response.json();
-			
-			// 转换数据格式以匹配前端需要的结构
+
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const formattedData = data.map((item: any) => ({
 				id: item.id,
 				title: item.title,
@@ -410,7 +377,7 @@ export default function CodingStandardsPage() {
 				content: item.content,
 				status: item.status
 			}));
-			
+
 			setStandards(formattedData);
 		} catch (error) {
 			console.error('获取规范失败:', error);
@@ -446,14 +413,14 @@ export default function CodingStandardsPage() {
 		setIsEditModalOpen(false);
 	};
 
-	// 保存规范
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const handleSaveStandard = async (standardData: any) => {
 		try {
 			// 确保 category 是字符串化的 JSON (Vercel Postgres 需要)
 			if (typeof standardData.category === 'object') {
 				standardData.category = JSON.stringify(standardData.category);
 			}
-			
+
 			let response;
 			if (selectedStandard?.id) {
 				// 更新现有规范
@@ -493,14 +460,14 @@ export default function CodingStandardsPage() {
 		const matchesSearch =
 			standard.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			(standard.description && standard.description.toLowerCase().includes(searchTerm.toLowerCase()));
-		
+
 		let categoryToMatch;
 		if (typeof standard.category === 'string') {
 			categoryToMatch = standard.category;
 		} else if (standard.category && typeof standard.category === 'object') {
 			categoryToMatch = (standard.category as { subcategory: string }).subcategory;
 		}
-		
+
 		const matchesCategory = activeCategory === 'all' || categoryToMatch === activeCategory;
 		return matchesSearch && matchesCategory;
 	});
@@ -553,7 +520,7 @@ export default function CodingStandardsPage() {
 						onClick={() => setIsAdminMode(!isAdminMode)}
 						className={cn(
 							"px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
-							isAdminMode 
+							isAdminMode
 								? "bg-green-600 text-white"
 								: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
 						)}
