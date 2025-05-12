@@ -18,6 +18,10 @@ model CodeAnalysis {
   language    String?
   source      String?
   title       String?
+  
+  // Project relation
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
 }
 
 model Conversations {
@@ -72,4 +76,32 @@ model Guideline {
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  // Project relation (optional to support global guidelines)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+}
+
+// 新增项目模型
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // 平台URL地址
+  liveUrl     String?       // 线上地址
+  gitUrl      String        // Git地址
+  jiraUrl     String?       // Jira地址
+  jenkinsUrl  String?       // Jenkins地址
+  
+  // 可扩展的DevOps信息
+  devOpsInfo  Json?
+  
+  // 关联
+  guidelines  Guideline[]
+  codeAnalyses CodeAnalysis[]
+  
+  // 是否为默认项目
+  isDefault   Boolean       @default(false)
 }
