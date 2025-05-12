@@ -6,7 +6,6 @@ import { ConceptList } from "@/components/concept-list"
 import { KnowledgePanel } from "@/components/knowledge-panel"
 import { englishExtractConcepts } from "@/lib/concept-extractor"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Code2, Brain, BookOpen } from "lucide-react"
 
@@ -126,44 +125,42 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-6">
-      <Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
-        <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Code2 className="h-5 w-5 text-purple-500"/>
-              <CardTitle className="text-lg">Concept Extracts</CardTitle>
-            </div>
-            <Button
-              onClick={handleExtractConcepts}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={isValidating}
-            >
-              {isValidating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Brain className="mr-2 h-4 w-4"/>
-                  Extract Concepts
-                </>
-              )}
-            </Button>
+    <div className="grid grid-cols-2 gap-4">
+      <div className="border border-slate-200 dark:border-slate-700 shadow-sm rounded-md overflow-hidden">
+        <div className="flex justify-between items-center bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3">
+          <div className="flex items-center gap-2">
+            <Code2 className="h-5 w-5 text-purple-500"/>
+            <h3 className="text-lg font-semibold">Concept Extracts</h3>
           </div>
-        </CardHeader>
-        <CardContent className="p-4 bg-white dark:bg-slate-800">
+          <Button
+            onClick={handleExtractConcepts}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            disabled={isValidating}
+          >
+            {isValidating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                Processing...
+              </>
+            ) : (
+              <>
+                <Brain className="mr-2 h-4 w-4"/>
+                Extract Concepts
+              </>
+            )}
+          </Button>
+        </div>
+        <div className="p-3 bg-white dark:bg-slate-800">
           <CodeEditor code={code} onChange={setCode}/>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <div className="space-y-6 grid grid-rows-1">
-        <Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
-          <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+      <div className="space-y-4 grid grid-rows-1">
+        <div className="border border-slate-200 dark:border-slate-700 shadow-sm rounded-md overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-indigo-500" />
-              <CardTitle className="text-lg">Extracted Concepts</CardTitle>
+              <h3 className="text-lg font-semibold">Extracted Concepts</h3>
             </div>
             {concepts.length > 0 && (
               <div className="flex gap-2 mt-2">
@@ -188,26 +185,24 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
                 )}
               </div>
             )}
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="p-4 bg-white dark:bg-slate-800 max-h-[250px] overflow-y-auto">
-              <ConceptList
-                concepts={concepts}
-                validConcepts={validConcepts}
-                invalidConcepts={invalidConcepts}
-                selectedConcept={selectedConcept}
-                onSelectConcept={handleSelectConcept}
-                isValidating={isValidating}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
-          <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+          </div>
+          <div className="bg-white dark:bg-slate-800 max-h-[250px] overflow-y-auto p-3">
+            <ConceptList
+              concepts={concepts}
+              validConcepts={validConcepts}
+              invalidConcepts={invalidConcepts}
+              selectedConcept={selectedConcept}
+              onSelectConcept={handleSelectConcept}
+              isValidating={isValidating}
+            />
+          </div>
+        </div>
+        <div className="border border-slate-200 dark:border-slate-700 shadow-sm rounded-md overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-indigo-500" />
-                <CardTitle className="text-lg">Knowledge Panel</CardTitle>
+                <h3 className="text-lg font-semibold">Knowledge Panel</h3>
               </div>
               {selectedConcept && (
                 <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400">
@@ -215,14 +210,13 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
                 </Badge>
               )}
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="p-4 bg-white dark:bg-slate-800 max-h-[250px] overflow-y-auto">
-              <KnowledgePanel concept={selectedConcept} items={knowledgeItems} isLoading={isLoading} />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="bg-white dark:bg-slate-800 max-h-[250px] overflow-y-auto p-3">
+            <KnowledgePanel concept={selectedConcept} items={knowledgeItems} isLoading={isLoading} />
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+
