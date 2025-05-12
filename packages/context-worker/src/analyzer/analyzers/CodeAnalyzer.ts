@@ -152,7 +152,7 @@ export class CodeAnalyzer {
 
 		const generatedFiles: string[] = [];
 		for (const intf of result.interfaceAnalysis.interfaces) {
-			if (intf.implementations.length === 0) continue; // 跳过没有实现的接口
+			if (intf.implementations.length === 0) continue;
 
 			const content = await this.generateInterfaceContent(intf);
 			const fileName = this.sanitizeFileName(`${intf.interfaceName}_实现.txt`);
@@ -160,8 +160,18 @@ export class CodeAnalyzer {
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
 		}
+		
+		// 添加对类继承关系的处理
+		for (const ext of result.extensionAnalysis.extensions) {
+			if (ext.children.length === 0) continue;
+			
+			const content = await this.generateExtensionContent(ext);
+			const fileName = this.sanitizeFileName(`${ext.parentName}_继承.txt`);
+			const filePath = path.join(outputDir, fileName);
+			await fs.promises.writeFile(filePath, content);
+			generatedFiles.push(filePath);
+		}
 
-		// Process markdown blocks
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
 			const markdownDir = path.join(outputDir, 'markdown_code');
 			if (!fs.existsSync(markdownDir)) {
