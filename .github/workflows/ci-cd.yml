@@ -27,16 +27,4 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm --filter @autodev/web build
-
-      - name: Setup custom domain
-        run: |
-          mkdir -p ./packages/web/dist
-          echo "autodev.work" > ./packages/web/dist/CNAME
-
-      - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: packages/web/dist
-          branch: gh-pages
-          clean: true
+        run: pnpm build
