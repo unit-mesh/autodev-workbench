@@ -75,6 +75,12 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 		const fields: CodeVariable[] = [];
 		let lastField: CodeVariable = this.initVariable();
 
+		// 接口相关变量
+		let interfaceObj: CodeStructure | null = null;
+		let interfaceMethodReturnType = '';
+		let interfaceMethodName = '';
+		const interfaceMethods: CodeFunction[] = [];
+
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
 			const text = capture.node.text;
@@ -144,12 +150,67 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					fields.push({ ...lastField });
 					lastField = this.initVariable();
 					break;
+				case 'interface-name':
+					// 如果有上一个接口，先保存
+					if (interfaceObj !== null) {
+						interfaceObj.methods = interfaceMethods.slice();
+						codeFile.classes.push({ ...interfaceObj });
+						interfaceMethods.length = 0; // 清空方法数组
+					}
+
+					// 创建新接口对象
+					interfaceObj = {
+						type: StructureType.Interface,
+						canonicalName: '',
+						constant: [],
+						extends: [],
+						methods: [],
+						name: text,
+						package: codeFile.package,
+						implements: [],
+						start: { row: 0, column: 0 },
+						end: { row: 0, column: 0 },
+					};
+					
+					const interfaceNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
+					if (interfaceNode !== null) {
+						this.insertLocation(interfaceNode, interfaceObj);
+					}
+					
+					interfaceObj.canonicalName = codeFile.package + '.' + interfaceObj.name;
+					break;
+				case 'interface-method.returnType':
+					interfaceMethodReturnType = text;
+					break;
+				case 'interface-method.name':
+					interfaceMethodName = text;
+					
+					// 创建接口方法
+					if (interfaceMethodName !== '' && interfaceObj !== null) {
+						const methodObj = this.createFunction(capture.node, interfaceMethodName);
+						if (interfaceMethodReturnType !== '') {
+							methodObj.returnType = interfaceMethodReturnType;
+						}
+						
+						interfaceMethods.push(methodObj);
+						
+						// 重置
+						interfaceMethodName = '';
+						interfaceMethodReturnType = '';
+					}
+					break;
 				case 'impl-name':
 					classObj.implements.push(text);
 					break;
 				default:
 					break;
 			}
+		}
+
+		// 处理最后一个接口
+		if (interfaceObj !== null) {
+			interfaceObj.methods = interfaceMethods.slice();
+			codeFile.classes.push({ ...interfaceObj });
 		}
 
 		classObj.fields = fields;

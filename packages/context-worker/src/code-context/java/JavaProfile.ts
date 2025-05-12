@@ -48,6 +48,16 @@ export class JavaProfile implements LanguageProfile {
           @method-params)
         body: (block) @method-body
       )
+			
+			(interface_declaration
+			  name: (identifier) @interface-name
+			  body: (interface_body
+			    (method_declaration
+			      type: (_) @interface-method.returnType
+			      name: (identifier) @interface-method.name
+			    )
+			  )
+			)
 
 			(program
 		    (class_declaration
