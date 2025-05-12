@@ -41,7 +41,7 @@ export class KotlinProfile implements LanguageProfile {
 		    (type_identifier) @class-name
 		    (delegation_specifier
 		      (user_type
-		        (type_identifier)) @extend-name)
+		        (type_identifier)) @extend-name)?
 		    )?
         (primary_constructor
           (class_parameter
