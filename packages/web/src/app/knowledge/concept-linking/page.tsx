@@ -1,13 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Zap } from "lucide-react"
 import { CodebaseContext } from "@/app/knowledge/concept-linking/codebase-context"
 import { ConceptLinking } from "@/app/knowledge/concept-linking/concept-linking"
 
 export default function Concept() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [useAI, setUseAI] = useState(true)
 
   return (
@@ -23,13 +21,6 @@ export default function Concept() {
               <p className="text-slate-600 dark:text-slate-400 mt-1">
                 Extract, validate, and explore concepts from your code
               </p>
-            </div>
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-sm">
-              <Switch id="use-ai" checked={useAI} onCheckedChange={setUseAI}/>
-              <Label htmlFor="use-ai" className="flex items-center gap-1.5 cursor-pointer">
-                <Zap className="h-4 w-4 text-amber-500"/>
-                <span>AI Validation</span>
-              </Label>
             </div>
           </div>
 
