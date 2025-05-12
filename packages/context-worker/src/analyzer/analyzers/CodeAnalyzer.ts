@@ -13,7 +13,6 @@ import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
 import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
-import { CodeBlockContextMerger } from "../utils/CodeBlockContextMerger";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -261,8 +260,7 @@ export class CodeAnalyzer {
 			}
 
 			for (const [filePath, blocks] of Object.entries(fileGroups)) {
-				const processedBlocks = CodeBlockContextMerger.processOverlappingContexts(blocks, 20);
-				for (const block of processedBlocks) {
+				for (const block of blocks) {
 					const content = await this.generateMarkdownBlockContent(block, true);
 
 					const blockIdentifier = block.heading
