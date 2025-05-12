@@ -177,12 +177,12 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						start: { row: 0, column: 0 },
 						end: { row: 0, column: 0 },
 					};
-					
+
 					const interfaceNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
 					if (interfaceNode !== null) {
 						this.insertLocation(interfaceNode, interfaceObj);
 					}
-					
+
 					interfaceObj.canonicalName = codeFile.package + '.' + interfaceObj.name;
 					break;
 				case 'interface-method.returnType':
@@ -190,16 +190,13 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'interface-method.name':
 					interfaceMethodName = text;
-					
-					// 创建接口方法
+
 					lastInterfaceMethod = this.createFunction(capture.node, interfaceMethodName);
 					if (interfaceMethodReturnType !== '') {
 						lastInterfaceMethod.returnType = interfaceMethodReturnType;
 					}
-					
+
 					interfaceMethods.push(lastInterfaceMethod);
-					
-					// 重置
 					interfaceMethodName = '';
 					interfaceMethodReturnType = '';
 					break;
@@ -246,7 +243,7 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						}
 						methods.push(methodObj);
 					}
-					
+
 					// 重置
 					classMethodName = '';
 					classMethodReturnType = '';
