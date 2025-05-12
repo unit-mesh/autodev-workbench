@@ -101,7 +101,22 @@ model Project {
   // 关联
   guidelines  Guideline[]
   codeAnalyses CodeAnalysis[]
+  conceptDictionaries ConceptDictionary[]
   
   // 是否为默认项目
   isDefault   Boolean       @default(false)
+}
+
+model ConceptDictionary {
+  id            String   @id @default(cuid())
+  termChinese   String   // 中文词汇
+  termEnglish   String   // 英文词汇
+  descChinese   String   @db.Text // 中文描述
+  descEnglish   String   @db.Text // 英文描述
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Project relation
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id])
 }
