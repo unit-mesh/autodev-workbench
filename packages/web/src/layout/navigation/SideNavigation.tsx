@@ -17,7 +17,7 @@ const navigationItems = [
     section: 'AI 工具',
     icon: Wrench,
     items: [
-      { name: '需求转换', href: '/ai-tools/requirements' },
+      { name: '需求驾驶舱', href: '/ai-tools/requirement-cockpit' },
       { name: '后端应用生成', href: '/ai-tools/golden-path' },
       { name: '前端 UI 页面', href: '/ai-tools/frontend' },
     ],
