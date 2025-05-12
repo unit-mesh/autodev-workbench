@@ -1,6 +1,8 @@
-# AutoDev Context
+# AutoDev Workbench
 
-> AutoDev Context provides contextual intelligence to empower AI Copilots such as AutoDev.
+> **AutoDev Workbench** is an AI-native developer platform designed to accelerate, automate, and contextualize modern
+> software development workflows. It serves as your intelligent, unified workspace for building, debugging, learning, 
+> and collaborating — all powered by large language models.
 
 [![CI/CD Pipeline](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/unit-mesh/autodev-work/actions/workflows/ci-cd.yml)
 ![NPM Version](https://img.shields.io/npm/v/%40autodev%2Fcontext-worker)
@@ -15,7 +17,7 @@ Architecture (English)
 
 ![](docs/arch-en.svg)
 
-AutoDev Work provides a unified platform for development teams to:
+AutoDev Workbench provides a unified platform for development teams to:
 
 - **AI-Powered Development**: Leverage advanced AI tools and models to assist in coding, debugging, and problem-solving
 - **Knowledge Management**: Centralize and organize development knowledge, patterns, and best practices
