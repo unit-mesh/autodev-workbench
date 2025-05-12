@@ -128,11 +128,11 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-6">
       <Card className="border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
-        <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+        <CardHeader className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Code2 className="h-5 w-5 text-purple-500"/>
-              <CardTitle className="text-lg">Code Linking</CardTitle>
+              <CardTitle className="text-lg">Concept Extracts</CardTitle>
             </div>
             <Button
               onClick={handleExtractConcepts}
