@@ -12,6 +12,7 @@ import { GoStructurerProvider } from "./code-context/go/GoStructurerProvider";
 import { KotlinStructurerProvider } from "./code-context/kotlin/KotlinStructurerProvider";
 import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
+import { PythonStructurer } from "./code-context/python/PythonStructurer";
 
 class CommandLineParser {
 	public parse(): { dirPath: string; upload: boolean; apiUrl?: string } {
@@ -101,6 +102,7 @@ class InterfaceAnalyzerApp {
 		providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
 		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
 
 		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService);
 		this.commandLineParser = new CommandLineParser();
