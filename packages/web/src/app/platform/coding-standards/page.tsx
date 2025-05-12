@@ -13,8 +13,7 @@ import {
 	Info,
 	Plus,
 	Edit,
-	Loader2,
-	Database
+	Loader2
 } from 'lucide-react';
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
@@ -387,7 +386,6 @@ export default function CodingStandardsPage() {
 	const [standards, setStandards] = useState<Standard[]>([]);
 	const [isAdminMode, setIsAdminMode] = useState(false);
 	const [loading, setLoading] = useState(false);
-	const [initLoading, setInitLoading] = useState(false);
 
 	// 获取规范列表
 	const fetchStandards = async () => {
@@ -490,27 +488,6 @@ export default function CodingStandardsPage() {
 		}
 	};
 
-	// 初始化数据库和示例数据
-	const handleInitializeDB = async () => {
-		try {
-			setInitLoading(true);
-			const response = await fetch('/api/setup');
-			if (!response.ok) {
-				throw new Error('初始化数据库失败');
-			}
-			const data = await response.json();
-			toast.success(data.message);
-			
-			// 重新获取规范列表
-			await fetchStandards();
-		} catch (error) {
-			console.error('初始化数据库失败:', error);
-			toast.error('初始化数据库失败');
-		} finally {
-			setInitLoading(false);
-		}
-	};
-
 	// 筛选后的编码规范
 	const filteredStandards = standards.filter(standard => {
 		const matchesSearch =
@@ -584,27 +561,13 @@ export default function CodingStandardsPage() {
 						{isAdminMode ? "退出管理" : "进入管理"}
 					</button>
 					{isAdminMode && (
-						<>
-							<button
-								onClick={() => openEditModal()}
-								className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-blue-600 text-white flex items-center gap-1"
-							>
-								<Plus size={16} />
-								添加规范
-							</button>
-							<button
-								onClick={handleInitializeDB}
-								disabled={initLoading}
-								className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-purple-600 text-white flex items-center gap-1"
-							>
-								{initLoading ? (
-									<Loader2 size={16} className="mr-1 animate-spin" />
-								) : (
-									<Database size={16} className="mr-1" />
-								)}
-								初始化示例
-							</button>
-						</>
+						<button
+							onClick={() => openEditModal()}
+							className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-blue-600 text-white flex items-center gap-1"
+						>
+							<Plus size={16} />
+							添加规范
+						</button>
 					)}
 				</div>
 			</div>
