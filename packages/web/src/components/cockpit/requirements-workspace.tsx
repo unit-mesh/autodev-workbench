@@ -69,7 +69,7 @@ export default function RequirementsWorkspace({
     <div className="flex-1 flex flex-col h-full border-l border-r border-gray-200">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-white">
-        <h1 className="text-xl font-semibold text-gray-800">需求工程工作区</h1>
+        <h1 className="text-xl font-semibold text-gray-800">需求驾驶舱</h1>
         <p className="text-sm text-gray-500">与 AI 助手协作定义和完善您的需求</p>
       </div>
 
@@ -93,7 +93,6 @@ export default function RequirementsWorkspace({
         </div>
       )}
 
-      {/* Tabs for Conversation and Document */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="mx-4 mt-2 justify-start">
           <TabsTrigger value="conversation" className="flex items-center">
@@ -106,7 +105,6 @@ export default function RequirementsWorkspace({
           </TabsTrigger>
         </TabsList>
 
-        {/* Conversation Tab */}
         <TabsContent value="conversation" className="flex-1 flex flex-col p-0 m-0">
           <ScrollArea className="flex-1 p-4">
             {conversation.map((message, index) => (

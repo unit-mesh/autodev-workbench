@@ -80,7 +80,6 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
         </ScrollArea>
       </div>
 
-      {/* Quality Assurance */}
       <div className="p-3 border-b border-gray-200">
         <h3 className="text-sm font-medium text-gray-700 mb-2">实时质量保证</h3>
         <ScrollArea className="h-48">
