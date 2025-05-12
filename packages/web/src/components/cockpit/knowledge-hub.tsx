@@ -1,23 +1,69 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, Book, Network, Plus } from "lucide-react"
+import { Upload, FileText, Book, Network, Plus, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import KnowledgeGraphPopup from "./knowledge-graph-popup"
+
+interface ConceptDictionary {
+  id: string
+  termChinese: string
+  termEnglish: string
+  descChinese: string
+  descEnglish: string
+  projectId: string | null
+  createdAt: string
+  updatedAt: string
+}
 
 interface KnowledgeHubProps {
   activeSource: string | null
   onSourceSelect: (sourceId: string | null) => void
+  projectId?: string // 可选的项目ID参数
 }
 
-export default function KnowledgeHub({ activeSource, onSourceSelect }: KnowledgeHubProps) {
+export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }: KnowledgeHubProps) {
   const [activeTab, setActiveTab] = useState("explicit")
   const [showKnowledgeGraphPopup, setShowKnowledgeGraphPopup] = useState(false)
+  const [glossaryTerms, setGlossaryTerms] = useState<ConceptDictionary[]>([])
+  const [isLoadingGlossary, setIsLoadingGlossary] = useState(false)
+  const [glossaryError, setGlossaryError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchGlossaryTerms() {
+      setIsLoadingGlossary(true)
+      setGlossaryError(null)
+      try {
+        let url = '/api/concepts/dict';
+        
+        // 如果提供了项目ID，则获取特定项目的词汇表
+        if (projectId) {
+          url = `/api/concepts/dict/${projectId}`;
+        }
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error('获取词汇表失败');
+        }
+        
+        const data = await response.json();
+        setGlossaryTerms(data);
+      } catch (error) {
+        console.error('获取词汇表出错:', error);
+        setGlossaryError(error instanceof Error ? error.message : '未知错误');
+      } finally {
+        setIsLoadingGlossary(false);
+      }
+    }
+
+    fetchGlossaryTerms();
+  }, [projectId]);
 
   const explicitKnowledge = [
     {
@@ -56,12 +102,6 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
       source: "行政部门主管",
       insight: "会议室预订冲突是当前系统的主要问题，新系统应提供更好的冲突检测",
     },
-  ]
-
-  const glossaryTerms = [
-    { term: "会议室", definition: "公司内用于举行会议的专用空间" },
-    { term: "预订时段", definition: "用户预留会议室的特定时间段" },
-    { term: "冲突检测", definition: "系统检查并防止多个预订在同一时间段占用同一会议室的机制" },
   ]
 
   return (
@@ -159,14 +199,29 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
           </Button>
         </div>
         <ScrollArea className="h-32">
-          <div className="space-y-2">
-            {glossaryTerms.map((item, index) => (
-              <div key={index} className="text-xs">
-                <span className="font-medium text-gray-800">{item.term}</span>
-                <span className="text-gray-500"> - {item.definition}</span>
-              </div>
-            ))}
-          </div>
+          {isLoadingGlossary ? (
+            <div className="flex justify-center items-center h-20">
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            </div>
+          ) : glossaryError ? (
+            <div className="text-xs text-red-500 p-2">
+              获取词汇表出错: {glossaryError}
+            </div>
+          ) : glossaryTerms.length === 0 ? (
+            <div className="text-xs text-gray-500 p-2">
+              暂无词汇表数据
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {glossaryTerms.map((item) => (
+                <div key={item.id} className="text-xs">
+                  <span className="font-medium text-gray-800">{item.termChinese}</span>
+                  <span className="text-gray-400"> ({item.termEnglish})</span>
+                  <span className="text-gray-500"> - {item.descChinese}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </ScrollArea>
       </div>
 
