@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
 import fetch from 'node-fetch';
+import { Command } from 'commander';
 
 import { InstantiationService, providerContainer } from "./base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "./base/common/languages/languageService";
@@ -23,38 +24,35 @@ interface AppConfig {
 
 class CommandLineParser {
 	public parse(): AppConfig {
-		const args = process.argv.slice(2);
-		let dirPath = process.cwd(); // 默认为当前目录
-		let upload = false;
-		let serverUrl = 'http://localhost:3000/api/context';
-		let outputDir = 'materials';
-
-		for (let i = 0; i < args.length; i++) {
-			if (args[i] === '--path' || args[i] === '-p') {
-				if (i + 1 < args.length) {
-					dirPath = args[i + 1];
-					 // 转换为绝对路径
-					if (!path.isAbsolute(dirPath)) {
-						dirPath = path.resolve(process.cwd(), dirPath);
-					}
-					i++; // 跳过下一个参数
-				}
-			} else if (args[i] === '--upload' || args[i] === '-u') {
-				upload = true;
-			} else if (args[i] === '--server-url' || args[i] === '--api-url') {
-				if (i + 1 < args.length) {
-					serverUrl = args[i + 1];
-					i++; // 跳过下一个参数
-				}
-			} else if (args[i] === '--output-dir' || args[i] === '-o') {
-				if (i + 1 < args.length) {
-					outputDir = args[i + 1];
-					i++; // 跳过下一个参数
-				}
-			}
+		const program = new Command();
+		
+		program
+			.name('context-worker')
+			.description('AutoDev Context Worker - Code analysis and context building tool')
+			.version('1.0.0');
+			
+		program
+			.option('-p, --path <dir>', 'Directory path to scan', process.cwd())
+			.option('-u, --upload', 'Upload analysis results to server', false)
+			.option('--server-url <url>', 'Server URL for uploading results', 'http://localhost:3000/api/context')
+			.option('-o, --output-dir <dir>', 'Output directory for learning materials', 'materials');
+			
+		program.parse(process.argv);
+		
+		const options = program.opts();
+		
+		// 将路径转换为绝对路径
+		let dirPath = options.path;
+		if (!path.isAbsolute(dirPath)) {
+			dirPath = path.resolve(process.cwd(), dirPath);
 		}
-
-		return { dirPath, upload, serverUrl, outputDir };
+		
+		return {
+			dirPath,
+			upload: options.upload || false,
+			serverUrl: options.serverUrl,
+			outputDir: options.outputDir
+		};
 	}
 }
 

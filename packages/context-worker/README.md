@@ -9,33 +9,33 @@
 
 AutoDev Context Worker 是一个用于深度解析和分析代码的工具，旨在为开发者提供更好的上下文理解和智能化的代码处理能力。它可以帮助开发者更高效地理解和使用代码库。
 
-## 安装与使用
+## Installation and Usage
 
-通过 npx 直接运行：
+Run directly with npx:
 
 ```bash
 npx @autodev/context-worker@latest
 ```
 
-## 命令行参数
+## Command Line Arguments
 
-Context Worker 支持以下命令行参数：
+Context Worker supports the following command line arguments:
 
-| 参数             | 简写   | 描述            | 默认值                               |
-|----------------|------|---------------|-----------------------------------|
-| `--path`       | `-p` | 指定要扫描的目录路径    | 当前工作目录                            |
-| `--upload`     | `-u` | 上传分析结果到服务器    | false                             |
-| `--server-url` | -    | 指定服务器地址       | http://localhost:3000/api/context |
-| `--output-dir` | `-o` | 指定生成的学习材料输出目录 | materials                         |
+| Parameter      | Short | Description                                     | Default                           |
+|----------------|-------|-------------------------------------------------|-----------------------------------|
+| `--path`       | `-p`  | Specify directory path to scan                  | Current working directory         |
+| `--upload`     | `-u`  | Upload analysis results to server               | false                             |
+| `--server-url` | -     | Specify server URL                              | http://localhost:3000/api/context |
+| `--output-dir` | `-o`  | Specify output directory for learning materials | materials                         |
 
-## 使用示例
+## Usage Examples
 
-扫描指定目录：
+Scan a specific directory:
 ```bash
 npx @autodev/context-worker --path /path/to/your/project
 ```
 
-扫描当前目录并上传结果：
+Scan current directory and upload results:
 ```bash
 npx @autodev/context-worker --upload --server-url https://localhost:3000/api/endpoint
 ```
