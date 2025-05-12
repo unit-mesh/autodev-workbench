@@ -1,3 +1,4 @@
+/// AI Generated content
 import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/postgres';
 
@@ -10,7 +11,7 @@ export async function GET() {
       SELECT * FROM "Guideline" 
       ORDER BY "updatedAt" DESC
     `;
-    
+
     return NextResponse.json(rows);
   } catch (error) {
     console.error('获取规范失败:', error);
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   try {
     await client.connect();
     const body = await request.json();
-    
+
     // 确保所需字段都存在
     if (!body.title || !body.content || !body.category) {
       return NextResponse.json(
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     // 将对象转换为JSON字符串
     const categoryJson = JSON.stringify(body.category);
     const now = new Date();
-    
+
     const { rows } = await client.sql`
       INSERT INTO "Guideline" (
         "title", 
@@ -64,12 +65,12 @@ export async function POST(request: Request) {
         ${body.language || 'general'}, 
         ${body.content}, 
         ${body.version || '1.0.0'}, 
-        ${now}, 
+        ${now.toDateString()}, 
         ${body.popularity || 0}, 
         ${body.status || 'DRAFT'}, 
         ${body.createdBy || 'system'}, 
-        ${now}, 
-        ${now}
+        ${now.toDateString()}, 
+        ${now.toDateString()}
       ) 
       RETURNING *
     `;
