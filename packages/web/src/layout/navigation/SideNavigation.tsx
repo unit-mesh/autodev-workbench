@@ -14,13 +14,12 @@ import {
 
 const navigationItems = [
   {
-    section: '平台知识',
-    icon: Building2,
+    section: 'AI 工具',
+    icon: Wrench,
     items: [
-      { name: '服务目录', href: '/platform/service-catalog' },
-      { name: '组件 & APIs', href: '/platform/framework' },
-      { name: '技术文档', href: '/platform/techdocs' },
-      { name: '规范中心', href: '/platform/coding-standards' },
+      { name: '需求转换', href: '/ai-tools/requirements' },
+      { name: '后端应用生成', href: '/ai-tools/golden-path' },
+      { name: '前端 UI 页面', href: '/ai-tools/frontend' },
     ],
   },
   {
@@ -32,20 +31,22 @@ const navigationItems = [
     ],
   },
   {
+    section: '平台知识',
+    icon: Building2,
+    items: [
+      { name: '服务目录', href: '/platform/service-catalog' },
+      { name: '组件 & APIs', href: '/platform/framework' },
+      { name: '技术文档', href: '/platform/techdocs' },
+      { name: '规范中心', href: '/platform/coding-standards' },
+    ],
+  },
+  {
     section: '智能中枢',
     icon: Brain,
     items: [
       { name: '智能体', href: '/ai-hub/agents' },
       { name: '项目规则', href: '/ai-hub/rules' },
       { name: '向量知识库', href: '/ai-hub/vector-db' },
-    ],
-  },
-  {
-    section: 'AI 工具',
-    icon: Wrench,
-    items: [
-      { name: '后端应用生成', href: '/ai-tools/golden-path' },
-      { name: '前端 UI 页面', href: '/ai-tools/frontend' },
     ],
   },
   {
