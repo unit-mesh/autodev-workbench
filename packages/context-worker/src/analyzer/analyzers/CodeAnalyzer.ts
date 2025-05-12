@@ -13,6 +13,7 @@ import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
 import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { MarkdownAnalyser } from "../../document/MarkdownAnalyser";
+import { CodeBlockContextMerger } from "../utils/CodeBlockContextMerger";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -106,7 +107,6 @@ export class CodeAnalyzer {
 				const codeDocuments = await this.markdownAnalyser.parse(content);
 
 				for (const doc of codeDocuments) {
-					// Skip code blocks that are 6 lines or fewer
 					const codeLineCount = doc.code ? doc.code.split('\n').length : 0;
 					if (codeLineCount <= 6) {
 						continue;
@@ -228,17 +228,27 @@ export class CodeAnalyzer {
 		}
 
 		if (result.markdownAnalysis && result.markdownAnalysis.codeBlocks.length > 0) {
+			// 按文件分组代码块
+			const fileGroups: { [key: string]: CodeBlock[] } = {};
 			for (const block of result.markdownAnalysis.codeBlocks) {
-				const content = this.generateMarkdownBlockContent(block, true);
+				if (!fileGroups[block.filePath]) {
+					fileGroups[block.filePath] = [];
+				}
+				fileGroups[block.filePath].push(block);
+			}
 
-				const blockIdentifier = block.heading
-					? `#${block.heading}`
-					: `#code-block-${Math.random().toString(36).substring(2, 9)}`;
+			for (const [filePath, blocks] of Object.entries(fileGroups)) {
+				const processedBlocks = CodeBlockContextMerger.processOverlappingContexts(blocks, 20);
+				for (const block of processedBlocks) {
+					const content = this.generateMarkdownBlockContent(block, true);
 
-				// Get the relative path for the file and append the block identifier
-				const relativePath = path.relative(targetDir, block.filePath) + blockIdentifier;
+					const blockIdentifier = block.heading
+						? `#${block.heading}`
+						: `#code-block-${Math.random().toString(36).substring(2, 9)}`;
 
-				items.push({ path: relativePath, content });
+					const relativePath = path.relative(targetDir, block.filePath) + blockIdentifier;
+					items.push({ path: relativePath, content });
+				}
 			}
 		}
 
