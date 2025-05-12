@@ -42,7 +42,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 		};
 		let classObj: CodeStructure = this.createEmptyStructure(StructureType.Class);
 		let interfaceObj: CodeStructure = this.createEmptyStructure(StructureType.Interface);
-
+		
 		let isLastNode = false;
 		let isInInterface = false;
 		const methods: CodeFunction[] = [];
@@ -68,7 +68,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						classObj.fields = fields.slice();
 						classObj.methods = methods.slice();
 						codeFile.classes.push({ ...classObj });
-
+						
 						// 重置字段和方法
 						methods.length = 0;
 						fields.length = 0;
@@ -78,7 +78,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					classObj.name = text;
 					classObj.canonicalName = codeFile.package ? codeFile.package + '.' + classObj.name : classObj.name;
 					isInInterface = false;
-
+					
 					const classNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
 					if (classNode !== null) {
 						this.insertLocation(classNode, classObj);
@@ -92,7 +92,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						interfaceObj.fields = fields.slice();
 						interfaceObj.methods = methods.slice();
 						codeFile.classes.push({ ...interfaceObj });
-
+						
 						// 重置字段和方法
 						methods.length = 0;
 						fields.length = 0;
@@ -102,7 +102,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					interfaceObj.name = text;
 					interfaceObj.canonicalName = codeFile.package ? codeFile.package + '.' + interfaceObj.name : interfaceObj.name;
 					isInInterface = true;
-
+					
 					const interfaceNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
 					if (interfaceNode !== null) {
 						this.insertLocation(interfaceNode, interfaceObj);
@@ -133,7 +133,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						if (methodReturnType !== '') {
 							methodObj.returnType = methodReturnType;
 							}
-
+						
 						methods.push(methodObj);
 					}
 
@@ -151,11 +151,6 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						lastField.type = text;
 						fields.push({ ...lastField });
 						lastField = this.initVariable();
-					}
-					break;
-				case 'field-value':
-					if (lastField.name) {
-						lastField.type = text;
 					}
 					break;
 				default:
@@ -188,9 +183,8 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 			name: '',
 			package: '',
 			implements: [],
-			fields: [],
+			start: { row: 0, column: 0 },
 			end: { row: 0, column: 0 },
-			start: { row: 0, column: 0 }
-		}
+		};
 	}
 }
