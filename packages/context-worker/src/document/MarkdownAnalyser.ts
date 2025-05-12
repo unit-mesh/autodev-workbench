@@ -11,6 +11,8 @@ export interface CodeDocument {
 	beforeString: string; /// x lines before the code block
 	afterString: string;  /// x lines after the code block
 	code: string;
+	startIndex?: number; // 代码块在原始文本中的开始位置
+	endIndex?: number;   // 代码块在原始文本中的结束位置
 }
 
 export interface DocumentAnalyser {
@@ -90,7 +92,9 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 				lastTitle: codeLastTitle,
 				beforeString,
 				afterString,
-				code: value
+				code: value,
+				startIndex: position.start.offset,
+				endIndex: position.end.offset
 			});
 		});
 
@@ -128,7 +132,9 @@ export class MarkdownAnalyser implements DocumentAnalyser {
 							lastTitle: codeLastTitle,
 							beforeString: '',
 							afterString: '',
-							code: fileContent
+							code: fileContent,
+							startIndex: position.start.offset,
+							endIndex: position.end.offset
 						});
 					}
 				} catch (error) {

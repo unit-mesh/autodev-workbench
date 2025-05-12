@@ -12,7 +12,7 @@ import { CodeCollector } from "../CodeCollector";
 import { InterfaceAnalyzer } from "./InterfaceAnalyzer";
 import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
-import { MarkdownAnalyser } from "../../document/MarkdownAnalyser";
+import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 import { CodeBlockContextMerger } from "../utils/CodeBlockContextMerger";
 
 export class CodeAnalyzer {
@@ -103,8 +103,8 @@ export class CodeAnalyzer {
 
 		for (const file of markdownFiles) {
 			try {
-				const content = await this.fileScanner.readFileContent(file);
-				const codeDocuments = await this.markdownAnalyser.parse(content);
+				const content: string = await this.fileScanner.readFileContent(file);
+				const codeDocuments: CodeDocument[] = await this.markdownAnalyser.parse(content);
 
 				for (const doc of codeDocuments) {
 					const codeLineCount = doc.code ? doc.code.split('\n').length : 0;
@@ -112,23 +112,38 @@ export class CodeAnalyzer {
 						continue;
 					}
 
-					const language = inferLanguage(`.${doc.language}`);
+					let startRow = 0;
+					if (doc.startIndex !== undefined) {
+						const contentBeforeBlock = content.substring(0, doc.startIndex);
+						startRow = Math.max(0, contentBeforeBlock.split('\n').length - 2);
+					}
+
+					let endRow = 0;
+					if (doc.endIndex !== undefined) {
+						const contentUpToBlock = content.substring(0, doc.endIndex);
+						endRow = Math.min(content.split('\n').length - 1, contentUpToBlock.split('\n').length);
+					}
+
 					allCodeBlocks.push({
 						filePath: file,
 						title: doc.title,
 						heading: doc.lastTitle,
 						language: doc.language,
-						internalLanguage: language,
+						internalLanguage: inferLanguage(`.${doc.language}`),
 						code: doc.code,
 						context: {
 							before: doc.beforeString,
 							after: doc.afterString
-						}
+						},
+						position: (startRow > 0 || endRow > 0) ? {
+							start: { row: startRow, column: 0 },
+							end: { row: endRow, column: 0 }
+						} : undefined
 					});
 
-					if (language && doc.code) {
+					if (inferLanguage(`.${doc.language}`) && doc.code) {
 						try {
-							const structurer = this.structurerManager.getStructurer(language);
+							const structurer = this.structurerManager.getStructurer(inferLanguage(`.${doc.language}`));
 							if (structurer) {
 								await structurer.init(this.serviceProvider);
 								const virtualFilePath = `${file}#${doc.title}.${doc.language}`;
@@ -198,7 +213,7 @@ export class CodeAnalyzer {
 					const block = blocks[i];
 					const index = i + 1;
 
-					const content = this.generateMarkdownBlockContent(block);
+					const content = await this.generateMarkdownBlockContent(block);
 					const docFileName = this.sanitizeFileName(`${sourceFileName}-${index}.txt`);
 					const docFilePath = path.join(markdownDir, docFileName);
 
@@ -240,7 +255,7 @@ export class CodeAnalyzer {
 			for (const [filePath, blocks] of Object.entries(fileGroups)) {
 				const processedBlocks = CodeBlockContextMerger.processOverlappingContexts(blocks, 20);
 				for (const block of processedBlocks) {
-					const content = this.generateMarkdownBlockContent(block, true);
+					const content = await this.generateMarkdownBlockContent(block, true);
 
 					const blockIdentifier = block.heading
 						? `#${block.heading}`
@@ -324,24 +339,24 @@ export class CodeAnalyzer {
 		return content;
 	}
 
-	private generateMarkdownBlockContent(block: CodeBlock, escapeForMarkdown: boolean = false): string {
+	private async generateMarkdownBlockContent(block: CodeBlock, escapeForMarkdown: boolean = false): Promise<string> {
 		let content = '';
 
 		content += `Source: ${block.filePath}\n`;
 		if (block.heading) {
 			content += `Chapter: ${block.heading}\n`;
 		}
-		content += `Language: ${block.language}\n\n`;
-		content += `Content：\n\n`;
-
+		content += `Language: ${block.language}\n`;
+		if (block.position) {
+			content += `Position: Line ${block.position.start.row}-${block.position.end.row}\n`;
+		}
+		content += `\nContent：\n\n`;
 		if (block.context.before && block.context.before.trim()) {
 			content += block.context.before;
 		}
 
-		const codeToUse = escapeForMarkdown ? this.escapeCodeForMarkdown(block.code) : block.code;
-		content += "```" + block.language + "\n";
-		content += codeToUse;
-		content += "\n```\n\n";
+		const codeToUse = await this.readCodeSection(block.filePath, block.position);
+		content += codeToUse + "\n";
 
 		if (block.context.after && block.context.after.trim()) {
 			content += block.context.after;
