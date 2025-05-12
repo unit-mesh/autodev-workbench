@@ -14,39 +14,52 @@ import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
 import { PythonStructurer } from "./code-context/python/PythonStructurer";
 
+interface AppConfig {
+	dirPath: string;
+	upload: boolean;
+	serverUrl: string;
+	outputDir: string;
+}
+
 class CommandLineParser {
-	public parse(): { dirPath: string; upload: boolean; apiUrl?: string } {
+	public parse(): AppConfig {
 		const args = process.argv.slice(2);
-		let dirPath = process.cwd(); // Default to current directory
+		let dirPath = process.cwd(); // 默认为当前目录
 		let upload = false;
-		let apiUrl = 'http://localhost:3000/api/context';
+		let serverUrl = 'http://localhost:3000/api/context';
+		let outputDir = 'materials';
 
 		for (let i = 0; i < args.length; i++) {
 			if (args[i] === '--path' || args[i] === '-p') {
 				if (i + 1 < args.length) {
 					dirPath = args[i + 1];
-					// Convert to absolute path
+					 // 转换为绝对路径
 					if (!path.isAbsolute(dirPath)) {
 						dirPath = path.resolve(process.cwd(), dirPath);
 					}
-					i++; // Skip next argument
+					i++; // 跳过下一个参数
 				}
 			} else if (args[i] === '--upload' || args[i] === '-u') {
 				upload = true;
-			} else if (args[i] === '--api-url') {
+			} else if (args[i] === '--server-url' || args[i] === '--api-url') {
 				if (i + 1 < args.length) {
-					apiUrl = args[i + 1];
-					i++; // Skip next argument
+					serverUrl = args[i + 1];
+					i++; // 跳过下一个参数
+				}
+			} else if (args[i] === '--output-dir' || args[i] === '-o') {
+				if (i + 1 < args.length) {
+					outputDir = args[i + 1];
+					i++; // 跳过下一个参数
 				}
 			}
 		}
 
-		return { dirPath, upload, apiUrl };
+		return { dirPath, upload, serverUrl, outputDir };
 	}
 }
 
 class UserInputHandler {
-	public async getDirectoryPath(): Promise<{ dirPath: string; upload: boolean; apiUrl: string }> {
+	public async getAppConfig(): Promise<AppConfig> {
 		const answers = await inquirer.prompt([
 			{
 				type: 'input',
@@ -69,10 +82,16 @@ class UserInputHandler {
 			},
 			{
 				type: 'input',
-				name: 'apiUrl',
-				message: '请输入API地址:',
+				name: 'serverUrl',
+				message: '请输入服务器地址:',
 				default: 'http://localhost:3000/api/context',
 				when: (answers) => answers.upload
+			},
+			{
+				type: 'input',
+				name: 'outputDir',
+				message: '请输入分析结果输出目录:',
+				default: 'materials'
 			}
 		]);
 
@@ -83,7 +102,8 @@ class UserInputHandler {
 		return {
 			dirPath,
 			upload: answers.upload,
-			apiUrl: answers.apiUrl
+			serverUrl: answers.serverUrl || 'http://localhost:3000/api/context',
+			outputDir: answers.outputDir
 		};
 	}
 }
@@ -109,14 +129,14 @@ class InterfaceAnalyzerApp {
 		this.userInputHandler = new UserInputHandler();
 	}
 
-	private async uploadResult(result: CodeAnalysisResult, apiUrl: string, targetDir: string): Promise<void> {
+	private async uploadResult(result: CodeAnalysisResult, serverUrl: string, targetDir: string): Promise<void> {
 		try {
 			const textResult = await this.codeAnalyzer.convertToList(result, targetDir);
 
 			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
 			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
 
-			const response = await fetch(apiUrl, {
+			const response = await fetch(serverUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -136,41 +156,38 @@ class InterfaceAnalyzerApp {
 		}
 	}
 
-	public async run(dirPath?: string): Promise<void> {
+	public async run(options?: Partial<AppConfig>): Promise<void> {
 		await this.codeAnalyzer.initialize();
 
-		let targetDir: string;
-		let shouldUpload = false;
-		let apiUrl = 'http://localhost:3000/api/context';
+		// 首先尝试从命令行参数获取配置
+		const cmdConfig = this.commandLineParser.parse();
+		
+		// 如果提供了参数选项，覆盖命令行配置
+		const mergedConfig: AppConfig = {
+			...cmdConfig,
+			...options,
+		};
 
-		if (dirPath) {
-			targetDir = dirPath;
-		} else {
-			const args = this.commandLineParser.parse();
-			if (args.dirPath !== process.cwd()) {
-				targetDir = args.dirPath;
-				shouldUpload = args.upload;
-				apiUrl = args.apiUrl || apiUrl;
-			} else {
-				const input = await this.userInputHandler.getDirectoryPath();
-				targetDir = input.dirPath;
-				shouldUpload = input.upload;
-				apiUrl = input.apiUrl;
-			}
+		// 检查是否需要交互式输入
+		// 只有当命令行没有提供路径且没有通过参数指定路径时，才启用交互式输入
+		let config = mergedConfig;
+		if (cmdConfig.dirPath === process.cwd() && !options?.dirPath) {
+			const userInput = await this.userInputHandler.getAppConfig();
+			config = userInput;
 		}
 
-		console.log(`正在扫描目录: ${targetDir}`);
-		let result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory(targetDir);
+		console.log(`正在扫描目录: ${config.dirPath}`);
+		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory(config.dirPath);
 		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
-		if (shouldUpload) {
-			console.log(`正在上传分析结果到 ${apiUrl}`);
-			await this.uploadResult(result, apiUrl, targetDir);
+		if (config.upload) {
+			console.log(`正在上传分析结果到 ${config.serverUrl}`);
+			await this.uploadResult(result, config.serverUrl, config.dirPath);
 		}
 
 		console.log(`分析结果已保存到 ${outputFilePath}`);
-		await this.codeAnalyzer.generateLearningMaterials(result, "materials");
+		await this.codeAnalyzer.generateLearningMaterials(result, config.outputDir);
 	}
 }
 

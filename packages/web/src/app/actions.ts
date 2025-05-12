@@ -47,7 +47,7 @@ export async function generateEpics(enhancedRequirement: string): Promise<string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function generatePRD(enhancedRequirement: string, epics: string[]): Promise<any> {
+export async function generatePRD(enhancedRequirement: string, epics: string[]): Promise<unknown> {
   try {
     // In a production environment, you would use the AI SDK with a proper API key
     // For demonstration purposes, we're returning mock data
