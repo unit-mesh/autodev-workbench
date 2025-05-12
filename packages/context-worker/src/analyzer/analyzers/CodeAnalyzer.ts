@@ -70,11 +70,17 @@ export class CodeAnalyzer {
 	}
 
 	private async collectCodeStructures(files: string[]): Promise<void> {
+		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
+
 		for (const file of files) {
 			try {
 				const language = this.codeCollector.inferLanguage(file);
 				if (!language) {
-					console.warn(`${file} is not a supported language, skipping...`);
+					// 检查文件扩展名是否在忽略列表中
+					const fileExt = path.extname(file).toLowerCase();
+					if (!silentExtensions.includes(fileExt)) {
+						console.warn(`${file} is not a supported language, skipping...`);
+					}
 					continue;
 				}
 
@@ -160,11 +166,11 @@ export class CodeAnalyzer {
 			await fs.promises.writeFile(filePath, content);
 			generatedFiles.push(filePath);
 		}
-		
+
 		// 添加对类继承关系的处理
 		for (const ext of result.extensionAnalysis.extensions) {
 			if (ext.children.length === 0) continue;
-			
+
 			const content = await this.generateExtensionContent(ext);
 			const fileName = this.sanitizeFileName(`${ext.parentName}_继承.txt`);
 			const filePath = path.join(outputDir, fileName);

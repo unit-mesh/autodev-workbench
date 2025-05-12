@@ -80,6 +80,12 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 		let interfaceMethodReturnType = '';
 		let interfaceMethodName = '';
 		const interfaceMethods: CodeFunction[] = [];
+		let lastInterfaceMethod: CodeFunction | null = null;
+
+		// 类方法相关变量
+		let classMethodReturnType = '';
+		let classMethodName = '';
+		let classMethodModifiers = '';
 
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
@@ -186,18 +192,65 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					interfaceMethodName = text;
 					
 					// 创建接口方法
-					if (interfaceMethodName !== '' && interfaceObj !== null) {
-						const methodObj = this.createFunction(capture.node, interfaceMethodName);
-						if (interfaceMethodReturnType !== '') {
-							methodObj.returnType = interfaceMethodReturnType;
-						}
-						
-						interfaceMethods.push(methodObj);
-						
-						// 重置
-						interfaceMethodName = '';
-						interfaceMethodReturnType = '';
+					lastInterfaceMethod = this.createFunction(capture.node, interfaceMethodName);
+					if (interfaceMethodReturnType !== '') {
+						lastInterfaceMethod.returnType = interfaceMethodReturnType;
 					}
+					
+					interfaceMethods.push(lastInterfaceMethod);
+					
+					// 重置
+					interfaceMethodName = '';
+					interfaceMethodReturnType = '';
+					break;
+				case 'interface-method.modifiers':
+					if (lastInterfaceMethod) {
+						lastInterfaceMethod.modifiers = text;
+					}
+					break;
+				case 'interface-method.param.type':
+					if (lastInterfaceMethod && !lastInterfaceMethod.parameters) {
+						lastInterfaceMethod.parameters = [];
+					}
+					if (lastInterfaceMethod) {
+						lastInterfaceMethod.parameters = lastInterfaceMethod.parameters || [];
+						lastInterfaceMethod.parameters.push({
+							type: text,
+							name: ''
+						});
+					}
+					break;
+				case 'interface-method.param.value':
+					if (lastInterfaceMethod && lastInterfaceMethod.parameters && lastInterfaceMethod.parameters.length > 0) {
+						const lastParam = lastInterfaceMethod.parameters[lastInterfaceMethod.parameters.length - 1];
+						lastParam.name = text;
+					}
+					break;
+				case 'class-method.returnType':
+					classMethodReturnType = text;
+					break;
+				case 'class-method.name':
+					classMethodName = text;
+					break;
+				case 'class-method.modifiers':
+					classMethodModifiers = text;
+					break;
+				case 'class-method.body':
+					if (classMethodName !== '') {
+						const methodObj = this.createFunction(capture.node, classMethodName);
+						if (classMethodReturnType !== '') {
+							methodObj.returnType = classMethodReturnType;
+						}
+						if (classMethodModifiers !== '') {
+							methodObj.modifiers = classMethodModifiers;
+						}
+						methods.push(methodObj);
+					}
+					
+					// 重置
+					classMethodName = '';
+					classMethodReturnType = '';
+					classMethodModifiers = '';
 					break;
 				case 'impl-name':
 					classObj.implements.push(text);

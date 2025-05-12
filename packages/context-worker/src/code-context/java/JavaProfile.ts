@@ -53,8 +53,15 @@ export class JavaProfile implements LanguageProfile {
 			  name: (identifier) @interface-name
 			  body: (interface_body
 			    (method_declaration
+			      (modifiers)? @interface-method.modifiers
 			      type: (_) @interface-method.returnType
 			      name: (identifier) @interface-method.name
+			      parameters: (formal_parameters
+              (formal_parameter
+                  (type_identifier)? @interface-method.param.type
+                  (identifier)? @interface-method.param.value
+              )?
+              @interface-method.params)
 			    )
 			  )
 			)
@@ -62,13 +69,29 @@ export class JavaProfile implements LanguageProfile {
 			(program
 		    (class_declaration
 		      name: ((identifier) @class-name)
-	        interfaces: (super_interfaces (type_list (type_identifier) @impl-name))?
+	        interfaces: (super_interfaces 
+            (type_list 
+              (type_identifier) @impl-name
+            )
+          )?
 	        body:
 	          (class_body
 	            (field_declaration
                 (modifiers) @field-modifiers
                 (type_identifier) @field-type
                 (variable_declarator) @field-decl
+              )?
+              (method_declaration
+                (modifiers)? @class-method.modifiers
+                type: (_) @class-method.returnType
+                name: (identifier) @class-method.name
+                parameters: (formal_parameters
+                  (formal_parameter
+                    (type_identifier)? @class-method.param.type
+                    (identifier)? @class-method.param.value
+                  )?
+                  @class-method.params)
+                body: (block) @class-method.body
               )?
             )
 		    )
