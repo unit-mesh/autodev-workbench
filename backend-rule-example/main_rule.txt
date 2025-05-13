@@ -1,0 +1,8 @@
+1. Always respond in 中文
+2. 所有类似扣除用户进度/用户资产然后给用户发放奖励的逻辑，优先扣除用户资产，再发放奖励，保证极端情况下平台不亏损
+3. 除了 Redis, 查询逻辑都必须避免 N + 1 问题，包括 SQL, RPC，Manager 调用
+4. 不在 for 循环中嵌套查询，容易造成 N + 1 问题，影响性能
+5. 线程池使用参考线程池规范
+6. 3个及以上的查询，如果允许，必须并行，使用 syncExecutor，参考线程池使用规范和并行查询规范。
+7. JSON 相关，使用 fastJson，反序列化泛型的使用必须用 TypeReference
+8. tradeNo 使用 `StringUtils.replace(UUID.randomUUID().toString(), "-", "")` 生成
