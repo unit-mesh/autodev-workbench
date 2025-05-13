@@ -1,3 +1,3 @@
 export * from "./types";
-export * from "./client";
-export * from "./server";
+export { MCPClientImpl as MCPClient } from "./client";
+export { MCPServerImpl as MCPServer } from "./server";
