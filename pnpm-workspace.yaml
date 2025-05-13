@@ -8,3 +8,4 @@ onlyBuiltDependencies:
   - protobufjs
   - sharp
   - sqlite3
+  - vscode-ripgrep

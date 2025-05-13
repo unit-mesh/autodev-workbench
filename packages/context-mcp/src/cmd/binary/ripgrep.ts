@@ -20,6 +20,7 @@ import * as path from "path"
 import * as readline from "readline"
 import fs from "fs/promises"
 import { findRipgrepBinary } from "./ripgrep-find";
+import { rgPath } from "vscode-ripgrep";
 
 
 /**
@@ -55,8 +56,8 @@ export async function createDirectoriesForFile(filePath: string): Promise<string
 /**
  * Helper function to check if a path exists.
  *
- * @param path - The path to check.
  * @returns A promise that resolves to true if the path exists, false otherwise.
+ * @param filePath
  */
 export async function fileExistsAtPath(filePath: string): Promise<boolean> {
 	try {
@@ -150,6 +151,10 @@ export async function getBinPath(vscodeAppRoot: string): Promise<string | undefi
 		return (await fileExistsAtPath(fullPath)) ? fullPath : undefined
 	}
 
+	if (await fileExistsAtPath(rgPath)) {
+		return rgPath
+	}
+
 	return (
 		(await checkPath("node_modules/@vscode/ripgrep/bin/")) ||
 		(await checkPath("node_modules/vscode-ripgrep/bin")) ||
@@ -200,7 +205,7 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 export async function regexSearchFiles(
 	cwd: string,
 	directoryPath: string,
-	regex: string, 
+	regex: string,
 	includeNodeModules = false,
 	filePattern?: string,
 ): Promise<string> {
@@ -211,9 +216,9 @@ export async function regexSearchFiles(
 	}
 
 	const args = [
-		"--json", 
-		"-e", regex, 
-		"--glob", filePattern || "*", 
+		"--json",
+		"-e", regex,
+		"--glob", filePattern || "*",
 		"--context", "1",
 		// Exclude node_modules unless explicitly included
 		...(includeNodeModules ? [] : ["--glob", "!node_modules/**"]),
