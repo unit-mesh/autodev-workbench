@@ -15,6 +15,7 @@ import { CodeAnalyzer } from "./analyzer/analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./analyzer/CodeAnalysisResult";
 import { PythonStructurer } from "./code-context/python/PythonStructurer";
 import { AppConfig, DEFAULT_CONFIG } from "./types/AppConfig";
+import { RustStructurer } from "./code-context/rust/RustStructurer";
 
 class CommandLineParser {
 	public parse(): AppConfig {
@@ -128,6 +129,7 @@ class InterfaceAnalyzerApp {
 		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
 		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
+		providerContainer.bind(IStructurerProvider).to(RustStructurer);
 
 		this.commandLineParser = new CommandLineParser();
 		this.userInputHandler = new UserInputHandler();

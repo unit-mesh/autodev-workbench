@@ -32,7 +32,50 @@ export class RustProfile implements LanguageProfile {
       return_type: (type_identifier)? @method-returnType
 		) @function
 	`);
-	structureQuery = new MemoizedQuery(``);
+	structureQuery = new MemoizedQuery(`
+		(use_declaration 
+			path: (_) @use-path)
+
+		(struct_item
+			name: (type_identifier) @struct-name
+			body: (ordered_field_declaration_list
+				(field_declaration
+					name: (field_identifier) @struct-field-name
+					type: (_) @struct-field-type)?
+			)?
+		)
+
+		(trait_item
+			name: (type_identifier) @trait-name
+			body: (declaration_list
+				(function_signature_item
+					name: (identifier) @trait-method-name
+					parameters: (parameters)? @trait-method-params
+					return_type: (_)? @trait-method-return-type
+				)?
+			)?
+		)
+
+		(impl_item
+			trait: (type_identifier)? @impl-trait-name
+			type: (type_identifier) @impl-struct-name
+			body: (declaration_list
+				(function_item
+					name: (identifier) @impl-method-name
+					parameters: (parameters)? @impl-method-params
+					return_type: (_)? @impl-method-return-type
+					body: (_) @impl-method-body
+				)?
+			)?
+		)
+
+		(function_item
+			name: (identifier) @function-name
+			parameters: (parameters)? @function-params
+			return_type: (_)? @function-return-type
+			body: (_) @function-body
+		)
+	`);
 	namespaces = [[
 		// variables
 		"const",
