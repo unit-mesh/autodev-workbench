@@ -187,4 +187,28 @@ export class MCPServerImpl {
   async serveStdio() {
     this.mcpInst.connect(this.mcpStdioTransport);
   }
+
+  /**
+   * Disconnect from underlying transports
+   */
+  async stop() {
+    if (this.mcpInst.isConnected()) {
+      await this.mcpInst.close();
+    }
+  }
+
+  /**
+   * Destroy the underlying transports
+   */
+  async destroy() {
+    if (this.managedHttpServer) {
+      await new Promise<void>((resolve, reject) => {
+        this.managedHttpServer?.close((err) => {
+          reject(err);
+        });
+        resolve();
+      });
+    }
+    this.mcpStdioTransport.close();
+  }
 }
