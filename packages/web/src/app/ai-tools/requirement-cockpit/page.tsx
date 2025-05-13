@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { EventSourceParserStream } from 'eventsource-parser/stream'
 import RequirementsWorkspace from "@/components/cockpit/requirements-workspace"
 import KnowledgeHub from "@/components/cockpit/knowledge-hub"
 import AIAssistantPanel from "@/components/cockpit/ai-assistant-panel"
@@ -48,7 +49,8 @@ export default function Home() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					messages: messages,
-					conversationId
+					conversationId,
+					stream: true
 				})
 			})
 
@@ -56,16 +58,30 @@ export default function Home() {
 				throw new Error("获取 AI 回复失败")
 			}
 
-			const data = await response.json()
-			const aiResponse = data.text
+			let aiResponse = ''
 
-			if (!conversationId && data.conversationId) {
-				setConversationId(data.conversationId)
+			const eventStream = response.body!
+				.pipeThrough(new TextDecoderStream())
+				.pipeThrough(new EventSourceParserStream())
+            
+		    // @ts-expect-error 移交给 @cgqaq 处理
+			for await (const event of eventStream) {
+				if (!conversationId) {
+					setConversationId(event.conversationId)
+				}
+
+				aiResponse += event.data
+				
+				setConversation(prev => {
+					const lastMessage = prev[prev.length - 1]
+					if (lastMessage && lastMessage.role === "assistant") {
+						return [...prev.slice(0, -1), { ...lastMessage, content: aiResponse }]
+					}
+					return [...prev, { role: "assistant", content: aiResponse }]
+				})
 			}
 
-			setConversation(prev => [...prev, { role: "assistant", content: aiResponse }])
 			handleAIResponse(aiResponse, newConversation.length)
-
 		} catch (error) {
 			console.error("获取 AI 回复时出错:", error)
 		} finally {
@@ -96,8 +112,8 @@ export default function Home() {
 				});
 
 				if (response.ok) {
-					const data = await response.json();
-					setDocumentContent(data);
+					const { conversationId, text } = await response.json() as { text: string; conversationId: string };
+					handleDocumentEdit(conversationId, text)
 					setActiveKnowledgeSource("company-policy");
 				}
 			}

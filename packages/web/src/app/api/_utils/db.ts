@@ -78,6 +78,29 @@ export async function getMessages(conversationId: string) {
   }
 }
 
+export async function saveMessage(
+  conversationId: string,
+  prompt: string,
+  text: string
+) {
+  const messageId = await createMessage(conversationId, "assistant", text);
+
+  const codeBlockRegex = /```([a-zA-Z0-9]+)?\n([\s\S]*?)```/g;
+  let match;
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    const language = match[1] || "jsx";
+    const code = match[2].trim();
+    await saveGeneratedCode(
+      conversationId,
+      messageId,
+      code,
+      language,
+      `Generated ${language} code`,
+      `Code generated from prompt: ${prompt.substring(0, 100)}...`
+    );
+  }
+}
+
 // Generated code helpers
 export async function saveGeneratedCode(
   conversationId: string,
