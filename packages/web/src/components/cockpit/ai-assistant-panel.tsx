@@ -33,7 +33,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
   ]
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 flex flex-col h-full">
+    <div className="bg-white border-l border-gray-200 flex flex-col h-full">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800">AI 助手与行动面板</h2>
         <p className="text-xs text-gray-500">AI 提问、建议与质量保证</p>
@@ -82,7 +82,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 
       <div className="p-3 border-b border-gray-200">
         <h3 className="text-sm font-medium text-gray-700 mb-2">实时质量保证</h3>
-        <ScrollArea className="h-48">
+        <ScrollArea className="min-h-48">
           <div className="space-y-2">
             {qualityAlerts.map((alert) => (
               <Card
