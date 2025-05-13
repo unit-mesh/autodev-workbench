@@ -18,7 +18,11 @@ interface RequirementsWorkspaceProps {
   documentContent: Array<{ id: string; type: string; content: string }>
   onSendMessage: (message: string) => void
   onDocumentEdit: (id: string, newContent: string) => void
+  onUpdateDocument?: () => void
+  onCheckQuality?: () => void
   isLoading?: boolean
+  isDocumentUpdating?: boolean
+  isQualityChecking?: boolean
 }
 
 export default function RequirementsWorkspace({
@@ -28,7 +32,11 @@ export default function RequirementsWorkspace({
   documentContent,
   onSendMessage,
   onDocumentEdit,
+  onUpdateDocument,
+  onCheckQuality,
   isLoading = false,
+  isDocumentUpdating = false,
+  isQualityChecking = false,
 }: RequirementsWorkspaceProps) {
   const [activeTab, setActiveTab] = useState("conversation")
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -134,6 +142,52 @@ export default function RequirementsWorkspace({
                 )}
               >
                 <div className="whitespace-pre-wrap">{message.content}</div>
+                {message.role === "assistant" && index === conversation.length - 1 && (
+                  <div className="flex gap-2 justify-end mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onUpdateDocument}
+                      disabled={isDocumentUpdating}
+                      className="flex items-center"
+                    >
+                      {isDocumentUpdating ? (
+                        <>
+                          <span className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
+                          更新中...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-3 w-3 mr-1" />
+                          生成需求文档
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onCheckQuality}
+                      disabled={isQualityChecking || (documentContent && documentContent.length === 0)}
+                      className="flex items-center"
+                    >
+                      {isQualityChecking ? (
+                        <>
+                          <span className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
+                          检查中...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-3 w-3 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v15"/>
+                            <path d="M13.9 17.25 16 15.5l2.1 1.75"/>
+                            <path d="m16 15.5-4.6 3.86L9 18"/>
+                          </svg>
+                          质量检查
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -158,7 +212,7 @@ export default function RequirementsWorkspace({
         {/* Document Tab */}
         <TabsContent value="document" className="flex-1 p-0 m-0">
           <ScrollArea className="flex-1 p-4">
-            {documentContent.map((section) => (
+            {documentContent && documentContent.map((section) => (
               <Card key={section.id} id={section.id} className="mb-4 py-0">
                 <CardContent className="p-4">
                   {editingId === section.id ? (

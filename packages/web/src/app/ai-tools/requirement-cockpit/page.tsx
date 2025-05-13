@@ -15,6 +15,8 @@ export default function Home() {
 		Array<{ id: string; type: string; message: string; relatedReqId: string }>
 	>([])
 	const [isLoading, setIsLoading] = useState(false)
+	const [isDocumentUpdating, setIsDocumentUpdating] = useState(false)
+	const [isQualityChecking, setIsQualityChecking] = useState(false)
 	const [conversationId, setConversationId] = useState<string | null>(null)
 
 	// 为需求对话添加系统提示词
@@ -99,53 +101,7 @@ export default function Home() {
 					setActiveKnowledgeSource("company-policy");
 				}
 			}
-			// 后续对话，更新文档
-			else if (documentContent.length > 0) {
-				// 提取并处理更新后的需求
-				const response = await fetch("/api/chat", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						messages: [
-							{
-								role: "system",
-								content: "你是需求文档编辑专家，请根据最新对话更新需求文档。"
-							},
-							{
-								role: "user",
-								content: `现有需求文档：\n\n${documentContent.map(doc => doc.content).join('\n\n')}\n\n` +
-									`用户最新对话：\n\n${aiResponse}\n\n` +
-									`请提供更新后的功能需求部分内容，保持原有格式，但融合新信息。`
-							}
-						]
-					})
-				});
-
-				if (response.ok) {
-					const data = await response.json();
-
-					// 解析 AI 返回的需求文档内容
-					const updatedRequirements = data.text || "## 2. 功能需求\n\n### 2.1 基本功能\n系统应提供基础功能。";
-
-					// 更新文档内容（仅更新功能需求部分）
-					setDocumentContent((prev) => {
-						const updated = [...prev];
-						const frIndex = updated.findIndex((item) => item.id === "fr-1");
-						if (frIndex !== -1) {
-							updated[frIndex] = {
-								...updated[frIndex],
-								content: updatedRequirements.trim(),
-							};
-						}
-						return updated;
-					});
-				}
-			}
-
-			// 进行质量检查
-			if (documentContent.length > 0) {
-				await performQualityCheck();
-			}
+			// 注意：后续对话不再自动更新文档和执行质量检查
 		} catch (error) {
 			console.error("处理 AI 响应时出错:", error);
 		}
@@ -156,7 +112,7 @@ export default function Home() {
 		// 如果没有文档内容，则不执行检查
 		if (documentContent.length === 0) return;
 
-		setIsLoading(true)
+		setIsQualityChecking(true)
 		try {
 			// 准备需求文档内容
 			const documentForAnalysis = documentContent.map(item => item.content).join("\n\n")
@@ -183,16 +139,86 @@ export default function Home() {
 		} catch (error) {
 			console.error("质量检查时出错:", error)
 		} finally {
-			setIsLoading(false)
+			setIsQualityChecking(false)
 		}
 	}
 
 	const handleDocumentEdit = (id: string, newContent: string) => {
 		setDocumentContent((prev) => prev.map((item) => (item.id === id ? { ...item, content: newContent } : item)))
-
-		// 文档编辑完成后，执行质量检查
-		performQualityCheck()
+		
+		// 注意：不再自动执行质量检查，改为用户手动触发
 	}
+
+	// 手动更新文档
+	const handleUpdateDocument = async () => {
+		if (conversation.length <= 1) return;
+		
+		setIsDocumentUpdating(true);
+		try {
+			// 获取最新的AI回复
+			const lastAIResponse = conversation
+				.filter(msg => msg.role === "assistant")
+				.pop()?.content || "";
+			
+			// 提取并处理更新后的需求
+			const response = await fetch("/api/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: [
+						{
+							role: "system",
+							content: "你是需求文档编辑专家，请根据最新对话更新需求文档。"
+						},
+						{
+							role: "user",
+							content: `现有需求文档：\n\n${documentContent.map(doc => doc.content).join('\n\n')}\n\n` +
+								`用户最新对话：\n\n${lastAIResponse}\n\n` +
+								`请提供更新后的功能需求部分内容，保持原有格式，但融合新信息。`
+						}
+					]
+				})
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+
+				// 解析 AI 返回的需求文档内容
+				const updatedRequirements = data.text || "## 2. 功能需求\n\n### 2.1 基本功能\n系统应提供基础功能。";
+
+				// 更新文档内容（仅更新功能需求部分）
+				setDocumentContent((prev) => {
+					const updated = [...prev];
+					const frIndex = updated.findIndex((item) => item.id === "fr-1");
+					if (frIndex !== -1) {
+						updated[frIndex] = {
+							...updated[frIndex],
+							content: updatedRequirements.trim(),
+						};
+					}
+					return updated;
+				});
+			}
+		} catch (error) {
+			console.error("更新文档时出错:", error);
+		} finally {
+			setIsDocumentUpdating(false);
+		}
+	};
+
+	// 手动执行质量检查
+	const handleQualityCheck = async () => {
+		if (documentContent.length === 0) return;
+		
+		setIsQualityChecking(true);
+		try {
+			await performQualityCheck();
+		} catch (error) {
+			console.error("执行质量检查时出错:", error);
+		} finally {
+			setIsQualityChecking(false);
+		}
+	};
 
 	return (
 		<div className="flex h-screen overflow-hidden">
@@ -218,7 +244,11 @@ export default function Home() {
 						documentContent={documentContent}
 						onSendMessage={handleSendMessage}
 						onDocumentEdit={handleDocumentEdit}
+						onUpdateDocument={handleUpdateDocument}
+						onCheckQuality={handleQualityCheck}
 						isLoading={isLoading}
+						isDocumentUpdating={isDocumentUpdating}
+						isQualityChecking={isQualityChecking}
 					/>
 				</Panel>
 
