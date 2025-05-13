@@ -1,11 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200px" height="482px" viewBox="-100 0 802 482" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200px" height="602px" viewBox="-100 -80 802 682" version="1.1" xmlns="http://www.w3.org/2000/svg">
     <title>PlatformEngFlow</title>
     <desc>Platform Engineering Flow Diagram</desc>
     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g transform="translate(1.000000, 1.000000)">
-            <!-- User Touchpoints -->
+            <g transform="translate(0.000000, -65.000000)">
+                <rect stroke="#1E90FF" stroke-width="2" fill="#FFFFFF" x="-275" y="0" width="1060" height="120" rx="8"/>
+                <text fill="#1E90FF" font-family="PingFangSC-Semibold, PingFang SC" font-size="18" font-weight="500">
+                    <tspan x="230" y="31">Workbench: AI-Powered Development</tspan>
+                </text>
+                <text fill="#000000" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
+                    <tspan x="230" y="70">- Unified context and development environment</tspan>
+                </text>
+                <text fill="#000000" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
+                    <tspan x="230" y="95">- AI-automated development</tspan>
+                </text>
+            </g>
+
+            <!-- Left Connection Lines -->
             <g>
+                <line x1="-30" y1="181" x2="10" y2="181" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5"/>
+                <line x1="-30" y1="351" x2="10" y2="351" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5"/>
+                <line x1="-30" y1="531" x2="10" y2="531" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5"/>
+            </g>
+
+            <!-- Right Connection Lines -->
+            <g>
+                <line x1="505" y1="181" x2="540" y2="181" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5"/>
+                <line x1="505" y1="351" x2="540" y2="351" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5"/>
+                <line x1="505" y1="531" x2="540" y2="531" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5"/>
+            </g>
+
+            <!-- From Workbench to Governance and Metrics connections -->
+            <g>
+                <line x1="-155" y1="55" x2="-155" y2="65" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5"/>
+                <line x1="665" y1="55" x2="665" y2="65" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5"/>
+            </g>
+
+            <!-- Arrow 0 (from Workbench to User Touchpoints) -->
+            <g transform="translate(260.000000, 65.000000)" stroke="#FFD700" stroke-width="2">
+                <path d="M10,0 L10,30 M0,20 L10,30 L20,20"/>
+            </g>
+
+            <g transform="translate(0.000000, 115.000000)">
+                <!-- User Touchpoints -->
                 <rect stroke="#FFA500" stroke-width="2" fill="#FFFFFF" x="5" y="0" width="500" height="120" rx="8" />
                 <text fill="#FFA500" font-family="PingFangSC-Semibold, PingFang SC" font-size="18" font-weight="500">
                     <tspan x="37" y="31">User Touchpoints: AI Self-Service</tspan>
@@ -27,12 +65,12 @@
             </g>
 
             <!-- Arrow 1 -->
-            <g transform="translate(260.000000, 130.000000)" stroke="#FFD700" stroke-width="2">
-                <path d="M10,0 L10,30 M0,20 L10,30 L20,20" />
+            <g transform="translate(260.000000, 245.000000)" stroke="#FFD700" stroke-width="2">
+                <path d="M10,0 L10,30 M0,20 L10,30 L20,20"/>
             </g>
 
             <!-- Middle Layer -->
-            <g transform="translate(0.000000, 180.000000)">
+            <g transform="translate(0.000000, 295.000000)">
                 <rect stroke="#008000" stroke-width="2" fill="#FFFFFF" x="5" y="0" width="500" height="120" rx="8" />
                 <text fill="#008000" font-family="PingFangSC-Semibold, PingFang SC" font-size="18" font-weight="500">
                     <tspan x="29" y="34">Middle Layer: Knowledge Hub</tspan>
@@ -50,12 +88,12 @@
             </g>
 
             <!-- Arrow 2 -->
-            <g transform="translate(260.000000, 310.000000)" stroke="#FFD700" stroke-width="2">
-                <path d="M10,0 L10,30 M0,20 L10,30 L20,20" />
+            <g transform="translate(260.000000, 425.000000)" stroke="#FFD700" stroke-width="2">
+                <path d="M10,0 L10,30 M0,20 L10,30 L20,20"/>
             </g>
 
             <!-- Internal Interfaces -->
-            <g transform="translate(0.000000, 360.000000)">
+            <g transform="translate(0.000000, 475.000000)">
                 <rect stroke="#0000FF" stroke-width="2" fill="#FFFFFF" x="5" y="0" width="500" height="120" rx="8" />
                 <text fill="#0000FF" font-family="PingFangSC-Semibold, PingFang SC" font-size="18" font-weight="500">
                     <tspan x="27" y="26">Internal APIs: Context Services</tspan>
@@ -73,56 +111,44 @@
             </g>
 
             <!-- AI Governance Hub -->
-            <g transform="translate(-280.000000, 0.000000)">
-                <rect stroke="#4B0082" stroke-width="2" fill="#FFFFFF" width="250" height="480" rx="8" />
+            <g transform="translate(-280.000000, 65.000000)">
+                <rect stroke="#4B0082" stroke-width="2" fill="#FFFFFF" width="250" height="530" rx="8"/>
                 <text fill="#4B0082" font-family="PingFangSC-Semibold, PingFang SC" font-size="18" font-weight="500">
                     <tspan x="57" y="40">AI Governance</tspan>
                 </text>
-                <line x1="75" y1="50" x2="175" y2="50" stroke="#4B0082" stroke-width="2" />
+                <line x1="75" y1="50" x2="175" y2="50" stroke="#4B0082" stroke-width="2"/>
                 <text fill="#000000" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
                     <tspan x="32" y="92">- Governance policies</tspan>
                     <tspan x="32" y="132">- Access control</tspan>
                     <tspan x="32" y="172">- Context injection</tspan>
                     <tspan x="32" y="212">- Auditing</tspan>
                     <tspan x="32" y="252">- Resource orchestration</tspan>
+                    <tspan x="32" y="292">- Smart workflow orchestration</tspan>
                 </text>
-                <rect stroke="#4B0082" fill-opacity="0.2" fill="#4B0082" x="40" y="401" width="188" height="54" rx="5" />
+                <rect stroke="#4B0082" fill-opacity="0.2" fill="#4B0082" x="40" y="450" width="188" height="54" rx="5"/>
                 <text fill="#4B0082" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
-                    <tspan x="65" y="433">IDP as Governance Hub</tspan>
+                    <tspan x="65" y="482">IDP as Governance Hub</tspan>
                 </text>
             </g>
 
             <!-- AI Metrics -->
-            <g transform="translate(540.000000, 0.000000)">
-                <rect stroke="#2E8B57" stroke-width="2" fill="#FFFFFF" width="250" height="480" rx="8" />
+            <g transform="translate(540.000000, 65.000000)">
+                <rect stroke="#2E8B57" stroke-width="2" fill="#FFFFFF" width="250" height="530" rx="8"/>
                 <text fill="#2E8B57" font-family="Helvetica-Bold, Helvetica" font-size="18" font-weight="bold">
                     <tspan x="40" y="40">AI Quality Metrics</tspan>
                 </text>
-                <line x1="30" y1="50" x2="220" y2="50" stroke="#2E8B57" stroke-width="2" />
+                <line x1="30" y1="50" x2="220" y2="50" stroke="#2E8B57" stroke-width="2"/>
                 <text fill="#000000" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
                     <tspan x="40" y="92">- Model effectiveness</tspan>
                     <tspan x="40" y="132">- Speed and accuracy</tspan>
                     <tspan x="40" y="172">- Usage and coverage</tspan>
                     <tspan x="40" y="212">- Productivity gains</tspan>
+                    <tspan x="40" y="252">- Code quality and test coverage</tspan>
                 </text>
-                <rect stroke="#2E8B57" fill-opacity="0.2" fill="#2E8B57" x="20" y="401" width="210" height="54" rx="5" />
+                <rect stroke="#2E8B57" fill-opacity="0.2" fill="#2E8B57" x="20" y="450" width="210" height="54" rx="5"/>
                 <text fill="#2E8B57" font-family="PingFangSC-Regular, PingFang SC" font-size="14">
-                    <tspan x="60" y="433">Improving AI Quality</tspan>
+                    <tspan x="60" y="482">Improving AI Quality</tspan>
                 </text>
-            </g>
-
-            <!-- Left Connection Lines -->
-            <g>
-                <line x1="-30" y1="56" x2="10" y2="56" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5" />
-                <line x1="-30" y1="240" x2="10" y2="240" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5" />
-                <line x1="-30" y1="420" x2="10" y2="420" stroke="#4B0082" stroke-width="2" stroke-dasharray="5,5" />
-            </g>
-
-            <!-- Right Connection Lines -->
-            <g>
-                <line x1="505" y1="56" x2="540" y2="56" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5" />
-                <line x1="505" y1="240" x2="540" y2="240" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5" />
-                <line x1="505" y1="420" x2="540" y2="420" stroke="#2E8B57" stroke-width="2" stroke-dasharray="5,5" />
             </g>
         </g>
     </g>
