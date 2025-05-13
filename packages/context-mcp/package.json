@@ -34,7 +34,8 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.1",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      zod:
-        specifier: ^3.24.4
-        version: 3.24.4
     devDependencies:
       '@types/node':
         specifier: ^20
@@ -33,6 +29,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      zod:
+        specifier: ^3.24.4
+        version: 3.24.4
     devDependencies:
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
