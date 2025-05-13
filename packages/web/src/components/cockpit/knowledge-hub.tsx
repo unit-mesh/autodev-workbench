@@ -40,18 +40,18 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
       setGlossaryError(null)
       try {
         let url = '/api/concepts/dict';
-        
+
         // 如果提供了项目ID，则获取特定项目的词汇表
         if (projectId) {
           url = `/api/concepts/dict/${projectId}`;
         }
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           throw new Error('获取词汇表失败');
         }
-        
+
         const data = await response.json();
         setGlossaryTerms(data);
       } catch (error) {
@@ -105,8 +105,8 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
   ]
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
+    <div className="bg-white border-r border-gray-200 flex flex-col h-full">
+      <div className="px-4 py-2 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800">情境与知识中心</h2>
         <p className="text-xs text-gray-500">管理和浏览项目相关知识</p>
       </div>
@@ -198,7 +198,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
             <Plus className="h-3 w-3" />
           </Button>
         </div>
-        <ScrollArea className="h-32">
+        <ScrollArea className="h-48">
           {isLoadingGlossary ? (
             <div className="flex justify-center items-center h-20">
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -225,7 +225,6 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
         </ScrollArea>
       </div>
 
-      {/* Knowledge Graph (Simplified) */}
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium text-gray-700">知识图谱浏览器</h3>

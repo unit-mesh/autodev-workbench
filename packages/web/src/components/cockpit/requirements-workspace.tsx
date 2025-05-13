@@ -57,26 +57,30 @@ export default function RequirementsWorkspace({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+    if (e.key === "Enter") {
+      if (e.altKey) {
+        // Alt+Enter 换行，不做处理
+        return
+      } else if (!e.shiftKey) {
+        e.preventDefault()
+        handleSend()
+      }
     }
   }
 
   // 生成发送按钮，根据加载状态显示不同内容
   const renderSendButton = () => {
     return (
-      <Button onClick={handleSend} disabled={isLoading}>
+      <Button 
+        onClick={handleSend} 
+        disabled={isLoading} 
+        size="icon" 
+        className="absolute right-2 bottom-2"
+      >
         {isLoading ? (
-          <>
-            <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
-            处理中...
-          </>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
         ) : (
-          <>
-            <Send className="h-4 w-4 mr-2" />
-            发送
-          </>
+          <Send className="h-4 w-4" />
         )}
       </Button>
     )
@@ -97,22 +101,22 @@ export default function RequirementsWorkspace({
   return (
     <div className="flex-1 flex flex-col h-full border-l border-r border-gray-200">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="px-4 py-2 border-b border-gray-200 bg-white">
         <h1 className="text-xl font-semibold text-gray-800">需求驾驶舱</h1>
         <p className="text-sm text-gray-500">与 AI 助手协作定义和完善您的需求</p>
       </div>
 
       {/* Initial Intent Input */}
       {conversation.length === 0 && (
-        <div className="p-6 bg-white">
+        <div className="px-4 py-2 bg-white">
           <div className="mb-2 text-sm font-medium text-gray-700">请用一句话描述您的核心需求或意图</div>
-          <div className="flex gap-2">
+          <div className="relative">
             <Textarea
               placeholder="例如：我需要一个能让用户在线预订会议室的系统"
               value={currentRequirement}
               onChange={(e) => setCurrentRequirement(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 resize-none"
+              className="resize-none pr-10"
             />
             {renderSendButton()}
           </div>
@@ -195,13 +199,13 @@ export default function RequirementsWorkspace({
 
           {conversation.length > 0 && (
             <div className="p-4 border-t border-gray-200 bg-white">
-              <div className="flex gap-2">
+              <div className="relative">
                 <Textarea
                   placeholder="输入您的回复..."
                   value={currentRequirement}
                   onChange={(e) => setCurrentRequirement(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="flex-1 resize-none"
+                  className="resize-none pr-10"
                 />
                 {renderSendButton()}
               </div>

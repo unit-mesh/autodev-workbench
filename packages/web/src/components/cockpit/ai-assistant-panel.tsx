@@ -34,7 +34,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 
   return (
     <div className="bg-white border-l border-gray-200 flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
+      <div className="px-4 py-2 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800">AI 助手与行动面板</h2>
         <p className="text-xs text-gray-500">AI 提问、建议与质量保证</p>
       </div>
