@@ -45,6 +45,10 @@ export class MCPServerImpl {
   private managedHttpServer?: http.Server;
 
   private expressApp: Application;
+
+  private isDestroyed = false;
+  private isStopped = false;
+
   constructor(impl: McpImplementation, options?: McpServerOptions) {
     this.impl = impl;
     this.mcpInst = new McpServer(
@@ -192,15 +196,32 @@ export class MCPServerImpl {
    * Disconnect from underlying transports
    */
   async stop() {
+    if (this.isStopped) {
+      throw new Error("You cannot stop the server twice");
+    }
+    this.isStopped = true;
+
     if (this.mcpInst.isConnected()) {
       await this.mcpInst.close();
     }
   }
 
   /**
-   * Destroy the underlying transports
+   * Destroy the underlying transports,
+   *
+   *
    */
   async destroy() {
+    if (this.isDestroyed) {
+      throw new Error("You cannot destroy the server twice");
+    }
+
+    if (!this.isStopped) {
+      this.stop();
+    }
+
+    this.isDestroyed = true;
+
     if (this.managedHttpServer) {
       await new Promise<void>((resolve, reject) => {
         this.managedHttpServer?.close((err) => {
