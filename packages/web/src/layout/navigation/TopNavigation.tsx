@@ -23,9 +23,9 @@ export function TopNavigation() {
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-between h-16">
 					<div className="flex">
-						<div className="flex-shrink-0 flex items-center">
+						<div className="flex-shrink-0 flex items-center pr-2">
 							<Link href="/">
-								<span className="text-xl text-gray-900 brand">AutoDev</span>
+								<span className="text-xl text-gray-900 brand ">AutoDev</span>
 							</Link>
 						</div>
 						<div className="hidden sm:ml-6 sm:flex sm:space-x-8">
