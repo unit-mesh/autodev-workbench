@@ -8,6 +8,7 @@ import { TypeScriptProfile } from './code-context/typescript/TypeScriptProfile';
 import { ILanguageProfile } from './ProviderTypes';
 import { CsharpProfile } from './code-context/csharp/CsharpProfile';
 import { KotlinProfile } from "./code-context/kotlin/KotlinProfile";
+import { CProfile } from "./code-context/c/CProfile";
 
 const languageContainer = new Container();
 
@@ -18,5 +19,6 @@ languageContainer.bind(ILanguageProfile).to(PythonProfile);
 languageContainer.bind(ILanguageProfile).to(CsharpProfile)
 languageContainer.bind(ILanguageProfile).to(RustProfile);
 languageContainer.bind(ILanguageProfile).to(KotlinProfile);
+languageContainer.bind(ILanguageProfile).to(CProfile);
 
 export { languageContainer };

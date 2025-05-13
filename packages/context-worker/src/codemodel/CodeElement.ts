@@ -17,7 +17,7 @@ export enum StructureType {
 	Class = 'class',
 	Interface = 'interface',
 	Enum = 'enum',
-	Structure = 'struct',
+	Struct = 'struct',
 	Annotation = 'annotation',
 }
 
