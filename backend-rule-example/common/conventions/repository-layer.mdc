@@ -1,0 +1,10 @@
+---
+description: Repository 层代码规范
+globs: 
+alwaysApply: false
+---
+
+##### Repository 层
+Repository 是介于 Manager 和 Mapper 必要的一层，包装 Mapper，通常有以下作用：
+1. 组织主表和子表数据
+2. 给 db 加缓存

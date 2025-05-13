@@ -1,0 +1,204 @@
+---
+description: Mybatis 代码规范
+globs: 
+alwaysApply: false
+---
+
+##### Mybatis
+Mybatis xml 示例如下：
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.AnchorUnionMapper">
+   <resultMap id="BaseResultMap" type="com.domain.AnchorUnion">
+      <id column="id" jdbcType="BIGINT" property="id" />
+      <result column="union_id" jdbcType="BIGINT" property="unionId" />
+      <result column="uid" jdbcType="BIGINT" property="uid" />
+      <result column="wallet_code" jdbcType="VARCHAR" property="walletCode" />
+      <result column="share_rate" jdbcType="DECIMAL" property="shareRate" />
+      <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+      <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+      <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+      <result column="union_company_id" jdbcType="BIGINT" property="unionCompanyId" />
+      <result column="remit_type" jdbcType="VARCHAR" property="remitType" />
+   </resultMap>
+   <sql id="Base_Column_List">
+      id, union_id, `uid`, wallet_code, share_rate, is_delete, create_time, update_time,
+      union_company_id, remit_type
+   </sql>
+   <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+      select
+      <include refid="Base_Column_List" />
+      from t_anchor_union
+      where id = #{id,jdbcType=BIGINT}
+   </select>
+   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+      delete from t_anchor_union
+      where id = #{id,jdbcType=BIGINT}
+   </delete>
+   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.domain.AnchorUnion" useGeneratedKeys="true">
+      insert into t_anchor_union (union_id, `uid`, wallet_code,
+      share_rate, is_delete, create_time,
+      update_time, union_company_id, remit_type
+      )
+      values (#{unionId,jdbcType=BIGINT}, #{uid,jdbcType=BIGINT}, #{walletCode,jdbcType=VARCHAR},
+      #{shareRate,jdbcType=DECIMAL}, #{isDelete,jdbcType=TINYINT}, #{createTime,jdbcType=TIMESTAMP},
+      #{updateTime,jdbcType=TIMESTAMP}, #{unionCompanyId,jdbcType=BIGINT}, #{remitType,jdbcType=VARCHAR}
+      )
+   </insert>
+   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.domain.AnchorUnion" useGeneratedKeys="true">
+      insert into t_anchor_union
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+         <if test="unionId != null">
+            union_id,
+         </if>
+         <if test="uid != null">
+            `uid`,
+         </if>
+         <if test="walletCode != null">
+            wallet_code,
+         </if>
+         <if test="shareRate != null">
+            share_rate,
+         </if>
+         <if test="isDelete != null">
+            is_delete,
+         </if>
+         <if test="createTime != null">
+            create_time,
+         </if>
+         <if test="updateTime != null">
+            update_time,
+         </if>
+         <if test="unionCompanyId != null">
+            union_company_id,
+         </if>
+         <if test="remitType != null">
+            remit_type,
+         </if>
+      </trim>
+      <trim prefix="values (" suffix=")" suffixOverrides=",">
+         <if test="unionId != null">
+            #{unionId,jdbcType=BIGINT},
+         </if>
+         <if test="uid != null">
+            #{uid,jdbcType=BIGINT},
+         </if>
+         <if test="walletCode != null">
+            #{walletCode,jdbcType=VARCHAR},
+         </if>
+         <if test="shareRate != null">
+            #{shareRate,jdbcType=DECIMAL},
+         </if>
+         <if test="isDelete != null">
+            #{isDelete,jdbcType=TINYINT},
+         </if>
+         <if test="createTime != null">
+            #{createTime,jdbcType=TIMESTAMP},
+         </if>
+         <if test="updateTime != null">
+            #{updateTime,jdbcType=TIMESTAMP},
+         </if>
+         <if test="unionCompanyId != null">
+            #{unionCompanyId,jdbcType=BIGINT},
+         </if>
+         <if test="remitType != null">
+            #{remitType,jdbcType=VARCHAR},
+         </if>
+      </trim>
+   </insert>
+   <update id="updateByPrimaryKeySelective" parameterType="com.domain.AnchorUnion">
+      update t_anchor_union
+      <set>
+         <if test="unionId != null">
+            union_id = #{unionId,jdbcType=BIGINT},
+         </if>
+         <if test="uid != null">
+            `uid` = #{uid,jdbcType=BIGINT},
+         </if>
+         <if test="walletCode != null">
+            wallet_code = #{walletCode,jdbcType=VARCHAR},
+         </if>
+         <if test="shareRate != null">
+            share_rate = #{shareRate,jdbcType=DECIMAL},
+         </if>
+         <if test="isDelete != null">
+            is_delete = #{isDelete,jdbcType=TINYINT},
+         </if>
+         <if test="createTime != null">
+            create_time = #{createTime,jdbcType=TIMESTAMP},
+         </if>
+         <if test="updateTime != null">
+            update_time = #{updateTime,jdbcType=TIMESTAMP},
+         </if>
+         <if test="unionCompanyId != null">
+            union_company_id = #{unionCompanyId,jdbcType=BIGINT},
+         </if>
+         <if test="remitType != null">
+            remit_type = #{remitType,jdbcType=VARCHAR},
+         </if>
+      </set>
+      where id = #{id,jdbcType=BIGINT}
+   </update>
+   <update id="updateByPrimaryKey" parameterType="com.domain.AnchorUnion">
+      update t_anchor_union
+      set union_id = #{unionId,jdbcType=BIGINT},
+      `uid` = #{uid,jdbcType=BIGINT},
+      wallet_code = #{walletCode,jdbcType=VARCHAR},
+      share_rate = #{shareRate,jdbcType=DECIMAL},
+      is_delete = #{isDelete,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      union_company_id = #{unionCompanyId,jdbcType=BIGINT},
+      remit_type = #{remitType,jdbcType=VARCHAR}
+      where id = #{id,jdbcType=BIGINT}
+   </update>
+</mapper>
+```
+说明：
+1. 要定义 Base_Column_List
+2. 查询条件默认不判空，减轻逻辑
+3. 查询语句，对于可为空的条件，如果条件是 null，则不添加这个 where 条件，相当于不做筛选，列表也一样。
+4. 如果条件是列表，如果列表是 null，则不添加条件，参考第3点，如果列表是 []，空列表，则不会返回数据。针对空列表，由于 mybatis xml 构造出的 SQL 会变成 where in ()，执行就报错，写 mybatis xml 的时候要做如下处理， 把列表筛选转换成一个 choose 语句，为 [] 的时候添加恒假条件，示例如下:
+```xml
+<select id="findByConditions" resultType="YourEntity">
+   SELECT
+   <include refid="Base_Column_List" />
+   FROM your_table
+   <where>
+      <!-- 其他条件... -->
+      <!-- 处理普通可空条件 -->
+      <if test="status != null">
+         AND status = #{status}
+      </if>
+      <!-- 先检查idList是否为null -->
+      <if test="idList != null">
+         <!-- 在确定idList不为null的情况下处理空列表和非空列表 -->
+         <choose>
+            <when test="idList.size() > 0">
+               AND id IN
+               <foreach collection="idList" item="id" open="(" separator="," close=")">
+                  #{id}
+               </foreach>
+            </when>
+            <otherwise>
+               <!-- 空列表情况，添加永假条件，确保不返回数据 -->
+               AND 1=2
+            </otherwise>
+         </choose>
+      </if>
+   </where>
+</select>
+```
+另外在 Repository 层也进行如下判断，为 null 则查询所有数据，为 [] 不会获取到数据，就不查询 db 了：
+```
+public List<YourEntity> findByConditions(Status status, List<Integer> idList) {
+    // 提前处理空列表情况
+    if (idList != null && CollectionUtils.isEmpty(idList)) {
+        return Collections.emptyList(); // 直接返回空结果，不执行查询
+    }
+    // 只有在 idList 为 null 或有值的情况下才执行查询
+    return mapper.findByConditions(status, idList);
+}
+```
+

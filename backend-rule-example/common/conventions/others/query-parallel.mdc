@@ -1,0 +1,134 @@
+---
+description: 并行查询代码规范
+globs: 
+alwaysApply: false
+---
+
+好的查询风格是，先查出所有数据，构建 map，然后通过 for 循环主数据源，通过 map 获取关联数据。
+代码示例如下：
+```
+public UserCompanyRelations findCompaniesByUid(@NotNull Long uid) {
+    UserCompanyRelations relations = new UserCompanyRelations();
+    relations.setSource(2);
+    relations.setUidList(Collections.singletonList(uid));
+    relations.setUserCompanyRelationItems(Collections.emptyList());
+
+    // 查询 uid 对应身份证下的所有 uid
+    List<Long> uidList = userDataQueryRPC.queryUidByUid(uid);
+    if (CollectionUtils.isEmpty(uidList)) {
+        log.warn("findCompaniesByUid failed,uidList is empty,uid={}", uid);
+        return relations;
+    }
+    relations.setUidList(uidList);
+
+    // 使用AtomicReference存储查询结果
+    AtomicReference<List<UnionDO>> presidentsRef = new AtomicReference<>();
+    AtomicReference<List<UnionAdminDO>> adminsRef = new AtomicReference<>();
+    AtomicReference<List<UnionAgentDO>> agentsRef = new AtomicReference<>();
+    AtomicReference<List<UnionMemberDO>> membersRef = new AtomicReference<>();
+
+    // 使用runAsync执行异步查询
+    CompletableFuture<Void> presidentsFuture = CompletableFuture.runAsync(() ->
+            presidentsRef.set(unionRepository.findByPresidents(uidList)), syncExecutor);
+
+    CompletableFuture<Void> adminsFuture = CompletableFuture.runAsync(() ->
+            adminsRef.set(unionAdminRepository.findByUids(uidList)), syncExecutor);
+
+    CompletableFuture<Void> agentsFuture = CompletableFuture.runAsync(() ->
+            agentsRef.set(unionAgentRepository.findByUids(uidList)), syncExecutor);
+
+    CompletableFuture<Void> membersFuture = CompletableFuture.runAsync(() ->
+            membersRef.set(unionMemberRepositoryImpl.findByUidList(uidList)), syncExecutor);
+
+    try {
+        // 等待所有查询完成
+        CompletableFuture.allOf(presidentsFuture, adminsFuture, agentsFuture, membersFuture)
+                .get(1, TimeUnit.SECONDS);
+    } catch (Exception e) {
+        log.error("Error processing CompletableFuture results", e);
+    }
+
+    // 构建从uid到unionIds的映射
+    Map<Long, Set<Long>> uidToUnionIdsMap = new HashMap<>();
+    Set<Long> allUnionIds = new HashSet<>();
+
+    // 处理会长数据
+    List<UnionDO> unionList = presidentsRef.get();
+    if (CollectionUtils.isNotEmpty(unionList)) {
+        for (UnionDO union : unionList) {
+            uidToUnionIdsMap.computeIfAbsent(union.getPresidentUid(), k -> new HashSet<>()).add(union.getId());
+            allUnionIds.add(union.getId());
+        }
+    }
+
+    // 处理管理员数据
+    List<UnionAdminDO> adminList = adminsRef.get();
+    if (CollectionUtils.isNotEmpty(adminList)) {
+        for (UnionAdminDO admin : adminList) {
+            uidToUnionIdsMap.computeIfAbsent(admin.getUid(), k -> new HashSet<>()).add(admin.getUnionId());
+            allUnionIds.add(admin.getUnionId());
+        }
+    }
+
+    // 处理经纪人数据
+    List<UnionAgentDO> agentList = agentsRef.get();
+    if (CollectionUtils.isNotEmpty(agentList)) {
+        for (UnionAgentDO agent : agentList) {
+            uidToUnionIdsMap.computeIfAbsent(agent.getUid(), k -> new HashSet<>()).add(agent.getUnionId());
+            allUnionIds.add(agent.getUnionId());
+        }
+    }
+
+    // 处理主播数据
+    List<UnionMemberDO> memberList = membersRef.get();
+    if (CollectionUtils.isNotEmpty(memberList)) {
+        for (UnionMemberDO member : memberList) {
+            uidToUnionIdsMap.computeIfAbsent(member.getUid(), k -> new HashSet<>()).add(member.getUnionId());
+            allUnionIds.add(member.getUnionId());
+        }
+    }
+
+    if (CollectionUtils.isEmpty(allUnionIds)) {
+        log.warn("findCompaniesByUid failed,unionIdList is empty,uid={}", uid);
+        return relations;
+    }
+
+    List<Long> unionIdList = new ArrayList<>(allUnionIds);
+    List<UnionCompanyDO> unionCompanyDOList = unionCompanyRepository.findByUnionIdList(unionIdList)
+            .stream()
+            .filter(x -> x.getState() != 0)
+            .collect(Collectors.toList());
+
+    if (CollectionUtils.isEmpty(unionCompanyDOList)) {
+        log.warn("findCompaniesByUid failed,unionCompanyDOList is empty,uid={}", uid);
+        return relations;
+    }
+
+    Map<Long, List<UnionCompanyDO>> unionIdToCompanyMap = unionCompanyDOList.stream()
+            .collect(Collectors.groupingBy(UnionCompanyDO::getUnionId));
+
+    List<UserCompanyRelationDTO> relationDTOS = new ArrayList<>();
+    for (Long eachUid : uidList) {
+        Set<Long> unionIds = uidToUnionIdsMap.getOrDefault(eachUid, Collections.emptySet());
+        for (Long unionId : unionIds) {
+            List<UnionCompanyDO> companyList = unionIdToCompanyMap.get(unionId);
+            if (CollectionUtils.isNotEmpty(companyList)) {
+                for (UnionCompanyDO unionCompanyDO : companyList) {
+                    UserCompanyRelationDTO dto = new UserCompanyRelationDTO();
+                    dto.setEachUid(eachUid);
+                    dto.setUnionId(unionId.toString());
+                    dto.setCompany(unionCompanyDO.getCompanyName());
+                    dto.setCreditCode(unionCompanyDO.getSocialCreditCode());
+                    relationDTOS.add(dto);
+                }
+            }
+        }
+    }
+    relations.setUserCompanyRelationItems(relationDTOS);
+    return relations;
+}
+```
+说明：
+a. 为了并发安全，使用 presidentsFuture，adminsFuture，agentsFuture，membersFuture，通过 AtomicReference 获取结果，然后 allOf 等待，后面从 AtomicReference 获取的时候注意判空
+b. 通过 uidList 作为主数据源，关联 map 中的数据，构建 relationDTOS，是一个好的做法。
+c. allOf 打个异常即可，不要直接终止查询流程

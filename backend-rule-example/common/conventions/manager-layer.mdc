@@ -1,0 +1,8 @@
+---
+description: Manager 层代码规范
+globs: 
+alwaysApply: false
+---
+
+##### Manager
+Manager 是核心逻辑所在，调用 Repository/Redis/Rpc/Apollo/KafkaSender/Aries 组织逻辑。

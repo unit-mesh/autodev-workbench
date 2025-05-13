@@ -1,0 +1,17 @@
+---
+description: MobileAPIContext 是公司内部的通用上下文组件，用于获取 C端用户信息，如 uid, token, deviceId 等，MobileAPIContext 只在 ServiceImpl 层，Controller 层调用，不在 Manager 层调用
+globs: 
+alwaysApply: false
+---
+
+##### MobileAPIContext
+MobileAPIContext 是公司内部的通用上下文组件，用于获取 C端用户信息，如 uid, token, deviceId 等，MobileAPIContext 只在 ServiceImpl 层，Controller 层调用，不在 Manager 层调用。
+使用示例：
+```java
+Integer appId = MobileAPIContext.get(MobileAPIParamEnum.CLIENT_APP.getValue(), Integer.class);
+String appVersion = MobileAPIContext.get(MobileAPIParamEnum.CLIENT_VERSION.getValue(), String.class);
+Long uid = MobileAPIContext.get(MobileAPIParamEnum.USER_UID.getValue(), Long.class);
+String osName = MobileAPIContext.get(MobileAPIParamEnum.CLIENT_OS.getValue(), String.class);
+Integer productId = MobileAPIContext.get(MobileAPIParamEnum.CLIENT_PRODUCTID.getValue(), Integer.class);
+MobileContext mobileContext = MobileAPIContext.get(MobileAPIParamEnum.MOBILECONTEXT, MobileContext.class);
+```

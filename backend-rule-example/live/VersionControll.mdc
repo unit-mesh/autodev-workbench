@@ -1,0 +1,77 @@
+---
+description: Controller 层代码规范
+globs: 
+alwaysApply: false
+---
+
+后端版本控制
+下面是一个礼物墙的版本控制示例，示例里面除了 GiftWallVersionConfigApollo 都是通用的已存在的依赖类和方法，不用重复定义：
+```
+import com.yupaopao.live.enums.ClientTypeEnum;
+import com.yupaopao.platform.common.utils.VersionUtil;
+
+@Slf4j
+@Configuration
+public class GiftWallVersionConfigApollo {
+    @ApolloConfig
+    private Config config;
+
+    public Map<Integer, String> getGiftWallVersionConfig() {
+        String property = config.getProperty("wish.gift.wall.app.version.config", "{}");
+        return JSON.parseObject(property, new TypeReference<Map<Integer, String>>() {});
+    }
+
+    public boolean checkGiftWallSupport(int appId, String osName, int productId, String version) {
+        if (StringUtils.isEmpty(version)) {
+            log.warn("GiftWallVersionConfigApollo version is empty, appId:{}, osName:{}, productId:{}", appId, osName, productId);
+            return false;
+        }
+        
+        Map<Integer, String> versionMap = getGiftWallVersionConfig();
+        Integer clientType = ClientTypeEnum.convertClientType(osName, appId, productId);
+        if (StringUtils.isEmpty(versionMap.get(clientType))) {
+            log.warn("GiftWallVersionConfigApollo not found clientType, appId:{}, osName:{}, productId:{}, version:{}, clientType:{}", appId, osName, productId, version, clientType);
+            return false;
+        }
+        return VersionUtil.compare(version, versionMap.get(clientType)) >= 0;
+    }
+}
+```
+
+ClientTypeEnum 定义如下，不需要重新定义：
+```java
+public enum ClientTypeEnum {
+
+    YUER_LIVE_APP(0, "鱼耳直播APP"),
+
+    YUER_LIVE_PC(1, "鱼耳直播PC端"),
+
+    YUER_ASSISTANT_APP(2, "手游助手APP"),
+
+    YUER_LIVE_WEB(3, "网页开播"),
+
+    BIXIN_APP(4, "比心APP"),
+
+    YUER_APP(5, "鱼耳app"),
+
+    MVP_APP(6, "载心APP"),
+
+    GUDU_APP(7, "咕嘟APP（马甲包）"),
+
+    FANTANG_APP(8, "饭糖APP）"),
+
+    YOUKA_APP(9, "游咖APP）"),
+
+    OTHER(-1, "其他");
+}
+```
+代码说明：
+通常情况下我们需要对3个app端做控制，bx 比心，xxq app 小星球 app，也叫鱼耳直播app，还有就是 xxqPc 鱼耳直播 PC，以下三个是客户端版本的定义，对于功能而言是通用的，不需要改动，校验逻辑也不需要改动。一般情况下外部只需要调用 checkSupport 即可，不需要关注内部实现。appId, osName, version 都可以在 MobileAPIContext 中取到。
+通常你要给出示例的  apollo 配置，由于通常只要3端控制，给出如下即可:
+```
+{
+    "0": "9.28.5",
+    "1": "7.28.5",
+    "4": "9.34.0"
+}
+```

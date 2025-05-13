@@ -1,0 +1,11 @@
+---
+description: 幂等，使用 mysql update 特性，防止重复执行，防止重复发奖
+globs: 
+alwaysApply: false
+---
+
+##### 防止重复执行，重复发奖式 SQL
+通过 update 业务 status 字段做判断，更新成功才继续执行
+SQL 形如 `update xxx_table set status = 2 where id = #{bizId,jdbcType=BIGINT} and status = 1`
+说明：
+1. 增加 status 筛选条件，保证 update effected rows > 0 时一定是更新成功

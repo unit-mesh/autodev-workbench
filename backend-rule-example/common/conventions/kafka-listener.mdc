@@ -1,0 +1,33 @@
+---
+description: Kafka Listener 代码规范
+globs: 
+alwaysApply: false
+---
+
+##### KafkaListener
+代码文件示例如下：
+```java
+package com.live.integration.kafka;
+
+import com.alibaba.fastjson.JSON;
+import com.live.common.constants.KafkaTopic;
+import com.live.manager.context.msg.LiveMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * 开播kafka监听
+ */
+@Slf4j
+@Component
+public class LiveStartListener {
+   @KafkaListener(topics = {KafkaTopic.LIVE_CHAT}, groupId = "live-service")
+   public void handle(ConsumerRecord<String, String> record) {
+      log.info("receive kafka message. topic:{}, msg:{}", KafkaTopic.LIVE_CHAT, record.value());
+      LiveMessage msg = JSON.parseObject(record.value(), LiveMessage.class);
+   }
+
+}
+```

@@ -1,0 +1,41 @@
+---
+description: 单测代码规范
+globs: 
+alwaysApply: false
+---
+
+##### 单测
+使用 junit4，不用 mock，直接获取数据即可，代码文件示例如下:
+```java
+package com.live.integration.kafka;
+
+import com.live.ApplicationMain;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.annotation.Resource;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {ApplicationMain.class}, properties = "spring.profiles.active=local,unittest")
+public class LiveStartListenerTest {
+   static {
+      System.setProperty("druid.asyncInit", "true");
+   }
+
+   @Resource
+   private LiveStartListener service;
+
+   @Test
+   public void startLivingWrapper() {
+      startLiving();
+   }
+
+   private void startLiving() {
+      ConsumerRecord<String, String> record = new ConsumerRecord<String, String>("", 0, 0, "", "{\"bizType\":2,\"originExp\":459,\"nowLevel\":2,\"membership\":\"PLANET_USER\",\"type\":2,\"nowExp\":509,\"ruleCode\":\"\",\"uid\":233481062512750001,\"originLevel\":1,\"upLevelText\":\"\",\"extra\":\"{\\\"isNotify\\\":false,\\\"nameColor\\\":\\\"#A9EBFF\\\",\\\"barrageColor\\\":\\\"#ffffff\\\",\\\"dynamicAvatar\\\":false,\\\"superServer\\\":false,\\\"superNumber\\\":false,\\\"specialEffect\\\":false}\",\"bizId\":\"5e9466c0d4a54a23998530c8f800da15\"}");
+      service.startLiving(record);
+   }
+}
+```

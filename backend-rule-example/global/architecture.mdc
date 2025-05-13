@@ -1,0 +1,38 @@
+---
+description: 后端架构说明
+globs: 
+alwaysApply: true
+---
+
+### 后端技术栈说明
+1. Dubbo 框架
+2. MySQL
+3. Mybatis
+4. Kafka
+5. Redis
+6. Aries (公司自研的定时任务/延时任务组件)
+
+### 代码结构
+代码库通常包含 api 模块和 core 模块，api 打成 jar 包提供给调用方，core 模块实现 api 逻辑。
+#### api 模块
+包含对外提供服务的接口类和一些 Req 和 DTO 类。
+Req 类和 DTO 类规范：
+1. 实现 Serializable 接口
+2. 使用 lombok @Data 注解
+3. 使用 @NotNull 等常见 javax.validation 注解简化校验代码
+
+#### core 模块
+层级/组件调用关系：
+```mermaid
+graph TD
+   AriesListener --> Manager
+   Controller --> Manager
+   KafkaListener --> Manager
+   Manager --> Repository
+   Repository --> Mapper
+   Manager --> Redis
+   Manager --> Rpc
+   Manager --> Apollo
+   Manager --> KafkaSender
+   Manager --> Aries
+```

@@ -1,0 +1,19 @@
+---
+description: 抛异常规范
+globs: 
+alwaysApply: false
+---
+
+##### 抛业务异常
+如果代码中需要抛业务异常，参考以下代码片段
+```
+// 尝试获取锁，超时时间为10秒
+            lockAcquired = acquireLock(lockKey, lockValue, 10);
+            
+            if (!lockAcquired) {
+                // 锁获取失败，直接抛出异常
+                log.warn("用户操作频繁, uid={}", uid);
+                throw new YppRunTimeException(Code.toast("操作频繁，请稍后再试"));
+            }
+            
+```

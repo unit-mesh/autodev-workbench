@@ -1,0 +1,64 @@
+---
+description: Rpc 层代码规范
+globs: 
+alwaysApply: false
+---
+
+##### Rpc
+desc: 调用外部 dubbo 接口的层级
+rpc 层规范：
+1. 函数返回值不应该返回 com.platform.common.dto.Response，而是返回 Response<T> 里的 T
+2. 如果 rpc 的函数返回值是集合类型，List 或 Map 或 Set 等，你需要对 result 进行判空，而且你应该返回空集合而不是 null，如 List 你应该返回  new ArrayList<>(), Map 和 Set 同理
+3. 如果 rpc 的返回值是对象类型，当你想要返回空对象时，你不要使用 Optional 类，也不要使用 new 一个空对象，可以返回 null, 调用方会判空。
+4. 你可以认为调用 DubboReference 时不会出现异常，因为框架已经实现了 Filter，不要再捕获异常，代码冗余
+5. 如果调用是成功的，不要打印日志，因为日志太多会拖垮服务,如果response.isSuccess()为false,打印错误日志
+6. 如果 Request 里面只有简单参数，生成 RPC 方法的时候必须拆分开，如 fooRpc(int a, int b, int c)
+7. 使用 ExecutorService 和 CompletableFuture 对批量查询进行分批并发请求
+8. 不要使用 synchronized 语句
+
+源文件示例如下，仅仅是示例，只给你用作格式参考，跟本地项目没有任何关系，纯属虚构，生成代码的时候保留代码中的 todo:
+```java
+@Resource
+private ExecutorService commonExecutor;
+
+/**
+ * 批量查询礼物墙稀有度配置
+ * @param poolIdList 礼物池ID列表
+ * @param showType 展示类型 1-送出 2-接收
+ * @return 礼物池ID与稀有度的映射关系
+ */
+public Map<Integer, Integer> batchQueryGiftWallRareConfig(List<Integer> poolIdList, Integer showType) {
+   Map<Integer, Integer> result = new ConcurrentHashMap<>();
+   if (CollectionUtils.isEmpty(poolIdList)) {
+      return result;
+   }
+// todo: 确定分批的大小
+   List<List<Integer>> groupList = Lists.partition(poolIdList, 50);
+// 并发查询配置信息
+   List<CompletableFuture<Void>> futureList = new ArrayList<>();
+   for (List<Integer> batch : groupList) {
+      // todo: 确认 commonExecutor 的线程池配置
+      CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+         GiftWallConfigQueryRequest request = new GiftWallConfigQueryRequest();
+         request.setPoolIdList(batch);
+         request.setShowType(showType);
+
+         Response<Map<Integer, Integer>> response = giftShowroomRemoteService.batchQueryGiftWallRareConfig(request);
+         if (response.isSuccess() && response.getResult() != null) {
+            result.putAll(response.getResult());
+         } else {
+            log.error("GiftShowroomRemoteService.batchQueryGiftWallRareConfig error, request={}, response={}", request, response);
+         }
+      }, commonExecutor);
+      futureList.add(future);
+   }
+// 等待所有任务完成
+   try {
+      CompletableFuture.allOf(futureList.toArray(new CompletableFuture[0]))
+              .get(1, TimeUnit.SECONDS); // 设置总超时时间为 1 秒
+   } catch (Exception e) {
+      log.warn("Some gift wall rare config fetch tasks did not complete within the timeout", e);
+   }
+   return result;
+}
+```
