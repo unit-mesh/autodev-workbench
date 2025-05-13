@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Book, Network, Plus, Loader2 } from "lucide-react"
@@ -21,6 +20,22 @@ interface ConceptDictionary {
   updatedAt: string
 }
 
+interface Guideline {
+  id: string
+  title: string
+  description: string
+  category: any
+  content: string
+  language: string
+  version: string
+  lastUpdated: string
+  popularity: number
+  status: string
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
 interface KnowledgeHubProps {
   activeSource: string | null
   onSourceSelect: (sourceId: string | null) => void
@@ -28,11 +43,13 @@ interface KnowledgeHubProps {
 }
 
 export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }: KnowledgeHubProps) {
-  const [activeTab, setActiveTab] = useState("explicit")
   const [showKnowledgeGraphPopup, setShowKnowledgeGraphPopup] = useState(false)
   const [glossaryTerms, setGlossaryTerms] = useState<ConceptDictionary[]>([])
   const [isLoadingGlossary, setIsLoadingGlossary] = useState(false)
   const [glossaryError, setGlossaryError] = useState<string | null>(null)
+  const [guidelines, setGuidelines] = useState<Guideline[]>([])
+  const [isLoadingGuidelines, setIsLoadingGuidelines] = useState(false)
+  const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
@@ -62,32 +79,29 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
       }
     }
 
-    fetchGlossaryTerms();
-  }, [projectId]);
+    async function fetchGuidelines() {
+      setIsLoadingGuidelines(true)
+      setGuidelinesError(null)
+      try {
+        const response = await fetch('/api/guideline');
 
-  const explicitKnowledge = [
-    {
-      id: "company-policy",
-      title: "公司会议室管理规范",
-      type: "document",
-      date: "2023-10-15",
-      excerpt: "会议室预订需提前24小时，取消需提前4小时...",
-    },
-    {
-      id: "current-system",
-      title: "现有会议室管理后台截图",
-      type: "image",
-      date: "2023-11-20",
-      excerpt: "展示了当前系统的会议室列表和筛选功能",
-    },
-    {
-      id: "ieee-29148",
-      title: "IEEE 29148 需求工程标准",
-      type: "standard",
-      date: "2022-01-10",
-      excerpt: "软件需求规格说明书的结构和内容指南",
-    },
-  ]
+        if (!response.ok) {
+          throw new Error('获取规范失败');
+        }
+
+        const data = await response.json();
+        setGuidelines(data);
+      } catch (error) {
+        console.error('获取规范出错:', error);
+        setGuidelinesError(error instanceof Error ? error.message : '未知错误');
+      } finally {
+        setIsLoadingGuidelines(false);
+      }
+    }
+
+    fetchGlossaryTerms();
+    fetchGuidelines();
+  }, [projectId]);
 
   const implicitKnowledge = [
     {
@@ -95,14 +109,19 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
       title: "从代码库分析",
       source: "会议室预订API",
       insight: "检测到现有API支持按部门筛选会议室，新系统可能需要保持此功能",
-    },
-    {
-      id: "interview-1",
-      title: "专家访谈记录",
-      source: "行政部门主管",
-      insight: "会议室预订冲突是当前系统的主要问题，新系统应提供更好的冲突检测",
-    },
+    }
   ]
+
+  const getItemTypeIcon = (category: string) => {
+    // check category is string if not return with type
+    if (typeof category !== "string") {
+      return <FileText className="h-3 w-3 mr-1 text-blue-600" />;
+    }
+
+    if (category?.includes("document")) return <FileText className="h-3 w-3 mr-1 text-blue-600" />;
+    if (category?.includes("standard")) return <Book className="h-3 w-3 mr-1 text-purple-600" />;
+    return <FileText className="h-3 w-3 mr-1 text-blue-600" />;
+  };
 
   return (
     <div className="bg-white border-r border-gray-200 flex flex-col h-full">
@@ -111,58 +130,69 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
         <p className="text-xs text-gray-500">管理和浏览项目相关知识</p>
       </div>
 
-      <Tabs defaultValue="explicit" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-2 mx-4 mt-2">
-          <TabsTrigger value="explicit">显性知识</TabsTrigger>
-          <TabsTrigger value="implicit">隐性知识</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="explicit" className="flex-1 flex flex-col p-0 m-0">
-          <div className="p-2 flex justify-end">
+      <div className="flex-1 flex flex-col">
+        {/* 显性知识部分 */}
+        <div className="border-b border-gray-200">
+          <div className="px-4 py-2 flex justify-between items-center">
+            <h3 className="text-sm font-semibold text-gray-700">显性知识</h3>
             <Button variant="outline" size="sm" className="text-xs">
               <Upload className="h-3 w-3 mr-1" />
               上传文档
             </Button>
           </div>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="h-80">
             <div className="p-2 space-y-2">
-              {explicitKnowledge.map((item) => (
-                <Card
-                  key={item.id}
-                  className={cn(
-                    "cursor-pointer hover:border-blue-200 transition-colors py-0",
-                    activeSource === item.id && "border-blue-500 bg-blue-50",
-                  )}
-                  onClick={() => onSourceSelect(item.id === activeSource ? null : item.id)}
-                >
-                  <CardHeader className="p-3 pb-0">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        {item.type === "document" && <FileText className="h-3 w-3 mr-1 text-blue-600" />}
-                        {item.type === "image" && (
-                          <img src="/placeholder.svg?height=12&width=12" className="h-3 w-3 mr-1" alt="" />
-                        )}
-                        {item.type === "standard" && <Book className="h-3 w-3 mr-1 text-purple-600" />}
-                        {item.title}
-                      </CardTitle>
-                      <Badge variant="outline" className="text-[10px] h-4">
-                        {item.type}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3 pt-2">
-                    <p className="text-xs text-gray-600">{item.excerpt}</p>
-                    <p className="text-[10px] text-gray-400 mt-1">更新于: {item.date}</p>
-                  </CardContent>
-                </Card>
-              ))}
+              {isLoadingGuidelines ? (
+                <div className="flex justify-center items-center h-20">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                </div>
+              ) : guidelinesError ? (
+                <div className="text-xs text-red-500 p-2">
+                  获取规范出错: {guidelinesError}
+                </div>
+              ) : guidelines.length === 0 ? (
+                <div className="text-xs text-gray-500 p-2">
+                  暂无规范数据
+                </div>
+              ) : (
+                guidelines.map((guideline) => (
+                  <Card
+                    key={guideline.id}
+                    className={cn(
+                      "cursor-pointer hover:border-blue-200 transition-colors py-0",
+                      activeSource === guideline.id && "border-blue-500 bg-blue-50",
+                    )}
+                    onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
+                  >
+                    <CardHeader className="p-3 pb-0">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-sm font-medium flex items-center">
+                          {getItemTypeIcon(guideline.category)}
+                          {guideline.title}
+                        </CardTitle>
+                        <Badge variant="outline" className="text-[10px] h-4">
+                          {guideline.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-2">
+                      <p className="text-xs text-gray-600">{guideline.description}</p>
+                      <p className="text-[10px] text-gray-400 mt-1">更新于: {guideline.lastUpdated}</p>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </ScrollArea>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="implicit" className="flex-1 flex flex-col p-0 m-0">
-          <ScrollArea className="flex-1">
+        <div>
+          <div className="px-4 py-2">
+            <h3 className="text-sm font-semibold text-gray-700">隐性知识</h3>
+          </div>
+
+          <ScrollArea className="h-80">
             <div className="p-2 space-y-2">
               {implicitKnowledge.map((item) => (
                 <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0">
@@ -187,10 +217,9 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
               ))}
             </div>
           </ScrollArea>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
 
-      {/* Project Glossary */}
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-medium text-gray-700">项目词汇表</h3>
