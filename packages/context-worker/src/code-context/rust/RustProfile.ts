@@ -34,15 +34,20 @@ export class RustProfile implements LanguageProfile {
 	`);
 	structureQuery = new MemoizedQuery(`
 		(use_declaration 
-			path: (_) @use-path)
+       argument: (scoped_use_list
+			   path: (scoped_identifier) @use-path)
+    )?
 
 		(struct_item
 			name: (type_identifier) @struct-name
-			body: (ordered_field_declaration_list
-				(field_declaration
-					name: (field_identifier) @struct-field-name
-					type: (_) @struct-field-type)?
-			)?
+			body: [
+				(field_declaration_list
+					(field_declaration
+						name: (field_identifier) @struct-field-name
+						type: (_) @struct-field-type)?
+				)?
+				(ordered_field_declaration_list)?
+			]
 		)
 
 		(trait_item
@@ -50,7 +55,7 @@ export class RustProfile implements LanguageProfile {
 			body: (declaration_list
 				(function_signature_item
 					name: (identifier) @trait-method-name
-					parameters: (parameters)? @trait-method-params
+					parameters: (parameters) @trait-method-params
 					return_type: (_)? @trait-method-return-type
 				)?
 			)?
@@ -62,8 +67,8 @@ export class RustProfile implements LanguageProfile {
 			body: (declaration_list
 				(function_item
 					name: (identifier) @impl-method-name
-					parameters: (parameters)? @impl-method-params
-					return_type: (_)? @impl-method-return-type
+					parameters: (parameters) @impl-method-params
+					return_type: (_)? @impl-method-returnType
 					body: (_) @impl-method-body
 				)?
 			)?
@@ -71,9 +76,14 @@ export class RustProfile implements LanguageProfile {
 
 		(function_item
 			name: (identifier) @function-name
-			parameters: (parameters)? @function-params
-			return_type: (_)? @function-return-type
+			parameters: (parameters) @function-params
+			return_type: (_)? @function-returnType
 			body: (_) @function-body
+		)
+
+		(parameter
+			pattern: (identifier) @param-name
+			type: (_) @param-type
 		)
 	`);
 	namespaces = [[
