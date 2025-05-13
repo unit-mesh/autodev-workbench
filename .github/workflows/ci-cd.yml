@@ -3,6 +3,9 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches:
+      - *
 
 jobs:
   build-and-deploy:
