@@ -154,12 +154,35 @@ export default function GoldenPathPage() {
 			});
 
 			const prompt = `
-Generate a project template for a ${currentFrameworkLabel} ${metadata.type} application named "${metadata.name}".
+Generate a JSON configuration for a ${currentFrameworkLabel} ${metadata.type} application named "${metadata.name}".
 Description: ${metadata.description || "No description provided"}
 Programming Language: ${metadata.language}
 Required Features: ${selectedFeatureLabels.join(', ') || "No specific features selected"}
 
-Please provide the initial project structure with the main configuration files and code examples for the selected features.
+Please provide a JSON configuration with the following structure:
+{
+  "projectConfig": {
+    "name": "${metadata.name}",
+    "description": "${metadata.description}",
+    "type": "${metadata.type}",
+    "language": "${metadata.language}",
+    "framework": "${metadata.framework}"
+  },
+  "features": [
+    // Array of selected feature IDs
+  ],
+  "structure": {
+    // Key directories and files in the project structure
+  },
+  "dependencies": {
+    // Key dependencies needed for the project
+  },
+  "configurations": {
+    // Configuration files content or snippets
+  }
+}
+
+Only return the JSON object without any explanation or markdown. Ensure the JSON is valid and well-formatted.
       `.trim();
 
 			// Call your LLM API here
@@ -172,7 +195,7 @@ Please provide the initial project structure with the main configuration files a
 					messages: [
 						{
 							role: "system",
-							content: "You are an expert software architect specializing in creating well-structured project templates. Provide detailed project structures and configuration files based on the user's requirements. Return your response in markdown format with appropriate code blocks."
+							content: "You are an expert software architect specializing in creating project configurations. Provide a detailed JSON configuration for the project based on the user's requirements. Only return the JSON object without any explanation or markdown."
 						},
 						{ role: "user", content: prompt }
 					],
@@ -184,10 +207,28 @@ Please provide the initial project structure with the main configuration files a
 			}
 
 			const data = await response.json();
-			setGeneratedResult(data.text);
+
+			// Extract JSON from response if needed
+			let jsonResult = data.text;
+			try {
+				// Try to extract JSON if wrapped in code blocks
+				const jsonMatch = jsonResult.match(/```json\s*([\s\S]*?)\s*```/) ||
+					jsonResult.match(/```\s*([\s\S]*?)\s*```/);
+
+				if (jsonMatch) {
+					jsonResult = jsonMatch[1].trim();
+				}
+
+				// Validate JSON by parsing it
+				JSON.parse(jsonResult);
+			} catch (e) {
+				console.error("Invalid JSON in response", e);
+			}
+
+			setGeneratedResult(jsonResult);
 		} catch (error) {
 			console.error("Error generating project:", error);
-			setGeneratedResult("抱歉，生成项目模板时出现错误。请稍后重试。");
+			setGeneratedResult("抱歉，生成项目配置时出现错误。请稍后重试。");
 		} finally {
 			setIsLoading(false);
 		}
@@ -350,10 +391,20 @@ Provide only the JSON object without any additional text or explanations.
 		// Allow Alt+Enter for new line
 	};
 
+	const copyToClipboard = () => {
+		navigator.clipboard.writeText(generatedResult)
+			.then(() => {
+				alert("JSON 配置已复制到剪贴板");
+			})
+			.catch(err => {
+				console.error("无法复制到剪贴板: ", err);
+			});
+	};
+
 	return (
 		<div className="container mx-auto py-8">
 			<h1 className="text-3xl font-bold mb-2">后端应用生成</h1>
-			<p className="text-muted-foreground mb-6">基于 AI 生成符合最佳实践的项目结构和配置</p>
+			<p className="text-muted-foreground mb-6">基于 AI 生成符合最佳实践的项目配置</p>
 
 			{/* AI Project Description Input */}
 			<Card className="mb-8 gap-2">
@@ -573,7 +624,7 @@ Provide only the JSON object without any additional text or explanations.
 				<TabsContent value="result">
 					<Card>
 						<CardHeader>
-							<CardTitle>项目生成结果</CardTitle>
+							<CardTitle>项目配置 JSON</CardTitle>
 							<CardDescription>
 								{metadata.name} ({metadata.language} / {currentFrameworkLabel})
 							</CardDescription>
@@ -582,12 +633,14 @@ Provide only the JSON object without any additional text or explanations.
 							{isLoading ? (
 								<div className="flex flex-col items-center justify-center py-12">
 									<Loader2 className="h-12 w-12 animate-spin text-primary mb-4"/>
-									<p className="text-muted-foreground">生成项目模板中，这可能需要一点时间...</p>
+									<p className="text-muted-foreground">生成项目配置中，这可能需要一点时间...</p>
 								</div>
 							) : (
-								<ScrollArea className="h-[600px] w-full">
-									<CodeBlock code={generatedResult} language="markdown"/>
-								</ScrollArea>
+								<>
+									<ScrollArea className="h-[600px] w-full">
+										<CodeBlock code={generatedResult} language="json"/>
+									</ScrollArea>
+								</>
 							)}
 						</CardContent>
 					</Card>
@@ -597,13 +650,10 @@ Provide only the JSON object without any additional text or explanations.
 							返回配置
 						</Button>
 						<Button
-							onClick={() => {
-								// Here you could implement downloading the generated template
-								// For now we'll just show an alert
-								alert("项目模板下载功能正在开发中");
-							}}
+							onClick={copyToClipboard}
+							disabled={isLoading || !generatedResult}
 						>
-							下载模板
+							复制 JSON 配置
 						</Button>
 					</div>
 				</TabsContent>
