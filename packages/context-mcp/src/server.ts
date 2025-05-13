@@ -39,15 +39,14 @@ export class MCPServerImpl {
   private impl: McpImplementation;
 
   private mcpInst: McpServer;
-  private mcpStdioTransport: McpStdioTransport;
-  private mcpHttpTransportSessions: { [sessionId: string]: McpHttpTransport };
+  private mcpStdioTransport?: McpStdioTransport;
+  private mcpHttpTransportSessions?: { [sessionId: string]: McpHttpTransport };
 
   private managedHttpServer?: http.Server;
 
-  private expressApp: Application;
+  private expressApp?: Application;
 
-  private isDestroyed = false;
-  private isStopped = false;
+  private isDestroyed = true;
 
   constructor(impl: McpImplementation, options?: McpServerOptions) {
     this.impl = impl;
@@ -59,12 +58,6 @@ export class MCPServerImpl {
       options
     );
     this.installHooks();
-
-    this.mcpStdioTransport = new McpStdioTransport();
-    this.mcpHttpTransportSessions = {};
-
-    this.expressApp = express();
-    this.expressApp.use(express.json());
   }
 
   installHooks() {
@@ -109,7 +102,38 @@ export class MCPServerImpl {
     // more prompts...
   }
 
+  ensureExpressApp() /* asserts this.expressApp is Application */{
+    if (!this.expressApp) {
+      this.expressApp = express();
+      this.expressApp.use(express.json());
+    }
+  }
+
+  ensureMcpHttpTransportSessions() /* asserts this.mcpHttpTransportSessions is { [sessionId: string]: McpHttpTransport } */{
+    if (!this.mcpHttpTransportSessions) {
+      this.mcpHttpTransportSessions = {};
+    }
+  }
+
+  ensureMcpStdioTransport() /* asserts this.mcpStdioTransport is McpStdioTransport */{
+    if (!this.mcpStdioTransport) {
+      this.mcpStdioTransport = new McpStdioTransport();
+    }
+  }
+
+  ensureDestroyed() /* asserts this.isDestroyed is false */{
+    if (!this.isDestroyed) {
+      throw new Error("MCPServer is still running");
+    }
+  }
+
   async serveHttp(options: HttpServeOptions) {
+    this.ensureDestroyed();
+    this.ensureExpressApp();
+    this.ensureMcpHttpTransportSessions();
+    if (!this.expressApp) throw new Error("Failed to create Express app"); // Type guard
+    if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
+    
     this.expressApp.post("/mcp", async (req, res) => {
       // Check for existing session ID
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
@@ -189,38 +213,25 @@ export class MCPServerImpl {
   }
 
   async serveStdio() {
+    this.ensureDestroyed();
+    this.ensureMcpStdioTransport();
+    if (!this.mcpStdioTransport) throw new Error("Failed to create MCP STDIO transport"); // Type guard
+
     this.mcpInst.connect(this.mcpStdioTransport);
   }
 
   /**
    * Disconnect from underlying transports
-   */
-  async stop() {
-    if (this.isStopped) {
-      throw new Error("You cannot stop the server twice");
-    }
-    this.isStopped = true;
-
-    if (this.mcpInst.isConnected()) {
-      await this.mcpInst.close();
-    }
-  }
-
-  /**
-   * Destroy the underlying transports,
-   *
-   *
+   * Destroy the underlying transports
    */
   async destroy() {
     if (this.isDestroyed) {
-      throw new Error("You cannot destroy the server twice");
-    }
-
-    if (!this.isStopped) {
-      this.stop();
+      return;
     }
 
     this.isDestroyed = true;
+
+    this.mcpInst.close();
 
     if (this.managedHttpServer) {
       await new Promise<void>((resolve, reject) => {
@@ -230,6 +241,11 @@ export class MCPServerImpl {
         resolve();
       });
     }
-    this.mcpStdioTransport.close();
+
+    this.expressApp = undefined;
+    this.mcpHttpTransportSessions = undefined;
+
+    this.mcpStdioTransport?.close();
+    this.mcpStdioTransport = undefined;
   }
 }
