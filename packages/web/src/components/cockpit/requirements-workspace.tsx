@@ -54,7 +54,7 @@ export default function RequirementsWorkspace({
       handleSend()
     }
   }
-  
+
   // 生成发送按钮，根据加载状态显示不同内容
   const renderSendButton = () => {
     return (
@@ -111,7 +111,7 @@ export default function RequirementsWorkspace({
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-auto">
         <TabsList className="mx-4 mt-2 justify-start">
           <TabsTrigger value="conversation" className="flex items-center">
             <MessageSquare className="h-4 w-4 mr-2" />
@@ -196,3 +196,4 @@ export default function RequirementsWorkspace({
     </div>
   )
 }
+
