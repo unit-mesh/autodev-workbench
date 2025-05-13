@@ -1,0 +1,37 @@
+---
+description: appId，即客户端应用 id，一个服务调用可能来自多个客户端, java enum APP 已有定义，无需新建
+globs: 
+alwaysApply: false
+---
+
+appId，即客户端应用 id，一个服务调用可能来自多个客户端
+枚举有：
+```
+/**
+ * 业务线划分，非具体的客户端
+ * 例如当前业务线为比心，鱼耳，小星球
+ */
+@Description("业务线划分，非具体的app包")
+public enum APP {
+    @Description("非定义业务线code")
+    UN_KNOWN(0, "未知"),
+
+    @Description("比心业务线")
+    BIXIN(10, "比心"),
+
+    @Description("鱼耳业务线")
+    YUER(20, "鱼耳"),
+
+    @Description("小星球业务线")
+    UNIVERSE(30, "小星球"),
+
+    @Description("载心")
+    MVP(110, "载心"),
+
+    @Description("饭糖")
+    FAN_TANG(220, "饭糖"),
+    ;
+    private int code;
+    private String name;
+}
+```

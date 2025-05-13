@@ -1,0 +1,64 @@
+---
+description: AriesListener 代码规范，Aries 是公司自研的定时任务和延时任务组件
+globs: 
+alwaysApply: false
+---
+
+##### AriesListener
+有两种：1. 定时任务 Listener 2. 延时任务 Listener
+定时任务示例：
+```java
+package com.yupaopao.xxq.revenue.service.core.job;
+
+import com.yupaopao.aries.client.JobExecutionContext;
+import com.yupaopao.aries.client.JobListener;
+import com.yupaopao.framework.spring.boot.aries.annotation.AriesCronJobListener;
+import com.yupaopao.xxq.revenue.service.core.manager.summon.v3.SummonV3CoreManager;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Resource;
+
+@Slf4j
+@AriesCronJobListener
+public class SummonV3SettleJob implements JobListener {
+
+    @Resource
+    private SummonV3CoreManager summonV3CoreManager;
+
+    @Override
+    public void execute(JobExecutionContext jobExecutionContext) {
+       log.info("SummonV3SettleJob start");
+       summonV3CoreManager.settleExpireRound();
+       log.info("SummonV3SettleJob end");
+    }
+}
+```
+延时任务示例：
+```java
+package com.yupaopao.xxq.user.job;
+
+import com.yupaopao.aries.client.DelayJobListener;
+import com.yupaopao.aries.client.JobExecutionContext;
+import com.yupaopao.framework.spring.boot.aries.annotation.AriesDelayJobListener;
+import com.yupaopao.xxq.user.manager.BxNewUserImManager;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Resource;
+
+@Slf4j
+@AriesDelayJobListener
+public class BxNewUserImDelayJob implements DelayJobListener {
+
+    @Resource
+    private BxNewUserImManager bxNewUserImManager;
+
+    @Override
+    public void execute(JobExecutionContext context) {
+       String uid = context.getParameter();
+       log.info("BxNewUserImDelayJob start, uid: {}", uid);
+       bxNewUserImManager.sendNewUserIm(Long.valueOf(uid));
+       log.info("BxNewUserImDelayJob end, uid: {}", uid);
+    }
+} 
+```
+

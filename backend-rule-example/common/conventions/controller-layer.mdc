@@ -1,0 +1,39 @@
+---
+description: Controller 层代码规范
+globs: 
+alwaysApply: false
+---
+
+##### Controller
+非 SpringBoot 的 Controller， 而是 Dubbo 直接继承 api 模块接口的实现类，Controller 之间不互相调用，只调用 Manager。
+规范：
+1. 无需异常 catch，有默认的全局异常处理了
+2. 如果需要上下文信息（MobileAPIContext 里的），会在这一层获取
+3. 业务逻辑，包括参数校验不在这一层做，在 Manager 层做，Controller 层只是透传和简单调用
+4. 不使用 Response<Void> 作为返回，至少使用 Response<Boolean>，哪怕最后直接返回 true
+   代码示例如下：
+```java
+package com.yupaopao.live.domain.core.service;
+
+import com.yupaopao.live.domain.api.dto.LiveRoomInfoResponse;
+import com.yupaopao.live.domain.api.req.LiveRoomInfoRequest;
+import com.yupaopao.live.domain.api.service.LiveRoomService;
+import com.yupaopao.live.domain.core.manager.LiveRoomManager;
+import com.yupaopao.platform.common.dto.Response;
+import org.apache.dubbo.config.annotation.DubboService;
+
+import javax.annotation.Resource;
+
+@DubboService
+public class LiveRoomServiceImpl implements LiveRoomService {
+   @Resource
+   private LiveRoomManager liveRoomManager;
+
+   @Override
+   public Response<LiveRoomInfoResponse> getLiveRoomInfo(LiveRoomInfoRequest request) {
+      Long uid = MobileAPIContext.get(MobileAPIParamEnum.USER_UID.getValue(), Long.class);
+      LiveRoomInfoResponse liveRoomInfo = liveRoomManager.getLiveRoomInfo(request.getLiveRoomId(), uid);
+      return Response.success(liveRoomInfo);
+   }
+}
+```

@@ -1,0 +1,38 @@
+---
+description: Apollo 代码规范, Apollo 是配置中心
+globs: 
+alwaysApply: false
+---
+
+##### Apollo
+源文件示例如下:
+```java
+package com.live.common.config.apollo;
+
+import com.ctrip.framework.apollo.spring.annotation.ApolloJsonValue;
+import lombok.Data;
+import lombok.Getter;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * 快直播用户门槛配置
+ */
+@Configuration
+public class AudienceQualificationThresholdsApollo {
+   @ApolloJsonValue("${audience.qualification.config}")
+   @Getter
+   private AudienceQualificationThresholdsConfig config;
+
+   @Data
+   public static class AudienceQualificationThresholdsConfig {
+
+      private Integer levelThreshold;
+
+      private Integer nobleLevelThreshold;
+
+      private Integer daysThreshold;
+
+      private Integer nobleDaysThreshold;
+   }
+}
+```

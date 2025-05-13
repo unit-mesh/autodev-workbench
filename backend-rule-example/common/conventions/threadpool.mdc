@@ -1,0 +1,30 @@
+---
+description: 线程池使用规范
+globs: 
+alwaysApply: false
+---
+
+线程池区分 syncExecutor 和 asyncExecutor
+syncExecutor 配置如下：
+```
+@Bean
+public ExecutorService syncExecutor() {
+    ExecutorService executorService = TraceExecutorServiceWrap.wrap(new ThreadPoolExecutor(10, 100, 100,
+            TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory("sync-executor"),
+            new ThreadPoolExecutor.CallerRunsPolicy()));
+    return executorService;
+}
+```
+说明：关键点在于使用 SynchronousQueue 和 CallerRunsPolicy, syncExecutor 使用场景在于同步调用，如多个 RPC 查询调用，会 wait 任务完成，所以设置任务队列是不必要的。
+
+asyncExecutor 配置如下：
+```
+@Bean
+public ExecutorService asyncExecutor() {
+    ExecutorService executorService = TraceExecutorServiceWrap.wrap(new ThreadPoolExecutor(10, 100, 100,
+            TimeUnit.SECONDS, new LinkedBlockingDeque<>(10000), new NamedThreadFactory("async-executor"),
+            new ThreadPoolExecutor.AbortPolicy()));
+    return executorService;
+}
+```
+说明：由于任务允许被丢弃，故使用 LinkedBlockingDeque 和 AbortPolicy

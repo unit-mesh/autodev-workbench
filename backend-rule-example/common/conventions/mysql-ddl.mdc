@@ -1,0 +1,43 @@
+---
+description: MySQL 建表，添加新列，添加索引，添加自增主键，修改列，分区表改造 DDL 规范示例
+globs: 
+alwaysApply: false
+---
+
+### DDL 规范示例
+建表示例(需要包含 id, create_time, udpate_time):
+CREATE TABLE `t_shell_task_config` (
+`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+`task_type` int(11) NOT NULL COMMENT '任务类型',
+`task_name` varchar(64) NOT NULL COMMENT '任务名称',
+`task_icon` varchar(256) NOT NULL COMMENT '任务图标',
+`task_param` int(11) NOT NULL COMMENT '任务参数',
+`reward` int(11) NOT NULL COMMENT '白贝壳奖励数量',
+`grade_min` int(11) NOT NULL COMMENT '最小等级',
+`grade_max` int(11) NOT NULL COMMENT '最大等级',
+`task_category` varchar(32) NOT NULL COMMENT '任务分类',
+`prereq_task_types` varchar(256) DEFAULT NULL COMMENT '前置任务类型,逗号分隔',
+`status` int(11) NOT NULL DEFAULT 1 COMMENT '状态 1:上线 0:下线',
+`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+PRIMARY KEY (`id`),
+KEY `idx_task_type` (`task_type`),
+KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='贝壳任务配置表';
+
+添加新列示例(支持多条语句):(支持ALGORITHM=INPLACE,LOCK=NONE)
+ALTER TABLE t_user ALGORITHM=INPLACE,LOCK=NONE, ADD COLUMN age int(2) NOT NULL DEFAULT 0 COMMENT '用户年龄'
+
+添加索引示例(支持多条语句):(支持ALGORITHM=INPLACE,LOCK=NONE)
+ALTER TABLE t_user ALGORITHM=INPLACE,LOCK=NONE, ADD INDEX idx_update_time(update_time)
+
+添加自增主键示例(支持多条语句):(仅支持ALGORITHM=INPLACE)
+ALTER TABLE t_user ALGORITHM=INPLACE, DROP PRIMARY KEY ,ADD COLUMN id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '非业务自增主键'
+
+修改列示例(支持多条语句):(不支持ALGORITHM=INPLACE,LOCK=NONE)
+ALTER TABLE t_user MODIFY COLUMN username varchar(64) NOT NULL DEFAULT '' COMMENT '用户姓名'
+
+分区表改造示例(分区表改造只允许填写一条语句):(不支持ALGORITHM=INPLACE,LOCK=NONE)
+ALTER TABLE t_user /*partition_table_transformation*/ PARTITION BY RANGE (to_days(create_time)) (
+PARTITION p201907 VALUES LESS THAN (to_days('2019-08-01 00:00:00')) ENGINE = InnoDB,
+PARTITION p201908 VALUES LESS THAN (to_days('2019-09-01 00:00:00')) ENGINE = InnoDB)

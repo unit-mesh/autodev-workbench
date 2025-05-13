@@ -1,0 +1,40 @@
+---
+description: AppKit 使用规范，AppKit 也是提供配置的，有别于 apollo，apollo 一般只有开发能够操作，AppKit 允许运营自行操作
+globs: 
+alwaysApply: false
+---
+
+##### AppKit
+AppKit 也是提供配置的，有别于 apollo，apollo 一般只有开发能够操作，AppKit 允许运营自行操作
+下面是读取 AppKit 的示例，最关键的其实就是 sceneKey
+```java
+/**
+ * 获取许愿墙黑名单礼物池ID列表
+ */
+public Set<Integer> getWishGiftWallBlacklistPoolIds() {
+   Set<Integer> poolIds = new HashSet<>();
+   // 获取黑名单配置
+   AppkitRequest request = new AppkitRequest();
+   request.setSceneKey("live_wish_gift_wall_blacklist");
+   AppkitResponse response = appkitClient.query(request);
+   if (!response.isSuccess()) {
+      log.error("获取许愿墙黑名单礼物池配置失败: {}", response);
+      return poolIds;
+   }
+   List<AppkitConfig> configList = response.getData();
+   if (!CollectionUtils.isEmpty(configList)) {
+      List<AppkitContent> contents = configList.iterator().next().getContents();
+      if (!CollectionUtils.isEmpty(contents)) {
+         for (AppkitContent content : contents) {
+            String message = content.getContent();
+            JSONObject jsonObject = JSONObject.parseObject(message);
+            Integer poolId = jsonObject.getInteger("poolId");
+            if (poolId != null) {
+               poolIds.add(poolId);
+            }
+         }
+      }
+   }
+   return poolIds;
+}
+```
