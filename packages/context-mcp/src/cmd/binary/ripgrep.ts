@@ -200,7 +200,8 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 export async function regexSearchFiles(
 	cwd: string,
 	directoryPath: string,
-	regex: string,
+	regex: string, 
+	includeNodeModules = false,
 	filePattern?: string,
 ): Promise<string> {
 	const rgPath = await getBinPath(cwd)
@@ -209,7 +210,15 @@ export async function regexSearchFiles(
 		throw new Error("Could not find ripgrep binary")
 	}
 
-	const args = ["--json", "-e", regex, "--glob", filePattern || "*", "--context", "1", directoryPath]
+	const args = [
+		"--json", 
+		"-e", regex, 
+		"--glob", filePattern || "*", 
+		"--context", "1",
+		// Exclude node_modules unless explicitly included
+		...(includeNodeModules ? [] : ["--glob", "!node_modules/**"]),
+		directoryPath
+	]
 
 	let output: string
 	try {
@@ -295,18 +304,16 @@ function formatResults(fileResults: SearchFileResult[], cwd: string): string {
 		const relativeFilePath = path.relative(cwd, file.file)
 		if (!groupedResults[relativeFilePath]) {
 			groupedResults[relativeFilePath] = []
-
 			groupedResults[relativeFilePath].push(...file.searchResults)
 		}
 	})
 
 	for (const [filePath, fileResults] of Object.entries(groupedResults)) {
-		output += `# ${filePath.toPosix()}\n`
+		// Replace toPosix() with proper path formatting
+		output += `# ${path.normalize(filePath)}\n`
 
 		fileResults.forEach((result) => {
-			// Only show results with at least one line
 			if (result.lines.length > 0) {
-				// Show all lines in the result
 				result.lines.forEach((line) => {
 					const lineNumber = String(line.line).padStart(3, " ")
 					output += `${lineNumber} | ${line.text.trimEnd()}\n`
