@@ -1,3 +1,2 @@
-export * from "./types";
-export { MCPClientImpl as MCPClient } from "./client";
 export { MCPServerImpl as MCPServer } from "./server";
+export type { McpServerOptions, McpImplementation } from "./server";

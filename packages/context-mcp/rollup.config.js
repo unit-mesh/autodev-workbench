@@ -23,17 +23,15 @@ export default defineConfig([
       },
     ],
     plugins: [
-      resolve(),
+      resolve({
+        preferBuiltins: true,
+      }),
       commonjs(),
       json(),
       typescript({
         tsconfig: "./tsconfig.json",
         exclude: ["**/__tests__/**", "**/*.test.ts"],
       }),
-    ],
-    external: [
-      ...Object.keys(packageJson.dependencies || {}),
-      ...Object.keys(packageJson.peerDependencies || {}),
     ],
   },
   {
