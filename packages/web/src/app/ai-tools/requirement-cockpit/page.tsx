@@ -60,13 +60,13 @@ export default function Home() {
 
 			let aiResponse = ''
 
-			const eventStream: ReadableStream<{ conversationId: string; data: string }> = response.body!
+			const eventStream = response.body!
 				.pipeThrough(new TextDecoderStream())
 				.pipeThrough(new EventSourceParserStream())
             
 			for await (const event of eventStream) {
-				if (!conversationId) {
-					setConversationId(event.conversationId)
+				if (!conversationId && event.id) {
+					setConversationId(event.id)
 				}
 
 				aiResponse += event.data
