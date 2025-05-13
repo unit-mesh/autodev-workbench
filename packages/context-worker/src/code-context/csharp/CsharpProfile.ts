@@ -19,10 +19,6 @@ export class CsharpProfile implements LanguageProfile {
       (method_declaration
         name: (identifier) @name.definition.method) @definition.method
     `);
-		/**
-		 * (struct_declaration
-       name: (identifier) @definition.struct)
-		 */
 	classQuery = new MemoizedQuery(`
       (class_declaration
         name: (identifier) @name.definition.class) @definition.class
@@ -35,9 +31,39 @@ export class CsharpProfile implements LanguageProfile {
 			(scoped_identifier) @package-name)
 	`);
 	structureQuery = new MemoizedQuery(`
-	 (struct_declaration
-		 name: (identifier) @name.definition.struct) @definition.struct
-  `);
+    (namespace_declaration
+      name: (identifier) @namespace-name)
+
+    (class_declaration
+      name: (identifier) @class-name
+      bases: (base_list
+        (identifier) @extend-name)?
+       )?
+      body: (declaration_list
+        (method_declaration
+          name: (identifier) @class-method-name
+          parameters: (parameter_list (parameter)? @parameter)
+        )?
+        (property_declaration
+          type: (_) @property-type
+          name: (identifier) @property-name
+        )?
+      )?
+
+    (interface_declaration
+      name: (identifier) @interface-name
+      body: (declaration_list
+        (method_declaration
+          name: (identifier) @interface-method-name
+          parameters: (parameter_list (parameter)? @parameter)
+        )?
+        (property_declaration
+          type: (_) @interface-prop-type
+          name: (identifier) @interface-prop-name
+        )?
+      )?
+    )
+`);
 	methodIOQuery = new MemoizedQuery(`
 		(method_declaration
         type: (_) @method-returnType
