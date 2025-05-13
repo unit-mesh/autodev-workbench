@@ -71,10 +71,10 @@ export default function RequirementsWorkspace({
   // 生成发送按钮，根据加载状态显示不同内容
   const renderSendButton = () => {
     return (
-      <Button 
-        onClick={handleSend} 
-        disabled={isLoading} 
-        size="icon" 
+      <Button
+        onClick={handleSend}
+        disabled={isLoading}
+        size="icon"
         className="absolute right-2 bottom-2"
       >
         {isLoading ? (
@@ -102,8 +102,8 @@ export default function RequirementsWorkspace({
     <div className="flex-1 flex flex-col h-full border-l border-r border-gray-200">
       {/* Header */}
       <div className="px-4 py-2 border-b border-gray-200 bg-white">
-        <h1 className="text-xl font-semibold text-gray-800">需求驾驶舱</h1>
-        <p className="text-sm text-gray-500">与 AI 助手协作定义和完善您的需求</p>
+        <h1 className="text-xl font-semibold text-gray-800">自动开发驾驶舱</h1>
+        <p className="text-sm text-gray-500">与 AI 助手协作定义、完善和实现您的需求</p>
       </div>
 
       {/* Initial Intent Input */}
