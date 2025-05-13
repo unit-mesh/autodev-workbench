@@ -55,12 +55,28 @@ export class CppProfile implements LanguageProfile {
       path: [(system_lib_string) (string_literal)] @include-path)?
     
     (namespace_definition
-      name: (namespace_identifier) @namespace-name)?
+      name: (identifier) @namespace-name)?
     
     (class_specifier
       name: (type_identifier) @class-name
       body: (field_declaration_list
         (access_specifier)? @access-specifier
+        (field_declaration
+          type: (_) @field-type
+          declarator: (field_identifier) @field-name)?
+        (function_definition
+          type: (_) @method-returnType
+          declarator: (function_declarator
+            declarator: (field_identifier) @method-name)
+          body: (compound_statement)? @method-body)?
+      )?
+      (base_class_clause
+        (type_identifier) @extend-name)?
+    )?
+
+    (struct_specifier
+      name: (type_identifier) @struct-name
+      body: (field_declaration_list
         (field_declaration
           type: (_) @field-type
           declarator: (field_identifier) @field-name)?
