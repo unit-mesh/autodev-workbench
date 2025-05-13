@@ -19,6 +19,7 @@ import * as childProcess from "child_process"
 import * as path from "path"
 import * as readline from "readline"
 import fs from "fs/promises"
+import { findRipgrepBinary } from "./ripgrep-find";
 
 
 /**
@@ -151,7 +152,8 @@ export async function getBinPath(vscodeAppRoot: string): Promise<string | undefi
 
 	return (
 		(await checkPath("node_modules/@vscode/ripgrep/bin/")) ||
-		(await checkPath("node_modules/vscode-ripgrep/bin"))
+		(await checkPath("node_modules/vscode-ripgrep/bin")) ||
+		findRipgrepBinary()
 	)
 }
 

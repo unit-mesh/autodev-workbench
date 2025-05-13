@@ -20,7 +20,7 @@ import * as path from "path"
 import * as fs from "fs"
 import * as childProcess from "child_process"
 import { arePathsEqual } from "../../utils/path"
-import { getBinPath } from "./ripgrep";
+import { getBinPath } from "../../cmd/binary/ripgrep";
 import { rootDir } from "../../constants";
 
 /**
