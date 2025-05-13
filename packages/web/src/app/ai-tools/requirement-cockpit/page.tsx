@@ -4,6 +4,7 @@ import { useState } from "react"
 import RequirementsWorkspace from "@/components/cockpit/requirements-workspace"
 import KnowledgeHub from "@/components/cockpit/knowledge-hub"
 import AIAssistantPanel from "@/components/cockpit/ai-assistant-panel"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 // export default function Home() {
 // 	return (
@@ -23,121 +24,260 @@ export default function Home() {
 	const [qualityAlerts, setQualityAlerts] = useState<
 		Array<{ id: string; type: string; message: string; relatedReqId: string }>
 	>([])
+	const [isLoading, setIsLoading] = useState(false)
+	const [conversationId, setConversationId] = useState<string | null>(null)
 
-	const handleSendMessage = (message: string) => {
-		// Add user message to conversation
+	// 为需求对话添加系统提示词
+	const requirementSystemPrompt = 
+		"你是一位专业的需求分析师，专门帮助用户分析和完善软件需求。" +
+		"你的任务是通过提问帮助用户明确需求，并将讨论内容整理为结构化的需求文档。" +
+		"回答时，你需要：\n" +
+		"1. 提出有价值的问题，帮助用户思考需求的各个方面\n" +
+		"2. 根据对话内容，自动识别并提取关键需求点\n" +
+		"3. 保持专业、友好的态度，引导用户考虑完整的需求场景\n" +
+		"如果用户的需求描述不够清晰，请主动询问细节。"
+
+	const handleSendMessage = async (message: string) => {
+		// 添加用户消息到对话
 		const newConversation = [...conversation, { role: "user", content: message }]
 		setConversation(newConversation)
-
-		// Simulate AI response
-		setTimeout(() => {
-			let aiResponse = ""
-
-			if (newConversation.length === 1) {
-				aiResponse =
-					"感谢您的初始需求。为了更好地理解会议室预订系统的需求，我需要了解一些细节：\n\n1. 用户需要看到哪些会议室信息（如容量、设备）？\n2. 预订时段是否有特殊规则（如最小/最大时长）？\n3. 是否需要集成日历功能？"
-
-				// Add initial requirement to document
-				setDocumentContent([
-					{
-						id: "intro-1",
-						type: "introduction",
-						content: "## 1. 引言\n\n### 1.1 目的\n本文档旨在定义在线会议室预订系统的需求。",
-					},
-					{
-						id: "fr-1",
-						type: "functional",
-						content: "## 2. 功能需求\n\n### 2.1 会议室预订\nFR1: 系统应允许用户查看可用会议室列表。",
-					},
-				])
-
-				// Add quality alert
-				setQualityAlerts([
-					{
-						id: "qa-1",
-						type: "ambiguity",
-						message: "'可用会议室列表'不够明确，需要定义显示哪些信息。",
-						relatedReqId: "fr-1",
-					},
-				])
-
-				// Highlight knowledge source
-				setActiveKnowledgeSource("company-policy")
-			} else if (newConversation.length === 3) {
-				aiResponse =
-					"非常感谢您提供的信息。根据您的回答，我已经更新了需求文档。我注意到您提到了需要显示会议室的容量和设备信息，这对于用户选择合适的会议室非常重要。\n\n您是否还需要系统支持会议室预订的审批流程？"
-
-				// Update document content
-				setDocumentContent((prev) => {
-					const updated = [...prev]
-					const frIndex = updated.findIndex((item) => item.id === "fr-1")
-					if (frIndex !== -1) {
-						updated[frIndex] = {
-							...updated[frIndex],
-							content:
-								"## 2. 功能需求\n\n### 2.1 会议室预订\nFR1: 系统应允许用户查看可用会议室列表，包含会议室名称、容量、可用设备和位置信息。\nFR2: 用户应能按时间段、容量和设备筛选会议室。\nFR3: 系统应支持用户预订会议室，并指定预订时间段（最短30分钟，最长8小时）。",
-						}
-					}
-					return updated
+		
+		// 设置加载状态
+		setIsLoading(true)
+		
+		try {
+			// 准备消息，添加系统提示词
+			let messages = newConversation
+			
+			// 如果是第一条消息，添加系统提示词
+			if (conversation.length === 0) {
+				messages = [
+					{ role: "system", content: requirementSystemPrompt },
+					...newConversation
+				]
+			}
+			
+			// 调用 API 获取 AI 回复
+			const response = await fetch("/api/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					messages: messages,
+					conversationId
 				})
-
-				// Update quality alerts
-				setQualityAlerts([
-					{
-						id: "qa-2",
-						type: "testability",
-						message: "FR2需要明确筛选条件的组合方式（AND/OR）。",
-						relatedReqId: "fr-1",
-					},
-				])
+			})
+			
+			if (!response.ok) {
+				throw new Error("获取 AI 回复失败")
 			}
-
-			if (aiResponse) {
-				setConversation((prev) => [...prev, { role: "assistant", content: aiResponse }])
+			
+			const data = await response.json()
+			const aiResponse = data.text
+			
+			// 如果是新对话，保存对话 ID
+			if (!conversationId && data.conversationId) {
+				setConversationId(data.conversationId)
 			}
-		}, 1000)
+			
+			// 添加 AI 回复到对话
+			setConversation(prev => [...prev, { role: "assistant", content: aiResponse }])
+			
+			// 处理 AI 响应，更新文档
+			handleAIResponse(aiResponse, newConversation.length)
+			
+		} catch (error) {
+			console.error("获取 AI 回复时出错:", error)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+	
+	// 处理 AI 响应，更新文档和质量警报
+	const handleAIResponse = async (aiResponse: string, messageCount: number) => {
+		try {
+			// 第一次对话，创建初始文档
+			if (messageCount === 1) {
+				// 提取可能的需求点
+				const response = await fetch("/api/chat", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						messages: [
+							{ 
+								role: "system", 
+								content: "你是需求分析专家，请从用户的对话中提取关键需求，并生成需求文档结构。"
+							},
+							{ 
+								role: "user", 
+								content: `根据以下对话，生成初始需求文档结构：\n\n${aiResponse}` 
+							}
+						]
+					})
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					// 尝试使用 AI 生成的文档结构，但保留基本结构以确保稳定性
+					
+					// 添加初始需求文档
+					setDocumentContent([
+						{
+							id: "intro-1",
+							type: "introduction",
+							content: "## 1. 引言\n\n### 1.1 目的\n本文档旨在定义系统需求。",
+						},
+						{
+							id: "fr-1",
+							type: "functional",
+							content: "## 2. 功能需求\n\n### 2.1 基本功能\n系统应提供基础功能。",
+						},
+					]);
+					
+					// 高亮知识来源（如果是首次对话）
+					setActiveKnowledgeSource("company-policy");
+				}
+			} 
+			// 后续对话，更新文档
+			else if (documentContent.length > 0) {
+				// 提取并处理更新后的需求
+				const response = await fetch("/api/chat", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						messages: [
+							{ 
+								role: "system", 
+								content: "你是需求文档编辑专家，请根据最新对话更新需求文档。" 
+							},
+							{ 
+								role: "user", 
+								content: `现有需求文档：\n\n${documentContent.map(doc => doc.content).join('\n\n')}\n\n` +
+								         `用户最新对话：\n\n${aiResponse}\n\n` +
+								         `请提供更新后的功能需求部分内容，保持原有格式，但融合新信息。`
+							}
+						]
+					})
+				});
+				
+				if (response.ok) {
+					const data = await response.json();
+					
+					// 解析 AI 返回的需求文档内容
+					const updatedRequirements = data.text || "## 2. 功能需求\n\n### 2.1 基本功能\n系统应提供基础功能。";
+					
+					// 更新文档内容（仅更新功能需求部分）
+					setDocumentContent((prev) => {
+						const updated = [...prev];
+						const frIndex = updated.findIndex((item) => item.id === "fr-1");
+						if (frIndex !== -1) {
+							updated[frIndex] = {
+								...updated[frIndex],
+								content: updatedRequirements.trim(),
+							};
+						}
+						return updated;
+					});
+				}
+			}
+			
+			// 进行质量检查
+			if (documentContent.length > 0) {
+				await performQualityCheck();
+			}
+		} catch (error) {
+			console.error("处理 AI 响应时出错:", error);
+		}
+	}
+	
+	// 执行需求质量检查
+	const performQualityCheck = async () => {
+		// 如果没有文档内容，则不执行检查
+		if (documentContent.length === 0) return;
+		
+		setIsLoading(true)
+		try {
+			// 准备需求文档内容
+			const documentForAnalysis = documentContent.map(item => item.content).join("\n\n")
+			
+			// 调用专用的需求分析 API
+			const response = await fetch("/api/analyze-requirements", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ document: documentForAnalysis })
+			})
+			
+			if (!response.ok) {
+				throw new Error("质量检查 API 调用失败")
+			}
+			
+			const data = await response.json()
+			
+			// 如果返回了质量问题，更新质量警报
+			if (data.qualityIssues && Array.isArray(data.qualityIssues)) {
+				setQualityAlerts(data.qualityIssues)
+			} else if (data.error) {
+				console.error("质量检查 API 返回错误:", data.error)
+			}
+		} catch (error) {
+			console.error("质量检查时出错:", error)
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	const handleDocumentEdit = (id: string, newContent: string) => {
 		setDocumentContent((prev) => prev.map((item) => (item.id === id ? { ...item, content: newContent } : item)))
 
-		// Simulate quality check on edit
-		if (newContent.includes("快速响应")) {
-			setQualityAlerts((prev) => [
-				...prev,
-				{
-					id: `qa-${Date.now()}`,
-					type: "testability",
-					message: "'快速响应'定义不明确，建议量化为具体时间。",
-					relatedReqId: id,
-				},
-			])
-		}
+		// 文档编辑完成后，执行质量检查
+		performQualityCheck()
 	}
 
 	return (
 		<div className="flex h-screen overflow-hidden">
-			{/* Left Panel: Knowledge Hub */}
-			<KnowledgeHub activeSource={activeKnowledgeSource} onSourceSelect={setActiveKnowledgeSource} />
-
-			{/* Center Panel: Main Workspace */}
-			<RequirementsWorkspace
-				currentRequirement={currentRequirement}
-				setCurrentRequirement={setCurrentRequirement}
-				conversation={conversation}
-				documentContent={documentContent}
-				onSendMessage={handleSendMessage}
-				onDocumentEdit={handleDocumentEdit}
-			/>
-
-			{/* Right Panel: AI Assistant */}
-			<AIAssistantPanel
-				qualityAlerts={qualityAlerts}
-				onAlertClick={(reqId) => {
-					// Scroll to requirement in document
-					document.getElementById(reqId)?.scrollIntoView({ behavior: "smooth" })
-				}}
-			/>
+			<PanelGroup direction="horizontal">
+				{/* Left Panel: Knowledge Hub */}
+				<Panel id="knowledge-hub" defaultSize={20} minSize={15}>
+					<KnowledgeHub activeSource={activeKnowledgeSource} onSourceSelect={setActiveKnowledgeSource} />
+				</Panel>
+				
+				<PanelResizeHandle 
+					className="w-1 hover:w-2 bg-gray-200 hover:bg-blue-400 transition-all duration-150 relative group"
+				>
+					<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-blue-600"></div>
+				</PanelResizeHandle>
+				
+				{/* Center Panel: Main Workspace */}
+				<Panel id="requirements-workspace" defaultSize={55} minSize={30}>
+					<RequirementsWorkspace
+						currentRequirement={currentRequirement}
+						setCurrentRequirement={setCurrentRequirement}
+						conversation={conversation}
+						documentContent={documentContent}
+						onSendMessage={handleSendMessage}
+						onDocumentEdit={handleDocumentEdit}
+						isLoading={isLoading}
+					/>
+				</Panel>
+				
+				<PanelResizeHandle 
+					className="w-1 hover:w-2 bg-gray-200 hover:bg-blue-400 transition-all duration-150 relative group"
+				>
+					<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-blue-600"></div>
+				</PanelResizeHandle>
+				
+				{/* Right Panel: AI Assistant */}
+				<Panel id="ai-assistant" defaultSize={25} minSize={15}>
+					<AIAssistantPanel
+						qualityAlerts={qualityAlerts}
+						onAlertClick={(reqId) => {
+							// Scroll to requirement in document
+							document.getElementById(reqId)?.scrollIntoView({ behavior: "smooth" })
+						}}
+					/>
+				</Panel>
+			</PanelGroup>
 		</div>
 	)
 }
+
+

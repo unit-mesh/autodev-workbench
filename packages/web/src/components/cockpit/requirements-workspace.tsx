@@ -18,6 +18,7 @@ interface RequirementsWorkspaceProps {
   documentContent: Array<{ id: string; type: string; content: string }>
   onSendMessage: (message: string) => void
   onDocumentEdit: (id: string, newContent: string) => void
+  isLoading?: boolean
 }
 
 export default function RequirementsWorkspace({
@@ -27,6 +28,7 @@ export default function RequirementsWorkspace({
   documentContent,
   onSendMessage,
   onDocumentEdit,
+  isLoading = false,
 }: RequirementsWorkspaceProps) {
   const [activeTab, setActiveTab] = useState("conversation")
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -51,6 +53,25 @@ export default function RequirementsWorkspace({
       e.preventDefault()
       handleSend()
     }
+  }
+  
+  // 生成发送按钮，根据加载状态显示不同内容
+  const renderSendButton = () => {
+    return (
+      <Button onClick={handleSend} disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
+            处理中...
+          </>
+        ) : (
+          <>
+            <Send className="h-4 w-4 mr-2" />
+            发送
+          </>
+        )}
+      </Button>
+    )
   }
 
   const startEditing = (id: string, content: string) => {
@@ -85,10 +106,7 @@ export default function RequirementsWorkspace({
               onKeyDown={handleKeyDown}
               className="flex-1 resize-none"
             />
-            <Button onClick={handleSend}>
-              <Send className="h-4 w-4 mr-2" />
-              发送
-            </Button>
+            {renderSendButton()}
           </div>
         </div>
       )}
@@ -131,10 +149,7 @@ export default function RequirementsWorkspace({
                   onKeyDown={handleKeyDown}
                   className="flex-1 resize-none"
                 />
-                <Button onClick={handleSend}>
-                  <Send className="h-4 w-4 mr-2" />
-                  发送
-                </Button>
+                {renderSendButton()}
               </div>
             </div>
           )}
