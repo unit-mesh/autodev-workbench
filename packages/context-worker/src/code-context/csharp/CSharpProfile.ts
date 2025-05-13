@@ -5,7 +5,7 @@ import { LanguageProfile, MemoizedQuery } from "../base/LanguageProfile";
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 
 @injectable()
-export class CsharpProfile implements LanguageProfile {
+export class CSharpProfile implements LanguageProfile {
 	languageIds = ['csharp'];
 	fileExtensions = ['csharp'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('csharp');

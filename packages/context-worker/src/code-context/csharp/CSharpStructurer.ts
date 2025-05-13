@@ -7,7 +7,7 @@ import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 import { LanguageProfile } from "../base/LanguageProfile";
 
 @injectable()
-export class CsharpStructurer extends BaseStructurerProvider {
+export class CSharpStructurer extends BaseStructurerProvider {
 	protected langId: string = 'csharp';
 	protected config: LanguageProfile = LanguageProfileUtil.from(this.langId)!!;
 	protected parser: Parser | undefined;

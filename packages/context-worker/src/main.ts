@@ -17,7 +17,7 @@ import { PythonStructurer } from "./code-context/python/PythonStructurer";
 import { AppConfig, DEFAULT_CONFIG } from "./types/AppConfig";
 import { RustStructurer } from "./code-context/rust/RustStructurer";
 import { CStructurer } from "./code-context/c/CStructurer";
-import { CsharpStructurer } from "./code-context/csharp/CsharpStructurer";
+import { CSharpStructurer } from "./code-context/csharp/CSharpStructurer";
 
 class CommandLineParser {
 	public parse(): AppConfig {
@@ -133,7 +133,7 @@ class InterfaceAnalyzerApp {
 		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
 		providerContainer.bind(IStructurerProvider).to(RustStructurer);
 		providerContainer.bind(IStructurerProvider).to(CStructurer);
-		providerContainer.bind(IStructurerProvider).to(CsharpStructurer);
+		providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
 
 		this.commandLineParser = new CommandLineParser();
 		this.userInputHandler = new UserInputHandler();
