@@ -15,10 +15,10 @@
  *
  */
 
-import { Tool } from "../base/Tool";
+import { Tool } from "../../base/Tool";
 import { spawn } from "child_process";
 
-interface RipGrepInput {
+export interface RipGrepInput {
 	command: "search" | "advanced-search" | "count-matches" | "list-files" | "list-file-types";
 	pattern?: string;
 	path?: string;
@@ -47,6 +47,14 @@ interface RipGrepOutput {
 }
 
 export class RipGrepTool implements Tool {
+	name(): string {
+		return "ripgrep";
+	}
+
+	usage(): string {
+		return "";
+	}
+
 	description(): string {
 		return "Search files using ripgrep (rg) with various options";
 	}
@@ -91,11 +99,6 @@ export class RipGrepTool implements Tool {
 	icon(): string {
 		return "search";
 	}
-
-	name(): string {
-		return "ripgrep";
-	}
-
 	/**
 	 * Strip ANSI escape sequences from a string to make it human-readable.
 	 */

@@ -3,6 +3,8 @@ export interface Tool {
 
 	description(): string;
 
+	usage(): string;
+
 	icon(): string;
 
 	inputSchema?(): Promise<object>;
