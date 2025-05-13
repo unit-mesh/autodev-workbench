@@ -112,7 +112,9 @@ export default function Home() {
 
 				if (response.ok) {
 					const { conversationId, text } = await response.json() as { text: string; conversationId: string };
-					handleDocumentEdit(conversationId, text)
+					setDocumentContent((prev) => {
+						return [...prev, { id: conversationId, type: "", content: text }];
+					})
 					setActiveKnowledgeSource("company-policy");
 				}
 			}
