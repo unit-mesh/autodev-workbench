@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, Book, Network, Plus, Loader2 } from "lucide-react"
+import { Upload, FileText, Book, Network, Plus, Loader2, Check, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import KnowledgeGraphPopup from "./knowledge-graph-popup"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface ConceptDictionary {
   id: string
@@ -50,6 +57,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
   const [guidelines, setGuidelines] = useState<Guideline[]>([])
   const [isLoadingGuidelines, setIsLoadingGuidelines] = useState(false)
   const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
+  const [selectedGuidelines, setSelectedGuidelines] = useState<string[]>([])
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
@@ -123,6 +131,14 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
     return <FileText className="h-3 w-3 mr-1 text-blue-600" />;
   };
 
+  const toggleGuidelineSelection = (guidelineId: string) => {
+    setSelectedGuidelines(prev =>
+      prev.includes(guidelineId)
+        ? prev.filter(id => id !== guidelineId)
+        : [...prev, guidelineId]
+    );
+  };
+
   return (
     <div className="bg-white border-r border-gray-200 flex flex-col h-full">
       <div className="px-4 py-2 border-b border-gray-200">
@@ -133,15 +149,37 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
       <div className="flex-1 flex flex-col">
         {/* 显性知识部分 */}
         <div className="border-b border-gray-200">
-          <div className="px-4 py-2 flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-gray-700">显性知识</h3>
-            <Button variant="outline" size="sm" className="text-xs">
-              <Upload className="h-3 w-3 mr-1" />
-              上传文档
-            </Button>
+          <div className="px-4 py-2 flex justify-between items-center border-b">
+            <div className="flex items-center gap-1">
+              <h3 className="text-sm font-semibold text-gray-700">显性知识</h3>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
+                      <Info className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-background border">
+                    <p className="text-xs">MCP 工具正在开发中</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="flex gap-2">
+              {selectedGuidelines.length > 0 && (
+                <Button variant="outline" size="sm" className="text-xs">
+                  <Check className="h-3 w-3 mr-1" />
+                  应用选中 ({selectedGuidelines.length})
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="text-xs">
+                <Upload className="h-3 w-3 mr-1" />
+                上传文档
+              </Button>
+            </div>
           </div>
 
-          <ScrollArea className="h-80">
+          <ScrollArea className="h-48">
             <div className="p-2 space-y-2">
               {isLoadingGuidelines ? (
                 <div className="flex justify-center items-center h-20">
@@ -160,23 +198,36 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
                   <Card
                     key={guideline.id}
                     className={cn(
-                      "cursor-pointer hover:border-blue-200 transition-colors py-0",
+                      "cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0",
                       activeSource === guideline.id && "border-blue-500 bg-blue-50",
                     )}
-                    onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
                   >
-                    <CardHeader className="p-3 pb-0">
+                    <CardHeader className="px-4 py-2 pb-0">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-sm font-medium flex items-center">
-                          {getItemTypeIcon(guideline.category)}
-                          {guideline.title}
-                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`guideline-${guideline.id}`}
+                            checked={selectedGuidelines.includes(guideline.id)}
+                            onCheckedChange={() => toggleGuidelineSelection(guideline.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <CardTitle
+                            className="text-sm font-medium flex items-center"
+                            onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
+                          >
+                            {getItemTypeIcon(guideline.category)}
+                            {guideline.title}
+                          </CardTitle>
+                        </div>
                         <Badge variant="outline" className="text-[10px] h-4">
                           {guideline.status}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-2">
+                    <CardContent
+                      className="p-2"
+                      onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
+                    >
                       <p className="text-xs text-gray-600">{guideline.description}</p>
                       <p className="text-[10px] text-gray-400 mt-1">更新于: {guideline.lastUpdated}</p>
                     </CardContent>
@@ -188,14 +239,28 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
         </div>
 
         <div>
-          <div className="px-4 py-2">
-            <h3 className="text-sm font-semibold text-gray-700">隐性知识</h3>
+          <div className="px-4 py-2 border-b">
+            <div className="flex items-center gap-1">
+              <h3 className="text-sm font-semibold text-gray-700">隐性知识</h3>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
+                      <Info className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-background border">
+                    <p className="text-xs">MCP 工具正在开发中</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
 
-          <ScrollArea className="h-80">
+          <ScrollArea className="h-48">
             <div className="p-2 space-y-2">
               {implicitKnowledge.map((item) => (
-                <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0">
+                <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0">
                   <CardHeader className="p-3 pb-0">
                     <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
                     <Badge variant="secondary" className="text-[10px] h-4 w-fit">
@@ -275,3 +340,4 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
     </div>
   )
 }
+
