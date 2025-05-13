@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,7 @@ export default function GoldenPathPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [generatedResult, setGeneratedResult] = useState<string>('');
 	const [activeTab, setActiveTab] = useState('config');
-	const [aiPrompt, setAiPrompt] = useState('');
+	const [aiPrompt, setAiPrompt] = useState('我需要一个带有用户认证、MySQL 数据库和 REST API 的微服务系统，主要用于客户订单管理');
 	const [isAiProcessing, setIsAiProcessing] = useState(false);
 	const [aiSuggested, setAiSuggested] = useState(false);
 
@@ -342,35 +342,45 @@ Provide only the JSON object without any additional text or explanations.
 		}
 	};
 
+	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+		if (e.key === 'Enter' && !e.altKey && !isAiProcessing && aiPrompt.trim()) {
+			e.preventDefault();
+			handleAiSuggest();
+		}
+		// Allow Alt+Enter for new line
+	};
+
 	return (
 		<div className="container mx-auto py-8">
-			<h1 className="text-3xl font-bold mb-2">项目黄金路径生成器</h1>
+			<h1 className="text-3xl font-bold mb-2">后端应用生成</h1>
 			<p className="text-muted-foreground mb-6">基于 AI 生成符合最佳实践的项目结构和配置</p>
 
 			{/* AI Project Description Input */}
-			<Card className="mb-8">
-				<CardHeader className="pb-3">
+			<Card className="mb-8 gap-2">
+				<CardHeader className="pb-0">
 					<CardTitle className="flex items-center gap-2">
 						<Sparkles className="h-5 w-5 text-primary"/>
 						AI 项目描述
 					</CardTitle>
-					<CardDescription>
-						用自然语言描述你的项目，AI 将帮助你自动配置项目设置
+					<CardDescription className="mt-0">
+						用自然语言描述你的项目，AI 将帮助你自动配置项目设置 (按 Enter 发送，Alt+Enter 换行)
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<div className="flex items-start gap-2">
+					<div className="relative">
 						<Textarea
 							value={aiPrompt}
 							onChange={(e) => setAiPrompt(e.target.value)}
+							onKeyDown={handleKeyDown}
 							placeholder="例如：我需要一个带有用户认证、MySQL 数据库和 REST API 的微服务系统，主要用于客户订单管理..."
-							className="flex-1 resize-none"
-							rows={2}
+							className="pr-12 resize-none"
+							rows={3}
 							disabled={isAiProcessing}
 						/>
 						<Button
-							className="mt-1"
+							className="absolute right-2 bottom-2"
 							size="icon"
+							variant="ghost"
 							onClick={handleAiSuggest}
 							disabled={isAiProcessing || !aiPrompt.trim()}
 						>
