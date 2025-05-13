@@ -60,7 +60,7 @@ export default function Home() {
 
 			let aiResponse = ''
 
-			const eventStream: EventSourceParserStream = response.body!
+			const eventStream: ReadableStream<{ conversationId: string; data: string }> = response.body!
 				.pipeThrough(new TextDecoderStream())
 				.pipeThrough(new EventSourceParserStream())
             
