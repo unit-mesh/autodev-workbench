@@ -61,6 +61,7 @@ export class MCPServerImpl {
   }
 
   installHooks() {
+    // TODO: Add hooks you like.
     this.mcpInst.resource(
       "mcp",
       new ResourceTemplate("mcp://version", { list: undefined }),
