@@ -60,11 +60,10 @@ export default function Home() {
 
 			let aiResponse = ''
 
-			const eventStream = response.body!
+			const eventStream: EventSourceParserStream = response.body!
 				.pipeThrough(new TextDecoderStream())
 				.pipeThrough(new EventSourceParserStream())
             
-		    // @ts-expect-error 移交给 @cgqaq 处理
 			for await (const event of eventStream) {
 				if (!conversationId) {
 					setConversationId(event.conversationId)
