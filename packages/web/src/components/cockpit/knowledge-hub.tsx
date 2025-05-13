@@ -160,7 +160,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
                       <Info className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-background border">
+                  <TooltipContent>
                     <p className="text-xs">MCP 工具正在开发中</p>
                   </TooltipContent>
                 </Tooltip>
@@ -250,7 +250,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
                       <Info className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-background border">
+                  <TooltipContent>
                     <p className="text-xs">MCP 工具正在开发中</p>
                   </TooltipContent>
                 </Tooltip>
