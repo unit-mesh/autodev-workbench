@@ -23,6 +23,12 @@ importers:
 
   packages/context-mcp:
     dependencies:
+      '@ast-grep/lang-typescript':
+        specifier: ^0.0.2
+        version: 0.0.2(tree-sitter-cli@0.25.4)
+      '@ast-grep/napi':
+        specifier: ^0.38.1
+        version: 0.38.1
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.1
         version: 1.11.1
@@ -75,6 +81,9 @@ importers:
       rollup-plugin-dts:
         specifier: ^6.1.0
         version: 6.2.1(rollup@4.40.2)(typescript@5.8.3)
+      tree-sitter-cli:
+        specifier: ^0.25.4
+        version: 0.25.4
       ts-jest:
         specifier: ^29.1.2
         version: 29.3.2(@babel/core@7.27.1)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.27.1))(jest@29.7.0(@types/node@20.17.46))(typescript@5.8.3)
@@ -518,6 +527,75 @@ packages:
 
   '@asamuzakjp/css-color@3.1.7':
     resolution: {integrity: sha512-Ok5fYhtwdyJQmU1PpEv6Si7Y+A4cYb8yNM9oiIJC9TzXPMuN9fvdonKJqcnz9TbFqV6bQ8z0giRq0iaOpGZV2g==}
+
+  '@ast-grep/lang-typescript@0.0.2':
+    resolution: {integrity: sha512-zLRqiSP/3Tc+r5OEopGZqetgMCMOFssLKuIRYE5zHXe8n6aRk8wMOXCHsuhY2g1YmH58rv9dloSZchpzIBriCQ==}
+    peerDependencies:
+      tree-sitter-cli: 0.24.6
+    peerDependenciesMeta:
+      tree-sitter-cli:
+        optional: true
+
+  '@ast-grep/napi-darwin-arm64@0.38.1':
+    resolution: {integrity: sha512-1YG5PgqfcDleO/5AFsbEDjkOYGLyth2oWpAUhz/JE7mzPdax586O/oBcISPDP2jV7QUGIV5TJ8J8Feft/No1gg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@ast-grep/napi-darwin-x64@0.38.1':
+    resolution: {integrity: sha512-2ubMVa8BZaqmwsPTDpScIWTorQfXug8XIBI+1TsbUgpVQFTQREZ5U0s7M3uOJ/bQqxx+14easGX4Z/IyH6heuA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@ast-grep/napi-linux-arm64-gnu@0.38.1':
+    resolution: {integrity: sha512-fUr02gEA4mweG7xfHch66/LlAyyOwiGHczUlfST9g84vThMGY/YEqjgiMwuUlynglvYzW/Cr9Wd1zEapvnW6zA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-arm64-musl@0.38.1':
+    resolution: {integrity: sha512-Cm0BbMcHPqg2IrUL2Rn1WdLcFzi8L2iqm62+hKs6334ht7OgFezt3YhoLgzP75bstNNlGT9NJuSk1m6/Fxa0HA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-x64-gnu@0.38.1':
+    resolution: {integrity: sha512-EThfZGW8OekPIS1rHJj6MpU9d14YZQazp24bb7QWcyyfo4lbe9etexLuF7ujbGF/rMovhi2TRbF/Tn0HvuJBpg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-x64-musl@0.38.1':
+    resolution: {integrity: sha512-PnI1RRP9yn+yyGUjxCXzgiUktEDH/gUyfV3tEFZEjqWzTZFUd7TdkC7hB6HlIHFrJ2ykXWUBMwXRR3k/2XDaMw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@ast-grep/napi-win32-arm64-msvc@0.38.1':
+    resolution: {integrity: sha512-Q6xEk2KTjZIYuDi3sIgHYF87i6uhly6g5kJC7G2loW1Io9GApHKqpLBuDdTSApwzwbwQgfyeLDPdHvwu5P1y5A==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@ast-grep/napi-win32-ia32-msvc@0.38.1':
+    resolution: {integrity: sha512-k2GnuAv30+XATjgEUZNb2gtWU7g7H4CvsSwaZLgvlpsKfMTIXf9julksh8M5WkU5F4WIx40wEUQeDALoKO/Ltw==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@ast-grep/napi-win32-x64-msvc@0.38.1':
+    resolution: {integrity: sha512-bbV/GNY4QCEahpo5MvRXkUg7m1wDamfQzaS2f0ncUr7ZW2ML6RC0qR7yQy3eLCvpdZl3cXUBnGydEsMe3hTnvw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@ast-grep/napi@0.38.1':
+    resolution: {integrity: sha512-7OxLNxyugFYRMNksdyQXo806BDHA+SClHmGD7H5IJXeiRS4ICEV5NAYiLxr1NAOOKVwwFk0yFQj0YZ2BkH8joA==}
+    engines: {node: '>= 10'}
+
+  '@ast-grep/setup-lang@0.0.3':
+    resolution: {integrity: sha512-+ZNOuf0r7ABVwOANrrQpUrUv7xyuhsZGyQ88WZCH/euQmIEvSH3JsUFevg/60M7hi8NVh4vfSQs6ajTpumSzxg==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -6603,6 +6681,11 @@ packages:
     resolution: {integrity: sha512-hdF5ZgjTqgAntKkklYw0R03MG2x/bSzTtkxmIRw/sTNV8YXsCJ1tfLAX23lhxhHJlEf3CRCOCGGWw3vI3GaSPw==}
     engines: {node: '>=18'}
 
+  tree-sitter-cli@0.25.4:
+    resolution: {integrity: sha512-tSOgiUuNH1xgSopWHMb+2EPuzIawj7/7/k0cNTNInBde21R0e53ElygJ+76PLjai2BOjnCzy9n8W0o7Eo9GVgA==}
+    engines: {node: '>=12.0.0'}
+    hasBin: true
+
   tree-sitter-json@0.24.8:
     resolution: {integrity: sha512-Tc9ZZYwHyWZ3Tt1VEw7Pa2scu1YO7/d2BCBbKTx5hXwig3UfdQjsOPkPyLpDJOn/m1UBEWYAtSdGAwCSyagBqQ==}
     peerDependencies:
@@ -7142,6 +7225,53 @@ snapshots:
       '@csstools/css-parser-algorithms': 3.0.4(@csstools/css-tokenizer@3.0.3)
       '@csstools/css-tokenizer': 3.0.3
       lru-cache: 10.4.3
+
+  '@ast-grep/lang-typescript@0.0.2(tree-sitter-cli@0.25.4)':
+    dependencies:
+      '@ast-grep/setup-lang': 0.0.3
+    optionalDependencies:
+      tree-sitter-cli: 0.25.4
+
+  '@ast-grep/napi-darwin-arm64@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-darwin-x64@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-gnu@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-musl@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-gnu@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-musl@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-win32-arm64-msvc@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-win32-ia32-msvc@0.38.1':
+    optional: true
+
+  '@ast-grep/napi-win32-x64-msvc@0.38.1':
+    optional: true
+
+  '@ast-grep/napi@0.38.1':
+    optionalDependencies:
+      '@ast-grep/napi-darwin-arm64': 0.38.1
+      '@ast-grep/napi-darwin-x64': 0.38.1
+      '@ast-grep/napi-linux-arm64-gnu': 0.38.1
+      '@ast-grep/napi-linux-arm64-musl': 0.38.1
+      '@ast-grep/napi-linux-x64-gnu': 0.38.1
+      '@ast-grep/napi-linux-x64-musl': 0.38.1
+      '@ast-grep/napi-win32-arm64-msvc': 0.38.1
+      '@ast-grep/napi-win32-ia32-msvc': 0.38.1
+      '@ast-grep/napi-win32-x64-msvc': 0.38.1
+
+  '@ast-grep/setup-lang@0.0.3': {}
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -14509,6 +14639,8 @@ snapshots:
   tr46@5.1.1:
     dependencies:
       punycode: 2.3.1
+
+  tree-sitter-cli@0.25.4: {}
 
   tree-sitter-json@0.24.8(tree-sitter@0.22.1):
     dependencies:
