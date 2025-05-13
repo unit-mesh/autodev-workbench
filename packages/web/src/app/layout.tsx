@@ -7,7 +7,7 @@ import { SideNavigation } from "@/layout/navigation/SideNavigation";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AutoDev Work",
+  title: "AutoDev Workbench",
   description: "AI-Powered AutoDevelopment Platform",
 };
 

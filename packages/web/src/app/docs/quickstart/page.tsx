@@ -7,13 +7,13 @@ export default function QuickStartPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">快速开始指南</h1>
-      
+
       <div className="space-y-8">
         {/* 项目概述 */}
         <section>
           <h2 className="text-2xl font-semibold mb-4">项目概述</h2>
           <p className="text-gray-600 mb-4">
-            AutoDev Work 是一个为开发团队提供统一平台的解决方案，旨在通过 AI 技术提升开发效率和质量。
+            AutoDev Workbench 是一个为开发团队提供统一平台的解决方案，旨在通过 AI 技术提升开发效率和质量。
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
@@ -126,4 +126,4 @@ export default function QuickStartPage() {
       </div>
     </div>
   );
-} 
+}
