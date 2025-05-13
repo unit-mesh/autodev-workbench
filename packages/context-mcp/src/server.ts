@@ -22,6 +22,11 @@ import { randomUUID } from "node:crypto";
 export type { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/server/index.js";
 export type { Implementation as McpImplementation } from "@modelcontextprotocol/sdk/types.js";
 
+export type HttpServeOptions = {
+  port: number;
+  hostname?: string;
+};
+
 /**
  * MCP Server Implementation
  * @constructor
@@ -100,7 +105,7 @@ export class MCPServerImpl {
     // more prompts...
   }
 
-  async serveHttp() {
+  async serveHttp(options: HttpServeOptions) {
     this.expressApp.post("/mcp", async (req, res) => {
       // Check for existing session ID
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
@@ -169,7 +174,14 @@ export class MCPServerImpl {
       this.managedHttpServer.close();
       this.managedHttpServer = undefined;
     }
-    this.managedHttpServer = this.expressApp.listen(3000);
+    if (options.hostname) {
+      this.managedHttpServer = this.expressApp.listen(
+        options.port,
+        options.hostname
+      );
+    } else {
+      this.managedHttpServer = this.expressApp.listen(options.port);
+    }
   }
 
   async serveStdio() {
