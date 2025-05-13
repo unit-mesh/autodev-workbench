@@ -31,6 +31,7 @@ interface Guideline {
   id: string
   title: string
   description: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   category: any
   content: string
   language: string

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, CheckCircle, HelpCircle, FileDown, FileSearch, Star } from "lucide-react"
+import { AlertTriangle, HelpCircle, Star } from "lucide-react"
 
 interface QualityAlert {
   id: string
