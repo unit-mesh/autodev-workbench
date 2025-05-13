@@ -35,6 +35,12 @@ interface FeatureItem {
 	description: string;
 }
 
+interface FrameworkItem {
+	value: string;
+	label: string;
+	legacy?: boolean;
+}
+
 export default function GoldenPathPage() {
 	const [metadata, setMetadata] = useState<ProjectMetadata>({
 		name: '',
@@ -68,14 +74,16 @@ export default function GoldenPathPage() {
 		{ value: 'go', label: 'Go' },
 	];
 
-	const frameworks = {
+	const frameworks: Record<string, FrameworkItem[]> = {
 		java: [
-			{ value: 'spring', label: 'Spring Boot' },
+			{ value: 'spring3', label: 'Spring Boot 3.x' },
+			{ value: 'spring2', label: 'Spring Boot 2.x', legacy: true },
 			{ value: 'quarkus', label: 'Quarkus' },
 			{ value: 'micronaut', label: 'Micronaut' },
 		],
 		kotlin: [
-			{ value: 'spring', label: 'Spring Boot' },
+			{ value: 'spring3', label: 'Spring Boot 3.x' },
+			{ value: 'spring2', label: 'Spring Boot 2.x', legacy: true },
 			{ value: 'ktor', label: 'Ktor' },
 		],
 		typescript: [
@@ -153,11 +161,19 @@ export default function GoldenPathPage() {
 				return feature?.label || featureId;
 			});
 
+			// Get framework details including version info for the prompt
+			const frameworkInfo = allFrameworks.find(f => f.value === metadata.framework);
+			const frameworkLabel = frameworkInfo?.label || '';
+			const isLegacy = frameworkInfo?.legacy === true;
+			const frameworkDescription = isLegacy ?
+				`${frameworkLabel} (Legacy version)` : frameworkLabel;
+
 			const prompt = `
-Generate a JSON configuration for a ${currentFrameworkLabel} ${metadata.type} application named "${metadata.name}".
+Generate a JSON configuration for a ${frameworkDescription} ${metadata.type} application named "${metadata.name}".
 Description: ${metadata.description || "No description provided"}
 Programming Language: ${metadata.language}
 Required Features: ${selectedFeatureLabels.join(', ') || "No specific features selected"}
+${isLegacy ? "Note: This is using a legacy version of the framework which may have different dependencies and configurations." : ""}
 
 Please provide a JSON configuration with the following structure:
 {
@@ -176,6 +192,7 @@ Please provide a JSON configuration with the following structure:
   },
   "dependencies": {
     // Key dependencies needed for the project
+    // If using Spring Boot, specify appropriate version-specific dependencies
   },
   "configurations": {
     // Configuration files content or snippets
@@ -303,7 +320,9 @@ Respond with a JSON object containing these fields:
 - description: A clear project description based on the input
 - type: One of these project types: web, api, microservice, cli, library
 - language: Recommended programming language (java, kotlin, typescript, python, go)
-- framework: Appropriate framework for the selected language
+- framework: Appropriate framework for the selected language. 
+  For Java/Kotlin, specify "spring3" for Spring Boot 3.x (current) or "spring2" for Spring Boot 2.x (legacy) if needed.
+
 - features: Array of feature IDs to include (from this list: auth, database, nosql, api-docs, validation, cache, messaging, service-discovery, config-server, api-gateway, distributed-tracing, cloud-storage, serverless, docker, kubernetes, ci-cd, testing, logging, monitoring, chaos-engineering)
 
 Provide only the JSON object without any additional text or explanations.
@@ -549,8 +568,16 @@ Provide only the JSON object without any additional text or explanations.
 										</SelectTrigger>
 										<SelectContent>
 											{frameworks[metadata.language as keyof typeof frameworks]?.map((framework) => (
-												<SelectItem key={framework.value} value={framework.value}>
+												<SelectItem key={framework.value} value={framework.value} className={
+													framework.legacy ? "text-amber-500 flex items-center gap-1" : ""
+												}>
 													{framework.label}
+													{framework.legacy && (
+														<span
+															className="ml-1 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
+															Legacy
+														</span>
+													)}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -627,6 +654,12 @@ Provide only the JSON object without any additional text or explanations.
 							<CardTitle>项目配置 JSON</CardTitle>
 							<CardDescription>
 								{metadata.name} ({metadata.language} / {currentFrameworkLabel})
+								{allFrameworks.find(f => f.value === metadata.framework)?.legacy && (
+									<span
+										className="ml-2 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
+										Legacy
+									</span>
+								)}
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
