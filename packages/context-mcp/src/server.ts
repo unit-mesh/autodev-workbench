@@ -6,8 +6,6 @@ import { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/ser
 import { StdioServerTransport as McpStdioTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport as McpHttpTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { z } from "zod";
-
 import http from "node:http";
 
 import {
@@ -17,6 +15,8 @@ import {
 
 import express, { Application } from "express";
 import { randomUUID } from "node:crypto";
+
+import { installCapabilities } from "./capabilities.js";
 
 // Export types for use in other packages
 export type { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/server/index.js";
@@ -57,50 +57,7 @@ export class MCPServerImpl {
       },
       options
     );
-    this.installHooks();
-  }
-
-  installHooks() {
-    // TODO: Add hooks you like.
-    this.mcpInst.resource(
-      "mcp",
-      new ResourceTemplate("mcp://version", { list: undefined }),
-      async (uri) => {
-        return {
-          contents: [
-            {
-              uri: uri.href,
-              text: this.impl.version,
-            },
-          ],
-        };
-      }
-    );
-    // more resources...
-
-    // Add an addition tool
-    this.mcpInst.tool(
-      "add",
-      { a: z.number(), b: z.number() },
-      async ({ a, b }) => ({
-        content: [{ type: "text", text: String(a + b) }],
-      })
-    );
-    // more tools...
-
-    // Review code prompt
-    this.mcpInst.prompt("review-code", { code: z.string() }, ({ code }) => ({
-      messages: [
-        {
-          role: "user",
-          content: {
-            type: "text",
-            text: `Please review this code:\n\n${code}`,
-          },
-        },
-      ],
-    }));
-    // more prompts...
+    installCapabilities(this.mcpInst, impl);
   }
 
   ensureExpressApp() /* asserts this.expressApp is Application */{
@@ -131,16 +88,17 @@ export class MCPServerImpl {
   async serveHttp(options: HttpServeOptions) {
     this.ensureDestroyed();
     this.ensureExpressApp();
-    this.ensureMcpHttpTransportSessions();
     if (!this.expressApp) throw new Error("Failed to create Express app"); // Type guard
-    if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
     
     this.expressApp.post("/mcp", async (req, res) => {
+      this.ensureMcpHttpTransportSessions();
+      if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
+
       // Check for existing session ID
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
       let transport: McpHttpTransport;
 
-      if (sessionId && this.mcpHttpTransportSessions[sessionId]) {
+      if (sessionId && this.mcpHttpTransportSessions![sessionId]) {
         // Reuse existing transport
         transport = this.mcpHttpTransportSessions[sessionId];
       } else if (!sessionId && isInitializeRequest(req.body)) {
@@ -148,6 +106,9 @@ export class MCPServerImpl {
         transport = new McpHttpTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sessionId) => {
+            this.ensureMcpHttpTransportSessions();
+            if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
+
             // Store the transport by session ID
             this.mcpHttpTransportSessions[sessionId] = transport;
           },
@@ -156,6 +117,9 @@ export class MCPServerImpl {
         // Clean up transport when closed
         transport.onclose = () => {
           if (transport.sessionId) {
+            this.ensureMcpHttpTransportSessions();
+            if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
+
             delete this.mcpHttpTransportSessions[transport.sessionId];
           }
         };
@@ -184,6 +148,9 @@ export class MCPServerImpl {
       res: express.Response
     ) => {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      this.ensureMcpHttpTransportSessions();
+      if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard
+
       if (!sessionId || !this.mcpHttpTransportSessions[sessionId]) {
         res.status(400).send("Invalid or missing session ID");
         return;
