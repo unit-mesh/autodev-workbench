@@ -11,6 +11,7 @@ import { MessageSquare, FileText } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import InputWithSend from "@/components/shared/input-with-send"
+import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
 // Default example requirement with rich context
 const DEFAULT_REQUIREMENT = "我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。";
@@ -158,7 +159,9 @@ export default function RequirementsWorkspace({
                   message.role === "user" ? "ml-auto bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-800",
                 )}
               >
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="whitespace-pre-wrap">
+                  <GenifyMarkdownRender content={message.content} />
+                </div>
                 {message.role === "assistant" && index === conversation.length - 1 && (
                   <div className="flex gap-2 justify-end mt-3">
                     <Button
