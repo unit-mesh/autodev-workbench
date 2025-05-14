@@ -1,8 +1,3 @@
-console.log("hello")
-export type CodeAnalysisResult = {
-	id: string;
-	name: string;
-	description: string;
-	code: string;
-}
-
+export * from "./resource"
+export * from "./converter/ProtoConverter"
+export * from "./converter/PackageHierarchy"

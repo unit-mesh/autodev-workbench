@@ -542,6 +542,9 @@ importers:
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      protobufjs:
+        specifier: ^7.5.1
+        version: 7.5.1
       vscode-ripgrep:
         specifier: ^1.13.2
         version: 1.13.2
