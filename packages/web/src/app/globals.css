@@ -98,7 +98,7 @@ body {
 @layer components {
     /* Markdown 样式 */
     .markdown-paragraph {
-        @apply mb-4;
+        @apply mb-2;
     }
 
     .markdown-blockquote {

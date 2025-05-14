@@ -148,9 +148,8 @@ const defaults = {
   th: (props: any) => <th className="markdown-th" {...props} />,
 };
 
-export default function GenifyMarkdownRender({ content, isShowCopyButton: isShowCopyButton = true }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  content: any,
+export default function GenifyMarkdownRender({ content, isShowCopyButton: isShowCopyButton = false }: {
+  content: string,
   isShowCopyButton?: boolean
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
