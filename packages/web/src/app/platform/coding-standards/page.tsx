@@ -19,6 +19,7 @@ import {
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { toast } from 'sonner';
+import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const languageIconMap: Record<string, any> = {
@@ -112,13 +113,7 @@ const StandardDetailModal: React.FC<StandardDetailModalProps> = ({ standard, isO
 					</div>
 
 					<div className="prose max-w-none">
-						<div dangerouslySetInnerHTML={{
-							__html: standard.content
-								.replace(/^#{1,6}\s+(.*?)$/gm, '<h3 class="text-xl font-bold mt-4 mb-2">$1</h3>')
-								.replace(/^- (.*?)$/gm, '<li class="ml-4">$1</li>')
-								.replace(/<li/g, '<li class="my-1"')
-								.split('\n\n').join('<br />')
-						}}/>
+						<GenifyMarkdownRender content={standard.content} isShowCopyButton={true} />
 					</div>
 				</div>
 			</div>
