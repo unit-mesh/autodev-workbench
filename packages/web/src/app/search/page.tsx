@@ -211,8 +211,8 @@ export default function SearchPage() {
             <div className="flex-1">
               <div className="flex justify-between items-center mb-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Found <strong>{searchResults.length}</strong> results for "
-                  <strong className="text-blue-600 dark:text-blue-400">{searchQuery}</strong>"
+                  Found <strong>{searchResults.length}</strong> results for &#34;
+                  <strong className="text-blue-600 dark:text-blue-400">{searchQuery}</strong>&#34;
                 </p>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Sort by:</span>

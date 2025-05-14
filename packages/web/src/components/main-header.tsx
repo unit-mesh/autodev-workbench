@@ -27,7 +27,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { useMediaQuery } from "@/hooks/use-media-query"
 import { useState } from "react"
 
 interface MainHeaderProps {
@@ -50,7 +49,7 @@ export function MainHeader({
   setTheme,
 }: MainHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const isTablet = useMediaQuery("(min-width: 768px)")
+  // const isTablet = useMediaQuery("(min-width: 768px)")
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur px-4 md:px-6">
@@ -141,7 +140,7 @@ export function MainHeader({
                   <div className="h-2 w-2 mt-1.5 rounded-full bg-gray-300"></div>
                   <div>
                     <p className="text-sm font-medium">新教程已发布</p>
-                    <p className="text-xs text-muted-foreground">查看"使用GraphQL API的最佳实践"</p>
+                    <p className="text-xs text-muted-foreground">查看&#34;使用GraphQL API的最佳实践&#34;</p>
                     <p className="text-xs text-muted-foreground mt-1">昨天</p>
                   </div>
                 </div>

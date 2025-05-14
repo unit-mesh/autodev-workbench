@@ -20,7 +20,7 @@ import DocSidebar from "@/components/doc-sidebar"
 import TableOfContents from "@/components/table-of-contents"
 import CodeBlock from "@/components/code-block"
 
-export default function ApiDocPage({ params }: { params: { slug: string[] } }) {
+export default function ApiDocPage() {
   // This would normally be fetched from a CMS or API
   const apiEndpoint = {
     name: "List Users",
@@ -365,7 +365,7 @@ function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-950/60 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-8 lg:gap-10">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/packages/web/public" className="flex items-center space-x-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -495,7 +495,7 @@ function Footer() {
     <footer className="w-full border-t bg-white dark:bg-gray-950">
       <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
         <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/packages/web/public" className="flex items-center space-x-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"

@@ -17,7 +17,7 @@ interface AIAssistantProps {
   isTablet: boolean
 }
 
-export function AIAssistant({ closeAssistant, currentDocId, isTablet }: AIAssistantProps) {
+export function AIAssistant({ closeAssistant, isTablet }: AIAssistantProps) {
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
     {
       role: "assistant",

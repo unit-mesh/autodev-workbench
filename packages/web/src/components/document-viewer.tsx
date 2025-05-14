@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -29,7 +29,7 @@ export function DocumentViewer({ documentId }: DocumentViewerProps) {
   const [copied, setCopied] = useState(false)
   const [feedbackGiven, setFeedbackGiven] = useState<"up" | "down" | null>(null)
   const [isStarred, setIsStarred] = useState(false)
-  const isTablet = useMediaQuery("(min-width: 768px)")
+  // const isTablet = useMediaQuery("(min-width: 768px)")
   const isDesktop = useMediaQuery("(min-width: 1024px)")
 
   const copyCode = () => {
@@ -47,6 +47,12 @@ export function DocumentViewer({ documentId }: DocumentViewerProps) {
 
   // 这里根据documentId加载不同的文档内容
   // 在实际应用中，这里应该从API或状态管理中获取文档数据
+  useEffect(() => {
+    if (documentId) {
+      // 根据documentId加载文档内容
+      // 例如：fetchDocument(documentId)
+    }
+  })
 
   return (
     <div className="flex h-[calc(100vh-64px)]">

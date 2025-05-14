@@ -39,7 +39,7 @@ export function Dashboard({ openDocument }: DashboardProps) {
     { id: "activity", title: "活动摘要", type: "activity", size: "large" },
   ])
 
-  const isTablet = useMediaQuery("(min-width: 768px)")
+  // const isTablet = useMediaQuery("(min-width: 768px)")
   const isDesktop = useMediaQuery("(min-width: 1024px)")
 
   const removeWidget = (id: string) => {
@@ -319,7 +319,7 @@ export function Dashboard({ openDocument }: DashboardProps) {
                           </div>
                           <div>
                             <div className="text-sm">
-                              <span className="font-medium">新教程已发布</span> - 查看"使用GraphQL API的最佳实践"
+                              <span className="font-medium">新教程已发布</span> - 查看&#34;使用GraphQL API的最佳实践&#34;
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">昨天</div>
                           </div>
