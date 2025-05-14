@@ -8,7 +8,7 @@ import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const navigationItems = [
-	{ name: "首页", href: "/" },
+	{ name: "驾驶舱", href: "/cockpit" },
 	{ name: "平台知识", href: "/platform" },
 	{ name: "智能中枢", href: "/ai-hub" },
 	{ name: "AI 工具", href: "/ai-tools" },
