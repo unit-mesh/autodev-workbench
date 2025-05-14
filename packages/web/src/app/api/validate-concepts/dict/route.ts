@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { validateConcepts } from "@/app/api/chat/ai-validator"
+import { validateDictConcepts } from "@/app/api/chat/ai-validator"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const validationResults = await validateConcepts(concepts, codeContext)
+    const validationResults = await validateDictConcepts(concepts, codeContext)
 
     return NextResponse.json(validationResults)
   } catch (error) {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, Book, Network, Plus, Loader2, Check, Info, Tag } from "lucide-react"
+import { Upload, FileText, Book, Network, Plus, Loader2, Check, Info, Tag, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import KnowledgeGraphPopup from "./knowledge-graph-popup"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -51,11 +51,11 @@ interface KnowledgeHubProps {
   extractedKeywords?: string[] // 添加新属性
 }
 
-export default function KnowledgeHub({ 
-  activeSource, 
-  onSourceSelect, 
-  projectId, 
-  extractedKeywords = [] 
+export default function KnowledgeHub({
+  activeSource,
+  onSourceSelect,
+  projectId,
+  extractedKeywords = []
 }: KnowledgeHubProps) {
   const [showKnowledgeGraphPopup, setShowKnowledgeGraphPopup] = useState(false)
   const [glossaryTerms, setGlossaryTerms] = useState<ConceptDictionary[]>([])
@@ -65,6 +65,10 @@ export default function KnowledgeHub({
   const [isLoadingGuidelines, setIsLoadingGuidelines] = useState(false)
   const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
   const [selectedGuidelines, setSelectedGuidelines] = useState<string[]>([])
+  const [matchedKeywords, setMatchedKeywords] = useState<string[]>([])
+  const [isValidatingKeywords, setIsValidatingKeywords] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [validationResults, setValidationResults] = useState<any>(null)
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
@@ -118,14 +122,58 @@ export default function KnowledgeHub({
     fetchGuidelines();
   }, [projectId]);
 
-  const implicitKnowledge = [
-    {
-      id: "code-insight-1",
-      title: "从代码库分析",
-      source: "会议室预订API",
-      insight: "检测到现有API支持按部门筛选会议室，新系统可能需要保持此功能",
+  useEffect(() => {
+    if (extractedKeywords.length > 0 && glossaryTerms.length > 0) {
+      // 找出匹配或相似的关键词
+      const matched = extractedKeywords.filter(keyword =>
+        glossaryTerms.some(term =>
+          term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
+          term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
+          keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
+          keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
+        )
+      );
+      setMatchedKeywords(matched);
+    } else {
+      setMatchedKeywords([]);
     }
-  ]
+  }, [extractedKeywords, glossaryTerms]);
+
+  const validateKeywordsWithLLM = async () => {
+    if (extractedKeywords.length === 0) return;
+
+    setIsValidatingKeywords(true);
+    setValidationResults(null);
+
+    try {
+      const response = await fetch('/api/validate-concepts/dict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          concepts: extractedKeywords,
+          codeContext: glossaryTerms.map(term => `${term.termChinese}(${term.termEnglish}): ${term.descChinese}`).join('\n')
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('验证关键词失败');
+      }
+
+      const data = await response.json();
+      setValidationResults(data);
+    } catch (error) {
+      console.error('验证关键词出错:', error);
+      setValidationResults({
+        success: false,
+        message: '验证失败',
+        error: error instanceof Error ? error.message : '未知错误'
+      });
+    } finally {
+      setIsValidatingKeywords(false);
+    }
+  };
 
   const getItemTypeIcon = (category: string) => {
     // check category is string if not return with type
@@ -145,6 +193,46 @@ export default function KnowledgeHub({
         : [...prev, guidelineId]
     );
   };
+
+  const getMatchingTermForKeyword = (keyword: string) => {
+    return glossaryTerms.find(term =>
+      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
+      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
+    );
+  };
+
+  // 添加检查词汇表条目是否与关键词匹配的函数
+  const isTermMatchingAnyKeyword = (term: ConceptDictionary) => {
+    if (extractedKeywords.length === 0) return false;
+
+    return extractedKeywords.some(keyword =>
+      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
+      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
+    );
+  };
+
+  // 获取词汇表条目匹配的关键词
+  const getMatchingKeywordsForTerm = (term: ConceptDictionary) => {
+    return extractedKeywords.filter(keyword =>
+      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
+      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
+      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
+    );
+  };
+
+  const implicitKnowledge = [
+    {
+      id: "code-insight-1",
+      title: "从代码库分析",
+      source: "会议室预订API",
+      insight: "检测到现有API支持按部门筛选会议室，新系统可能需要保持此功能",
+    }
+  ]
 
   return (
     <div className="bg-white border-r border-gray-200 flex flex-col h-full">
@@ -292,11 +380,11 @@ export default function KnowledgeHub({
         </div>
       </div>
 
-      {/* 添加提取的关键词部分 */}
+      {/* 修改提取的关键词部分 */}
       {extractedKeywords.length > 0 && (
         <div className="border-t border-gray-200 p-3">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-medium text-gray-700">提取的关键词</h3>
+            <h3 className="text-sm font-semibold text-gray-700">提取的关键词</h3>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -311,21 +399,83 @@ export default function KnowledgeHub({
             </TooltipProvider>
           </div>
           <div className="flex flex-wrap gap-1 mb-2">
-            {extractedKeywords.map((keyword, index) => (
-              <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                <Tag className="h-3 w-3" />
-                {keyword}
-              </Badge>
-            ))}
+            {extractedKeywords.map((keyword, index) => {
+              const isMatched = matchedKeywords.includes(keyword);
+              const matchingTerm = isMatched ? getMatchingTermForKeyword(keyword) : null;
+
+              return (
+                <TooltipProvider key={index}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant={isMatched ? "default" : "secondary"}
+                        className={`flex items-center gap-1 cursor-help ${
+                          isMatched ? "bg-green-100 text-green-800 hover:bg-green-200" : ""
+                        }`}
+                      >
+                        <Tag className="h-3 w-3" />
+                        {keyword}
+                        {isMatched && <Check className="h-3 w-3 ml-1" />}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isMatched ? (
+                        <div className="text-xs max-w-60">
+                          <p className="font-medium">已在词汇表中找到匹配:</p>
+                          <p>{matchingTerm?.termChinese} ({matchingTerm?.termEnglish})</p>
+                          <p className="text-gray-500 mt-1">{matchingTerm?.descChinese}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs">未在当前词汇表中找到匹配</p>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={validateKeywordsWithLLM}
+              disabled={isValidatingKeywords || extractedKeywords.length === 0}
+            >
+              {isValidatingKeywords ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  验证中
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  智能验证
+                </>
+              )}
+            </Button>
             <Button variant="outline" size="sm" className="text-xs">
               添加到词汇表
             </Button>
           </div>
+
+          {validationResults && (
+            <div className="mt-2 p-2 border rounded bg-gray-50 text-xs">
+              <div className="font-medium mb-1">验证结果:</div>
+              <div className={validationResults.success ? "text-green-600" : "text-red-600"}>
+                {validationResults.message || "完成关键词验证"}
+              </div>
+              {validationResults.suggestions && (
+                <div className="mt-1">
+                  <span className="font-medium">建议:</span> {validationResults.suggestions}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
+      {/* 项目词汇表部分 - 添加高亮功能 */}
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-medium text-gray-700">项目词汇表</h3>
@@ -348,13 +498,49 @@ export default function KnowledgeHub({
             </div>
           ) : (
             <div className="space-y-2">
-              {glossaryTerms.map((item) => (
-                <div key={item.id} className="text-xs">
-                  <span className="font-medium text-gray-800">{item.termChinese}</span>
-                  <span className="text-gray-400"> ({item.termEnglish})</span>
-                  <span className="text-gray-500"> - {item.descChinese}</span>
-                </div>
-              ))}
+              {glossaryTerms.map((item) => {
+                const isMatched = isTermMatchingAnyKeyword(item);
+                const matchingKeywords = isMatched ? getMatchingKeywordsForTerm(item) : [];
+
+                return (
+                  <TooltipProvider key={item.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`text-xs p-1.5 rounded-md ${
+                            isMatched 
+                              ? "bg-green-50 border border-green-100" 
+                              : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1">
+                            <span className={`font-medium ${isMatched ? "text-green-800" : "text-gray-800"}`}>
+                              {item.termChinese}
+                            </span>
+                            <span className="text-gray-400">({item.termEnglish})</span>
+                            {isMatched && <Check className="h-3 w-3 text-green-600" />}
+                          </div>
+                          <span className="text-gray-500"> - {item.descChinese}</span>
+                        </div>
+                      </TooltipTrigger>
+                      {isMatched && (
+                        <TooltipContent>
+                          <div className="text-xs max-w-60">
+                            <p className="font-medium">匹配关键词:</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {matchingKeywords.map((keyword, i) => (
+                                <Badge key={i} variant="outline" className="bg-green-50 text-green-800">
+                                  {keyword}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
             </div>
           )}
         </ScrollArea>

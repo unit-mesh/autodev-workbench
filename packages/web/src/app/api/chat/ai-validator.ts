@@ -74,3 +74,48 @@ Respond in the following JSON format:
     }
   }
 }
+
+/**
+ * 使用大语言模型验证提取的概念
+ * @param concepts 提取的关键词/概念
+ * @param codeContext 项目上下文，如词汇表数据
+ */
+export async function validateDictConcepts(concepts: string[], codeContext: string) {
+  try {
+    const response = await reply([
+      {
+        role: 'system',
+        content: '你是一个专业的领域驱动设计概念验证助手，你需要帮助验证提取的关键词是否准确、相关，并提供改进建议。'
+      },
+      {
+        role: 'user',
+        content: `请分析以下从需求文本中提取的关键词/概念，并与项目现有的词汇表进行比较，提供专业的分析和建议。
+
+关键词: ${concepts.join(', ')}
+
+项目词汇表:
+${codeContext}
+            
+请提供简短的分析报告：
+1. 这些关键词是否准确地代表了领域概念
+2. 是否有任何词义模糊或歧义的概念需要澄清
+3. 与现有词汇表的整合建议
+4. 其他可能缺失的相关概念`
+      }
+    ]);
+
+    return {
+      success: true,
+      message: '关键词验证完成',
+      suggestions: response || '无具体建议',
+      details: response
+    };
+  } catch (error) {
+    console.error('验证概念时出错:', error);
+    return {
+      success: false,
+      message: '验证过程出错',
+      error: error instanceof Error ? error.message : '未知错误'
+    };
+  }
+}
