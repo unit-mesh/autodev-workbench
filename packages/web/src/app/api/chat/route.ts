@@ -39,12 +39,13 @@ export async function POST(req: Request) {
             const data = [
               `id: ${conversationId}\n`,
               `event: message\n`,
-              `data: ${part}\n\n`,
+              `data: ${JSON.stringify({ id: conversationId, text: part })}\n\n`,
             ];
 
             controller.enqueue(encoder.encode(data.join("")));
           }
 
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           saveToDB(content);
         },
       });

@@ -64,12 +64,14 @@ export default function Home() {
 				.pipeThrough(new TextDecoderStream())
 				.pipeThrough(new EventSourceParserStream())
 
-			for await (const event of eventStream) {
-				if (!conversationId && event.id) {
-					setConversationId(event.id)
+			for await (const { id, data } of eventStream) {
+				if (data === "[DONE]")  break
+
+				if (!conversationId && id) {
+					setConversationId(id)
 				}
 
-				aiResponse += event.data
+				aiResponse += JSON.parse(data).text
 
 				setConversation(prev => {
 					const lastMessage = prev[prev.length - 1]
@@ -80,8 +82,6 @@ export default function Home() {
 				})
 			}
 
-			console.log("Done")
-			setIsLoading(false)
 			handleAIResponse(aiResponse, newConversation.length)
 		} catch (error) {
 			console.error("获取 AI 回复时出错:", error)
