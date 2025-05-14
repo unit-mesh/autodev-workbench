@@ -1,151 +1,122 @@
-/// AI Generated content
-import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import {NextResponse} from 'next/server';
+import {Status} from '@prisma/client';
+import {prisma} from "../../../../../prisma/prisma";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-	const client = createClient();
-	try {
-		await client.connect();
-		const id = Number((await params).id);
-		if (isNaN(id)) {
-			return NextResponse.json(
-				{ error: '无效的规范ID' },
-				{ status: 400 }
-			);
-		}
+export async function GET(request: Request, {params}: { params: Promise<{ id: string }> }) {
+    try {
+        const id = Number((await params).id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                {error: '无效的规范ID'},
+                {status: 400}
+            );
+        }
 
-		const { rows } = await client.sql`
-        SELECT *
-        FROM "Guideline"
-        WHERE id = ${id}
-		`;
+        const guideline = await prisma.guideline.findUnique({
+            where: {id}
+        });
 
-		if (rows.length === 0) {
-			return NextResponse.json(
-				{ error: '找不到规范' },
-				{ status: 404 }
-			);
-		}
+        if (!guideline) {
+            return NextResponse.json(
+                {error: '找不到规范'},
+                {status: 404}
+            );
+        }
 
-		return NextResponse.json(rows[0]);
-	} catch (error) {
-		console.error('获取规范详情失败:', error);
-		return NextResponse.json(
-			{ error: '获取规范详情失败' },
-			{ status: 500 }
-		);
-	} finally {
-		await client.end();
-	}
+        return NextResponse.json(guideline);
+    } catch (error) {
+        console.error('获取规范详情失败:', error);
+        return NextResponse.json(
+            {error: '获取规范详情失败'},
+            {status: 500}
+        );
+    }
 }
 
-// 更新规范
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-	const client = createClient();
-	try {
-		await client.connect();
-		const id = Number((await params).id);
-		if (isNaN(id)) {
-			return NextResponse.json(
-				{ error: '无效的规范ID' },
-				{ status: 400 }
-			);
-		}
+export async function PUT(request: Request, {params}: { params: Promise<{ id: string }> }) {
+    try {
+        const id = Number((await params).id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                {error: '无效的规范ID'},
+                {status: 400}
+            );
+        }
 
-		const body = await request.json();
+        const body = await request.json();
 
-		// 检查该规范是否存在
-		const { rows: existingRows } = await client.sql`
-        SELECT *
-        FROM "Guideline"
-        WHERE id = ${id}
-		`;
+        // 检查规范是否存在
+        const existingGuideline = await prisma.guideline.findUnique({
+            where: {id}
+        });
 
-		if (existingRows.length === 0) {
-			return NextResponse.json(
-				{ error: '找不到规范' },
-				{ status: 404 }
-			);
-		}
+        if (!existingGuideline) {
+            return NextResponse.json(
+                {error: '找不到规范'},
+                {status: 404}
+            );
+        }
 
-		// 将对象转换为JSON字符串
-		const categoryJson = JSON.stringify(body.category);
-		const now = new Date();
+        // 更新规范
+        const updatedGuideline = await prisma.guideline.update({
+            where: {id},
+            data: {
+                title: body.title,
+                description: body.description || '',
+                category: body.category,
+                language: body.language || 'general',
+                content: body.content,
+                version: body.version || '1.0.0',
+                lastUpdated: new Date(),
+                popularity: body.popularity || 0,
+                status: (body.status as Status) || 'DRAFT',
+                updatedAt: new Date()
+            }
+        });
 
-		// 更新规范
-		const { rows } = await client.sql`
-        UPDATE "Guideline"
-        SET "title"       = ${body.title},
-            "description" = ${body.description || ''},
-            "category"    = ${categoryJson},
-            "language"    = ${body.language || 'general'},
-            "content"     = ${body.content},
-            "version"     = ${body.version || '1.0.0'},
-            "lastUpdated" = ${now.toDateString()},
-            "popularity"  = ${body.popularity || 0},
-            "status"      = ${body.status || 'DRAFT'},
-            "updatedAt"   = ${now.toDateString()}
-        WHERE id = ${id}
-        RETURNING *
-		`;
-
-		return NextResponse.json(rows[0]);
-	} catch (error) {
-		console.error('更新规范失败:', error);
-		return NextResponse.json(
-			{ error: '更新规范失败' },
-			{ status: 500 }
-		);
-	} finally {
-		await client.end();
-	}
+        return NextResponse.json(updatedGuideline);
+    } catch (error) {
+        console.error('更新规范失败:', error);
+        return NextResponse.json(
+            {error: '更新规范失败'},
+            {status: 500}
+        );
+    }
 }
 
-// 删除规范
-export async function DELETE(
-	request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) {
-	const client = createClient();
-	try {
-		await client.connect();
-		const id = Number((await params).id);
-		if (isNaN(id)) {
-			return NextResponse.json(
-				{ error: '无效的规范ID' },
-				{ status: 400 }
-			);
-		}
+export async function DELETE(request: Request, {params}: { params: Promise<{ id: string }> }) {
+    try {
+        const id = Number((await params).id);
+        if (isNaN(id)) {
+            return NextResponse.json(
+                {error: '无效的规范ID'},
+                {status: 400}
+            );
+        }
 
-		// 检查该规范是否存在
-		const { rows: existingRows } = await client.sql`
-        SELECT *
-        FROM "Guideline"
-        WHERE id = ${id}
-		`;
+        // 检查规范是否存在
+        const existingGuideline = await prisma.guideline.findUnique({
+            where: {id}
+        });
 
-		if (existingRows.length === 0) {
-			return NextResponse.json(
-				{ error: '找不到规范' },
-				{ status: 404 }
-			);
-		}
+        if (!existingGuideline) {
+            return NextResponse.json(
+                {error: '找不到规范'},
+                {status: 404}
+            );
+        }
 
-		// 删除规范
-		await client.sql`
-        DELETE
-        FROM "Guideline"
-        WHERE id = ${id}
-		`;
+        // 删除规范
+        await prisma.guideline.delete({
+            where: {id}
+        });
 
-		return NextResponse.json({ success: true });
-	} catch (error) {
-		console.error('删除规范失败:', error);
-		return NextResponse.json(
-			{ error: '删除规范失败' },
-			{ status: 500 }
-		);
-	} finally {
-		await client.end();
-	}
+        return NextResponse.json({success: true});
+    } catch (error) {
+        console.error('删除规范失败:', error);
+        return NextResponse.json(
+            {error: '删除规范失败'},
+            {status: 500}
+        );
+    }
 }
