@@ -2,9 +2,9 @@ import {NextResponse} from 'next/server';
 import {Status} from '@prisma/client';
 import {prisma} from "../../../../../prisma/prisma";
 
-export async function GET(request: Request, {params}: { params: { id: string } }) {
+export async function GET(request: Request, {params}: { params: Promise<{ id: string }> }) {
     try {
-        const id = Number(params.id);
+        const id = Number((await params).id);
         if (isNaN(id)) {
             return NextResponse.json(
                 {error: '无效的规范ID'},
@@ -33,9 +33,9 @@ export async function GET(request: Request, {params}: { params: { id: string } }
     }
 }
 
-export async function PUT(request: Request, {params}: { params: { id: string } }) {
+export async function PUT(request: Request, {params}: { params: Promise<{ id: string }> }) {
     try {
-        const id = Number(params.id);
+        const id = Number((await params).id);
         if (isNaN(id)) {
             return NextResponse.json(
                 {error: '无效的规范ID'},
@@ -84,9 +84,9 @@ export async function PUT(request: Request, {params}: { params: { id: string } }
     }
 }
 
-export async function DELETE(request: Request, {params}: { params: { id: string } }) {
+export async function DELETE(request: Request, {params}: { params: Promise<{ id: string }> }) {
     try {
-        const id = Number(params.id);
+        const id = Number((await params).id);
         if (isNaN(id)) {
             return NextResponse.json(
                 {error: '无效的规范ID'},
