@@ -43,7 +43,6 @@ export default function InputWithSend({
 
     setIsAnalyzingKeywords(true);
     try {
-      // Call the API to analyze keywords
       const keywordPrompt = `
 Please analyze the following text and extract the key domain terms and concepts. 
 Return only a JSON array of strings with the extracted keywords.
@@ -99,7 +98,6 @@ ${value}
             .filter((k: string) => k && !k.startsWith('"') && !k.startsWith('[') && !k.startsWith(']'));
         }
 
-        console.log(keywords)
         setExtractedKeywords(keywords);
       } catch (error) {
         console.error("Error parsing keywords:", error);
@@ -134,7 +132,7 @@ ${value}
               className="h-8 w-8"
               title="AI 分析并优化需求"
             >
-              {isAnalyzing ? (
+              {isLoading ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
               ) : (
                 <Wand2 className="h-4 w-4" />
