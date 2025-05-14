@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MessageSquare, FileText, Wand2 } from "lucide-react"
+import { MessageSquare, FileText } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import InputWithSend from "@/components/shared/input-with-send"
@@ -134,6 +134,7 @@ export default function RequirementsWorkspace({
             value={currentRequirement}
             onChange={(e) => setCurrentRequirement(e.target.value)}
             onSend={handleSend}
+            keywordsAnalyze={true}
             onAnalyze={analyzeRequirement}
             isLoading={isLoading}
             isAnalyzing={isAnalyzing}
