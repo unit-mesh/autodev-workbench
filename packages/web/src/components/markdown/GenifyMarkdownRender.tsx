@@ -35,7 +35,7 @@ const defaults = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   p: (props: any) => {
     const { children } = props;
-    return <p className="mb-2">{children}</p>;
+    return <p className="markdown-paragraph">{children}</p>;
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   em: (props: any) => {
@@ -46,9 +46,7 @@ const defaults = {
   blockquote: (props: any) => {
     const { children } = props;
     return (
-      <blockquote className="p-2 bg-gray-100 rounded text-gray-600">
-        {children}
-      </blockquote>
+      <blockquote className="markdown-blockquote">{children}</blockquote>
     );
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,11 +54,11 @@ const defaults = {
     const { children } = props;
     return <del>{children}</del>;
   },
-  hr: () => <hr className="my-4 border-t border-gray-300" />,
+  hr: () => <hr className="markdown-hr" />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  a: (props: any) => <a className="text-blue-600 underline" {...props} />,
+  a: (props: any) => <a className="markdown-link" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  img: (props: any) => <img className="max-w-full h-auto" {...props} />,
+  img: (props: any) => <img className="markdown-image" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   text: (props: any) => {
     const { children } = props;
@@ -68,12 +66,11 @@ const defaults = {
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ul: (props: any) => {
-    const { ordered, children, depth } = props;
-    let listStyle = "list-disc";
-    if (ordered) listStyle = "list-decimal";
-    if (depth === 1) listStyle = "list-circle";
+    const { children, depth } = props;
+    let listClass = "markdown-list";
+    if (depth === 1) listClass += " markdown-list-nested";
     return (
-      <ul className={`pl-4 ${listStyle} space-y-2`} {...props}>
+      <ul className={listClass} {...props}>
         {children}
       </ul>
     );
@@ -81,10 +78,10 @@ const defaults = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ol: (props: any) => {
     const { children, depth } = props;
-    let listStyle = "list-decimal";
-    if (depth === 1) listStyle = "list-circle";
+    let listClass = "markdown-list markdown-list-ordered";
+    if (depth === 1) listClass += " markdown-list-nested";
     return (
-      <ol className={`pl-4 ${listStyle} space-y-2`} {...props}>
+      <ol className={listClass} {...props}>
         {children}
       </ol>
     );
@@ -92,11 +89,15 @@ const defaults = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   li: (props: any) => {
     const { children, checked } = props;
+    let itemClass = "markdown-list-item";
+
+    if (checked !== null) {
+      // 对于任务列表项，添加特定的类，但不使用自定义span元素
+      itemClass += checked ? " markdown-task-checked" : " markdown-task-unchecked";
+    }
+
     return (
-      <li className={`list-none ${checked !== null ? "pl-6" : ""}`}>
-        {checked !== null ? (
-          <input type="checkbox" checked={checked} readOnly className="mr-2" />
-        ) : null}
+      <li className={itemClass}>
         {children}
       </li>
     );
@@ -107,34 +108,25 @@ const defaults = {
     const level = parseInt(props.node.tagName.replace("h", ""), 10);
     const HeadingTag = `h${level}`;
 
-    const sizeClasses = {
-      1: "text-4xl font-extrabold",
-      2: "text-3xl font-bold",
-      3: "text-2xl font-semibold",
-      4: "text-xl font-semibold",
-      5: "text-lg font-medium",
-      6: "text-base font-medium",
-    };
-
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    return <HeadingTag className={`${sizeClasses[level] || "text-base"} my-2`}>
+    return <HeadingTag className={`markdown-heading markdown-heading-${level}`}>
       {children}
     </HeadingTag>;
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pre: (props: any) => {
     const { children } = props;
-    return <pre className="p-4 bg-gray-200 rounded">{children}</pre>;
+    return <pre className="markdown-pre">{children}</pre>;
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  table: (props: any) => <table className="min-w-full border" {...props} />,
+  table: (props: any) => <table className="markdown-table" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  thead: (props: any) => <thead className="bg-gray-100" {...props} />,
+  thead: (props: any) => <thead className="markdown-thead" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tbody: (props: any) => <tbody {...props} />,
+  tbody: (props: any) => <tbody className="markdown-tbody" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tr: (props: any) => <tr className="border-b" {...props} />,
+  tr: (props: any) => <tr className="markdown-tr" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   td: (props: any) => {
     const { children } = props;
@@ -150,10 +142,10 @@ const defaults = {
       return child;
     });
 
-    return <td className="p-2 border">{renderedChildren}</td>;
+    return <td className="markdown-td">{renderedChildren}</td>;
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  th: (props: any) => <th className="p-2 border font-semibold text-left" {...props} />,
+  th: (props: any) => <th className="markdown-th" {...props} />,
 };
 
 export default function GenifyMarkdownRender({ content, isShowCopyButton: isShowCopyButton = true }: {
@@ -212,13 +204,13 @@ export default function GenifyMarkdownRender({ content, isShowCopyButton: isShow
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 h-8 w-8 transition-opacity"
+          className="markdown-copy-button"
           onClick={copyToClipboard}
         >
           {isCopied ? (
-            <Check className="h-4 w-4" />
+            <Check className="markdown-icon" />
           ) : (
-            <Copy className="h-4 w-4" />
+            <Copy className="markdown-icon" />
           )}
         </Button>
       )}

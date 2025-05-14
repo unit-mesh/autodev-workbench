@@ -159,7 +159,7 @@ export default function RequirementsWorkspace({
                   message.role === "user" ? "ml-auto bg-blue-100 text-blue-900" : "bg-gray-100 text-gray-800",
                 )}
               >
-                <div className="whitespace-pre-wrap">
+                <div>
                   <GenifyMarkdownRender content={message.content} />
                 </div>
                 {message.role === "assistant" && index === conversation.length - 1 && (

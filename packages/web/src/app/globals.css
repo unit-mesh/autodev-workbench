@@ -93,6 +93,113 @@ body {
   }
 }
 
+@layer components {
+  /* Markdown 样式 */
+  .markdown-paragraph {
+    @apply mb-4;
+  }
+  
+  .markdown-blockquote {
+    @apply p-2 bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-300 dark:border-gray-600 rounded my-4;
+  }
+  
+  .markdown-hr {
+    @apply my-4 border-t border-gray-300 dark:border-gray-600;
+  }
+  
+  .markdown-link {
+    @apply text-blue-600 dark:text-blue-400 hover:underline;
+  }
+  
+  .markdown-image {
+    @apply max-w-full h-auto rounded my-2;
+  }
+  
+  .markdown-list {
+    @apply pl-6 my-4 space-y-2;
+  }
+  
+  .markdown-list-ordered {
+    @apply list-decimal;
+  }
+  
+  .markdown-list-nested {
+    @apply mt-2;
+  }
+  
+  .markdown-list-item {
+    @apply list-disc;
+  }
+  
+  .markdown-task-checked {
+    @apply list-none relative pl-6 before:content-['✓'] before:absolute before:left-0 before:text-green-500;
+  }
+  
+  .markdown-task-unchecked {
+    @apply list-none relative pl-6 before:content-['□'] before:absolute before:left-0;
+  }
+  
+  .markdown-heading {
+    @apply font-bold my-4;
+  }
+  
+  .markdown-heading-1 {
+    @apply text-3xl;
+  }
+  
+  .markdown-heading-2 {
+    @apply text-2xl;
+  }
+  
+  .markdown-heading-3 {
+    @apply text-xl;
+  }
+  
+  .markdown-heading-4 {
+    @apply text-lg;
+  }
+  
+  .markdown-heading-5 {
+    @apply text-base;
+  }
+  
+  .markdown-heading-6 {
+    @apply text-sm;
+  }
+  
+  .markdown-pre {
+    @apply p-4 bg-gray-100 dark:bg-gray-800 rounded my-4 overflow-auto;
+  }
+  
+  .markdown-table {
+    @apply min-w-full border border-collapse my-4;
+  }
+  
+  .markdown-thead {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+  
+  .markdown-th {
+    @apply p-2 border border-gray-300 dark:border-gray-600 font-semibold text-left;
+  }
+  
+  .markdown-tr {
+    @apply border-b border-gray-300 dark:border-gray-600;
+  }
+  
+  .markdown-td {
+    @apply p-2 border border-gray-300 dark:border-gray-600;
+  }
+  
+  .markdown-copy-button {
+    @apply absolute top-2 right-2 h-8 w-8 p-1 opacity-70 hover:opacity-100 transition-opacity;
+  }
+  
+  .markdown-icon {
+    @apply h-4 w-4;
+  }
+}
+
 .brand {
   font-family: sans-serif;
   color: #3b4151;

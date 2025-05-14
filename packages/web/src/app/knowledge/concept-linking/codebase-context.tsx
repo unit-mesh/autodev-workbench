@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Loader2, FileText, RefreshCw, Code } from "lucide-react"
@@ -14,6 +14,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
 export function CodebaseContext() {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,8 +246,12 @@ export function CodebaseContext() {
 																{item.code}
 															</SyntaxHighlighter>
 														) : (
-															<div className="text-sm whitespace-pre-wrap overflow-y-auto max-h-[400px]">
-																{item.content || "No content available"}
+															<div className="overflow-y-auto max-h-[400px]">
+																{ item.content ? (
+																	<GenifyMarkdownRender content={item.content} />
+																) : (
+																	<div className="text-sm text-slate-500 italic">No content available</div>
+																)}
 															</div>
 														)}
 													</div>
