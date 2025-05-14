@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MainHeader } from "@/components/main-header"
-import { MainSidebar } from "@/components/main-sidebar"
-import { Dashboard } from "@/components/dashboard"
-import { DocumentViewer } from "@/components/document-viewer"
-import { AIAssistant } from "@/components/ai-assistant"
+import { MainHeader } from "@/components/document/main-header"
+import { MainSidebar } from "@/components/document/main-sidebar"
+import { Dashboard } from "@/components/document/dashboard"
+import { DocumentViewer } from "@/components/document/document-viewer"
+import { AIAssistant } from "@/components/document/ai-assistant"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { SearchDialog } from "@/components/search-dialog"
+import { SearchDialog } from "@/components/document/search-dialog"
 import { cn } from "@/lib/utils"
 
 export function DeveloperCockpit() {
