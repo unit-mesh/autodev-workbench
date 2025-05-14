@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Send, MessageSquare, FileText } from "lucide-react"
+import { Send, MessageSquare, FileText, Wand2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+
+// Default example requirement with rich context
+const DEFAULT_REQUIREMENT = "我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。";
 
 interface RequirementsWorkspaceProps {
   currentRequirement: string
@@ -41,7 +44,15 @@ export default function RequirementsWorkspace({
   const [activeTab, setActiveTab] = useState("conversation")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Set default requirement if empty and conversation is empty
+  useEffect(() => {
+    if (conversation.length === 0 && !currentRequirement) {
+      setCurrentRequirement(DEFAULT_REQUIREMENT);
+    }
+  }, [conversation.length, currentRequirement, setCurrentRequirement]);
 
   useEffect(() => {
     if (messagesEndRef.current && activeTab === "conversation") {
@@ -68,6 +79,33 @@ export default function RequirementsWorkspace({
     }
   }
 
+  const analyzeRequirement = async () => {
+    if (!currentRequirement.trim()) return
+
+    setIsAnalyzing(true)
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: '你是一个需求分析专家。请分析用户输入的需求，提取关键信息，并给出更完整、结构化的需求陈述。' },
+            { role: 'user', content: `请分析并扩展以下需求：${currentRequirement}` }
+          ]
+        })
+      })
+
+      const data = await response.json()
+      if (data.text) {
+        setCurrentRequirement(data.text)
+      }
+    } catch (error) {
+      console.error('Error analyzing requirement:', error)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   // 生成发送按钮，根据加载状态显示不同内容
   const renderSendButton = () => {
     return (
@@ -75,7 +113,7 @@ export default function RequirementsWorkspace({
         onClick={handleSend}
         disabled={isLoading}
         size="icon"
-        className="absolute right-2 bottom-2"
+        className="h-8 w-8"
       >
         {isLoading ? (
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
@@ -109,16 +147,32 @@ export default function RequirementsWorkspace({
       {/* Initial Intent Input */}
       {conversation.length === 0 && (
         <div className="px-4 py-2 bg-white">
-          <div className="mb-2 text-sm font-medium text-gray-700">请用一句话描述您的核心需求或意图</div>
+          <div className="mb-2 text-sm font-medium text-gray-700">请用描述您的核心需求或意图</div>
           <div className="relative">
             <Textarea
-              placeholder="例如：我需要一个能让用户在线预订会议室的系统"
+              placeholder="例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
               value={currentRequirement}
               onChange={(e) => setCurrentRequirement(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="resize-none pr-10"
+              className="resize-none pr-10 min-h-[100px]"
             />
-            {renderSendButton()}
+            <div className="absolute right-2 bottom-2 flex gap-2">
+              <Button
+                onClick={analyzeRequirement}
+                disabled={isAnalyzing || !currentRequirement.trim()}
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                title="AI 分析并优化需求"
+              >
+                {isAnalyzing ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
+              </Button>
+              {renderSendButton()}
+            </div>
           </div>
         </div>
       )}
@@ -205,9 +259,25 @@ export default function RequirementsWorkspace({
                   value={currentRequirement}
                   onChange={(e) => setCurrentRequirement(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="resize-none pr-10"
+                  className="resize-none pr-10 min-h-[80px]"
                 />
-                {renderSendButton()}
+                <div className="absolute right-2 bottom-2 flex gap-2">
+                  <Button
+                    onClick={analyzeRequirement}
+                    disabled={isAnalyzing || !currentRequirement.trim()}
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    title="AI 分析并优化需求"
+                  >
+                    {isAnalyzing ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
+                    ) : (
+                      <Wand2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  {renderSendButton()}
+                </div>
               </div>
             </div>
           )}
