@@ -45,11 +45,11 @@ export interface CodeFunction extends PositionElement, CodeElement {
 	returnType?: string;
 	start: CodePosition;
 	end: CodePosition;
-	parameters: {
+	parameters?: {
 		name: string;
 		type: string;
 	}[];
-	modifiers: string;
+	modifiers?: string;
 }
 
 export interface CodeVariable extends CodeElement, PositionElement {
