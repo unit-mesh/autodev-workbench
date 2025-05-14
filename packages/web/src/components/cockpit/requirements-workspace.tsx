@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Send, MessageSquare, FileText, Wand2 } from "lucide-react"
+import { MessageSquare, FileText, Wand2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import InputWithSend from "@/components/shared/input-with-send"
 
 // Default example requirement with rich context
 const DEFAULT_REQUIREMENT = "我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。";
@@ -106,24 +107,6 @@ export default function RequirementsWorkspace({
     }
   }
 
-  // 生成发送按钮，根据加载状态显示不同内容
-  const renderSendButton = () => {
-    return (
-      <Button
-        onClick={handleSend}
-        disabled={isLoading}
-        size="icon"
-        className="h-8 w-8"
-      >
-        {isLoading ? (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
-        ) : (
-          <Send className="h-4 w-4" />
-        )}
-      </Button>
-    )
-  }
-
   const startEditing = (id: string, content: string) => {
     setEditingId(id)
     setEditContent(content)
@@ -144,36 +127,20 @@ export default function RequirementsWorkspace({
         <p className="text-sm text-gray-500">与 AI 助手协作定义、完善和实现您的需求</p>
       </div>
 
-      {/* Initial Intent Input */}
       {conversation.length === 0 && (
         <div className="px-4 py-2 bg-white">
           <div className="mb-2 text-sm font-medium text-gray-700">请用描述您的核心需求或意图</div>
-          <div className="relative">
-            <Textarea
-              placeholder="例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
-              value={currentRequirement}
-              onChange={(e) => setCurrentRequirement(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="resize-none pr-10 min-h-[100px]"
-            />
-            <div className="absolute right-2 bottom-2 flex gap-2">
-              <Button
-                onClick={analyzeRequirement}
-                disabled={isAnalyzing || !currentRequirement.trim()}
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                title="AI 分析并优化需求"
-              >
-                {isAnalyzing ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
-                ) : (
-                  <Wand2 className="h-4 w-4" />
-                )}
-              </Button>
-              {renderSendButton()}
-            </div>
-          </div>
+          <InputWithSend
+            value={currentRequirement}
+            onChange={(e) => setCurrentRequirement(e.target.value)}
+            onSend={handleSend}
+            onAnalyze={analyzeRequirement}
+            isLoading={isLoading}
+            isAnalyzing={isAnalyzing}
+            minHeight="100px"
+            onKeyDown={handleKeyDown}
+            placeholder="例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
+          />
         </div>
       )}
 
@@ -253,32 +220,17 @@ export default function RequirementsWorkspace({
 
           {conversation.length > 0 && (
             <div className="p-4 border-t border-gray-200 bg-white">
-              <div className="relative">
-                <Textarea
-                  placeholder="输入您的回复..."
-                  value={currentRequirement}
-                  onChange={(e) => setCurrentRequirement(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="resize-none pr-10 min-h-[80px]"
-                />
-                <div className="absolute right-2 bottom-2 flex gap-2">
-                  <Button
-                    onClick={analyzeRequirement}
-                    disabled={isAnalyzing || !currentRequirement.trim()}
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    title="AI 分析并优化需求"
-                  >
-                    {isAnalyzing ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
-                    ) : (
-                      <Wand2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {renderSendButton()}
-                </div>
-              </div>
+              <InputWithSend
+                value={currentRequirement}
+                onChange={(e) => setCurrentRequirement(e.target.value)}
+                onSend={handleSend}
+                onAnalyze={analyzeRequirement}
+                isLoading={isLoading}
+                isAnalyzing={isAnalyzing}
+                minHeight="80px"
+                onKeyDown={handleKeyDown}
+                placeholder="输入您的回复..."
+              />
             </div>
           )}
         </TabsContent>
