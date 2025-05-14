@@ -80,7 +80,7 @@ const defaults = {
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ol: (props: any) => {
-    const { ordered, children, depth } = props;
+    const { children, depth } = props;
     let listStyle = "list-decimal";
     if (depth === 1) listStyle = "list-circle";
     return (
