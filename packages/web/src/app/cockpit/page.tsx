@@ -63,14 +63,14 @@ export default function Home() {
 			const eventStream = response.body!
 				.pipeThrough(new TextDecoderStream())
 				.pipeThrough(new EventSourceParserStream())
-            
+
 			for await (const event of eventStream) {
 				if (!conversationId && event.id) {
 					setConversationId(event.id)
 				}
 
 				aiResponse += event.data
-				
+
 				setConversation(prev => {
 					const lastMessage = prev[prev.length - 1]
 					if (lastMessage && lastMessage.role === "assistant") {
@@ -80,6 +80,7 @@ export default function Home() {
 				})
 			}
 
+			setIsLoading(false)
 			handleAIResponse(aiResponse, newConversation.length)
 		} catch (error) {
 			console.error("获取 AI 回复时出错:", error)
@@ -162,21 +163,21 @@ export default function Home() {
 
 	const handleDocumentEdit = (id: string, newContent: string) => {
 		setDocumentContent((prev) => prev.map((item) => (item.id === id ? { ...item, content: newContent } : item)))
-		
+
 		// 注意：不再自动执行质量检查，改为用户手动触发
 	}
 
 	// 手动更新文档
 	const handleUpdateDocument = async () => {
 		if (conversation.length <= 1) return;
-		
+
 		setIsDocumentUpdating(true);
 		try {
 			// 获取最新的AI回复
 			const lastAIResponse = conversation
 				.filter(msg => msg.role === "assistant")
 				.pop()?.content || "";
-			
+
 			// 提取并处理更新后的需求
 			const response = await fetch("/api/chat", {
 				method: "POST",
@@ -226,7 +227,7 @@ export default function Home() {
 	// 手动执行质量检查
 	const handleQualityCheck = async () => {
 		if (documentContent.length === 0) return;
-		
+
 		setIsQualityChecking(true);
 		try {
 			await performQualityCheck();

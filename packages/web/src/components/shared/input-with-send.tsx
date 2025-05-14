@@ -14,7 +14,7 @@ interface InputWithSendProps {
   isAnalyzing?: boolean
   minHeight?: string
   onKeyDown?: (e: React.KeyboardEvent) => void
-  className?: string
+  className?: string | ""
   systemPrompt?: string
 }
 
@@ -77,21 +77,29 @@ ${value}
         let keywords: string[] = [];
         const responseText = data.text;
 
-        if (responseText.includes("[") && responseText.includes("]")) {
-          const jsonMatch = responseText.match(/\[.*]/);
+        const cleanedText = responseText.replace(/```[\s\S]*?```/g, (match: string) => {
+          return match.replace(/```[\w]*\n|\n```/g, '');
+        });
+
+        if (cleanedText.includes("[") && cleanedText.includes("]")) {
+          const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
           if (jsonMatch) {
-            keywords = JSON.parse(jsonMatch[0]);
+            try {
+              keywords = JSON.parse(jsonMatch[0]);
+            } catch (e) {
+              console.error("Error parsing JSON array:", e);
+            }
           }
         }
 
         if (keywords.length === 0) {
-          keywords = responseText
-            .replace(/```[\s\S]*?```/, "") // Remove code blocks
+          keywords = cleanedText
             .split(/[,\n]/)
             .map((k: string) => k.trim())
             .filter((k: string) => k && !k.startsWith('"') && !k.startsWith('[') && !k.startsWith(']'));
         }
 
+        console.log(keywords)
         setExtractedKeywords(keywords);
       } catch (error) {
         console.error("Error parsing keywords:", error);
@@ -150,7 +158,6 @@ ${value}
 
       {keywordsAnalyze && extractedKeywords.length > 0 && (
         <div className="mt-2 text-sm">
-          <p className="text-xs text-gray-500 mb-1">提取的关键词:</p>
           <div className="flex flex-wrap gap-1">
             {extractedKeywords.map((keyword, index) => (
               <span
@@ -166,3 +173,4 @@ ${value}
     </div>
   )
 }
+

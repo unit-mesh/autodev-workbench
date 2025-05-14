@@ -127,24 +127,6 @@ export default function RequirementsWorkspace({
         <p className="text-sm text-gray-500">与 AI 助手协作定义、完善和实现您的需求</p>
       </div>
 
-      {conversation.length === 0 && (
-        <div className="px-4 py-2 bg-white">
-          <div className="mb-2 text-sm font-medium text-gray-700">请用描述您的核心需求或意图</div>
-          <InputWithSend
-            value={currentRequirement}
-            onChange={(e) => setCurrentRequirement(e.target.value)}
-            onSend={handleSend}
-            keywordsAnalyze={true}
-            onAnalyze={analyzeRequirement}
-            isLoading={isLoading}
-            isAnalyzing={isAnalyzing}
-            minHeight="100px"
-            onKeyDown={handleKeyDown}
-            placeholder="例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
-          />
-        </div>
-      )}
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-auto">
         <TabsList className="mx-4 mt-2 justify-start">
           <TabsTrigger value="conversation" className="flex items-center">
@@ -159,6 +141,15 @@ export default function RequirementsWorkspace({
 
         <TabsContent value="conversation" className="flex-1 flex flex-col p-0 m-0">
           <ScrollArea className="flex-1 p-4">
+            {conversation.length === 0 && (
+              <div className="flex justify-center items-center h-40 text-gray-500">
+                <div className="text-center">
+                  <p className="mb-2">请在下方输入您的需求描述开始对话</p>
+                  <p className="text-xs">提示：使用清晰、具体的语言描述您的需求</p>
+                </div>
+              </div>
+            )}
+
             {conversation.map((message, index) => (
               <div
                 key={index}
@@ -219,21 +210,25 @@ export default function RequirementsWorkspace({
             <div ref={messagesEndRef} />
           </ScrollArea>
 
-          {conversation.length > 0 && (
-            <div className="p-4 border-t border-gray-200 bg-white">
-              <InputWithSend
-                value={currentRequirement}
-                onChange={(e) => setCurrentRequirement(e.target.value)}
-                onSend={handleSend}
-                onAnalyze={analyzeRequirement}
-                isLoading={isLoading}
-                isAnalyzing={isAnalyzing}
-                minHeight="80px"
-                onKeyDown={handleKeyDown}
-                placeholder="输入您的回复..."
-              />
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className={conversation.length === 0 ? "mb-2 text-sm font-medium text-gray-700" : "hidden"}>
+              请描述您的核心需求或意图
             </div>
-          )}
+            <InputWithSend
+              value={currentRequirement}
+              onChange={(e) => setCurrentRequirement(e.target.value)}
+              onSend={handleSend}
+              keywordsAnalyze={true}
+              onAnalyze={analyzeRequirement}
+              isLoading={isLoading}
+              isAnalyzing={isAnalyzing}
+              minHeight={conversation.length === 0 ? "100px" : "80px"} // 首次输入框高一些
+              onKeyDown={handleKeyDown}
+              placeholder={conversation.length === 0
+                ? "例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
+                : "输入您的回复..."}
+            />
+          </div>
         </TabsContent>
 
         {/* Document Tab */}
