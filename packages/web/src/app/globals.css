@@ -3,226 +3,228 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
 }
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 3.9%;
+        --primary: 0 0% 9%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 96.1%;
+        --secondary-foreground: 0 0% 9%;
+        --muted: 0 0% 96.1%;
+        --muted-foreground: 0 0% 45.1%;
+        --accent: 0 0% 96.1%;
+        --accent-foreground: 0 0% 9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 89.8%;
+        --input: 0 0% 89.8%;
+        --ring: 0 0% 3.9%;
+        --chart-1: 12 76% 61%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --radius: 0.5rem;
+        --sidebar-background: 0 0% 98%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 240 4.8% 95.9%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+    }
+
+    .dark {
+        --background: 0 0% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 3.9%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 3.9%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 0 0% 9%;
+        --secondary: 0 0% 14.9%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 14.9%;
+        --muted-foreground: 0 0% 63.9%;
+        --accent: 0 0% 14.9%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 14.9%;
+        --input: 0 0% 14.9%;
+        --ring: 0 0% 83.1%;
+        --chart-1: 220 70% 50%;
+        --chart-2: 160 60% 45%;
+        --chart-3: 30 80% 55%;
+        --chart-4: 280 65% 60%;
+        --chart-5: 340 75% 55%;
+        --sidebar-background: 240 5.9% 10%;
+        --sidebar-foreground: 240 4.8% 95.9%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 3.7% 15.9%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
 @layer components {
-  /* Markdown 样式 */
-  .markdown-paragraph {
-    @apply mb-4;
-  }
-  
-  .markdown-blockquote {
-    @apply p-2 bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-300 dark:border-gray-600 rounded my-4;
-  }
-  
-  .markdown-hr {
-    @apply my-4 border-t border-gray-300 dark:border-gray-600;
-  }
-  
-  .markdown-link {
-    @apply text-blue-600 dark:text-blue-400 hover:underline;
-  }
-  
-  .markdown-image {
-    @apply max-w-full h-auto rounded my-2;
-  }
-  
-  .markdown-list {
-    @apply pl-6 my-4 space-y-2;
-  }
-  
-  .markdown-list-ordered {
-    @apply list-decimal;
-  }
-  
-  .markdown-list-nested {
-    @apply mt-2;
-  }
-  
-  .markdown-list-item {
-    @apply list-disc;
-  }
-  
-  .markdown-task-checked {
-    @apply list-none relative pl-6 before:content-['✓'] before:absolute before:left-0 before:text-green-500;
-  }
-  
-  .markdown-task-unchecked {
-    @apply list-none relative pl-6 before:content-['□'] before:absolute before:left-0;
-  }
-  
-  .markdown-heading {
-    @apply font-bold my-4;
-  }
-  
-  .markdown-heading-1 {
-    @apply text-3xl;
-  }
-  
-  .markdown-heading-2 {
-    @apply text-2xl;
-  }
-  
-  .markdown-heading-3 {
-    @apply text-xl;
-  }
-  
-  .markdown-heading-4 {
-    @apply text-lg;
-  }
-  
-  .markdown-heading-5 {
-    @apply text-base;
-  }
-  
-  .markdown-heading-6 {
-    @apply text-sm;
-  }
-  
-  .markdown-pre {
-    @apply p-4 bg-gray-100 dark:bg-gray-800 rounded my-4 overflow-auto;
-  }
-  
-  .markdown-table {
-    @apply min-w-full border border-collapse my-4;
-  }
-  
-  .markdown-thead {
-    @apply bg-gray-100 dark:bg-gray-800;
-  }
-  
-  .markdown-th {
-    @apply p-2 border border-gray-300 dark:border-gray-600 font-semibold text-left;
-  }
-  
-  .markdown-tr {
-    @apply border-b border-gray-300 dark:border-gray-600;
-  }
-  
-  .markdown-td {
-    @apply p-2 border border-gray-300 dark:border-gray-600;
-  }
-  
-  .markdown-copy-button {
-    @apply absolute top-2 right-2 h-8 w-8 p-1 opacity-70 hover:opacity-100 transition-opacity;
-  }
-  
-  .markdown-icon {
-    @apply h-4 w-4;
-  }
+    /* Markdown 样式 */
+    .markdown-paragraph {
+        @apply mb-4;
+    }
+
+    .markdown-blockquote {
+        @apply p-2 bg-gray-100 dark:bg-gray-800 border-l-4 border-gray-300 dark:border-gray-600 rounded my-4;
+    }
+
+    .markdown-hr {
+        @apply my-4 border-t border-gray-300 dark:border-gray-600;
+    }
+
+    .markdown-link {
+        @apply text-blue-600 dark:text-blue-400 hover:underline;
+    }
+
+    .markdown-image {
+        @apply max-w-full h-auto rounded my-2;
+    }
+
+    .markdown-list {
+        @apply pl-4 my-2 space-y-1;
+    }
+
+    .markdown-list-ordered {
+        @apply list-decimal;
+    }
+
+    .markdown-list-nested {
+        @apply mt-2;
+    }
+
+    .markdown-list-item {
+        @apply list-disc;
+    }
+
+    .markdown-task-checked {
+        @apply list-none relative pl-6 before:content-['✓'] before:absolute before:left-0 before:text-green-500;
+    }
+
+    .markdown-task-unchecked {
+        @apply list-none relative pl-6 before:content-['□'] before:absolute before:left-0;
+    }
+
+    .markdown-heading {
+        @apply font-bold my-4;
+    }
+
+    .markdown-heading-1 {
+        @apply text-3xl;
+    }
+
+    .markdown-heading-2 {
+        @apply text-2xl;
+    }
+
+    .markdown-heading-3 {
+        @apply text-xl;
+    }
+
+    .markdown-heading-4 {
+        @apply text-lg;
+    }
+
+    .markdown-heading-5 {
+        @apply text-base;
+    }
+
+    .markdown-heading-6 {
+        @apply text-sm;
+    }
+
+    .markdown-pre {
+        @apply p-4 bg-gray-100 dark:bg-gray-800 rounded my-4 overflow-auto;
+    }
+
+    .markdown-table {
+        @apply min-w-full border border-collapse my-4;
+    }
+
+    .markdown-thead {
+        @apply bg-gray-100 dark:bg-gray-800;
+    }
+
+    .markdown-th {
+        @apply p-2 border border-gray-300 dark:border-gray-600 font-semibold text-left;
+    }
+
+    .markdown-tr {
+        @apply border-b border-gray-300 dark:border-gray-600;
+    }
+
+    .markdown-td {
+        @apply p-2 border border-gray-300 dark:border-gray-600;
+    }
+
+    .markdown-copy-button {
+        @apply absolute top-2 right-2 h-8 w-8 p-1 opacity-70 hover:opacity-100 transition-opacity;
+    }
+
+    .markdown-icon {
+        @apply h-4 w-4;
+    }
 }
 
 .brand {
-  font-family: sans-serif;
-  color: #3b4151;
+    font-family: sans-serif;
+    color: #3b4151;
 }
 
 .icon-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 9999px;
-  margin-bottom: 0; /* 修改原来的边距 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    margin-bottom: 0; /* 修改原来的边距 */
 }
 
 .card {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid #f1f5f9;
-  height: 100%; /* 确保所有卡片高度一致 */
-  display: flex;
-  flex-direction: column;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #f1f5f9;
+    height: 100%; /* 确保所有卡片高度一致 */
+    display: flex;
+    flex-direction: column;
 }
