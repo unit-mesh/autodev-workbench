@@ -4,11 +4,13 @@ import fetch from 'node-fetch';
 
 import { InstantiationService, providerContainer } from "../base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "../base/common/languages/languageService";
-import { IStructurerProvider } from "../ProviderTypes";
+import { IRestApiAnalyser, IStructurerProvider } from "../ProviderTypes";
 import { JavaStructurerProvider } from "../code-context/java/JavaStructurerProvider";
+import { JavaSpringControllerAnalyser } from "../code-context/java/JavaSpringControllerAnalyser";
 import { TypeScriptStructurer } from "../code-context/typescript/TypeScriptStructurer";
 import { GoStructurerProvider } from "../code-context/go/GoStructurerProvider";
 import { KotlinStructurerProvider } from "../code-context/kotlin/KotlinStructurerProvider";
+import { KotlinSpringControllerAnalyser } from "../code-context/kotlin/KotlinSpringControllerAnalyser";
 import { CodeAnalyzer } from "./analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./CodeAnalysisResult";
 import { PythonStructurer } from "../code-context/python/PythonStructurer";
@@ -25,6 +27,7 @@ export class InterfaceAnalyzerApp {
         this.instantiationService = new InstantiationService();
         this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
+        // Register structurer providers
         providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
         providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
         providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
@@ -33,6 +36,10 @@ export class InterfaceAnalyzerApp {
         providerContainer.bind(IStructurerProvider).to(RustStructurer);
         providerContainer.bind(IStructurerProvider).to(CStructurer);
         providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
+
+        // Register REST API analysers
+        providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
+        providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
 
         // 使用默认配置初始化CodeAnalyzer
         this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);

@@ -6,6 +6,7 @@
 import { type interfaces } from 'inversify';
 import { LanguageProfile } from "./code-context/base/LanguageProfile";
 import { RelevantCodeProvider } from "./code-context/base/RelevantCodeProvider";
+import { RestApiAnalyser } from "./code-context/base/RestApiAnalyser";
 import { StructurerProvider } from "./code-context/base/StructurerProvider";
 
 export const ILanguageProfile: interfaces.ServiceIdentifier<LanguageProfile> = Symbol('LanguageProfile');
@@ -18,3 +19,9 @@ export const IRelevantCodeProvider: interfaces.ServiceIdentifier<RelevantCodePro
  * structure data for {@link CodeElement} which can be {@link CodeFile}, {@link CodeFunction}, {@link CodeVariable}
  */
 export const IStructurerProvider: interfaces.ServiceIdentifier<StructurerProvider> = Symbol('IStructurerProvider');
+
+/**
+ * REST API analysis, extract API resources and demands from code structure
+ * see in {@link RestApiAnalyser#analyse}
+ */
+export const IRestApiAnalyser: interfaces.ServiceIdentifier<RestApiAnalyser> = Symbol('IRestApiAnalyser');
