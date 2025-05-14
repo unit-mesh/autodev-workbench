@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { TopNavigation } from "@/layout/navigation/TopNavigation";
 import { SideNavigation } from "@/layout/navigation/SideNavigation";
+import { AIAssistantWrapper } from "@/layout/AIAssistantWrapper";
+import { AIAssistantProvider } from "@/context/AIAssistantContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,15 +21,18 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className={inter.className}>
-        <div className="min-h-screen bg-white flex flex-col">
-          <TopNavigation />
-          <div className="flex flex-1">
-            <SideNavigation />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
+        <AIAssistantProvider>
+          <div className="min-h-screen bg-white flex flex-col">
+            <TopNavigation />
+            <div className="flex flex-1">
+              <SideNavigation />
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+            <AIAssistantWrapper />
           </div>
-        </div>
+        </AIAssistantProvider>
       </body>
     </html>
   );

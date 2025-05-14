@@ -4,8 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { ModelSelector } from "@/components/biz-ui/model-selector"
-import { Search } from "lucide-react"
+import { Search, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAIAssistant } from "@/context/AIAssistantContext"
 
 const navigationItems = [
 	{ name: "驾驶舱", href: "/cockpit" },
@@ -17,6 +18,7 @@ const navigationItems = [
 
 export function TopNavigation() {
 	const pathname = usePathname()
+	const { isOpen, toggleAssistant } = useAIAssistant()
 
 	return (
 		<nav className="bg-white border-b border-gray-200">
@@ -53,6 +55,20 @@ export function TopNavigation() {
 						>
 							<Search className="h-4 w-4 mr-1"/>
 							<span>搜索</span>
+						</Button>
+						<Button
+							variant={isOpen ? "secondary" : "ghost"}
+							size="icon"
+							onClick={toggleAssistant}
+							className="relative"
+						>
+							<MessageSquare className="h-5 w-5" />
+							<span className="sr-only">AI助手</span>
+							{!isOpen && (
+								<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white">
+									AI
+								</span>
+							)}
 						</Button>
 					</div>
 				</div>
