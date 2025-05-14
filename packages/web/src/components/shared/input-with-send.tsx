@@ -16,6 +16,7 @@ interface InputWithSendProps {
   onKeyDown?: (e: React.KeyboardEvent) => void
   className?: string | ""
   systemPrompt?: string
+  onKeywordsExtracted?: (keywords: string[]) => void // 新增回调函数属性
 }
 
 export default function InputWithSend({
@@ -31,6 +32,7 @@ export default function InputWithSend({
   onKeyDown,
   className,
   systemPrompt,
+  onKeywordsExtracted, // 添加新属性
 }: InputWithSendProps) {
   const [isAnalyzingKeywords, setIsAnalyzingKeywords] = useState(false);
   const [extractedKeywords, setExtractedKeywords] = useState<string[]>([]);
@@ -99,6 +101,10 @@ ${value}
         }
 
         setExtractedKeywords(keywords);
+        // 当提取到关键词时，调用回调函数
+        if (onKeywordsExtracted && keywords.length > 0) {
+          onKeywordsExtracted(keywords);
+        }
       } catch (error) {
         console.error("Error parsing keywords:", error);
       } finally {

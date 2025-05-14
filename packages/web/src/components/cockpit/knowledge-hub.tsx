@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, Book, Network, Plus, Loader2, Check, Info } from "lucide-react"
+import { Upload, FileText, Book, Network, Plus, Loader2, Check, Info, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import KnowledgeGraphPopup from "./knowledge-graph-popup"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -48,9 +48,15 @@ interface KnowledgeHubProps {
   activeSource: string | null
   onSourceSelect: (sourceId: string | null) => void
   projectId?: string // 可选的项目ID参数
+  extractedKeywords?: string[] // 添加新属性
 }
 
-export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }: KnowledgeHubProps) {
+export default function KnowledgeHub({ 
+  activeSource, 
+  onSourceSelect, 
+  projectId, 
+  extractedKeywords = [] 
+}: KnowledgeHubProps) {
   const [showKnowledgeGraphPopup, setShowKnowledgeGraphPopup] = useState(false)
   const [glossaryTerms, setGlossaryTerms] = useState<ConceptDictionary[]>([])
   const [isLoadingGlossary, setIsLoadingGlossary] = useState(false)
@@ -285,6 +291,40 @@ export default function KnowledgeHub({ activeSource, onSourceSelect, projectId }
           </ScrollArea>
         </div>
       </div>
+
+      {/* 添加提取的关键词部分 */}
+      {extractedKeywords.length > 0 && (
+        <div className="border-t border-gray-200 p-3">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-medium text-gray-700">提取的关键词</h3>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
+                    <Info className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">从需求文本中自动提取的关键词</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="flex flex-wrap gap-1 mb-2">
+            {extractedKeywords.map((keyword, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                <Tag className="h-3 w-3" />
+                {keyword}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" className="text-xs">
+              添加到词汇表
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center mb-2">

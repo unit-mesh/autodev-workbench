@@ -19,6 +19,8 @@ export default function Home() {
 	const [isDocumentUpdating, setIsDocumentUpdating] = useState(false)
 	const [isQualityChecking, setIsQualityChecking] = useState(false)
 	const [conversationId, setConversationId] = useState<string | null>(null)
+	// 添加关键词状态
+	const [extractedKeywords, setExtractedKeywords] = useState<string[]>([])
 
 	// 为需求对话添加系统提示词
 	const requirementSystemPrompt =
@@ -239,12 +241,21 @@ export default function Home() {
 		}
 	};
 
+	// 添加处理关键词的函数
+	const handleKeywordsExtracted = (keywords: string[]) => {
+		setExtractedKeywords(keywords);
+	};
+
 	return (
 		<div className="flex h-screen overflow-hidden">
 			<PanelGroup direction="horizontal">
 				{/* Left Panel: Knowledge Hub */}
 				<Panel id="knowledge-hub" defaultSize={20} minSize={15}>
-					<KnowledgeHub activeSource={activeKnowledgeSource} onSourceSelect={setActiveKnowledgeSource}/>
+					<KnowledgeHub 
+						activeSource={activeKnowledgeSource} 
+						onSourceSelect={setActiveKnowledgeSource}
+						extractedKeywords={extractedKeywords} // 将关键词传递给 KnowledgeHub
+					/>
 				</Panel>
 
 				<PanelResizeHandle
@@ -265,6 +276,7 @@ export default function Home() {
 						onDocumentEdit={handleDocumentEdit}
 						onUpdateDocument={handleUpdateDocument}
 						onCheckQuality={handleQualityCheck}
+						onKeywordsExtracted={handleKeywordsExtracted} // 添加关键词提取回调
 						isLoading={isLoading}
 						isDocumentUpdating={isDocumentUpdating}
 						isQualityChecking={isQualityChecking}

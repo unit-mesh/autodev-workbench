@@ -24,6 +24,7 @@ interface RequirementsWorkspaceProps {
 	onDocumentEdit: (id: string, newContent: string) => void
 	onUpdateDocument?: () => void
 	onCheckQuality?: () => void
+	onKeywordsExtracted?: (keywords: string[]) => void // 添加新属性
 	isLoading?: boolean
 	isDocumentUpdating?: boolean
 	isQualityChecking?: boolean
@@ -38,6 +39,7 @@ export default function RequirementsWorkspace({
 	                                              onDocumentEdit,
 	                                              onUpdateDocument,
 	                                              onCheckQuality,
+	                                              onKeywordsExtracted, // 添加新属性
 	                                              isLoading = false,
 	                                              isDocumentUpdating = false,
 	                                              isQualityChecking = false,
@@ -246,6 +248,7 @@ export default function RequirementsWorkspace({
 							isAnalyzing={isAnalyzing}
 							minHeight={conversation.length === 0 ? "100px" : "80px"}
 							onKeyDown={handleKeyDown}
+							onKeywordsExtracted={onKeywordsExtracted} // 添加关键词提取回调
 							placeholder={conversation.length === 0
 								? "例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
 								: "输入您的回复..."}
