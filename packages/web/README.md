@@ -2,6 +2,12 @@
 
 First, run the development server:
 
+Create a .env.local file in the web directory and fill in the environment variables.
+```bash
+cp .env.example .env.local
+```
+Open the prisma folder in the project web/prisma directory and execute all SQL files in Neon's https://console.neon.tech/ SQL Editor in order.
+
 ```bash
 pnpm dev
 ```
