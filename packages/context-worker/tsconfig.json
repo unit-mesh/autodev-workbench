@@ -1,24 +1,39 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "module": "ESNext",
     "outDir": "./dist",
     "noEmit": false,
     "declaration": true,
     "declarationDir": "./dist/types",
-    "checkJs": true,
     "importHelpers": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "types": ["node","vite/client", "vitest/globals", "reflect-metadata"],
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "types": [
+      "node",
+      "vite/client",
+      "vitest/globals",
+      "reflect-metadata"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
+    /* ioc */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "lib": [
+      "ES2022.Error"
+    ]
   },
   "include": [
     "src/**/*",
     "test/**/*",
     "../../node_modules/.pnpm/vitest@1.6.1_@types+node@20.17.46_jsdom@24.1.3_bufferutil@4.0.9__lightningcss@1.29.2/node_modules/vitest/globals.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
