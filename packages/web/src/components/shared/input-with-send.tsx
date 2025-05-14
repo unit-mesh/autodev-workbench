@@ -27,7 +27,7 @@ export default function InputWithSend({
   placeholder = "输入文本...",
   isLoading = false,
   isAnalyzing = false,
-  minHeight = "80px",
+  minHeight = "120px",
   onKeyDown,
   className,
   systemPrompt,
@@ -120,7 +120,7 @@ ${value}
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
-          className={`resize-none pr-10 min-h-[${minHeight}]`}
+          className={`resize-none pr-20 min-h-[${minHeight}]`}
         />
         <div className="absolute right-2 bottom-2 flex gap-2">
           {onAnalyze && (
@@ -132,7 +132,7 @@ ${value}
               className="h-8 w-8"
               title="AI 分析并优化需求"
             >
-              {isLoading ? (
+              {isAnalyzing ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
               ) : (
                 <Wand2 className="h-4 w-4" />
@@ -145,7 +145,7 @@ ${value}
             size="icon"
             className="h-8 w-8"
           >
-            {isLoading || isAnalyzingKeywords ? (
+            {isLoading ? (
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600"/>
             ) : (
               <Send className="h-4 w-4" />

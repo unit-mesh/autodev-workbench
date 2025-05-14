@@ -80,6 +80,7 @@ export default function Home() {
 				})
 			}
 
+			console.log("Done")
 			setIsLoading(false)
 			handleAIResponse(aiResponse, newConversation.length)
 		} catch (error) {
