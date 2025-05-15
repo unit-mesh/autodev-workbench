@@ -87,7 +87,7 @@ export class CodeAnalyzer {
 		};
 	}
 
-	private async parseCodeStructures(files: string[]): Promise<void> {
+	async parseCodeStructures(files: string[]): Promise<void> {
 		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
 
 		for (const file of files) {

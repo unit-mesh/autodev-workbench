@@ -5,14 +5,18 @@ import { ApiResource } from "@autodev/worker-core";
 
 export class HttpApiAnalyser implements ICodeAnalyzer {
 	private manager: ControllerAnalyserManager = ControllerAnalyserManager.getInstance()
+	private analysers = this.manager.getAnalyser();
+
+	constructor() {
+		console.log("[HttpApiAnalyser] : analyzers", this.analysers);
+	}
+
 
 	async analyze(codeCollector: CodeCollector): Promise<ApiResource[]> {
 		let allFiles = codeCollector.getAllFiles();
-		let analysers = this.manager.getAnalyser();
-
 		let apiResources: ApiResource[] = [];
 		for (let file of allFiles) {
-			for (let analyser of analysers) {
+			for (let analyser of this.analysers) {
 				let result: ApiResource[] = await analyser.analysis(file);
 				if (result && result.length > 0) {
 					apiResources = apiResources.concat(result);

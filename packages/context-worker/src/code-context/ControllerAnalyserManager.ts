@@ -1,5 +1,6 @@
 import { providerContainer } from "../base/common/instantiation/instantiationService";
 import { RestApiAnalyser } from "./base/RestApiAnalyser";
+import { IRestApiAnalyser } from "../ProviderTypes";
 
 export class ControllerAnalyserManager {
 	private static instance: ControllerAnalyserManager;
@@ -14,7 +15,6 @@ export class ControllerAnalyserManager {
 	}
 
 	getAnalyser(): RestApiAnalyser[] {
-		let providers = providerContainer.getAll(RestApiAnalyser);
-		return providers;
+		return providerContainer.getAll(IRestApiAnalyser);
 	}
 }

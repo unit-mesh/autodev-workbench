@@ -1,4 +1,7 @@
+
+import { injectable } from "inversify";
 import Parser, { SyntaxNode } from 'web-tree-sitter';
+
 import { RestApiAnalyser } from '../base/RestApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile, CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
@@ -12,6 +15,7 @@ export interface Annotation {
 	keyValues: { key: string; value: string }[];
 }
 
+@injectable()
 export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 	protected parser: Parser | undefined;
 	protected language: Parser.Language | undefined;

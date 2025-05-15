@@ -2,5 +2,4 @@
 dist
 materials
 analysis_result.json
-debug_analysis_result.json
-api_analysis_result.json
+*_analysis_result.json
