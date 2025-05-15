@@ -18,7 +18,7 @@ tests/
 *.log
 
 # Build configs
-rollup.config.js
+rollup.config.mjs
 tsconfig.json
 jest.config.js
 
