@@ -123,6 +123,10 @@ export class InterfaceAnalyzerApp {
 	}
 
 	async handleApiContext(config: AppConfig) {
+		await this.analysisProtobuf(config);
+	}
+
+	private async analysisProtobuf(config: AppConfig) {
 		const protoFiles = await scanProtoFiles(config.dirPath);
 		const results = await analyseProtos(protoFiles);
 
