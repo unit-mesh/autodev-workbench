@@ -68,6 +68,19 @@ export class JavaProfile implements LanguageProfile {
 
 			(program
 		    (class_declaration
+		      (modifiers
+            (marker_annotation name: (identifier) @class-annotation-name)?
+		        (annotation
+                name: (identifier) @class-annotation-name
+                arguments: (annotation_argument_list
+                  ((element_value_pair
+                    key: (identifier) @class-annotation-key
+                    value: [(string_literal) (field_access)] @class-annotation-value
+                  )?
+                  (string_literal) @class-annotation-value)?
+                )?
+              )*
+            )?
 		      name: ((identifier) @class-name)
 	        interfaces: (super_interfaces 
             (type_list 
@@ -92,6 +105,24 @@ export class JavaProfile implements LanguageProfile {
                   )?
                   @class-method.params)
                 body: (block) @class-method.body
+              )?
+              (annotation
+                name: (identifier) @annotation-name
+                arguments: (annotation_argument_list
+                  ((element_value_pair
+                    key: (identifier) @key
+                    value: [(string_literal) (field_access)] @value
+                  )?
+                  (string_literal) @value)?
+                )?
+              )?
+              (method_invocation
+                object: (identifier) @object-name
+                name: (identifier) @method-name
+                arguments: (argument_list
+                  (string_literal) @url-arg
+                  (_)* @other-args
+                )
               )?
             )
 		    )

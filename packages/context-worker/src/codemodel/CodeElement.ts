@@ -35,6 +35,8 @@ export interface CodeStructure extends PositionElement, CodeElement {
 	methods: CodeFunction[];
 	/// for nested classes
 	classes?: CodeStructure[];
+	// class annotations for languages like Java
+	annotations?: { name: string; keyValues: { key: string; value: string }[] }[];
 	start: CodePosition;
 	end: CodePosition;
 }
@@ -50,6 +52,8 @@ export interface CodeFunction extends PositionElement, CodeElement {
 		type: string;
 	}[];
 	modifiers?: string;
+	// method annotations for languages like Java
+	annotations?: { name: string; keyValues: { key: string; value: string }[] }[];
 }
 
 export interface CodeVariable extends CodeElement, PositionElement {

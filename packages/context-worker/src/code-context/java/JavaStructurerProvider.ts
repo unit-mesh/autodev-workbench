@@ -64,6 +64,7 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 			name: '',
 			package: '',
 			implements: [],
+			annotations: [],
 			start: { row: 0, column: 0 },
 			end: { row: 0, column: 0 },
 		};
@@ -111,6 +112,7 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 							extends: [],
 							methods: [],
 							name: '',
+							annotations: [],
 							start: { row: 0, column: 0 },
 							end: { row: 0, column: 0 },
 						};
@@ -185,6 +187,7 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						name: text,
 						package: codeFile.package,
 						implements: [],
+						annotations: [],
 						start: { row: 0, column: 0 },
 						end: { row: 0, column: 0 },
 					};
@@ -265,6 +268,99 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'impl-name':
 					classObj.implements.push(text);
+					break;
+				case 'class-annotation-name':
+					classObj.annotations = classObj.annotations || [];
+					classObj.annotations.push({ name: text, keyValues: [] });
+					break;
+				case 'class-annotation-key':
+					// 处理类级别注解键
+					if (classObj.annotations && classObj.annotations.length > 0) {
+						const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
+						lastAnnotation.keyValues.push({ key: text, value: '' });
+					}
+					break;
+				case 'class-annotation-value':
+					if (classObj.annotations && classObj.annotations.length > 0) {
+						const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
+						// 如果有键等待值，则将此值分配给它
+						if (lastAnnotation.keyValues.length > 0 &&
+							lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
+							const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
+							lastKeyValue.value = this.cleanStringLiteral(text);
+						} else {
+							// 没有指定键，使用空键（对于单值注解）
+							lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
+						}
+					}
+					break;
+				case 'annotation-name':
+					// 处理注解名称
+					if (classObj.name !== '') {
+						// 判断是否属于方法的注解
+						// 在Java中，注解通常位于方法定义上方，所以我们需要检查接下来是否解析到方法
+						// 如果最后一个处理的方法存在，且当前不在尝试解析新方法，则认为注解属于方法
+						if (methods.length > 0 && classMethodName === '') {
+							const lastMethod = methods[methods.length - 1];
+							lastMethod.annotations = lastMethod.annotations || [];
+							lastMethod.annotations.push({ name: text, keyValues: [] });
+						} else {
+							// 否则认为是类的注解
+							classObj.annotations = classObj.annotations || [];
+							classObj.annotations.push({ name: text, keyValues: [] });
+						}
+					}
+					break;
+				case 'key':
+					// 处理注解键
+					if (classObj.name !== '') {
+						// 判断是否属于方法的注解
+						if (methods.length > 0 && classMethodName === '' &&
+							methods[methods.length - 1].annotations &&
+							methods[methods.length - 1].annotations.length > 0) {
+
+							const lastMethod = methods[methods.length - 1];
+							const lastAnnotation = lastMethod.annotations![lastMethod.annotations!.length - 1];
+							lastAnnotation.keyValues.push({ key: text, value: '' });
+						} else if (classObj.annotations && classObj.annotations.length > 0) {
+							const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
+							lastAnnotation.keyValues.push({ key: text, value: '' });
+						}
+					}
+					break;
+				case 'value':
+					// 处理注解值
+					if (classObj.name !== '') {
+						// 判断是否属于方法的注解
+						if (methods.length > 0 && classMethodName === '' &&
+							methods[methods.length - 1].annotations &&
+							methods[methods.length - 1].annotations.length > 0) {
+
+							const lastMethod = methods[methods.length - 1];
+							const lastAnnotation = lastMethod.annotations![lastMethod.annotations!.length - 1];
+
+							// 如果有键等待值，则将此值分配给它
+							if (lastAnnotation.keyValues.length > 0 &&
+								lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
+								const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
+								lastKeyValue.value = this.cleanStringLiteral(text);
+							} else {
+								// 没有指定键，使用空键（对于单值注解）
+								lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
+							}
+						} else if (classObj.annotations && classObj.annotations.length > 0) {
+							const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
+							// 如果有键等待值，则将此值分配给它
+							if (lastAnnotation.keyValues.length > 0 &&
+								lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
+								const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
+								lastKeyValue.value = this.cleanStringLiteral(text);
+							} else {
+								// 没有指定键，使用空键（对于单值注解）
+								lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
+							}
+						}
+					}
 					break;
 				default:
 					break;
@@ -369,5 +465,10 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 		}
 
 		return fields;
+	}
+
+	// 清理字符串字面量，移除引号
+	private cleanStringLiteral(text: string): string {
+		return text.replace(/^"(.*)"$/, '$1');
 	}
 }

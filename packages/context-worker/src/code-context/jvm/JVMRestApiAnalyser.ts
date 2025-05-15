@@ -18,9 +18,8 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 	protected language: Parser.Language | undefined;
 	protected abstract config: LanguageProfile;
 	protected abstract structurer: StructurerProvider;
-
-	protected abstract springAnnotationQuery: MemoizedQuery;
-	protected abstract restTemplateQuery: MemoizedQuery;
+	protected abstract get springAnnotationQuery(): MemoizedQuery;
+	protected abstract get restTemplateQuery(): MemoizedQuery;
 
 	abstract override readonly langId: LanguageIdentifier;
 
@@ -44,9 +43,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			return;
 		}
 
-		// const structurerManager = StructurerProviderManager.getInstance();
-		// const structurer = structurerManager.getStructurer(this.langId);
-		//
 		if (!this.structurer) {
 			console.warn(`No structurer available for language ${this.langId}`);
 			return;
@@ -61,7 +57,10 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 
 		const tree = this.parser.parse(sourceCode);
 		for (const node of codeFile.classes) {
-			const classAnnotations = this.extractAnnotations(tree.rootNode);
+			const classAnnotations = node.annotations && node.annotations.length > 0
+				? node.annotations
+				: this.extractAnnotations(tree.rootNode);
+
 			const isController = this.isSpringController(classAnnotations);
 
 			if (isController) {
@@ -69,11 +68,15 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 
 				if (node.methods && node.methods.length > 0) {
 					node.methods.forEach(method => {
-						const methodNode = this.findMethodNode(tree.rootNode, method.name);
-						if (methodNode) {
-							const methodAnnotations = this.extractAnnotations(methodNode);
-							this.processControllerMethod(method, methodAnnotations, baseUrl, node);
-						}
+						// 优先使用来自方法结构本身的注解
+						const methodAnnotations = method.annotations && method.annotations.length > 0
+							? method.annotations
+							: (() => {
+									const methodNode = this.findMethodNode(tree.rootNode, method.name);
+									return methodNode ? this.extractAnnotations(methodNode) : [];
+								})();
+
+						this.processControllerMethod(method, methodAnnotations, baseUrl, node);
 					});
 				}
 			}

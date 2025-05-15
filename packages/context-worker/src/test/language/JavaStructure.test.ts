@@ -36,6 +36,7 @@ public class ExampleClass {
 			classes: [
 				{
 					type: 'class',
+					annotations: [],
 					constant: [],
 					extends: [],
 					fields: [],

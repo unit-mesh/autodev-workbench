@@ -11,33 +11,17 @@ import { JavaStructurerProvider } from "./JavaStructurerProvider";
 
 @injectable()
 export class JavaSpringControllerAnalyser extends JVMRestApiAnalyser {
-  protected structurer: StructurerProvider = new JavaStructurerProvider();
+	protected structurer: StructurerProvider = new JavaStructurerProvider();
 	readonly langId: LanguageIdentifier = 'java';
 	protected config: LanguageProfile;
 
-	protected springAnnotationQuery = new MemoizedQuery(`
-    (annotation
-      name: (identifier) @annotation-name
-      arguments: (annotation_argument_list
-        ((element_value_pair
-          key: (identifier) @key
-          value: [(string_literal) (field_access)] @value
-        )?
-        (string_literal) @value)?
-      )?
-    )
-  `);
+	protected get springAnnotationQuery(): MemoizedQuery {
+		return this.config.structureQuery;
+	}
 
-	protected restTemplateQuery = new MemoizedQuery(`
-    (method_invocation
-      object: (identifier) @object-name
-      name: (identifier) @method-name
-      arguments: (argument_list
-        (string_literal) @url-arg
-        (_)* @other-args
-      )
-    )
-  `);
+	protected get restTemplateQuery(): MemoizedQuery {
+		return this.config.structureQuery;
+	}
 
 	constructor() {
 		super();
@@ -49,7 +33,6 @@ export class JavaSpringControllerAnalyser extends JVMRestApiAnalyser {
 	}
 
 	protected cleanStringLiteral(text: string): string {
-		// Remove quotes from string literals
 		return text.replace(/^"(.*)"$/, '$1');
 	}
 }
