@@ -72,4 +72,5 @@ export type ApiResource = {
 	packageName: string;
 	className: string;
 	methodName: string;
+	supplyType: string;
 }

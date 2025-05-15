@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ProtoAnalyser } from './ProtoAnalyser';
 import { CodeDataStruct } from "./ProtoAnalyser.type";
+import { ProtoApiResourceGenerator } from "./ProtoApiResourceGenerator";
 
 export interface AnalysisResult {
     filePath: string;
@@ -61,6 +62,13 @@ async function main() {
     // save to file
     const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
     fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
+
+    const resourceAnalyser = new ProtoApiResourceGenerator();
+    const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
+    console.log(JSON.stringify(apiResources, null, 2));
+    // save to file
+    const apiOutputFilePath = path.join(process.cwd(), 'api_resources.json');
+    fs.writeFileSync(apiOutputFilePath, JSON.stringify(apiResources, null, 2));
 }
 
 main().catch((error) => {

@@ -43,3 +43,4 @@ pnpm-debug.log*
 *.zip
 *.tar.gz
 analysis_result.json
+api_resources.json
