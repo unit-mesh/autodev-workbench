@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build
+      - name: Core Build
         run: pnpm --filter worker-core build
 
-      - name: Build
-        run: pnpm build
+      - name: Web Build
+        run: pnpm --filter web build
