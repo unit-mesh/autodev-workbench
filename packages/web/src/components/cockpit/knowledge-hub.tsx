@@ -71,6 +71,9 @@ export default function KnowledgeHub({
   const [validationResults, setValidationResults] = useState<any>(null)
   // 添加新状态跟踪AI验证的匹配词
   const [aiVerifiedMatches, setAiVerifiedMatches] = useState<string[]>([])
+  const [apiResources, setApiResources] = useState<any[]>([])
+  const [isLoadingApiResources, setIsLoadingApiResources] = useState(false)
+  const [apiResourcesError, setApiResourcesError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
@@ -123,6 +126,27 @@ export default function KnowledgeHub({
     fetchGlossaryTerms();
     fetchGuidelines();
   }, [projectId]);
+
+  useEffect(() => {
+    async function fetchApiResources() {
+      setIsLoadingApiResources(true)
+      setApiResourcesError(null)
+      try {
+        const response = await fetch('/api/context/api')
+        if (!response.ok) {
+          throw new Error('获取API资源失败')
+        }
+        const data = await response.json()
+        setApiResources(data)
+      } catch (error) {
+        console.error('获取API资源出错:', error)
+        setApiResourcesError(error instanceof Error ? error.message : '未知错误')
+      } finally {
+        setIsLoadingApiResources(false)
+      }
+    }
+    fetchApiResources()
+  }, [])
 
   useEffect(() => {
     if (extractedKeywords.length > 0 && glossaryTerms.length > 0) {
@@ -239,16 +263,16 @@ export default function KnowledgeHub({
     );
   };
 
-  const implicitKnowledge = [
-    {
-      id: "code-insight-1",
-      title: "从代码库分析",
-      source: "会议室预订API",
-      insight: "检测到现有API支持按部门筛选会议室，新系统可能需要保持此功能",
+  const implicitKnowledge = apiResources.map(resource => {
+    return {
+      id: resource.id,
+      title: "API资源",
+      source: `${resource.packageName}.${resource.className}.${resource.methodName}`,
+      insight: `检测到API端点: ${resource.sourceHttpMethod} ${resource.sourceUrl}`,
+      rawData: resource
     }
-  ]
+  })
 
-  // 修改关键词匹配判断逻辑
   const isKeywordMatched = (keyword: string) => {
     return matchedKeywords.includes(keyword);
   };
@@ -376,7 +400,7 @@ export default function KnowledgeHub({
             </div>
           </div>
 
-          <ScrollArea className="h-48">
+          <ScrollArea className="h-64">
             <div className="p-2 space-y-2">
               {implicitKnowledge.map((item) => (
                 <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0">
