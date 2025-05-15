@@ -59,12 +59,12 @@ public class ExampleClass {
 					package: '',
 					implements: [],
 					start: {
-						row: 4,
-						column: 54,
+						row: 3,
+						column: 0,
 					},
 					end: {
-						row: 6,
-						column: 2,
+						row: 7,
+						column: 1,
 					},
 				},
 			],

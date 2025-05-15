@@ -30,7 +30,8 @@
   },
   "include": [
     "src/**/*",
-    "test/**/*"
+    "test/**/*",
+    "vitest/globals.d.ts"
   ],
   "exclude": [
     "node_modules"

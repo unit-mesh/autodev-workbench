@@ -71,6 +71,7 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 		const methods: CodeFunction[] = [];
 		let methodReturnType = '';
 		let methodName = '';
+		let methodModifiers = '';
 
 		const fields: CodeVariable[] = [];
 		let lastField: CodeVariable = this.initVariable();
@@ -131,6 +132,9 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 				case 'method-name':
 					methodName = text;
 					break;
+				case 'method-modifiers':
+					methodModifiers = text;
+					break;
 				case 'method-body':
 					if (methodName !== '') {
 						const methodNode = capture.node;
@@ -138,15 +142,22 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						if (methodReturnType !== '') {
 							methodObj.returnType = methodReturnType;
 						}
+						if (methodModifiers !== '') {
+							methodObj.modifiers = methodModifiers;
+						}
 						if (methodNode !== null) {
 							this.insertLocation(methodNode, classObj);
 						}
 
-						methods.push(methodObj);
+						// 在添加方法到 methods 数组之前，检查是否已经存在相同的方法
+						if (!methods.some(m => m.name === methodObj.name && m.start.row === methodObj.start.row && m.start.column === methodObj.start.column)) {
+							methods.push(methodObj);
+						}
 					}
 
 					methodReturnType = '';
 					methodName = '';
+					methodModifiers = '';
 					break;
 				case 'field-type':
 					lastField.type = text;
@@ -241,7 +252,10 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						if (classMethodModifiers !== '') {
 							methodObj.modifiers = classMethodModifiers;
 						}
-						methods.push(methodObj);
+						// 在添加方法到 methods 数组之前，检查是否已经存在相同的方法
+						if (!methods.some(m => m.name === methodObj.name && m.start.row === methodObj.start.row && m.start.column === methodObj.start.column)) {
+							methods.push(methodObj);
+						}
 					}
 
 					// 重置
