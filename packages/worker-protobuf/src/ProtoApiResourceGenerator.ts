@@ -1,4 +1,4 @@
-import { CodeDataStruct, ApiResource, CodeFunction } from './ProtoAnalyser.type';
+import { CodeDataStruct, ApiResource, CodeFunction } from '@autodev/worker-core';
 
 export class ProtoApiResourceGenerator {
 	/**

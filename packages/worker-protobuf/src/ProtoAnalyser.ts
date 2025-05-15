@@ -4,7 +4,7 @@ import {
 	DataStructType,
 	CodeField,
 	CodeFunction,
-} from './ProtoAnalyser.type';
+} from '@autodev/worker-core';
 
 export class ProtoAnalyser {
 	/**

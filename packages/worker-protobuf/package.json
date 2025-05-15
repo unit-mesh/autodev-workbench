@@ -39,7 +39,8 @@
     "express": "^5.1.0",
     "protobufjs": "^7.5.1",
     "vscode-ripgrep": "^1.13.2",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "@autodev/worker-core": "workspace:*"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

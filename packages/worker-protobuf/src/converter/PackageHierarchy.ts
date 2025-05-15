@@ -1,4 +1,4 @@
-import { ApiResource } from "../ProtoAnalyser.type";
+import { ApiResource } from '@autodev/worker-core';
 
 export function toFlatPackage(apiResources: ApiResource[]) {
   const apiMap: any = {};

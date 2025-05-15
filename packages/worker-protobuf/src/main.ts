@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ProtoAnalyser } from './ProtoAnalyser';
-import { CodeDataStruct } from "./ProtoAnalyser.type";
-import { ProtoApiResourceGenerator } from "./ProtoApiResourceGenerator";
+import { CodeDataStruct } from '@autodev/worker-core';
+import { ProtoApiResourceGenerator } from './ProtoApiResourceGenerator';
 
 export interface AnalysisResult {
-    filePath: string;
-    dataStructures: CodeDataStruct[];
+	filePath: string;
+	dataStructures: CodeDataStruct[];
 }
 
 /**
@@ -15,25 +15,25 @@ export interface AnalysisResult {
  * @returns .proto 文件路径数组
  */
 export function scanProtoFiles(dirPath: string): string[] {
-    const protoFiles: string[] = [];
+	const protoFiles: string[] = [];
 
-    function scanDirectory(directory: string) {
-        const files = fs.readdirSync(directory);
+	function scanDirectory(directory: string) {
+		const files = fs.readdirSync(directory);
 
-        for (const file of files) {
-            const fullPath = path.join(directory, file);
-            const stat = fs.statSync(fullPath);
+		for (const file of files) {
+			const fullPath = path.join(directory, file);
+			const stat = fs.statSync(fullPath);
 
-            if (stat.isDirectory()) {
-                scanDirectory(fullPath);
-            } else if (file.endsWith('.proto')) {
-                protoFiles.push(fullPath);
-            }
-        }
-    }
+			if (stat.isDirectory()) {
+				scanDirectory(fullPath);
+			} else if (file.endsWith('.proto')) {
+				protoFiles.push(fullPath);
+			}
+		}
+	}
 
-    scanDirectory(dirPath);
-    return protoFiles;
+	scanDirectory(dirPath);
+	return protoFiles;
 }
 
 /**
@@ -42,35 +42,35 @@ export function scanProtoFiles(dirPath: string): string[] {
  * @returns 合并后的分析结果
  */
 export async function analyseProtos(protoFiles: string[]): Promise<AnalysisResult[]> {
-    const analyser = new ProtoAnalyser();
-    const results: AnalysisResult[] = [];
+	const analyser = new ProtoAnalyser();
+	const results: AnalysisResult[] = [];
 
-    for (const filePath of protoFiles) {
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const dataStructures = analyser.analyseFromContent(content, filePath);
-        results.push({ filePath, dataStructures });
-    }
+	for (const filePath of protoFiles) {
+		const content = fs.readFileSync(filePath, 'utf-8');
+		const dataStructures = analyser.analyseFromContent(content, filePath);
+		results.push({ filePath, dataStructures });
+	}
 
-    return results;
+	return results;
 }
 
 async function main() {
-    const dirPath = process.argv[2] || '.'; // 默认扫描 ./protos 目录
-    const protoFiles = scanProtoFiles(dirPath);
-    const results = await analyseProtos(protoFiles);
-    console.log(JSON.stringify(results, null, 2));
-    // save to file
-    const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
-    fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
+	const dirPath = process.argv[2] || '.'; // 默认扫描 ./protos 目录
+	const protoFiles = scanProtoFiles(dirPath);
+	const results = await analyseProtos(protoFiles);
+	console.log(JSON.stringify(results, null, 2));
+	// save to file
+	const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
+	fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
 
-    const resourceAnalyser = new ProtoApiResourceGenerator();
-    const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
-    console.log(JSON.stringify(apiResources, null, 2));
-    // save to file
-    const apiOutputFilePath = path.join(process.cwd(), 'api_resources.json');
-    fs.writeFileSync(apiOutputFilePath, JSON.stringify(apiResources, null, 2));
+	const resourceAnalyser = new ProtoApiResourceGenerator();
+	const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
+	console.log(JSON.stringify(apiResources, null, 2));
+	// save to file
+	const apiOutputFilePath = path.join(process.cwd(), 'api_resources.json');
+	fs.writeFileSync(apiOutputFilePath, JSON.stringify(apiResources, null, 2));
 }
 
 main().catch((error) => {
-    console.error('Error:', error);
+	console.error('Error:', error);
 });
