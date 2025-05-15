@@ -42,3 +42,14 @@ next-env.d.ts
 .idea/*
 node_modules/
 .next/*
+
+
+
+.nx/cache
+.nx/workspace-data
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# Next.js
+.next
+out
