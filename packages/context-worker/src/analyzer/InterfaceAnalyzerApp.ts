@@ -131,7 +131,7 @@ export class InterfaceAnalyzerApp {
 		const config = this.config;
 		const controllerFilter = (fileName: string) => {
 			const baseName = path.basename(fileName);
-			return baseName.endsWith('controller') || baseName.endsWith('Controller');
+			return baseName.includes('controller') || baseName.includes('Controller');
 		};
 
 		let codeFiles = await this.codeAnalyzer.initializeFiles(controllerFilter);
