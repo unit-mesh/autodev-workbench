@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@vercel/postgres";
 import { ApiResource } from '@autodev/worker-core';
+import { generateId } from "@/app/api/_utils/db";
 
 export async function GET() {
 	try {
@@ -59,11 +60,11 @@ export async function POST(request: Request) {
 		}
 
 		for (const item of data) {
+			const id = generateId()
 			await client.sql`
-				INSERT INTO "ApiResource" ("sourceUrl", "sourceHttpMethod", "packageName", "className", "methodName")
-				VALUES (${item.sourceUrl}, ${item.sourceHttpMethod}, ${item.packageName}, ${item.className}, ${item.methodName})
-				ON CONFLICT ("sourceUrl", "sourceHttpMethod", "packageName", "className", "methodName") DO NOTHING
-				RETURNING id, "sourceUrl", "sourceHttpMethod", "packageName", "className", "methodName";
+				INSERT INTO "ApiResource" ("id", "sourceUrl", "sourceHttpMethod", "packageName", "className", "methodName")
+				VALUES (${id}, ${item.sourceUrl}, ${item.sourceHttpMethod}, ${item.packageName}, ${item.className}, ${item.methodName})
+				RETURNING id;
 			`;
 		}
 
