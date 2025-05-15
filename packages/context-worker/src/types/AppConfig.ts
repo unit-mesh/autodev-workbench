@@ -12,6 +12,8 @@ export interface AppConfig {
   outputDir: string;
   /** 是否使用非交互模式 */
   nonInteractive: boolean;
+  /** 要处理的上下文类型 */
+  contextType: 'api' | 'interface';
   /** JSON 结果输出文件名 */
   outputJsonFile?: string;
 }
@@ -25,5 +27,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   baseUrl: 'http://localhost:3000/api/context',
   outputDir: 'materials',
   nonInteractive: false,
+  contextType: 'api',
   outputJsonFile: 'analysis_result.json'
 };

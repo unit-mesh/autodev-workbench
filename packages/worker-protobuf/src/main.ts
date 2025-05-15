@@ -54,23 +54,23 @@ export async function analyseProtos(protoFiles: string[]): Promise<AnalysisResul
 	return results;
 }
 
-async function main() {
-	const dirPath = process.argv[2] || '.'; // 默认扫描 ./protos 目录
-	const protoFiles = scanProtoFiles(dirPath);
-	const results = await analyseProtos(protoFiles);
-	console.log(JSON.stringify(results, null, 2));
-	// save to file
-	const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
-	fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
-
-	const resourceAnalyser = new ProtoApiResourceGenerator();
-	const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
-	console.log(JSON.stringify(apiResources, null, 2));
-	// save to file
-	const apiOutputFilePath = path.join(process.cwd(), 'api_resources.json');
-	fs.writeFileSync(apiOutputFilePath, JSON.stringify(apiResources, null, 2));
-}
-
-main().catch((error) => {
-	console.error('Error:', error);
-});
+// async function main() {
+// 	const dirPath = process.argv[2] || '.'; // 默认扫描 ./protos 目录
+// 	const protoFiles = scanProtoFiles(dirPath);
+// 	const results = await analyseProtos(protoFiles);
+// 	console.log(JSON.stringify(results, null, 2));
+// 	// save to file
+// 	const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
+// 	fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
+//
+// 	const resourceAnalyser = new ProtoApiResourceGenerator();
+// 	const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
+// 	console.log(JSON.stringify(apiResources, null, 2));
+// 	// save to file
+// 	const apiOutputFilePath = path.join(process.cwd(), 'api_resources.json');
+// 	fs.writeFileSync(apiOutputFilePath, JSON.stringify(apiResources, null, 2));
+// }
+//
+// main().catch((error) => {
+// 	console.error('Error:', error);
+// });

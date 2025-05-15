@@ -103,19 +103,14 @@ export class InterfaceAnalyzerApp {
 		}
 	}
 
-	public async run(config: AppConfig): Promise<void> {
-		await this.handleCodeContext(config);
-		await this.handleProtobuf(config);
-	}
-
-	private async handleCodeContext(config: AppConfig) {
+	async handleInterfaceContext(config: AppConfig) {
 		await this.codeAnalyzer.initialize();
 		this.codeAnalyzer.updateConfig(config);
 
 		console.log(`正在扫描目录: ${config.dirPath}`);
 		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
-		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'analysis_result.json');
+		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'interface_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (config.upload) {
@@ -127,12 +122,11 @@ export class InterfaceAnalyzerApp {
 		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 
-	private async handleProtobuf(config: AppConfig) {
+	async handleApiContext(config: AppConfig) {
 		const protoFiles = scanProtoFiles(config.dirPath);
 		const results = await analyseProtos(protoFiles);
-		console.log(JSON.stringify(results, null, 2));
-		// save to file
-		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
+
+		const outputFilePath = path.join(process.cwd(), 'api_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
 
 		const resourceAnalyser = new ProtoApiResourceGenerator();

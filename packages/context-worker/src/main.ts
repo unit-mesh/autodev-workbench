@@ -3,29 +3,34 @@ import { CommandLineParser, UserInputHandler } from "./cli/cli";
 import { InterfaceAnalyzerApp } from "./analyzer/InterfaceAnalyzerApp";
 
 async function run(options?: Partial<AppConfig>): Promise<void> {
-    const commandLineParser = new CommandLineParser();
-    const userInputHandler = new UserInputHandler();
-    const app = new InterfaceAnalyzerApp();
+	const commandLineParser = new CommandLineParser();
+	const userInputHandler = new UserInputHandler();
+	const app = new InterfaceAnalyzerApp();
 
-    const cmdConfig = commandLineParser.parse();
-    const initialConfig: AppConfig = {
-        ...cmdConfig,
-        ...options,
-    };
+	const cmdConfig = commandLineParser.parse();
+	const initialConfig: AppConfig = {
+		...cmdConfig,
+		...options,
+	};
 
-    let config = initialConfig;
-    const isDefaultPath = cmdConfig.dirPath === process.cwd();
-    const shouldPrompt = !config.nonInteractive && (isDefaultPath && !options?.dirPath);
+	let config = initialConfig;
+	const isDefaultPath = cmdConfig.dirPath === process.cwd();
+	const shouldPrompt = !config.nonInteractive && (isDefaultPath && !options?.dirPath);
 
-    if (shouldPrompt) {
-        config = await userInputHandler.getAppConfig(config);
-    }
+	if (shouldPrompt) {
+		config = await userInputHandler.getAppConfig(config);
+	}
 
-    await app.run(config);
+	if (config.contextType === 'interface') {
+		await app.handleInterfaceContext(config);
+		await app.handleApiContext(config);
+	} else {
+		await app.handleApiContext(config);
+	}
 }
 
 if (require.main === module) {
-    run().catch(err => console.error("错误:", err));
+	run().catch(err => console.error("错误:", err));
 } else {
-    module.exports = { main: run };
+	module.exports = { main: run };
 }
