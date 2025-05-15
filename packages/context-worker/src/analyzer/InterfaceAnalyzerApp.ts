@@ -104,6 +104,11 @@ export class InterfaceAnalyzerApp {
 	}
 
 	public async run(config: AppConfig): Promise<void> {
+		await this.handleCodeContext(config);
+		await this.handleProtobuf(config);
+	}
+
+	private async handleCodeContext(config: AppConfig) {
 		await this.codeAnalyzer.initialize();
 		this.codeAnalyzer.updateConfig(config);
 
@@ -120,8 +125,6 @@ export class InterfaceAnalyzerApp {
 
 		console.log(`分析结果已保存到 ${outputFilePath}`);
 		await this.codeAnalyzer.generateLearningMaterials(result);
-
-		await this.handleProtobuf(config);
 	}
 
 	private async handleProtobuf(config: AppConfig) {
