@@ -50,11 +50,23 @@ export class CodeAnalyzer {
 	private filesInDir: string[] = [];
 	private markdownFilesInDir: string[] = [];
 
-	public async initialize(): Promise<void> {
+	/**
+	 * Initialize and parse files in the directory
+	 * @param fileFilter Optional function to filter files by name
+	 * @returns Array of parsed CodeFile objects
+	 */
+	public async initializeFiles(fileFilter?: (fileName: string) => boolean): Promise<CodeFile[]> {
 		await this.serviceProvider.ready();
 		const allFiles = await this.fileScanner.scanDirectory(this.config.dirPath);
 
+		this.filesInDir = [];
+		this.markdownFilesInDir = [];
+
 		for (const file of allFiles) {
+			if (fileFilter && !fileFilter(file)) {
+				continue;
+			}
+
 			if (path.extname(file).toLowerCase() === '.md') {
 				this.markdownFilesInDir.push(file);
 			} else {
@@ -62,7 +74,21 @@ export class CodeAnalyzer {
 			}
 		}
 
-		await this.parseCodeStructures(this.filesInDir);
+		return await this.parseCodeStructures(this.filesInDir);
+	}
+
+	/**
+	 * 通用的文件名过滤器生成函数
+	 * @param patterns 文件名应匹配的模式数组
+	 * @returns 过滤函数
+	 */
+	public static createFileNameFilter(patterns: string[]): (fileName: string) => boolean {
+		return (fileName: string) => {
+			const baseName = path.basename(fileName);
+			return patterns.some(pattern =>
+				baseName.toLowerCase().endsWith(pattern.toLowerCase())
+			);
+		};
 	}
 
 	public async analyzeDirectory(): Promise<CodeAnalysisResult> {
@@ -79,8 +105,9 @@ export class CodeAnalyzer {
 		};
 	}
 
-	async parseCodeStructures(files: string[]): Promise<void> {
+	async parseCodeStructures(files: string[]): Promise<CodeFile[]> {
 		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
+		const parsedFiles: CodeFile[] = [];
 
 		for (const file of files) {
 			try {
@@ -105,11 +132,14 @@ export class CodeAnalyzer {
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
 
 				this.codeCollector.addCodeFile(file, codeFile);
+				parsedFiles.push(codeFile);
 
 			} catch (error) {
 				console.error(`处理文件 ${file} 时出错:`, error);
 			}
 		}
+
+		return parsedFiles;
 	}
 
 	private async analyzeMarkdownFiles(markdownFiles: string[]): Promise<any> {
@@ -465,8 +495,8 @@ export class CodeAnalyzer {
 		return code;
 	}
 
-	analyzeApi(config: AppConfig): Promise<ApiResource[]> {
-		return this.httpApiAnalyser.analyze(this.codeCollector)
+	analyzeApi(files: CodeFile[]): Promise<ApiResource[]> {
+		return this.httpApiAnalyser.analyze(files)
 	}
 }
 

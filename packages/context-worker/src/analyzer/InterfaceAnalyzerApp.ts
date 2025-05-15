@@ -14,7 +14,7 @@ import { KotlinSpringControllerAnalyser } from "../code-context/kotlin/KotlinSpr
 import { CodeAnalyzer } from "./analyzers/CodeAnalyzer";
 import { CodeAnalysisResult } from "./CodeAnalysisResult";
 import { PythonStructurer } from "../code-context/python/PythonStructurer";
-import { AppConfig, DEFAULT_CONFIG } from "../types/AppConfig";
+import { AppConfig } from "../types/AppConfig";
 import { RustStructurer } from "../code-context/rust/RustStructurer";
 import { CStructurer } from "../code-context/c/CStructurer";
 import { CSharpStructurer } from "../code-context/csharp/CSharpStructurer";
@@ -27,6 +27,7 @@ export class InterfaceAnalyzerApp {
 	private config: AppConfig;
 
 	constructor(config: AppConfig) {
+		this.config = config;
 		this.instantiationService = new InstantiationService();
 		this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
@@ -106,11 +107,8 @@ export class InterfaceAnalyzerApp {
 		}
 	}
 
-	async initialize() {
-		return this.codeAnalyzer.initialize()
-	}
-
 	async handleInterfaceContext() {
+		await this.codeAnalyzer.initializeFiles();
 		const config = this.config;
 		this.codeAnalyzer.updateConfig(config);
 
@@ -131,8 +129,14 @@ export class InterfaceAnalyzerApp {
 
 	async handleApiContext() {
 		const config = this.config;
+		const controllerFilter = (fileName: string) => {
+			const baseName = path.basename(fileName);
+			return baseName.endsWith('controller') || baseName.endsWith('Controller');
+		};
+
+		let codeFiles = await this.codeAnalyzer.initializeFiles(controllerFilter);
 		let apiResources = await this.analysisProtobuf(config);
-		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(config);
+		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(codeFiles);
 		apiResources = apiResources.concat(normalApis);
 
 		if (config.upload) {

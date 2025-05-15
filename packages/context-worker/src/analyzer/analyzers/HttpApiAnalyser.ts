@@ -1,16 +1,14 @@
-import { CodeCollector } from "../CodeCollector";
-import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { ControllerAnalyserManager } from "../../code-context/ControllerAnalyserManager";
 import { ApiResource } from "@autodev/worker-core";
+import { CodeFile } from "../../codemodel/CodeElement";
 
-export class HttpApiAnalyser implements ICodeAnalyzer {
+export class HttpApiAnalyser {
 	private manager: ControllerAnalyserManager = ControllerAnalyserManager.getInstance()
 	private analysers = this.manager.getAnalyser();
 
-	async analyze(codeCollector: CodeCollector): Promise<ApiResource[]> {
-		let allFiles = codeCollector.getAllFiles();
+	async analyze(codeFiles: CodeFile[]): Promise<ApiResource[]> {
 		let apiResources: ApiResource[] = [];
-		for (let file of allFiles) {
+		for (let file of codeFiles) {
 			for (let analyser of this.analysers) {
 				let result: ApiResource[] = await analyser.analysis(file);
 				if (result && result.length > 0) {

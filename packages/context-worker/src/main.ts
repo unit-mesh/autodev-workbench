@@ -21,7 +21,6 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 	}
 
 	const app = new InterfaceAnalyzerApp(config);
-	await app.initialize();
 	if (config.contextType === 'interface') {
 		await app.handleInterfaceContext();
 		await app.handleApiContext();
