@@ -14,6 +14,8 @@ import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 import { AppConfig } from "../../types/AppConfig";
+import { HttpApiAnalyser } from "./HttpApiAnalyser";
+import { ApiResource } from "@autodev/worker-core";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -23,6 +25,7 @@ export class CodeAnalyzer {
 	private analyzers: ICodeAnalyzer[];
 	private markdownAnalyser: MarkdownAnalyser;
 	private config: AppConfig;
+	private httpApiAnalyser: HttpApiAnalyser;
 
 	constructor(instantiationService: InstantiationService, config?: Partial<AppConfig>) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
@@ -30,13 +33,14 @@ export class CodeAnalyzer {
 		this.fileScanner = new FileSystemScanner();
 		this.codeCollector = new CodeCollector();
 		this.markdownAnalyser = new MarkdownAnalyser();
-		
+		this.httpApiAnalyser = new HttpApiAnalyser();
+
 		// 初始化各个分析器
 		this.analyzers = [
 			new InterfaceAnalyzer(),
-			new ClassHierarchyAnalyzer()
+			new ClassHierarchyAnalyzer(),
 		];
-		
+
 		// 存储配置
 		this.config = config as AppConfig;
 	}
@@ -53,9 +57,8 @@ export class CodeAnalyzer {
 	}
 
 	public async analyzeDirectory(dirPath?: string): Promise<CodeAnalysisResult> {
-		// 使用传入的目录路径或配置中的路径
 		const targetDir = dirPath || this.config.dirPath;
-		
+
 		const files = await this.fileScanner.scanDirectory(targetDir);
 
 		const markdownFiles: string[] = [];
@@ -69,7 +72,7 @@ export class CodeAnalyzer {
 			}
 		}
 
-		await this.collectCodeStructures(codeFiles);
+		await this.parseCodeStructures(codeFiles);
 
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
@@ -84,7 +87,7 @@ export class CodeAnalyzer {
 		};
 	}
 
-	private async collectCodeStructures(files: string[]): Promise<void> {
+	private async parseCodeStructures(files: string[]): Promise<void> {
 		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
 
 		for (const file of files) {
@@ -191,7 +194,7 @@ export class CodeAnalyzer {
 	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir?: string): Promise<string[]> {
 		// 使用传入的输出目录或配置中的输出目录
 		const targetDir = outputDir || this.config.outputDir;
-		
+
 		if (!fs.existsSync(targetDir)) {
 			fs.mkdirSync(targetDir, { recursive: true });
 		}
@@ -251,10 +254,13 @@ export class CodeAnalyzer {
 		return generatedFiles;
 	}
 
-	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{ path: string; content: string }[]> {
+	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{
+		path: string;
+		content: string
+	}[]> {
 		// 使用传入的目标目录或配置中的扫描目录
 		const scanDir = targetDir || this.config.dirPath;
-		
+
 		const items: { path: string; content: string }[] = [];
 
 		for (const intf of result.interfaceAnalysis.interfaces) {
@@ -460,6 +466,10 @@ export class CodeAnalyzer {
 			return code.replace(/`/g, "\\`");
 		}
 		return code;
+	}
+
+	analyzeApi(config: AppConfig): Promise<ApiResource[]> {
+		return this.httpApiAnalyser.analyze(this.codeCollector)
 	}
 }
 

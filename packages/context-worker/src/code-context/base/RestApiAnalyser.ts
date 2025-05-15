@@ -1,23 +1,8 @@
 import { injectable } from 'inversify';
-import { CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
-
-/**
- * API resource representation
- */
-export interface ApiResource {
-  // URL path of the API
-  url: string;
-  // HTTP method (GET, POST, PUT, DELETE, PATCH, etc.)
-  httpMethod: string;
-  // Package name where the API controller is defined
-  packageName: string;
-  // Class name of the controller
-  className: string;
-  // Method name that handles the request
-  methodName: string;
-}
+import { ApiResource } from "@autodev/worker-core";
+import { CodeFile } from "../../codemodel/CodeElement";
 
 /**
  * API call representation
@@ -31,21 +16,6 @@ export interface ApiDemand {
   targetHttpMethod: string;
 }
 
-/**
- * API service representation
- */
-export interface ApiService {
-  // Service name
-  name: string;
-  // API resources offered by this service
-  resources: ApiResource[];
-  // API demands (calls to other services)
-  demands: ApiDemand[];
-}
-
-/**
- * Interface for analysing REST API resources from code
- */
 @injectable()
 export abstract class RestApiAnalyser {
   // Language identifier that this analyser supports
@@ -77,15 +47,8 @@ export abstract class RestApiAnalyser {
   abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]>;
 
   /**
-   * Convert analysed resources and demands into API services
+   * Perform analysis on the code file
+   * @param codeFile the code file to analyse
    */
-  toApiServices(): ApiService[] {
-    return [
-      {
-        name: "",
-        resources: this.resources,
-        demands: this.demands
-      }
-    ];
-  }
+  abstract analysis(codeFile: CodeFile): Promise<ApiResource[]>;
 }

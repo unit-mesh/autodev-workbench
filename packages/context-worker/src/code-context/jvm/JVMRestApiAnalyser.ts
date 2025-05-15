@@ -1,10 +1,11 @@
 import Parser, { SyntaxNode } from 'web-tree-sitter';
-import { ApiResource, RestApiAnalyser } from '../base/RestApiAnalyser';
+import { RestApiAnalyser } from '../base/RestApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
-import { CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
+import { CodeFile, CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { StructurerProvider } from "../base/StructurerProvider";
+import { ApiResource } from "@autodev/worker-core";
 
 export interface Annotation {
 	name: string;
@@ -52,6 +53,10 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			return;
 		}
 
+		return this.analysis(codeFile);
+	}
+
+	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
 		for (const node of codeFile.classes) {
 			const classAnnotations = node.annotations
 			const isController = this.isSpringController(classAnnotations);
@@ -68,7 +73,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			}
 		}
 
-		return this.resources
+		return Promise.all(this.resources)
 	}
 
 	protected cleanStringLiteral(text: string): string {
@@ -148,11 +153,13 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			const fullPath = this.combinePaths(baseUrl, path);
 
 			this.resources.push({
-				url: fullPath,
-				httpMethod: httpMethod,
+				id: "",
+				sourceUrl: fullPath,
+				sourceHttpMethod: httpMethod,
 				packageName: node.package,
 				className: node.name,
-				methodName: method.name
+				methodName: method.name,
+				supplyType: "Java",
 			});
 		}
 	}

@@ -123,21 +123,29 @@ export class InterfaceAnalyzerApp {
 	}
 
 	async handleApiContext(config: AppConfig) {
-		await this.analysisProtobuf(config);
-	}
+		let apiResources = await this.analysisProtobuf(config);
+		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(config);
+		apiResources = apiResources.concat(normalApis);
 
-	private async analysisProtobuf(config: AppConfig) {
-		const protoFiles = await scanProtoFiles(config.dirPath);
-		const results = await analyseProtos(protoFiles);
-
-		const outputFilePath = path.join(process.cwd(), 'api_analysis_result.json');
-		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
-
-		const resourceAnalyser = new ProtoApiResourceGenerator();
-		const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
 		if (config.upload) {
 			console.log(`正在上传分析结果到 ${config.baseUrl}`);
 			await this.uploadApiCodeResult(apiResources, config);
 		}
+
+		// write to file
+		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'api_analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(apiResources, null, 2));
+	}
+
+	private async analysisProtobuf(config: AppConfig): Promise<ApiResource[]> {
+		const protoFiles = await scanProtoFiles(config.dirPath);
+		const results = await analyseProtos(protoFiles);
+
+		const outputFilePath = path.join(process.cwd(), 'protobuf_analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
+
+		const resourceAnalyser = new ProtoApiResourceGenerator();
+		const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
+		return apiResources
 	}
 }
