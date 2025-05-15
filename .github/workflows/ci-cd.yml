@@ -28,4 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Build
+        run: pnpm --filter worker-core build
+
+      - name: Build
         run: pnpm build
