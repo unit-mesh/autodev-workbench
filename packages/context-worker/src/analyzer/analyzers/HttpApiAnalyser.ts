@@ -7,11 +7,6 @@ export class HttpApiAnalyser implements ICodeAnalyzer {
 	private manager: ControllerAnalyserManager = ControllerAnalyserManager.getInstance()
 	private analysers = this.manager.getAnalyser();
 
-	constructor() {
-		console.log("[HttpApiAnalyser] : analyzers", this.analysers);
-	}
-
-
 	async analyze(codeCollector: CodeCollector): Promise<ApiResource[]> {
 		let allFiles = codeCollector.getAllFiles();
 		let apiResources: ApiResource[] = [];

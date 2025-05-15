@@ -85,6 +85,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 	}
 
 	protected isSpringController(annotations: Annotation[]): boolean {
+		if (!annotations || annotations.length === 0) return false;
 		return annotations.some(anno =>
 			anno.name === 'RestController' ||
 			anno.name === 'Controller'

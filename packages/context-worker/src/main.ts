@@ -5,7 +5,6 @@ import { InterfaceAnalyzerApp } from "./analyzer/InterfaceAnalyzerApp";
 async function run(options?: Partial<AppConfig>): Promise<void> {
 	const commandLineParser = new CommandLineParser();
 	const userInputHandler = new UserInputHandler();
-	const app = new InterfaceAnalyzerApp();
 
 	const cmdConfig = commandLineParser.parse();
 	const initialConfig: AppConfig = {
@@ -21,11 +20,13 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 		config = await userInputHandler.getAppConfig(config);
 	}
 
+	const app = new InterfaceAnalyzerApp(config);
+	await app.initialize();
 	if (config.contextType === 'interface') {
-		await app.handleInterfaceContext(config);
-		await app.handleApiContext(config);
+		await app.handleInterfaceContext();
+		await app.handleApiContext();
 	} else {
-		await app.handleApiContext(config);
+		await app.handleApiContext();
 	}
 }
 

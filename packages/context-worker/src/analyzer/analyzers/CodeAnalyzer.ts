@@ -35,51 +35,43 @@ export class CodeAnalyzer {
 		this.markdownAnalyser = new MarkdownAnalyser();
 		this.httpApiAnalyser = new HttpApiAnalyser();
 
-		// 初始化各个分析器
 		this.analyzers = [
 			new InterfaceAnalyzer(),
 			new ClassHierarchyAnalyzer(),
 		];
 
-		// 存储配置
 		this.config = config as AppConfig;
 	}
 
-	/**
-	 * 更新配置
-	 */
 	public updateConfig(config: AppConfig): void {
 		this.config = config;
 	}
 
+	private filesInDir: string[] = [];
+	private markdownFilesInDir: string[] = [];
+
 	public async initialize(): Promise<void> {
 		await this.serviceProvider.ready();
-	}
+		const allFiles = await this.fileScanner.scanDirectory(this.config.dirPath);
 
-	public async analyzeDirectory(dirPath?: string): Promise<CodeAnalysisResult> {
-		const targetDir = dirPath || this.config.dirPath;
-
-		const files = await this.fileScanner.scanDirectory(targetDir);
-
-		const markdownFiles: string[] = [];
-		const codeFiles: string[] = [];
-
-		for (const file of files) {
+		for (const file of allFiles) {
 			if (path.extname(file).toLowerCase() === '.md') {
-				markdownFiles.push(file);
+				this.markdownFilesInDir.push(file);
 			} else {
-				codeFiles.push(file);
+				this.filesInDir.push(file);
 			}
 		}
 
-		await this.parseCodeStructures(codeFiles);
+		await this.parseCodeStructures(this.filesInDir);
+	}
 
+	public async analyzeDirectory(): Promise<CodeAnalysisResult> {
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
 			this.analyzers[1].analyze(this.codeCollector)
 		]);
 
-		const markdownAnalysisResult = await this.analyzeMarkdownFiles(markdownFiles);
+		const markdownAnalysisResult = await this.analyzeMarkdownFiles(this.markdownFilesInDir);
 		return {
 			interfaceAnalysis,
 			extensionAnalysis,
@@ -104,6 +96,11 @@ export class CodeAnalyzer {
 
 				const content = await this.fileScanner.readFileContent(file);
 				const structurer = this.structurerManager.getStructurer(language);
+				if (!structurer) {
+					console.warn(`No structurer found for language ${language}, skipping file ${file}`);
+					continue;
+				}
+
 				await structurer.init(this.serviceProvider);
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
 

@@ -24,8 +24,9 @@ import { ApiResource } from "@autodev/worker-core";
 export class InterfaceAnalyzerApp {
 	private instantiationService: InstantiationService;
 	private codeAnalyzer: CodeAnalyzer;
+	private config: AppConfig;
 
-	constructor() {
+	constructor(config: AppConfig) {
 		this.instantiationService = new InstantiationService();
 		this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
@@ -41,7 +42,7 @@ export class InterfaceAnalyzerApp {
 		providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
 		providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
 
-		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);
+		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, config);
 	}
 
 	/**
@@ -49,7 +50,8 @@ export class InterfaceAnalyzerApp {
 	 * @param result
 	 * @param config
 	 */
-	public async uploadCodeResult(result: CodeAnalysisResult, config: AppConfig): Promise<void> {
+	public async uploadCodeResult(result: CodeAnalysisResult): Promise<void> {
+		const config = this.config;
 		try {
 			const textResult = await this.codeAnalyzer.convertToList(result);
 
@@ -81,7 +83,8 @@ export class InterfaceAnalyzerApp {
 	 * @param result
 	 * @param config
 	 */
-	public async uploadApiCodeResult(result: ApiResource[], config: AppConfig): Promise<void> {
+	public async uploadApiCodeResult(result: ApiResource[]): Promise<void> {
+		const config = this.config;
 		try {
 			const response = await fetch(config.baseUrl + '/api', {
 				method: 'POST',
@@ -103,8 +106,12 @@ export class InterfaceAnalyzerApp {
 		}
 	}
 
-	async handleInterfaceContext(config: AppConfig) {
-		await this.codeAnalyzer.initialize();
+	async initialize() {
+		return this.codeAnalyzer.initialize()
+	}
+
+	async handleInterfaceContext() {
+		const config = this.config;
 		this.codeAnalyzer.updateConfig(config);
 
 		console.log(`正在扫描目录: ${config.dirPath}`);
@@ -115,21 +122,22 @@ export class InterfaceAnalyzerApp {
 
 		if (config.upload) {
 			console.log(`正在上传分析结果到 ${config.baseUrl}`);
-			await this.uploadCodeResult(result, config);
+			await this.uploadCodeResult(result);
 		}
 
 		console.log(`分析结果已保存到 ${outputFilePath}`);
 		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 
-	async handleApiContext(config: AppConfig) {
+	async handleApiContext() {
+		const config = this.config;
 		let apiResources = await this.analysisProtobuf(config);
 		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(config);
 		apiResources = apiResources.concat(normalApis);
 
 		if (config.upload) {
 			console.log(`正在上传分析结果到 ${config.baseUrl}`);
-			await this.uploadApiCodeResult(apiResources, config);
+			await this.uploadApiCodeResult(apiResources);
 		}
 
 		// write to file

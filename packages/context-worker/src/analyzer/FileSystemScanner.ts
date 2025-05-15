@@ -83,21 +83,17 @@ export class FileSystemScanner {
 	 * Scans a directory and returns all file paths, respecting ignore patterns and .gitignore files
 	 */
 	public async scanDirectory(dirPath: string, baseDir: string = dirPath): Promise<string[]> {
-		// Check if this directory should be ignored
 		const relativePath = path.relative(baseDir, dirPath);
 		if (this.shouldIgnorePath(relativePath)) {
 			return [];
 		}
 
-		// Parse .gitignore if it exists in this directory
 		await this.parseGitignoreIfExists(dirPath, baseDir);
 
 		const entries = await readdir(dirPath, { withFileTypes: true });
 		const files = await Promise.all(entries.map(async (entry) => {
 			const fullPath = path.join(dirPath, entry.name);
 			const relPath = path.relative(baseDir, fullPath);
-
-			// Skip if this path should be ignored
 			if (this.shouldIgnorePath(relPath) || this.isIgnoredByGitignore(relPath, baseDir)) {
 				return [];
 			}
@@ -105,10 +101,8 @@ export class FileSystemScanner {
 			if (entry.isDirectory()) {
 				return this.scanDirectory(fullPath, baseDir);
 			} else {
-				// For binary files or files that are too large, we might want to skip them
 				try {
 					const fileStat = await stat(fullPath);
-					// Skip large files (e.g., larger than 1MB)
 					if (fileStat.size > 1024 * 1024) {
 						return [];
 					}
