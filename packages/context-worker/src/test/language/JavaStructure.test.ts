@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { TestLanguageServiceProvider } from "../TestLanguageService";
 import { JavaStructurerProvider } from "../../code-context/java/JavaStructurerProvider";
@@ -12,7 +12,7 @@ describe('JavaStructure', () => {
 import java.util.List;
 
 @Application
-@AutoDev
+@AutoDev("/api/users")
 public class ExampleClass {
 	public void exampleMethod(String param1, int param2) {
 		System.out.println("Hello World");
@@ -45,7 +45,12 @@ public class ExampleClass {
 						},
 						{
 							name: 'AutoDev',
-							keyValues: [],
+							keyValues: [
+								{
+									key: "value",
+									value: "/api/users"
+								}
+							],
 						},
 					],
 					constant: [],
@@ -56,6 +61,7 @@ public class ExampleClass {
 							vars: [],
 							modifiers: "public",
 							name: 'exampleMethod',
+							annotations: [],
 							start: {
 								row: 6,
 								column: 1,

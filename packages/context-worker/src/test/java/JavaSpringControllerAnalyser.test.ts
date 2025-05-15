@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { TestLanguageServiceProvider } from "../TestLanguageService";
 import { JavaSpringControllerAnalyser } from "../../code-context/java/JavaSpringControllerAnalyser";
@@ -55,30 +56,30 @@ public class UserController {
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
-    // expect(resources[0]).toMatchObject({
-    //   url: '/api/users',
-    //   httpMethod: 'GET',
-    //   packageName: 'com.example.controllers',
-    //   className: 'UserController',
-    //   methodName: 'getAllUsers'
-    // });
-    //
-    // // 检查第二个端点
-    // expect(resources[1]).toMatchObject({
-    //   url: '/api/users/{id}',
-    //   httpMethod: 'GET',
-    //   packageName: 'com.example.controllers',
-    //   className: 'UserController',
-    //   methodName: 'getUserById'
-    // });
-    //
-    // // 检查第三个端点
-    // expect(resources[2]).toMatchObject({
-    //   url: '/api/users',
-    //   httpMethod: 'POST',
-    //   packageName: 'com.example.controllers',
-    //   className: 'UserController',
-    //   methodName: 'createUser'
-    // });
+    expect(resources[0]).toMatchObject({
+      url: '/api/users',
+      httpMethod: 'GET',
+      packageName: 'com.example.controllers',
+      className: 'UserController',
+      methodName: 'getAllUsers'
+    });
+
+    // 检查第二个端点
+    expect(resources[1]).toMatchObject({
+      url: '/api/users/{id}',
+      httpMethod: 'GET',
+      packageName: 'com.example.controllers',
+      className: 'UserController',
+      methodName: 'getUserById'
+    });
+
+    // 检查第三个端点
+    expect(resources[2]).toMatchObject({
+      url: '/api/users',
+      httpMethod: 'POST',
+      packageName: 'com.example.controllers',
+      className: 'UserController',
+      methodName: 'createUser'
+    });
   });
 });

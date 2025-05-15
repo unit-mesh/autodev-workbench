@@ -52,7 +52,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			return;
 		}
 
-		const tree = this.parser.parse(sourceCode);
 		for (const node of codeFile.classes) {
 			const classAnnotations = node.annotations
 			const isController = this.isSpringController(classAnnotations);
@@ -67,8 +66,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 					});
 				}
 			}
-
-			this.findRestTemplateUsages(tree.rootNode, node);
 		}
 
 		return this.resources
