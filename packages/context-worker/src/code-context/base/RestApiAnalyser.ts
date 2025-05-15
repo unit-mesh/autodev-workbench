@@ -69,11 +69,12 @@ export abstract class RestApiAnalyser {
   abstract init(langService: ILanguageServiceProvider): Promise<void>;
 
   /**
-   * Analyse a code structure to extract API resources and demands
-   * @param node the code structure to analyse
+   * Analyse source code to extract API resources and demands
+   * @param sourceCode the source code to analyse
+   * @param filePath the file path of the source code
    * @param workspacePath the workspace path
    */
-  abstract analyse(node: CodeStructure, workspacePath: string): void;
+  abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<void>;
 
   /**
    * Convert analysed resources and demands into API services

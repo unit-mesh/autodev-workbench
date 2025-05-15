@@ -6,12 +6,12 @@ import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { KotlinProfile } from './KotlinProfile';
 import { MemoizedQuery } from '../base/LanguageProfile';
 import { JVMRestApiAnalyser} from '../jvm/JVMRestApiAnalyser';
+import { StructurerProvider } from "../base/StructurerProvider";
+import { KotlinStructurerProvider } from "./KotlinStructurerProvider";
 
-/**
- * An implementation of RestApiAnalyser for analyzing Kotlin Spring Controllers
- */
 @injectable()
 export class KotlinSpringControllerAnalyser extends JVMRestApiAnalyser {
+	protected structurer: StructurerProvider = new KotlinStructurerProvider();
 	readonly langId: LanguageIdentifier = 'kotlin';
 	protected config: LanguageProfile;
 

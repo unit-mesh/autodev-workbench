@@ -5,6 +5,8 @@ import { CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { MemoizedQuery } from '../base/LanguageProfile';
+import { StructurerProviderManager } from '../StructurerProviderManager';
+import { StructurerProvider } from "../base/StructurerProvider";
 
 export interface Annotation {
 	name: string;
@@ -15,6 +17,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 	protected parser: Parser | undefined;
 	protected language: Parser.Language | undefined;
 	protected abstract config: LanguageProfile;
+	protected abstract structurer: StructurerProvider;
 
 	protected abstract springAnnotationQuery: MemoizedQuery;
 	protected abstract restTemplateQuery: MemoizedQuery;
@@ -27,51 +30,56 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 		parser!.setLanguage(language);
 		this.parser = parser;
 		this.language = language;
+		await this.structurer.init(langService)
 	}
 
-	analyse(node: CodeStructure, workspacePath: string): void {
+	async analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<void> {
 		if (!this.language || !this.parser) {
 			console.warn(`${this.constructor.name} not initialized for ${this.langId}`);
 			return;
 		}
-
-		// Step 1: Read the source code (we need to get it from somewhere)
-		// This is a placeholder; in a real implementation, we would need to read the source code
-		const sourceCode = ''; // Placeholder
 
 		if (!sourceCode) {
 			console.warn('No source code available for analysis');
 			return;
 		}
 
-		// Step 2: Parse the code
-		const tree = this.parser.parse(sourceCode);
-
-		// Step 3: Check if this class is a Spring Controller
-		const classAnnotations = this.extractAnnotations(tree.rootNode);
-		const isController = this.isSpringController(classAnnotations);
-
-		if (isController) {
-			// Step 4: Get base URL from class-level RequestMapping
-			const baseUrl = this.getBaseUrl(classAnnotations);
-
-			// Step 5: Analyze methods
-			if (node.methods && node.methods.length > 0) {
-				node.methods.forEach(method => {
-					// For each method, we need to get its node from the parse tree
-					// This is simplified; in a real implementation, we would need to locate
-					// the method in the AST
-					const methodNode = this.findMethodNode(tree.rootNode, method.name);
-					if (methodNode) {
-						const methodAnnotations = this.extractAnnotations(methodNode);
-						this.processControllerMethod(method, methodAnnotations, baseUrl, node);
-					}
-				});
-			}
+		// const structurerManager = StructurerProviderManager.getInstance();
+		// const structurer = structurerManager.getStructurer(this.langId);
+		//
+		if (!this.structurer) {
+			console.warn(`No structurer available for language ${this.langId}`);
+			return;
 		}
 
-		// Step 6: Check for RestTemplate usages
-		this.findRestTemplateUsages(tree.rootNode, node);
+		const codeFile = await this.structurer.parseFile(sourceCode, filePath);
+
+		if (!codeFile || !codeFile.classes || codeFile.classes.length === 0) {
+			console.warn('No code structures found in the source code');
+			return;
+		}
+
+		const tree = this.parser.parse(sourceCode);
+		for (const node of codeFile.classes) {
+			const classAnnotations = this.extractAnnotations(tree.rootNode);
+			const isController = this.isSpringController(classAnnotations);
+
+			if (isController) {
+				const baseUrl = this.getBaseUrl(classAnnotations);
+
+				if (node.methods && node.methods.length > 0) {
+					node.methods.forEach(method => {
+						const methodNode = this.findMethodNode(tree.rootNode, method.name);
+						if (methodNode) {
+							const methodAnnotations = this.extractAnnotations(methodNode);
+							this.processControllerMethod(method, methodAnnotations, baseUrl, node);
+						}
+					});
+				}
+			}
+
+			this.findRestTemplateUsages(tree.rootNode, node);
+		}
 	}
 
 	protected extractAnnotations(node: SyntaxNode): Annotation[] {
@@ -121,7 +129,10 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 		return annotations;
 	}
 
-	protected abstract cleanStringLiteral(text: string): string;
+	protected cleanStringLiteral(text: string): string {
+		// 默认实现：移除双引号
+		return text.replace(/^"(.*)"$/, '$1');
+	}
 
 	protected isSpringController(annotations: Annotation[]): boolean {
 		return annotations.some(anno =>

@@ -257,9 +257,6 @@ importers:
       '@rollup/plugin-typescript':
         specifier: ^12.1.2
         version: 12.1.2(rollup@4.40.2)(tslib@2.8.1)(typescript@5.8.3)
-      '@types/jest':
-        specifier: ^29.5.14
-        version: 29.5.14
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
