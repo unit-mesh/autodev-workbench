@@ -52,6 +52,18 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 		const fields: CodeVariable[] = [];
 		let lastField: CodeVariable = this.initVariable();
 
+		// 类注解相关变量
+		let currentClassAnnotation: { name: string; keyValues: { key: string; value: string }[] } | null = null;
+		let classAnnotations: { name: string; keyValues: { key: string; value: string }[] }[] = [];
+
+		// 方法注解相关变量
+		let currentMethodAnnotation: { name: string; keyValues: { key: string; value: string }[] } | null = null;
+		let methodAnnotations: { name: string; keyValues: { key: string; value: string }[] }[] = [];
+
+		// 参数注解相关变量
+		let currentParamAnnotation: { name: string; keyValues: { key: string; value: string }[] } | null = null;
+		let paramAnnotations: { name: string; keyValues: { key: string; value: string }[] }[] = [];
+
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
 			const text = capture.node.text;
@@ -62,6 +74,27 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'import-name':
 					codeFile.imports.push(text);
+					break;
+				case 'class-annotation-name':
+					const existingAnnotationIndex = classAnnotations.findIndex(a => a.name === text);
+					if (existingAnnotationIndex !== -1) {
+						currentClassAnnotation = classAnnotations[existingAnnotationIndex];
+					} else {
+						currentClassAnnotation = {
+							name: text,
+							keyValues: []
+						};
+						classAnnotations.push(currentClassAnnotation);
+					}
+					break;
+				case 'class-annotation-value':
+					if (currentClassAnnotation) {
+						// 添加默认的值键值对
+						currentClassAnnotation.keyValues.push({
+							key: 'value',
+							value: this.cleanStringLiteral(text)
+						});
+					}
 					break;
 				case 'class-name':
 					if (classObj.name !== '') {
@@ -77,6 +110,7 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 					classObj = this.createEmptyStructure(StructureType.Class);
 					classObj.name = text;
 					classObj.canonicalName = codeFile.package ? codeFile.package + '.' + classObj.name : classObj.name;
+					classObj.package = codeFile.package;
 					isInInterface = false;
 					
 					const classNode: Parser.SyntaxNode | null = capture.node?.parent ?? null;
@@ -85,6 +119,45 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						if (!isLastNode) {
 							isLastNode = true;
 						}
+						// 设置类注解
+						classObj.annotations = [...classAnnotations];
+					}
+					break;
+				case 'method-annotation-name':
+					const existingMethodAnnotationIndex = methodAnnotations.findIndex(a => a.name === text);
+					if (existingMethodAnnotationIndex !== -1) {
+						currentMethodAnnotation = methodAnnotations[existingMethodAnnotationIndex];
+					} else {
+						currentMethodAnnotation = {
+							name: text,
+							keyValues: []
+						};
+						methodAnnotations.push(currentMethodAnnotation);
+					}
+					break;
+				case 'method-annotation-value':
+					if (currentMethodAnnotation) {
+						// 添加默认的值键值对
+						// 检查是否已经有相同的值，避免重复添加
+						if (!currentMethodAnnotation.keyValues.some(kv => 
+							kv.key === 'value' && kv.value === this.cleanStringLiteral(text))) {
+							currentMethodAnnotation.keyValues.push({
+								key: 'value',
+								value: this.cleanStringLiteral(text)
+							});
+						}
+					}
+					break;
+				case 'param-annotation-name':
+					const existingParamAnnotationIndex = paramAnnotations.findIndex(a => a.name === text);
+					if (existingParamAnnotationIndex !== -1) {
+						currentParamAnnotation = paramAnnotations[existingParamAnnotationIndex];
+					} else {
+						currentParamAnnotation = {
+							name: text,
+							keyValues: []
+						};
+						paramAnnotations.push(currentParamAnnotation);
 					}
 					break;
 				case 'interface-name':
@@ -121,6 +194,9 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 				case 'implements-name':
 					classObj.implements.push(text);
 					break;
+				case 'method-returnType':
+					methodReturnType = text;
+					break;
 				case 'method-name':
 				case 'interface-method-name':
 					methodName = text;
@@ -132,13 +208,26 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 						const methodObj = this.createFunction(capture.node, methodName);
 						if (methodReturnType !== '') {
 							methodObj.returnType = methodReturnType;
-							}
+						}
+						
+						// 设置方法注解
+						methodObj.annotations = methodAnnotations.length > 0 ? [...methodAnnotations] : [];
 						
 						methods.push(methodObj);
+						
+						// 重置方法注解
+						methodAnnotations = [];
+						currentMethodAnnotation = null;
 					}
 
 					methodReturnType = '';
 					methodName = '';
+					break;
+				case 'method-param-name':
+					// 参数注解处理可以在这里添加
+					break;
+				case 'method-param-type':
+					// 可以在这里添加参数类型处理
 					break;
 				case 'field-name':
 				case 'interface-property-name':
@@ -183,8 +272,17 @@ export class KotlinStructurerProvider extends BaseStructurerProvider {
 			name: '',
 			package: '',
 			implements: [],
+			annotations: [], // 确保包含注解字段
 			start: { row: 0, column: 0 },
 			end: { row: 0, column: 0 },
 		};
+	}
+	
+	// 清理字符串字面量，移除引号
+	private cleanStringLiteral(text: string): string {
+		if (text.startsWith('"') && text.endsWith('"')) {
+			return text.substring(1, text.length - 1);
+		}
+		return text;
 	}
 }
