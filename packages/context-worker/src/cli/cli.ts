@@ -17,7 +17,7 @@ export class CommandLineParser {
         program
             .option('-p, --path <dir>', 'Directory path to scan', DEFAULT_CONFIG.dirPath)
             .option('-u, --upload', 'Upload analysis results to server', DEFAULT_CONFIG.upload)
-            .option('--server-url <url>', 'Server URL for uploading results', DEFAULT_CONFIG.serverUrl)
+            .option('--server-url <url>', 'Server URL for uploading results', DEFAULT_CONFIG.baseUrl)
             .option('-o, --output-dir <dir>', 'Output directory for learning materials', DEFAULT_CONFIG.outputDir)
             .option('-n, --non-interactive', 'Run in non-interactive mode', DEFAULT_CONFIG.nonInteractive)
             .option('--output-file <file>', 'JSON output file name', DEFAULT_CONFIG.outputJsonFile);
@@ -35,7 +35,7 @@ export class CommandLineParser {
         return {
             dirPath,
             upload: options.upload || DEFAULT_CONFIG.upload,
-            serverUrl: options.serverUrl || DEFAULT_CONFIG.serverUrl,
+            baseUrl: options.serverUrl || DEFAULT_CONFIG.baseUrl,
             outputDir: options.outputDir || DEFAULT_CONFIG.outputDir,
             nonInteractive: options.nonInteractive || DEFAULT_CONFIG.nonInteractive,
             outputJsonFile: options.outputFile || DEFAULT_CONFIG.outputJsonFile
@@ -68,8 +68,8 @@ export class UserInputHandler {
             {
                 type: 'input',
                 name: 'serverUrl',
-                message: '请输入服务器地址:',
-                default: currentConfig.serverUrl,
+                message: '请输入 baseUrl 服务器地址:',
+                default: currentConfig.baseUrl,
                 when: (answers) => answers.upload
             },
             {
@@ -93,7 +93,7 @@ export class UserInputHandler {
         return {
             dirPath,
             upload: answers.upload,
-            serverUrl: answers.upload ? answers.serverUrl : currentConfig.serverUrl,
+            baseUrl: answers.upload ? answers.serverUrl : currentConfig.baseUrl,
             outputDir: answers.outputDir,
             nonInteractive: currentConfig.nonInteractive,
             outputJsonFile: answers.outputJsonFile

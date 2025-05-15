@@ -18,73 +18,125 @@ import { AppConfig, DEFAULT_CONFIG } from "../types/AppConfig";
 import { RustStructurer } from "../code-context/rust/RustStructurer";
 import { CStructurer } from "../code-context/c/CStructurer";
 import { CSharpStructurer } from "../code-context/csharp/CSharpStructurer";
+import { analyseProtos, ProtoApiResourceGenerator, scanProtoFiles } from "@autodev/worker-protobuf";
+import { ApiResource } from "@autodev/worker-core";
 
 export class InterfaceAnalyzerApp {
-    private instantiationService: InstantiationService;
-    private codeAnalyzer: CodeAnalyzer;
+	private instantiationService: InstantiationService;
+	private codeAnalyzer: CodeAnalyzer;
 
-    constructor() {
-        this.instantiationService = new InstantiationService();
-        this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
+	constructor() {
+		this.instantiationService = new InstantiationService();
+		this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
-        providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
-        providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
-        providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
-        providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
-        providerContainer.bind(IStructurerProvider).to(PythonStructurer);
-        providerContainer.bind(IStructurerProvider).to(RustStructurer);
-        providerContainer.bind(IStructurerProvider).to(CStructurer);
-        providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
+		providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
+		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
+		providerContainer.bind(IStructurerProvider).to(RustStructurer);
+		providerContainer.bind(IStructurerProvider).to(CStructurer);
+		providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
 
-        providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
-        providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
+		providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
+		providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
 
-        this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);
-    }
+		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);
+	}
 
-    public async uploadResult(result: CodeAnalysisResult, config: AppConfig): Promise<void> {
-        try {
-            const textResult = await this.codeAnalyzer.convertToList(result);
+	/**
+	 * Upload interface based and markdown analysis result to the server
+	 * @param result
+	 * @param config
+	 */
+	public async uploadCodeResult(result: CodeAnalysisResult, config: AppConfig): Promise<void> {
+		try {
+			const textResult = await this.codeAnalyzer.convertToList(result);
 
-            const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
-            fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
+			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
+			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
 
-            const response = await fetch(config.serverUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(textResult)
-            });
+			const response = await fetch(config.baseUrl + '/code', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(textResult)
+			});
 
-            const data = await response.json();
-            if (data.success) {
-                console.log('分析结果上传成功!');
-                console.log(`ID: ${data.id}`);
-            } else {
-                console.error('上传失败:', data);
-            }
-        } catch (error) {
-            console.error('上传过程中发生错误:', error);
-        }
-    }
+			const data = await response.json();
+			if (data.success) {
+				console.log('分析结果上传成功!');
+				console.log(`ID: ${data.id}`);
+			} else {
+				console.error('上传失败:', data);
+			}
+		} catch (error) {
+			console.error('上传过程中发生错误:', error);
+		}
+	}
 
-    public async run(config: AppConfig): Promise<void> {
-        await this.codeAnalyzer.initialize();
-        this.codeAnalyzer.updateConfig(config);
+	/**
+	 * Upload interface based and markdown analysis result to the server
+	 * @param result
+	 * @param config
+	 */
+	public async uploadApiCodeResult(result: ApiResource[], config: AppConfig): Promise<void> {
+		try {
+			const response = await fetch(config.baseUrl + '/api', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(result)
+			});
 
-        console.log(`正在扫描目录: ${config.dirPath}`);
-        const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
+			const data = await response.json();
+			if (data.success) {
+				console.log('分析结果上传成功!');
+				console.log(`ID: ${data.id}`);
+			} else {
+				console.error('上传失败:', data);
+			}
+		} catch (error) {
+			console.error('上传过程中发生错误:', error);
+		}
+	}
 
-        const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'analysis_result.json');
-        fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+	public async run(config: AppConfig): Promise<void> {
+		await this.codeAnalyzer.initialize();
+		this.codeAnalyzer.updateConfig(config);
 
-        if (config.upload) {
-            console.log(`正在上传分析结果到 ${config.serverUrl}`);
-            await this.uploadResult(result, config);
-        }
+		console.log(`正在扫描目录: ${config.dirPath}`);
+		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
-        console.log(`分析结果已保存到 ${outputFilePath}`);
-        await this.codeAnalyzer.generateLearningMaterials(result);
-    }
+		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+
+		if (config.upload) {
+			console.log(`正在上传分析结果到 ${config.baseUrl}`);
+			await this.uploadCodeResult(result, config);
+		}
+
+		console.log(`分析结果已保存到 ${outputFilePath}`);
+		await this.codeAnalyzer.generateLearningMaterials(result);
+
+		await this.handleProtobuf(config);
+	}
+
+	private async handleProtobuf(config: AppConfig) {
+		const protoFiles = scanProtoFiles(config.dirPath);
+		const results = await analyseProtos(protoFiles);
+		console.log(JSON.stringify(results, null, 2));
+		// save to file
+		const outputFilePath = path.join(process.cwd(), 'analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
+
+		const resourceAnalyser = new ProtoApiResourceGenerator();
+		const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
+		if (config.upload) {
+			console.log(`正在上传分析结果到 ${config.baseUrl}`);
+			await this.uploadApiCodeResult(apiResources, config);
+		}
+	}
 }
