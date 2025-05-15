@@ -10,9 +10,9 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "node dist/autodev-context-worker.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "nx vite:test run",
+    "test:watch": "nx vite:test",
+    "test:coverage": "nx vite:test run --coverage"
   },
   "keywords": [],
   "dependencies": {
