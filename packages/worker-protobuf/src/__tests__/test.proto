@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package example;
+
+// 用户信息
+message User {
+  string id = 1;
+  string name = 2;
+  int32 age = 3;
+  string email = 4;
+  repeated string tags = 5;
+  Address address = 6;
+  UserType type = 7;
+  
+  // 用户状态
+  enum UserStatus {
+    ACTIVE = 0;
+    INACTIVE = 1;
+    SUSPENDED = 2;
+  }
+  
+  UserStatus status = 8;
+  
+  message Address {
+    string street = 1;
+    string city = 2;
+    string country = 3;
+    int32 zip_code = 4;
+  }
+}
+
+// 用户类型
+enum UserType {
+  NORMAL = 0;
+  ADMIN = 1;
+  GUEST = 2;
+}
+
+// 用户服务
+service UserService {
+  // 获取用户信息
+  rpc GetUser(GetUserRequest) returns (User);
+  // 创建用户
+  rpc CreateUser(User) returns (CreateUserResponse);
+  // 更新用户
+  rpc UpdateUser(User) returns (UpdateUserResponse);
+  // 删除用户
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  // 列出用户
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message CreateUserResponse {
+  string user_id = 1;
+  bool success = 2;
+}
+
+message UpdateUserResponse {
+  bool success = 1;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string filter = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
