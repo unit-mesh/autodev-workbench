@@ -1,6 +1,6 @@
 {
   "name": "@autodev/context-worker",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "",
   "main": "./dist/autodev-context-worker.js",
   "bin": {
@@ -48,7 +48,9 @@
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
     "velocityjs": "^2.0.6",
-    "web-tree-sitter": "^0.22.2"
+    "web-tree-sitter": "^0.22.2",
+    "@autodev/worker-core": "workspace:*",
+    "@autodev/worker-protobuf": "workspace:*"
   },
   "author": "Phodal HUANG<h@phodal.com>",
   "license": "MIT",

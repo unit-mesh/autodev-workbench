@@ -90,7 +90,6 @@ export class UserInputHandler {
             ? answers.dirPath
             : path.resolve(process.cwd(), answers.dirPath);
 
-        // 保留serverUrl的值，如果用户没有上传，则不会覆盖原来的值
         return {
             dirPath,
             upload: answers.upload,

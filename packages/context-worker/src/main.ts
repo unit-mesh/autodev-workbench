@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { AppConfig } from "./types/AppConfig";
 import { CommandLineParser, UserInputHandler } from "./cli/cli";
 import { InterfaceAnalyzerApp } from "./analyzer/InterfaceAnalyzerApp";

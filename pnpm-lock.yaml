@@ -145,6 +145,12 @@ importers:
 
   packages/context-worker:
     dependencies:
+      '@autodev/worker-core':
+        specifier: workspace:*
+        version: link:../worker-core
+      '@autodev/worker-protobuf':
+        specifier: workspace:*
+        version: link:../worker-protobuf
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.0
         version: 1.11.1

@@ -27,7 +27,6 @@ export class InterfaceAnalyzerApp {
         this.instantiationService = new InstantiationService();
         this.instantiationService.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
 
-        // Register structurer providers
         providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
         providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
         providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
@@ -37,11 +36,9 @@ export class InterfaceAnalyzerApp {
         providerContainer.bind(IStructurerProvider).to(CStructurer);
         providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
 
-        // Register REST API analysers
         providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
         providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
 
-        // 使用默认配置初始化CodeAnalyzer
         this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, DEFAULT_CONFIG);
     }
 
@@ -74,14 +71,11 @@ export class InterfaceAnalyzerApp {
 
     public async run(config: AppConfig): Promise<void> {
         await this.codeAnalyzer.initialize();
-
-        // 更新分析器配置
         this.codeAnalyzer.updateConfig(config);
 
         console.log(`正在扫描目录: ${config.dirPath}`);
         const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
-        // 使用配置中的输出文件名
         const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'analysis_result.json');
         fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
