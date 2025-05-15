@@ -42,3 +42,4 @@ pnpm-debug.log*
 *.tgz
 *.zip
 *.tar.gz
+analysis_result.json

@@ -7,7 +7,7 @@ export enum DataStructType {
 	Message = 'Message',
 }
 
-interface CodeField {
+export interface CodeField {
 	Name: string;
 	Type: string;
 	IsArray: boolean;
@@ -16,7 +16,7 @@ interface CodeField {
 	Comment: string;
 }
 
-interface CodeFunction {
+export interface CodeFunction {
 	Name: string;
 	ReturnType: string;
 	Parameters: CodeParameter[];
@@ -27,24 +27,24 @@ interface CodeFunction {
 	Content: string;
 }
 
-interface CodeParameter {
+export interface CodeParameter {
 	Name: string;
 	Type: string;
 }
 
-interface CodePosition {
+export interface CodePosition {
 	StartLine: number;
 	EndLine: number;
 	StartColumn: number;
 	EndColumn: number;
 }
 
-interface CodeAnnotation {
+export interface CodeAnnotation {
 	Name: string;
 	Parameters: Record<string, string>;
 }
 
-interface CodeDataStruct {
+export interface CodeDataStruct {
 	NodeName: string;
 	Module: string;
 	Type: DataStructType;
@@ -69,7 +69,7 @@ interface CodeDataStruct {
 export class ProtoAnalyser {
 	/**
 	 * 将 .proto 文件内容转换为 CodeDataStruct 数组
-	 * 
+	 *
 	 * @param protoContent proto 文件内容
 	 * @param filePath proto 文件路径
 	 * @returns CodeDataStruct 数组
@@ -97,10 +97,10 @@ export class ProtoAnalyser {
 		// 处理根级嵌套对象
 		if (root.nested) {
 			this.processNestedObjects(
-				root.nested, 
-				dataStructs, 
-				packageName, 
-				filePath, 
+				root.nested,
+				dataStructs,
+				packageName,
+				filePath,
 				''
 			);
 		}
@@ -125,7 +125,7 @@ export class ProtoAnalyser {
 				// 处理消息
 				const messageStruct = this.processMessageType(obj, packageName, filePath, currentModule);
 				dataStructs.push(messageStruct);
-				
+
 				// 检查消息内部是否有嵌套结构
 				if (obj.nested) {
 					this.processNestedObjects(
@@ -167,7 +167,7 @@ export class ProtoAnalyser {
 		module: string
 	): CodeDataStruct {
 		const fields: CodeField[] = [];
-		
+
 		// 处理字段
 		for (const [fieldName, field] of Object.entries(type.fields)) {
 			fields.push({
