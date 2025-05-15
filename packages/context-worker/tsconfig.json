@@ -8,7 +8,7 @@
     "declarationDir": "./dist/types",
     "importHelpers": true,
     "esModuleInterop": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "types": [
@@ -30,8 +30,7 @@
   },
   "include": [
     "src/**/*",
-    "test/**/*",
-    "../../node_modules/.pnpm/vitest@1.6.1_@types+node@20.17.46_jsdom@24.1.3_bufferutil@4.0.9__lightningcss@1.29.2/node_modules/vitest/globals.d.ts"
+    "test/**/*"
   ],
   "exclude": [
     "node_modules"
