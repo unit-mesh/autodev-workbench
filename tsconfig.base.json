@@ -1,0 +1,13 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@autodev/context-mcp": ["packages/context-mcp/src/index.ts"],
+      "@autodev/context-worker": ["packages/context-worker/src/index.ts"],
+      "@autodev/worker-core": ["packages/worker-core/src/index.ts"],
+      "@autodev/worker-protobuf": ["packages/worker-protobuf/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

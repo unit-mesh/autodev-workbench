@@ -18,9 +18,9 @@ tests/
 *.log
 
 # Build configs
-rollup.config.js
+rollup.config.mjs
 tsconfig.json
-jest.config.js
+jest.config.cjs
 
 # Development dependencies
 node_modules/
