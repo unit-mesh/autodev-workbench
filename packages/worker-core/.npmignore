@@ -1,0 +1,37 @@
+# Source files
+src/
+__tests__/
+test/
+tests/
+*.test.ts
+*.spec.ts
+
+# Development configs
+.eslintrc*
+.prettierrc*
+.editorconfig
+.gitignore
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+
+# Build configs
+rollup.config.js
+tsconfig.json
+jest.config.js
+
+# Development dependencies
+node_modules/
+
+# Misc
+.DS_Store
+*.tgz
+*.zip
+*.tar.gz
+coverage/
+.nyc_output/
+.cache/
+.temp/
+.tmp/
