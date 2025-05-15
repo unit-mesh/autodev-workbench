@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { CodeDataStruct, ProtoAnalyser } from './ProtoAnalyser';
+import { ProtoAnalyser } from './ProtoAnalyser';
+import { CodeDataStruct } from "./ProtoAnalyser.type";
 
-interface AnalysisResult {
+export interface AnalysisResult {
     filePath: string;
     dataStructures: CodeDataStruct[];
 }

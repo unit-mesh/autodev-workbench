@@ -1,4 +1,4 @@
-import { ApiResource } from "../resource";
+import { ApiResource } from "../ProtoAnalyser.type";
 
 export function toFlatPackage(apiResources: ApiResource[]) {
   const apiMap: any = {};
