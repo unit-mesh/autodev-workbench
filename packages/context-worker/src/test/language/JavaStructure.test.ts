@@ -11,6 +11,8 @@ describe('JavaStructure', () => {
 		const javaHelloWorld = `package com.example;
 import java.util.List;
 
+@Application
+@AutoDev
 public class ExampleClass {
 	public void exampleMethod(String param1, int param2) {
 		System.out.println("Hello World");
@@ -36,7 +38,16 @@ public class ExampleClass {
 			classes: [
 				{
 					type: 'class',
-					annotations: [],
+					annotations: [
+						{
+							name: 'Application',
+							keyValues: [],
+						},
+						{
+							name: 'AutoDev',
+							keyValues: [],
+						},
+					],
 					constant: [],
 					extends: [],
 					fields: [],
@@ -45,11 +56,11 @@ public class ExampleClass {
 							vars: [],
 							name: 'exampleMethod',
 							start: {
-								row: 4,
+								row: 6,
 								column: 1,
 							},
 							end: {
-								row: 6,
+								row: 8,
 								column: 2,
 							},
 							returnType: 'void',
@@ -64,7 +75,7 @@ public class ExampleClass {
 						column: 0,
 					},
 					end: {
-						row: 7,
+						row: 9,
 						column: 1,
 					},
 				},

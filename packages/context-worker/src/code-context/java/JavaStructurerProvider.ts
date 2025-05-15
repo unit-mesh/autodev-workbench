@@ -271,7 +271,9 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'class-annotation-name':
 					classObj.annotations = classObj.annotations || [];
-					classObj.annotations.push({ name: text, keyValues: [] });
+					if (!classObj.annotations.some(anno => anno.name === text)) {
+						classObj.annotations.push({ name: text, keyValues: [] });
+					}
 					break;
 				case 'class-annotation-key':
 					// 处理类级别注解键
