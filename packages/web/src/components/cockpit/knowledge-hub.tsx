@@ -71,9 +71,10 @@ export default function KnowledgeHub({
   const [validationResults, setValidationResults] = useState<any>(null)
   // 添加新状态跟踪AI验证的匹配词
   const [aiVerifiedMatches, setAiVerifiedMatches] = useState<string[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [apiResources, setApiResources] = useState<any[]>([])
-  const [isLoadingApiResources, setIsLoadingApiResources] = useState(false)
-  const [apiResourcesError, setApiResourcesError] = useState<string | null>(null)
+  const [, setIsLoadingApiResources] = useState(false)
+  const [, setApiResourcesError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
