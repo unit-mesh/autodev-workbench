@@ -74,7 +74,7 @@ export abstract class RestApiAnalyser {
    * @param filePath the file path of the source code
    * @param workspacePath the workspace path
    */
-  abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<void>;
+  abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]>;
 
   /**
    * Convert analysed resources and demands into API services

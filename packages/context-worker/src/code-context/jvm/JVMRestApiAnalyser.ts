@@ -1,11 +1,9 @@
 import Parser, { SyntaxNode } from 'web-tree-sitter';
-import { RestApiAnalyser } from '../base/RestApiAnalyser';
-import { LanguageProfile } from '../base/LanguageProfile';
+import { ApiResource, RestApiAnalyser } from '../base/RestApiAnalyser';
+import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
-import { MemoizedQuery } from '../base/LanguageProfile';
-import { StructurerProviderManager } from '../StructurerProviderManager';
 import { StructurerProvider } from "../base/StructurerProvider";
 
 export interface Annotation {
@@ -18,7 +16,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 	protected language: Parser.Language | undefined;
 	protected abstract config: LanguageProfile;
 	protected abstract structurer: StructurerProvider;
-	protected abstract get springAnnotationQuery(): MemoizedQuery;
 	protected abstract get restTemplateQuery(): MemoizedQuery;
 
 	abstract override readonly langId: LanguageIdentifier;
@@ -32,7 +29,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 		await this.structurer.init(langService)
 	}
 
-	async analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<void> {
+	async analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
 		if (!this.language || !this.parser) {
 			console.warn(`${this.constructor.name} not initialized for ${this.langId}`);
 			return;
@@ -57,10 +54,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 
 		const tree = this.parser.parse(sourceCode);
 		for (const node of codeFile.classes) {
-			const classAnnotations = node.annotations && node.annotations.length > 0
-				? node.annotations
-				: this.extractAnnotations(tree.rootNode);
-
+			const classAnnotations = node.annotations
 			const isController = this.isSpringController(classAnnotations);
 
 			if (isController) {
@@ -68,72 +62,19 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 
 				if (node.methods && node.methods.length > 0) {
 					node.methods.forEach(method => {
-						// 优先使用来自方法结构本身的注解
-						const methodAnnotations = method.annotations && method.annotations.length > 0
-							? method.annotations
-							: (() => {
-									const methodNode = this.findMethodNode(tree.rootNode, method.name);
-									return methodNode ? this.extractAnnotations(methodNode) : [];
-								})();
-
-						this.processControllerMethod(method, methodAnnotations, baseUrl, node);
+						if (method.annotations == undefined) return;
+						this.processControllerMethod(method, method.annotations, baseUrl, node);
 					});
 				}
 			}
 
 			this.findRestTemplateUsages(tree.rootNode, node);
 		}
-	}
 
-	protected extractAnnotations(node: SyntaxNode): Annotation[] {
-		if (!this.language) return [];
-
-		const annotations: Annotation[] = [];
-		const query = this.springAnnotationQuery.query(this.language);
-		if (!query) return [];
-
-		const captures = query.captures(node);
-		let currentAnnotation: Annotation | null = null;
-
-		for (const capture of captures) {
-			switch (capture.name) {
-				case 'annotation-name':
-					if (currentAnnotation) {
-						annotations.push(currentAnnotation);
-					}
-					currentAnnotation = { name: capture.node.text, keyValues: [] };
-					break;
-				case 'key':
-					if (!currentAnnotation) break;
-					// Store the key for the next value
-					currentAnnotation.keyValues.push({ key: capture.node.text, value: '' });
-					break;
-				case 'value':
-					if (!currentAnnotation) break;
-
-					// If we have a key waiting for a value, assign this value to it
-					if (currentAnnotation.keyValues.length > 0 &&
-						currentAnnotation.keyValues[currentAnnotation.keyValues.length - 1].value === '') {
-						const lastKeyValue = currentAnnotation.keyValues[currentAnnotation.keyValues.length - 1];
-						lastKeyValue.value = this.cleanStringLiteral(capture.node.text);
-					} else {
-						// No key specified, use an empty key (for single value annotations)
-						currentAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(capture.node.text) });
-					}
-					break;
-			}
-		}
-
-		// Add the last annotation if there is one
-		if (currentAnnotation) {
-			annotations.push(currentAnnotation);
-		}
-
-		return annotations;
+		return this.resources
 	}
 
 	protected cleanStringLiteral(text: string): string {
-		// 默认实现：移除双引号
 		return text.replace(/^"(.*)"$/, '$1');
 	}
 
@@ -148,21 +89,12 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 		const requestMapping = annotations.find(anno => anno.name === 'RequestMapping');
 		if (!requestMapping) return '';
 
-		// Try to get the value directly if it's a single value annotation
 		if (requestMapping.keyValues.length === 1 && requestMapping.keyValues[0].key === '') {
 			return requestMapping.keyValues[0].value;
 		}
 
-		// Otherwise look for the 'value' key
 		const valueKeyValue = requestMapping.keyValues.find(kv => kv.key === 'value');
 		return valueKeyValue ? valueKeyValue.value : '';
-	}
-
-	protected findMethodNode(rootNode: SyntaxNode, methodName: string): SyntaxNode | null {
-		// This is a simplified implementation
-		// In a real implementation, we would traverse the AST to find the method node
-		// For now, we'll just return null as a placeholder
-		return null;
 	}
 
 	protected processControllerMethod(
@@ -174,7 +106,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 		let httpMethod = '';
 		let path = '';
 
-		// Check for HTTP method annotations
 		for (const annotation of annotations) {
 			switch (annotation.name) {
 				case 'GetMapping':

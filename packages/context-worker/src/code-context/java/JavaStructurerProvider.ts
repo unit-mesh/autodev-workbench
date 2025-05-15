@@ -89,6 +89,14 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 		let classMethodName = '';
 		let classMethodModifiers = '';
 
+		// 类注解相关变量
+		let currentClassAnnotation: { name: string; keyValues: { key: string; value: string }[] } | null = null;
+		let classAnnotations: { name: string; keyValues: { key: string; value: string }[] }[] = [];
+
+		// 方法注解相关变量
+		let currentMethodAnnotation: { name: string; keyValues: { key: string; value: string }[] } | null = null;
+		let methodAnnotations: { name: string; keyValues: { key: string; value: string }[] }[] = [];
+
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
 			const text = capture.node.text;
@@ -115,7 +123,9 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 							annotations: [],
 							start: { row: 0, column: 0 },
 							end: { row: 0, column: 0 },
+							fields: [],
 						};
+						classAnnotations = []; // 重置类注解
 					}
 
 					classObj.name = text;
@@ -126,6 +136,68 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						if (!isLastNode) {
 							isLastNode = true;
 						}
+					}
+					// 设置之前收集的类注解
+					classObj.annotations = classAnnotations;
+					break;
+				case 'class-annotation-name':
+					// 创建新的注解对象
+					currentClassAnnotation = {
+						name: text,
+						keyValues: []
+					};
+					classAnnotations.push(currentClassAnnotation);
+					break;
+				case 'class-annotation-key':
+					if (currentClassAnnotation) {
+						// 创建一个键值对，等待后续的值
+						currentClassAnnotation.keyValues.push({
+							key: text,
+							value: ''
+						});
+					}
+					break;
+				case 'class-annotation-value':
+					if (currentClassAnnotation && currentClassAnnotation.keyValues.length > 0) {
+						// 更新最后一个键值对的值
+						let lastKeyValue = currentClassAnnotation.keyValues[currentClassAnnotation.keyValues.length - 1];
+						lastKeyValue.value = this.cleanStringLiteral(text);
+					} else if (currentClassAnnotation) {
+						// 如果没有键，只有值（单值注解）
+						currentClassAnnotation.keyValues.push({
+							key: "value",
+							value: this.cleanStringLiteral(text)
+						});
+					}
+					break;
+				case 'method-annotation-name':
+					// 创建新的方法注解对象
+					currentMethodAnnotation = {
+						name: text,
+						keyValues: []
+					};
+					methodAnnotations.push(currentMethodAnnotation);
+					break;
+				case 'key':
+					if (currentMethodAnnotation) {
+						// 创建一个键值对，等待后续的值
+						currentMethodAnnotation.keyValues.push({
+							key: text,
+							value: ''
+						});
+					}
+					break;
+				case 'value':
+					if (currentMethodAnnotation && currentMethodAnnotation.keyValues.length > 0) {
+						// 更新最后一个键值对的值
+						let lastKeyValue = currentMethodAnnotation.keyValues[currentMethodAnnotation.keyValues.length - 1];
+						lastKeyValue.value = this.cleanStringLiteral(text);
+					} else if (currentMethodAnnotation) {
+						// 如果没有键，只有值（单值注解）
+						currentMethodAnnotation.keyValues.push({
+							key: "value",
+							value: this.cleanStringLiteral(text)
+						});
 					}
 					break;
 				case 'method-returnType':
@@ -150,10 +222,14 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						if (methodNode !== null) {
 							this.insertLocation(methodNode, classObj);
 						}
-
+						// 设置方法注解
+						methodObj.annotations = [...methodAnnotations];
+						
 						// 在添加方法到 methods 数组之前，检查是否已经存在相同的方法
 						if (!methods.some(m => m.name === methodObj.name && m.start.row === methodObj.start.row && m.start.column === methodObj.start.column)) {
 							methods.push(methodObj);
+							methodAnnotations = [];
+							currentMethodAnnotation = null;
 						}
 					}
 
@@ -255,9 +331,14 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 						if (classMethodModifiers !== '') {
 							methodObj.modifiers = classMethodModifiers;
 						}
+						// 设置方法注解
+						methodObj.annotations = [...methodAnnotations];
+						
 						// 在添加方法到 methods 数组之前，检查是否已经存在相同的方法
 						if (!methods.some(m => m.name === methodObj.name && m.start.row === methodObj.start.row && m.start.column === methodObj.start.column)) {
 							methods.push(methodObj);
+							methodAnnotations = [];
+							currentMethodAnnotation = null;
 						}
 					}
 
@@ -268,101 +349,6 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 					break;
 				case 'impl-name':
 					classObj.implements.push(text);
-					break;
-				case 'class-annotation-name':
-					classObj.annotations = classObj.annotations || [];
-					if (!classObj.annotations.some(anno => anno.name === text)) {
-						classObj.annotations.push({ name: text, keyValues: [] });
-					}
-					break;
-				case 'class-annotation-key':
-					// 处理类级别注解键
-					if (classObj.annotations && classObj.annotations.length > 0) {
-						const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
-						lastAnnotation.keyValues.push({ key: text, value: '' });
-					}
-					break;
-				case 'class-annotation-value':
-					if (classObj.annotations && classObj.annotations.length > 0) {
-						const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
-						// 如果有键等待值，则将此值分配给它
-						if (lastAnnotation.keyValues.length > 0 &&
-							lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
-							const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
-							lastKeyValue.value = this.cleanStringLiteral(text);
-						} else {
-							// 没有指定键，使用空键（对于单值注解）
-							lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
-						}
-					}
-					break;
-				case 'annotation-name':
-					// 处理注解名称
-					if (classObj.name !== '') {
-						// 判断是否属于方法的注解
-						// 在Java中，注解通常位于方法定义上方，所以我们需要检查接下来是否解析到方法
-						// 如果最后一个处理的方法存在，且当前不在尝试解析新方法，则认为注解属于方法
-						if (methods.length > 0 && classMethodName === '') {
-							const lastMethod = methods[methods.length - 1];
-							lastMethod.annotations = lastMethod.annotations || [];
-							lastMethod.annotations.push({ name: text, keyValues: [] });
-						} else {
-							// 否则认为是类的注解
-							classObj.annotations = classObj.annotations || [];
-							classObj.annotations.push({ name: text, keyValues: [] });
-						}
-					}
-					break;
-				case 'key':
-					// 处理注解键
-					if (classObj.name !== '') {
-						// 判断是否属于方法的注解
-						if (methods.length > 0 && classMethodName === '' &&
-							methods[methods.length - 1].annotations &&
-							methods[methods.length - 1].annotations.length > 0) {
-
-							const lastMethod = methods[methods.length - 1];
-							const lastAnnotation = lastMethod.annotations![lastMethod.annotations!.length - 1];
-							lastAnnotation.keyValues.push({ key: text, value: '' });
-						} else if (classObj.annotations && classObj.annotations.length > 0) {
-							const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
-							lastAnnotation.keyValues.push({ key: text, value: '' });
-						}
-					}
-					break;
-				case 'value':
-					// 处理注解值
-					if (classObj.name !== '') {
-						// 判断是否属于方法的注解
-						if (methods.length > 0 && classMethodName === '' &&
-							methods[methods.length - 1].annotations &&
-							methods[methods.length - 1].annotations.length > 0) {
-
-							const lastMethod = methods[methods.length - 1];
-							const lastAnnotation = lastMethod.annotations![lastMethod.annotations!.length - 1];
-
-							// 如果有键等待值，则将此值分配给它
-							if (lastAnnotation.keyValues.length > 0 &&
-								lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
-								const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
-								lastKeyValue.value = this.cleanStringLiteral(text);
-							} else {
-								// 没有指定键，使用空键（对于单值注解）
-								lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
-							}
-						} else if (classObj.annotations && classObj.annotations.length > 0) {
-							const lastAnnotation = classObj.annotations[classObj.annotations.length - 1];
-							// 如果有键等待值，则将此值分配给它
-							if (lastAnnotation.keyValues.length > 0 &&
-								lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1].value === '') {
-								const lastKeyValue = lastAnnotation.keyValues[lastAnnotation.keyValues.length - 1];
-								lastKeyValue.value = this.cleanStringLiteral(text);
-							} else {
-								// 没有指定键，使用空键（对于单值注解）
-								lastAnnotation.keyValues.push({ key: '', value: this.cleanStringLiteral(text) });
-							}
-						}
-					}
 					break;
 				default:
 					break;

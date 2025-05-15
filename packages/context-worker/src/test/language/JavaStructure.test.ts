@@ -54,6 +54,7 @@ public class ExampleClass {
 					methods: [
 						{
 							vars: [],
+							modifiers: "public",
 							name: 'exampleMethod',
 							start: {
 								row: 6,

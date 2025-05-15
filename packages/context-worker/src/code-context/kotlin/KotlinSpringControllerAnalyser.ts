@@ -15,20 +15,6 @@ export class KotlinSpringControllerAnalyser extends JVMRestApiAnalyser {
 	readonly langId: LanguageIdentifier = 'kotlin';
 	protected config: LanguageProfile;
 
-	protected springAnnotationQuery = new MemoizedQuery(`
-    (annotation
-      (user_type 
-        (type_identifier) @annotation-name
-      )
-      (value_arguments
-        (value_argument
-          (simple_identifier) @key
-          (string_literal) @value
-        )?
-      )?
-    )
-  `);
-
 	// Query for RestTemplate usages
 	protected restTemplateQuery = new MemoizedQuery(`
     (call_expression

@@ -15,13 +15,16 @@ export class JavaSpringControllerAnalyser extends JVMRestApiAnalyser {
 	readonly langId: LanguageIdentifier = 'java';
 	protected config: LanguageProfile;
 
-	protected get springAnnotationQuery(): MemoizedQuery {
-		return this.config.structureQuery;
-	}
-
-	protected get restTemplateQuery(): MemoizedQuery {
-		return this.config.structureQuery;
-	}
+	protected restTemplateQuery = new MemoizedQuery(`
+    (method_invocation
+      object: (identifier) @object-name
+      name: (identifier) @method-name
+      arguments: (argument_list
+        (string_literal) @url-arg
+        (_)* @other-args
+      )
+    )
+  `);
 
 	constructor() {
 		super();

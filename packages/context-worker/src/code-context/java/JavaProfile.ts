@@ -37,18 +37,6 @@ export class JavaProfile implements LanguageProfile {
 			(import_declaration
 			  (scoped_identifier) @import-name)
 
-      (method_declaration
-        type: (_) @method-returnType
-        name: (identifier) @method-name
-        parameters: (formal_parameters
-          (formal_parameter
-              (type_identifier) @method-param.type
-              (identifier) @method-param.value
-          )?
-          @method-params)
-        body: (block) @method-body
-      )
-			
 			(interface_declaration
 			  name: (identifier) @interface-name
 			  body: (interface_body
@@ -95,7 +83,19 @@ export class JavaProfile implements LanguageProfile {
                 (variable_declarator) @field-decl
               )?
               (method_declaration
-                (modifiers)? @class-method.modifiers
+                (modifiers
+                 (marker_annotation name: (identifier) @method-annotation-name)?
+                 (annotation
+	                name: (identifier) @method-annotation-name
+	                arguments: (annotation_argument_list
+	                  ((element_value_pair
+	                    key: (identifier) @key
+	                    value: [(string_literal) (field_access)] @value
+	                  )?
+	                  (string_literal) @value)?
+	                )?
+	              )?
+                )? @class-method.modifiers
                 type: (_) @class-method.returnType
                 name: (identifier) @class-method.name
                 parameters: (formal_parameters
@@ -105,16 +105,6 @@ export class JavaProfile implements LanguageProfile {
                   )?
                   @class-method.params)
                 body: (block) @class-method.body
-              )?
-              (annotation
-                name: (identifier) @annotation-name
-                arguments: (annotation_argument_list
-                  ((element_value_pair
-                    key: (identifier) @key
-                    value: [(string_literal) (field_access)] @value
-                  )?
-                  (string_literal) @value)?
-                )?
               )?
               (method_invocation
                 object: (identifier) @object-name
