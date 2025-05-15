@@ -1,1 +1,6 @@
 export * from './code-model'
+export * from './filesystem/list-files'
+export * from './filesystem/path'
+export * from './filesystem/constants'
+export * from './cmd/binary/ripgrep'
+export * from './cmd/binary/ripgrep-find'

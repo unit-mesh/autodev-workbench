@@ -123,7 +123,7 @@ export class InterfaceAnalyzerApp {
 	}
 
 	async handleApiContext(config: AppConfig) {
-		const protoFiles = scanProtoFiles(config.dirPath);
+		const protoFiles = await scanProtoFiles(config.dirPath);
 		const results = await analyseProtos(protoFiles);
 
 		const outputFilePath = path.join(process.cwd(), 'api_analysis_result.json');

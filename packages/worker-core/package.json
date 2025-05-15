@@ -33,7 +33,8 @@
   "author": "AutoDev authors",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.1"
+    "@modelcontextprotocol/sdk": "^1.11.1",
+    "@vscode/ripgrep": "^1.15.11"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

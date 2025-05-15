@@ -19,9 +19,9 @@ import os from "os"
 import * as path from "path"
 import * as fs from "fs"
 import * as childProcess from "child_process"
-import { arePathsEqual } from "../../utils/path"
-import { getBinPath } from "../../cmd/binary/ripgrep";
-import { rootDir } from "../../constants";
+import { arePathsEqual } from "./path"
+import { getBinPath } from "../cmd/binary/ripgrep";
+import { rootDir } from "./constants";
 
 /**
  * List of directories that are typically large and should be ignored
