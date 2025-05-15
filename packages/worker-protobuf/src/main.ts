@@ -35,9 +35,13 @@ export async function analyseProtos(protoFiles: string[]): Promise<AnalysisResul
 	const results: AnalysisResult[] = [];
 
 	for (const filePath of protoFiles) {
-		const content = fs.readFileSync(filePath, 'utf-8');
-		const dataStructures = analyser.analyseFromContent(content, filePath);
-		results.push({ filePath, dataStructures });
+		try {
+			const content = fs.readFileSync(filePath, 'utf-8');
+			const dataStructures = analyser.analyseFromContent(content, filePath);
+			results.push({ filePath, dataStructures });
+		} catch (e) {
+			console.error(`Failed to read or parse file ${filePath}:`, e);
+		}
 	}
 
 	return results;
