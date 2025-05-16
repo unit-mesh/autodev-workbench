@@ -3,6 +3,7 @@ packages:
 ignoredBuiltDependencies:
   - esbuild
 onlyBuiltDependencies:
+  - '@vscode/ripgrep'
   - nodejieba
   - onnxruntime-node
   - protobufjs

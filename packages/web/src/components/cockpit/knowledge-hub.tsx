@@ -71,6 +71,10 @@ export default function KnowledgeHub({
   const [validationResults, setValidationResults] = useState<any>(null)
   // 添加新状态跟踪AI验证的匹配词
   const [aiVerifiedMatches, setAiVerifiedMatches] = useState<string[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [apiResources, setApiResources] = useState<any[]>([])
+  const [, setIsLoadingApiResources] = useState(false)
+  const [, setApiResourcesError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchGlossaryTerms() {
@@ -123,6 +127,27 @@ export default function KnowledgeHub({
     fetchGlossaryTerms();
     fetchGuidelines();
   }, [projectId]);
+
+  useEffect(() => {
+    async function fetchApiResources() {
+      setIsLoadingApiResources(true)
+      setApiResourcesError(null)
+      try {
+        const response = await fetch('/api/context/api')
+        if (!response.ok) {
+          throw new Error('获取API资源失败')
+        }
+        const data = await response.json()
+        setApiResources(data)
+      } catch (error) {
+        console.error('获取API资源出错:', error)
+        setApiResourcesError(error instanceof Error ? error.message : '未知错误')
+      } finally {
+        setIsLoadingApiResources(false)
+      }
+    }
+    fetchApiResources()
+  }, [])
 
   useEffect(() => {
     if (extractedKeywords.length > 0 && glossaryTerms.length > 0) {
@@ -239,16 +264,16 @@ export default function KnowledgeHub({
     );
   };
 
-  const implicitKnowledge = [
-    {
-      id: "code-insight-1",
-      title: "从代码库分析",
-      source: "会议室预订API",
-      insight: "检测到现有API支持按部门筛选会议室，新系统可能需要保持此功能",
+  const implicitKnowledge = apiResources.map(resource => {
+    return {
+      id: resource.id,
+      title: "API资源",
+      source: `${resource.packageName}.${resource.className}.${resource.methodName}`,
+      insight: `检测到API端点: ${resource.sourceHttpMethod} ${resource.sourceUrl}`,
+      rawData: resource
     }
-  ]
+  })
 
-  // 修改关键词匹配判断逻辑
   const isKeywordMatched = (keyword: string) => {
     return matchedKeywords.includes(keyword);
   };
@@ -266,7 +291,6 @@ export default function KnowledgeHub({
       </div>
 
       <div className="flex-1 flex flex-col">
-        {/* 显性知识部分 */}
         <div className="border-b border-gray-200">
           <div className="px-4 py-2 flex justify-between items-center border-b">
             <div className="flex items-center gap-1">
@@ -275,7 +299,7 @@ export default function KnowledgeHub({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
-                      <Info className="h-3.5 w-3.5" />
+                      <Info className="h-3.5 w-3.5"/>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -287,12 +311,12 @@ export default function KnowledgeHub({
             <div className="flex gap-2">
               {selectedGuidelines.length > 0 && (
                 <Button variant="outline" size="sm" className="text-xs">
-                  <Check className="h-3 w-3 mr-1" />
+                  <Check className="h-3 w-3 mr-1"/>
                   应用选中 ({selectedGuidelines.length})
                 </Button>
               )}
               <Button variant="outline" size="sm" className="text-xs">
-                <Upload className="h-3 w-3 mr-1" />
+                <Upload className="h-3 w-3 mr-1"/>
                 上传文档
               </Button>
             </div>
@@ -302,7 +326,7 @@ export default function KnowledgeHub({
             <div className="p-2 space-y-2">
               {isLoadingGuidelines ? (
                 <div className="flex justify-center items-center h-20">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400"/>
                 </div>
               ) : guidelinesError ? (
                 <div className="text-xs text-red-500 p-2">
@@ -365,7 +389,7 @@ export default function KnowledgeHub({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
-                      <Info className="h-3.5 w-3.5" />
+                      <Info className="h-3.5 w-3.5"/>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -376,7 +400,7 @@ export default function KnowledgeHub({
             </div>
           </div>
 
-          <ScrollArea className="h-48">
+          <ScrollArea className="h-64">
             <div className="p-2 space-y-2">
               {implicitKnowledge.map((item) => (
                 <Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0">
@@ -404,134 +428,130 @@ export default function KnowledgeHub({
         </div>
       </div>
 
-      {/* 修改提取的关键词部分 */}
-      {extractedKeywords.length > 0 && (
-        <div className="border-t border-gray-200 p-3">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-semibold text-gray-700">提取的关键词</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
-                    <Info className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">从需求文本中自动提取的关键词</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {extractedKeywords.map((keyword, index) => {
-              const isMatched = isKeywordMatched(keyword);
-              const isAiVerified = isKeywordAiVerified(keyword);
-              const matchingTerm = isMatched ? getMatchingTermForKeyword(keyword) : null;
-
-              return (
-                <TooltipProvider key={index}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant={isAiVerified && matchingTerm?.termChinese ? "default" : isMatched ? "outline" : "secondary"}
-                        className={`flex items-center gap-1 cursor-help ${
-                          isAiVerified && matchingTerm?.termChinese
-                            ? "bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-300" 
-                            : isMatched 
-                              ? "bg-green-50 text-green-800 hover:bg-green-100 border-green-300" 
-                              : ""
-                        }`}
-                      >
-                        <Tag className="h-3 w-3" />
-                        {keyword}
-                        {isAiVerified && matchingTerm?.termChinese
-                          ? <AlertCircle className="h-3 w-3 ml-1 text-purple-600" />
-                          : isMatched
-                            ? <Check className="h-3 w-3 ml-1 text-green-600" />
-                            : null
-                        }
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {isAiVerified && matchingTerm?.termChinese ? (
-                        <div className="text-xs max-w-60">
-                          <p className="font-medium text-purple-800">AI 验证匹配:</p>
-                          <p>{matchingTerm?.termChinese} ({matchingTerm?.termEnglish})</p>
-                          <p className="text-gray-500 mt-1">{matchingTerm?.descChinese}</p>
-                        </div>
-                      ) : isMatched ? (
-                        <div className="text-xs max-w-60">
-                          <p className="font-medium">已在词汇表中找到匹配:</p>
-                          <p>{matchingTerm?.termChinese} ({matchingTerm?.termEnglish})</p>
-                          <p className="text-gray-500 mt-1">{matchingTerm?.descChinese}</p>
-                        </div>
-                      ) : (
-                        <p className="text-xs">未在当前词汇表中找到匹配</p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={validateKeywordsWithLLM}
-              disabled={isValidatingKeywords || extractedKeywords.length === 0}
-            >
-              {isValidatingKeywords ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  验证中
-                </>
-              ) : validationResults?.success ? (
-                <>
-                  <Check className="h-3 w-3 mr-1" />
-                  重新验证
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  智能验证
-                </>
-              )}
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs">
-              添加到词汇表
-            </Button>
-          </div>
-
-          {validationResults && (
-            <div className="mt-2 p-2 border rounded bg-gray-50 text-xs">
-              <div className="font-medium mb-1">验证结果:</div>
-              <div className={validationResults.success ? "text-green-600" : "text-red-600"}>
-                {validationResults.message || "完成关键词验证"}
-              </div>
-              {validationResults.suggestions && (
-                <div className="mt-1">
-                  <span className="font-medium">建议:</span> {validationResults.suggestions}
-                </div>
-              )}
-            </div>
-          )}
+      <div className="border-t border-gray-200 p-3">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-semibold text-gray-700">提取的关键词</h3>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-gray-400">
+                  <Info className="h-3.5 w-3.5"/>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">从需求文本中自动提取的关键词</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
-      )}
+        <div className="flex flex-wrap gap-1 mb-2">
+          {extractedKeywords.map((keyword, index) => {
+            const isMatched = isKeywordMatched(keyword);
+            const isAiVerified = isKeywordAiVerified(keyword);
+            const matchingTerm = isMatched ? getMatchingTermForKeyword(keyword) : null;
 
-      {/* 项目词汇表部分 - 确保未匹配项保持原始颜色 */}
+            return (
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant={isAiVerified && matchingTerm?.termChinese ? "default" : isMatched ? "outline" : "secondary"}
+                      className={`flex items-center gap-1 cursor-help ${
+                        isAiVerified && matchingTerm?.termChinese
+                          ? "bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-300"
+                          : isMatched
+                            ? "bg-green-50 text-green-800 hover:bg-green-100 border-green-300"
+                            : ""
+                      }`}
+                    >
+                      <Tag className="h-3 w-3"/>
+                      {keyword}
+                      {isAiVerified && matchingTerm?.termChinese
+                        ? <AlertCircle className="h-3 w-3 ml-1 text-purple-600"/>
+                        : isMatched
+                          ? <Check className="h-3 w-3 ml-1 text-green-600"/>
+                          : null
+                      }
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isAiVerified && matchingTerm?.termChinese ? (
+                      <div className="text-xs max-w-60">
+                        <p className="font-medium text-purple-800">AI 验证匹配:</p>
+                        <p>{matchingTerm?.termChinese} ({matchingTerm?.termEnglish})</p>
+                        <p className="text-gray-500 mt-1">{matchingTerm?.descChinese}</p>
+                      </div>
+                    ) : isMatched ? (
+                      <div className="text-xs max-w-60">
+                        <p className="font-medium">已在词汇表中找到匹配:</p>
+                        <p>{matchingTerm?.termChinese} ({matchingTerm?.termEnglish})</p>
+                        <p className="text-gray-500 mt-1">{matchingTerm?.descChinese}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs">未在当前词汇表中找到匹配</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            );
+          })}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={validateKeywordsWithLLM}
+            disabled={isValidatingKeywords || extractedKeywords.length === 0}
+          >
+            {isValidatingKeywords ? (
+              <>
+                <Loader2 className="h-3 w-3 mr-1 animate-spin"/>
+                验证中
+              </>
+            ) : validationResults?.success ? (
+              <>
+                <Check className="h-3 w-3 mr-1"/>
+                重新验证
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-3 w-3 mr-1"/>
+                智能验证
+              </>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" className="text-xs">
+            添加到词汇表
+          </Button>
+        </div>
+
+        {validationResults && (
+          <div className="mt-2 p-2 border rounded bg-gray-50 text-xs">
+            <div className="font-medium mb-1">验证结果:</div>
+            <div className={validationResults.success ? "text-green-600" : "text-red-600"}>
+              {validationResults.message || "完成关键词验证"}
+            </div>
+            {validationResults.suggestions && (
+              <div className="mt-1">
+                <span className="font-medium">建议:</span> {validationResults.suggestions}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="border-t border-gray-200 p-3">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-medium text-gray-700">项目词汇表</h3>
           <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3 w-3"/>
           </Button>
         </div>
         <ScrollArea className="h-48">
           {isLoadingGlossary ? (
             <div className="flex justify-center items-center h-20">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400"/>
             </div>
           ) : glossaryError ? (
             <div className="text-xs text-red-500 p-2">
@@ -556,28 +576,28 @@ export default function KnowledgeHub({
                       <TooltipTrigger asChild>
                         <div
                           className={`text-xs p-1.5 rounded-md ${
-                            isAiVerified 
-                              ? "bg-purple-50 border border-purple-100" 
-                              : isMatched 
-                                ? "bg-green-50 border border-green-100" 
+                            isAiVerified
+                              ? "bg-purple-50 border border-purple-100"
+                              : isMatched
+                                ? "bg-green-50 border border-green-100"
                                 : ""
                           }`}
                         >
                           <div className="flex items-center gap-1">
                             <span className={`font-medium ${
-                              isAiVerified 
-                                ? "text-purple-800" 
-                                : isMatched 
-                                  ? "text-green-800" 
+                              isAiVerified
+                                ? "text-purple-800"
+                                : isMatched
+                                  ? "text-green-800"
                                   : "text-gray-800"
                             }`}>
                               {item.termChinese}
                             </span>
                             <span className="text-gray-400">({item.termEnglish})</span>
                             {isAiVerified ? (
-                              <AlertCircle className="h-3 w-3 text-purple-600" />
+                              <AlertCircle className="h-3 w-3 text-purple-600"/>
                             ) : isMatched ? (
-                              <Check className="h-3 w-3 text-green-600" />
+                              <Check className="h-3 w-3 text-green-600"/>
                             ) : null}
                             <span className="text-gray-500"> - {item.descChinese}</span>
                           </div>
@@ -624,14 +644,14 @@ export default function KnowledgeHub({
             className="h-6 text-[10px]"
             onClick={() => setShowKnowledgeGraphPopup(true)}
           >
-            <Network className="h-3 w-3 mr-1" />
+            <Network className="h-3 w-3 mr-1"/>
             查看
           </Button>
         </div>
       </div>
 
       {showKnowledgeGraphPopup && (
-        <KnowledgeGraphPopup onClose={() => setShowKnowledgeGraphPopup(false)} />
+        <KnowledgeGraphPopup onClose={() => setShowKnowledgeGraphPopup(false)}/>
       )}
     </div>
   )

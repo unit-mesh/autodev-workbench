@@ -1,6 +1,6 @@
 {
   "name": "@autodev/worker-core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "AutoDev Worker Core",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -33,7 +33,9 @@
   "author": "AutoDev authors",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.1"
+    "@modelcontextprotocol/sdk": "^1.11.1",
+    "@vscode/ripgrep": "^1.15.11",
+    "fzf": "^0.5.2"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

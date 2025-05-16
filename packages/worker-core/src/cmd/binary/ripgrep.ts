@@ -20,7 +20,7 @@ import * as path from "path"
 import * as readline from "readline"
 import fs from "fs/promises"
 import { findRipgrepBinary } from "./ripgrep-find";
-import { rgPath } from "vscode-ripgrep";
+import { rgPath } from "@vscode/ripgrep";
 
 
 /**

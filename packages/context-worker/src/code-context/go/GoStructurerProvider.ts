@@ -1,14 +1,15 @@
 import Parser, { SyntaxNode } from 'web-tree-sitter';
-
+import { injectable } from 'inversify';
 
 import { TextRange } from '../../code-search/scope-graph/model/TextRange';
 import { ScopeGraph } from '../../code-search/scope-graph/ScopeGraph';
 import { BaseStructurerProvider } from "../base/StructurerProvider";
 import { LanguageIdentifier } from "../../base/common/languages/languages";
 import { LanguageProfile } from "../base/LanguageProfile";
-import { CodeFile } from "../../codemodel/CodeElement";
+import { CodeFile, CodeFunction, CodeStructure, CodeVariable, StructureType } from "../../codemodel/CodeElement";
 import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 
+@injectable()
 export class GoStructurerProvider extends BaseStructurerProvider {
 	protected langId: LanguageIdentifier = 'go';
 	protected config: LanguageProfile = LanguageProfileUtil.from(this.langId)!!;
@@ -23,7 +24,13 @@ export class GoStructurerProvider extends BaseStructurerProvider {
 		return lang === this.langId;
 	}
 
-	parseFile(code: string, filepath: string): Promise<CodeFile | undefined> {
+	/**
+	 * 解析Go代码文件，构建代码结构
+	 * @param code 源代码字符串
+	 * @param filepath 文件路径
+	 * @returns 解析后的代码文件结构
+	 */
+	async parseFile(code: string, filepath: string): Promise<CodeFile | undefined> {
 		const tree = this.parser!!.parse(code);
 		const query = this.config.structureQuery.query(this.language!!);
 		const captures = query!!.captures(tree.rootNode);
@@ -40,45 +47,133 @@ export class GoStructurerProvider extends BaseStructurerProvider {
 			classes: [],
 		};
 
-		// method-name, method-body and function-name, function-body
+		// 用于存储结构体信息
+		let structObj: CodeStructure = this.initStructure();
+
+		// 用于存储函数信息
+		const functions: CodeFunction[] = [];
+
+		// 用于存储字段信息
+		const fields: CodeVariable[] = [];
+		let lastField: CodeVariable = this.initVariable();
+
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
+			const text = capture.node.text;
 
 			switch (capture.name) {
-				case 'function-name':
-					const functionObj = this.createFunction(capture.node, capture.node.text);
-					codeFile.functions!!.push(functionObj);
+				case 'package-name':
+					codeFile.package = text;
 					break;
-				case 'function-body':
+				case 'import-name':
+					// 处理Go导入路径，移除引号
+					const importPath = this.cleanStringLiteral(text);
+					codeFile.imports.push(importPath);
+					break;
+				case 'type-name':
+					// 如果已经有一个结构体，先保存
+					if (structObj.name !== '') {
+						codeFile.classes.push({ ...structObj });
+						// 重置结构体对象
+						structObj = this.initStructure();
+					}
+
+					structObj.name = text;
+					structObj.canonicalName = codeFile.package + '.' + structObj.name;
+					structObj.package = codeFile.package;
+					structObj.type = StructureType.Class; // 在Go中，我们将struct映射为类
+
+					const structNode: Parser.SyntaxNode | null = capture.node?.parent?.parent ?? null;
+					if (structNode !== null) {
+						this.insertLocation(structNode, structObj);
+					}
+					break;
+				case 'field-name':
+					lastField.name = text;
+					break;
+				case 'field-type':
+					lastField.type = text;
+					if (lastField.name !== '') {
+						fields.push({ ...lastField });
+						lastField = this.initVariable();
+					}
+					break;
+				case 'function-name':
+					const funcNode = capture.node.parent;
+					if (funcNode) {
+						const funcObj = this.createFunction(funcNode, text);
+						functions.push(funcObj);
+
+						// 同时添加到文件的函数列表中
+						codeFile.functions.push(funcObj);
+					}
 					break;
 				case 'method-name':
-					const methodObj = this.createFunction(capture.node, capture.node.text);
-					codeFile.classes[0].methods.push(methodObj);
+					const methodNode = capture.node.parent;
+					if (methodNode) {
+						// 获取接收者类型（结构体名称）
+						const receiverStructName = methodNode.childForFieldName('receiver')?.text || '';
+						const receiverType = this.extractReceiverType(receiverStructName);
+
+						const methodObj = this.createFunction(methodNode, text);
+						// 添加到结构体的方法列表中
+						if (structObj.name === receiverType) {
+							structObj.methods.push(methodObj);
+						} else {
+							// 如果方法的接收者是其他结构体，可能需要查找或创建该结构体
+							let targetStruct = codeFile.classes.find(c => c.name === receiverType);
+							if (!targetStruct) {
+								// 创建新的结构体
+								targetStruct = this.initStructure();
+								targetStruct.name = receiverType;
+								targetStruct.canonicalName = codeFile.package + '.' + receiverType;
+								targetStruct.package = codeFile.package;
+								targetStruct.type = StructureType.Class;
+
+								codeFile.classes.push(targetStruct);
+							}
+
+							// 确保不会添加重复的方法
+							if (!targetStruct.methods.some(m => m.name === methodObj.name)) {
+								targetStruct.methods.push(methodObj);
+							}
+						}
+					}
 					break;
-				case 'method-body':
+				default:
 					break;
 			}
 		}
 
-		return Promise.resolve(codeFile);
+		// 添加字段到结构体
+		structObj.fields = fields;
+
+		// 如果有未保存的结构体，保存它
+		if (structObj.name !== '') {
+			codeFile.classes.push({ ...structObj });
+		}
+
+		return codeFile;
 	}
 
 	/**
-	 * `extractMethodIOImports` is an asynchronous method that extracts the import statements related to the input and output
-	 * types of a given method from the source code.
-	 *
-	 * @param {ScopeGraph} graph - The node graph of the source code.
-	 * @param {SyntaxNode} node - The syntax node representing the method in the source code.
-	 * @param {TextRange} range - The range of the method in the source code.
-	 * @param {string} src - The source code as a string.
-	 *
-	 * @returns {Promise<string[] | undefined>} A promise that resolves to an array of import statements or undefined if no import statements are found.
-	 *
-	 * The method works by first finding the syntax node that corresponds to the given range in the source code. It then uses a query to capture the return type and parameter types of the method. For each captured element, it fetches the corresponding import statements from the source code and adds them to an array. Finally, it removes any duplicate import statements from the array before returning it.
-	 *
-	 * The method uses the `fetchImportsWithinScope` method to fetch the import statements for a given syntax node from the source code.
-	 *
-	 * Note: The method assumes that the `methodIOQuery` and `language` properties of the `config` object are defined.
+	 * 提取Go方法接收者类型
+	 * 例如从 "(r *Repository)" 中提取 "Repository"
+	 */
+	private extractReceiverType(receiverText: string): string {
+		// 从接收者文本中提取类型
+		const pointerMatch = receiverText.match(/\*([A-Za-z0-9_]+)/);
+		if (pointerMatch) {
+			return pointerMatch[1];
+		}
+
+		// 非指针类型
+		const typeMatch = receiverText.match(/\b([A-Za-z0-9_]+)\b/);
+		return typeMatch ? typeMatch[1] : '';
+	}
+
+	/**
+	 * 从方法中提取输入输出相关的导入
 	 */
 	async retrieveMethodIOImports(
 		graph: ScopeGraph,
@@ -115,5 +210,69 @@ export class GoStructurerProvider extends BaseStructurerProvider {
 
 		// remove duplicates
 		return [...new Set(inputAndOutput)];
+	}
+
+	/**
+	 * 清理字符串字面量，移除引号
+	 */
+	private cleanStringLiteral(text: string): string {
+		if ((text.startsWith('"') && text.endsWith('"')) ||
+			(text.startsWith('`') && text.endsWith('`'))) {
+			return text.substring(1, text.length - 1);
+		}
+		return text;
+	}
+
+	/**
+	 * 初始化结构体对象
+	 */
+	private initStructure(): CodeStructure {
+		return {
+			type: StructureType.Class,
+			canonicalName: '',
+			constant: [],
+			extends: [],
+			methods: [],
+			name: '',
+			package: '',
+			implements: [],
+			annotations: [],
+			start: { row: 0, column: 0 },
+			end: { row: 0, column: 0 },
+			fields: [],
+		};
+	}
+
+	/**
+	 * 提取结构体字段
+	 */
+	async extractFields(node: SyntaxNode) {
+		const query = this.config.classQuery.query(this.language!!);
+		const captures = query!!.captures(node);
+
+		const fields: CodeVariable[] = [];
+		let fieldObj: CodeVariable = this.initVariable();
+
+		for (const element of captures) {
+			const capture: Parser.QueryCapture = element!!;
+			const text = capture.node.text;
+
+			switch (capture.name) {
+				case 'field-name':
+					fieldObj.name = text;
+					break;
+				case 'field-type':
+					fieldObj.type = text;
+					if (fieldObj.name !== '') {
+						fields.push({ ...fieldObj });
+						fieldObj = this.initVariable();
+					}
+					break;
+				default:
+					break;
+			}
+		}
+
+		return fields;
 	}
 }

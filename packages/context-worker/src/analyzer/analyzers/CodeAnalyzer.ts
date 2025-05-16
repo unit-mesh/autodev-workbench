@@ -14,6 +14,8 @@ import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 import { AppConfig } from "../../types/AppConfig";
+import { HttpApiAnalyser } from "./HttpApiAnalyser";
+import { ApiResource } from "@autodev/worker-core";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -23,6 +25,7 @@ export class CodeAnalyzer {
 	private analyzers: ICodeAnalyzer[];
 	private markdownAnalyser: MarkdownAnalyser;
 	private config: AppConfig;
+	private httpApiAnalyser: HttpApiAnalyser;
 
 	constructor(instantiationService: InstantiationService, config?: Partial<AppConfig>) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
@@ -30,53 +33,71 @@ export class CodeAnalyzer {
 		this.fileScanner = new FileSystemScanner();
 		this.codeCollector = new CodeCollector();
 		this.markdownAnalyser = new MarkdownAnalyser();
-		
-		// 初始化各个分析器
+		this.httpApiAnalyser = new HttpApiAnalyser();
+
 		this.analyzers = [
 			new InterfaceAnalyzer(),
-			new ClassHierarchyAnalyzer()
+			new ClassHierarchyAnalyzer(),
 		];
-		
-		// 存储配置
+
 		this.config = config as AppConfig;
 	}
 
-	/**
-	 * 更新配置
-	 */
 	public updateConfig(config: AppConfig): void {
 		this.config = config;
 	}
 
-	public async initialize(): Promise<void> {
+	private filesInDir: string[] = [];
+	private markdownFilesInDir: string[] = [];
+
+	/**
+	 * Initialize and parse files in the directory
+	 * @param fileFilter Optional function to filter files by name
+	 * @returns Array of parsed CodeFile objects
+	 */
+	public async initializeFiles(fileFilter?: (fileName: string) => boolean): Promise<CodeFile[]> {
 		await this.serviceProvider.ready();
-	}
+		const allFiles = await this.fileScanner.scanDirectory(this.config.dirPath);
 
-	public async analyzeDirectory(dirPath?: string): Promise<CodeAnalysisResult> {
-		// 使用传入的目录路径或配置中的路径
-		const targetDir = dirPath || this.config.dirPath;
-		
-		const files = await this.fileScanner.scanDirectory(targetDir);
+		this.filesInDir = [];
+		this.markdownFilesInDir = [];
 
-		const markdownFiles: string[] = [];
-		const codeFiles: string[] = [];
+		for (const file of allFiles) {
+			if (fileFilter && !fileFilter(file)) {
+				continue;
+			}
 
-		for (const file of files) {
 			if (path.extname(file).toLowerCase() === '.md') {
-				markdownFiles.push(file);
+				this.markdownFilesInDir.push(file);
 			} else {
-				codeFiles.push(file);
+				this.filesInDir.push(file);
 			}
 		}
 
-		await this.collectCodeStructures(codeFiles);
+		return await this.parseCodeStructures(this.filesInDir);
+	}
 
+	/**
+	 * 通用的文件名过滤器生成函数
+	 * @param patterns 文件名应匹配的模式数组
+	 * @returns 过滤函数
+	 */
+	public static createFileNameFilter(patterns: string[]): (fileName: string) => boolean {
+		return (fileName: string) => {
+			const baseName = path.basename(fileName);
+			return patterns.some(pattern =>
+				baseName.toLowerCase().endsWith(pattern.toLowerCase())
+			);
+		};
+	}
+
+	public async analyzeDirectory(): Promise<CodeAnalysisResult> {
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
 			this.analyzers[1].analyze(this.codeCollector)
 		]);
 
-		const markdownAnalysisResult = await this.analyzeMarkdownFiles(markdownFiles);
+		const markdownAnalysisResult = await this.analyzeMarkdownFiles(this.markdownFilesInDir);
 		return {
 			interfaceAnalysis,
 			extensionAnalysis,
@@ -84,8 +105,9 @@ export class CodeAnalyzer {
 		};
 	}
 
-	private async collectCodeStructures(files: string[]): Promise<void> {
+	async parseCodeStructures(files: string[]): Promise<CodeFile[]> {
 		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
+		const parsedFiles: CodeFile[] = [];
 
 		for (const file of files) {
 			try {
@@ -101,15 +123,23 @@ export class CodeAnalyzer {
 
 				const content = await this.fileScanner.readFileContent(file);
 				const structurer = this.structurerManager.getStructurer(language);
+				if (!structurer) {
+					console.warn(`No structurer found for language ${language}, skipping file ${file}`);
+					continue;
+				}
+
 				await structurer.init(this.serviceProvider);
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
 
 				this.codeCollector.addCodeFile(file, codeFile);
+				parsedFiles.push(codeFile);
 
 			} catch (error) {
 				console.error(`处理文件 ${file} 时出错:`, error);
 			}
 		}
+
+		return parsedFiles;
 	}
 
 	private async analyzeMarkdownFiles(markdownFiles: string[]): Promise<any> {
@@ -191,7 +221,7 @@ export class CodeAnalyzer {
 	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir?: string): Promise<string[]> {
 		// 使用传入的输出目录或配置中的输出目录
 		const targetDir = outputDir || this.config.outputDir;
-		
+
 		if (!fs.existsSync(targetDir)) {
 			fs.mkdirSync(targetDir, { recursive: true });
 		}
@@ -251,10 +281,13 @@ export class CodeAnalyzer {
 		return generatedFiles;
 	}
 
-	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{ path: string; content: string }[]> {
+	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{
+		path: string;
+		content: string
+	}[]> {
 		// 使用传入的目标目录或配置中的扫描目录
 		const scanDir = targetDir || this.config.dirPath;
-		
+
 		const items: { path: string; content: string }[] = [];
 
 		for (const intf of result.interfaceAnalysis.interfaces) {
@@ -460,6 +493,10 @@ export class CodeAnalyzer {
 			return code.replace(/`/g, "\\`");
 		}
 		return code;
+	}
+
+	analyzeApi(files: CodeFile[]): Promise<ApiResource[]> {
+		return this.httpApiAnalyser.analyze(files)
 	}
 }
 

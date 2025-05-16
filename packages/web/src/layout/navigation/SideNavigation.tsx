@@ -71,8 +71,7 @@ const navigationItems = [
 
 export function SideNavigation() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  // 默认所有菜单展开，将 null 改为 -1，表示全部展开
+  const [collapsed, setCollapsed] = useState(true);
   const [expandedSection, setExpandedSection] = useState<number | null | -1>(-1);
 
   const toggleSidebar = () => {
@@ -93,11 +92,11 @@ export function SideNavigation() {
       // 如果所有菜单都展开（-1），点击某个菜单后只显示该菜单
       if (expandedSection === -1) {
         setExpandedSection(index);
-      } 
+      }
       // 如果当前点击的菜单已展开，则全部展开
       else if (expandedSection === index) {
         setExpandedSection(-1);
-      } 
+      }
       // 否则展开点击的菜单
       else {
         setExpandedSection(index);
@@ -118,7 +117,7 @@ export function SideNavigation() {
 
           return (
             <div key={sectionIndex} className="mb-4">
-              <div 
+              <div
                 className={cn(
                   "flex items-center px-3 py-2 rounded-md cursor-pointer",
                   isSectionActive ? "bg-gray-100 text-blue-800" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -129,7 +128,7 @@ export function SideNavigation() {
                   "h-5 w-5",
                   isSectionActive ? "text-blue-700" : "text-gray-500"
                 )} />
-                
+
                 {!collapsed && (
                   <>
                     <h3 className={cn(
@@ -165,8 +164,8 @@ export function SideNavigation() {
           );
         })}
       </div>
-      
-      <button 
+
+      <button
         onClick={toggleSidebar}
         className="mx-auto mb-4 p-2 rounded-full hover:bg-gray-100 text-gray-500"
       >
