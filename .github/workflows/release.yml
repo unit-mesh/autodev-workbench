@@ -66,10 +66,15 @@ jobs:
       - name: Extract version from git diff
         id: extract_version
         run: |
-          # Check for changes in package.json files
-          VERSION=$(git diff -U0 | grep '^\+.*"version"' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          # Check for changes in package.json files using git diff --cached
+          VERSION=$(git diff --cached | grep '^\+.*"version":' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
           
-          # If not found in direct diff, try looking at all package.json files
+          # If not found in diff --cached, try regular git diff (for already committed changes)
+          if [ -z "$VERSION" ]; then
+            VERSION=$(git diff | grep '^\+.*"version":' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          fi
+          
+          # If still not found, try looking at all package.json files
           if [ -z "$VERSION" ]; then
             # Find the main package.json or any package with recent version changes
             VERSION=$(grep -o '"version": "[0-9]\+\.[0-9]\+\.[0-9]\+"' package.json 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
