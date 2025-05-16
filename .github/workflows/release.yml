@@ -67,7 +67,7 @@ jobs:
           title: "chore: release ${{ inputs.version }} version"
           body: "This PR contains version updates for ${{ inputs.version }} release"
           base: ${{ github.base_ref }}
-          branch: release/$(date +%Y%m%d-%H%M%S)
+          branch: release/${{ steps.date.outputs.date }}
 
   publish:
     name: Publish to npm
