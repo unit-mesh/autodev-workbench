@@ -21,12 +21,19 @@ npx @autodev/context-worker@latest
 
 Context Worker supports the following command line arguments:
 
-| Parameter      | Short | Description                                     | Default                           |
-|----------------|-------|-------------------------------------------------|-----------------------------------|
-| `--path`       | `-p`  | Specify directory path to scan                  | Current working directory         |
-| `--upload`     | `-u`  | Upload analysis results to server               | false                             |
-| `--server-url` | -     | Specify server URL                              | http://localhost:3000/api/context |
-| `--output-dir` | `-o`  | Specify output directory for learning materials | materials                         |
+| Parameter             | Short | Description                                     | Default                                         |
+|-----------------------|-------|-------------------------------------------------|-------------------------------------------------|
+| `--path`              | `-p`  | Directory path to scan                          | Current working directory                       |
+| `--upload`            | `-u`  | Upload analysis results to server               | false                                           |
+| `--server-url`        | -     | Server URL for uploading results                | http://localhost:3000/api/context               |
+| `--output-dir`        | `-o`  | Output directory for learning materials         | materials                                       |
+| `--non-interactive`   | `-n`  | Run in non-interactive mode                     | false                                           |
+| `--output-file`       | -     | JSON output file name                           | analysis_result.json                            |
+| `--interface`         | -     | Process interface context only                  | false                                           |
+| `--api`               | -     | Process API context only                        | true                                            |
+| `--project-id`        | -     | Project ID for organization                     | -                                               |
+| `--version`           | `-V`  | Output the version number                       | -                                               |
+| `--help`              | `-h`  | Display help for command                        | -                                               |
 
 ## Usage Examples
 
@@ -40,14 +47,19 @@ Scan current directory and upload results:
 npx @autodev/context-worker --upload --server-url https://localhost:3000/api/endpoint
 ```
 
-指定输出目录：
+Run in non-interactive mode with custom output file:
 ```bash
-npx @autodev/context-worker --path /path/to/project --output-dir custom-materials
+npx @autodev/context-worker --non-interactive --output-file my-analysis.json
 ```
 
-完整参数示例：
+Process only interface context:
 ```bash
-npx @autodev/context-worker --path /path/to/project --upload --server-url https://localhost:3000/api/endpoint --output-dir custom-output
+npx @autodev/context-worker --interface --api false
+```
+
+Complete example with multiple options:
+```bash
+npx @autodev/context-worker --path /path/to/project --upload --server-url https://your-server/api/context --output-dir custom-output --project-id my-project-123 --non-interactive
 ```
 
 ## 示例输出格式
