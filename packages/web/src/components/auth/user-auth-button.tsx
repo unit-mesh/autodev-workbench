@@ -52,12 +52,12 @@ export function UserAuthButton({ showMyProjects = false }: UserAuthButtonProps) 
           </div>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            个人信息
-          </Link>
-        </DropdownMenuItem>
+        {/*<DropdownMenuItem asChild>*/}
+        {/*  <Link href="/profile" className="flex items-center">*/}
+        {/*    <User className="mr-2 h-4 w-4" />*/}
+        {/*    个人信息*/}
+        {/*  </Link>*/}
+        {/*</DropdownMenuItem>*/}
         {showMyProjects && (
           <DropdownMenuItem asChild>
             <Link href="/projects" className="flex items-center">

@@ -561,7 +561,7 @@ export function ProjectDetail({ id }: { id: string }) {
                   <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                     <Code className="h-12 w-12 text-gray-300" />
                     <p className="text-center text-gray-500">暂无代码分析</p>
-                    <CopyCliCommand projectId={project.id} variant="withPath" />
+                    <CopyCliCommand projectId={project.id} />
                   </div>
                 )}
               </TabsContent>

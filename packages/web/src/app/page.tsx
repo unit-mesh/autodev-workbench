@@ -159,7 +159,7 @@ export default function Home() {
             <CheckCircle2 className="h-5 w-5"/>
             项目 <strong>{project.name}</strong> 已就绪！
           </div>
-          <CopyCliCommand projectId={project.id} variant="withPath" />
+          <CopyCliCommand projectId={project.id} />
           <p className="text-sm text-muted-foreground mt-2">
             请在您的本地终端中运行以上命令，完成上下文初始化。
           </p>
