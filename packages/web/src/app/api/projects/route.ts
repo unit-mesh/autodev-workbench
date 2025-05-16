@@ -5,8 +5,48 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    // If userId is specified or user is logged in, get their projects
+    if (userId || session?.user?.id) {
+      const projects = await prisma.project.findMany({
+        where: {
+          userId: userId || session?.user?.id
+        },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true
+            }
+          },
+          guidelines: {
+            select: {
+              id: true,
+              title: true,
+              category: true,
+              status: true
+            }
+          },
+          codeAnalyses: {
+            select: {
+              id: true,
+              title: true,
+              language: true
+            },
+            take: 5
+          }
+        }
+      });
+
+      return NextResponse.json(projects);
+    }
+
+    // Default behavior - get all projects
     const projects = await prisma.project.findMany({
       include: {
         user: {

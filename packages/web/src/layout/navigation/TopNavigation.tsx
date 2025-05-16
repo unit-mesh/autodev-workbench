@@ -71,7 +71,7 @@ export function TopNavigation() {
 								</span>
 							)}
 						</Button>
-						<UserAuthButton />
+						<UserAuthButton showMyProjects={true} />
 					</div>
 				</div>
 			</div>

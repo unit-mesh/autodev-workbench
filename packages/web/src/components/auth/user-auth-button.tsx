@@ -1,78 +1,80 @@
-"use client";
+"use client"
 
-import { signIn, signOut, useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
+import { signIn, signOut, useSession } from "next-auth/react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Github, User, LogOut } from "lucide-react";
-import Image from "next/image";
+} from "@/components/ui/dropdown-menu"
+import Link from "next/link"
+import { FolderKanban, LogOut, User } from "lucide-react"
 
-export function UserAuthButton() {
-  const { data: session, status } = useSession();
+interface UserAuthButtonProps {
+  showMyProjects?: boolean
+}
 
-  if (status === "loading") {
+export function UserAuthButton({ showMyProjects = false }: UserAuthButtonProps) {
+  const { data: session } = useSession()
+
+  if (!session) {
     return (
-      <Button variant="ghost" size="icon" disabled>
-        <User className="h-5 w-5" />
-      </Button>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return (
-      <Button
-        variant="outline"
-        onClick={() => signIn("github")}
-        className="flex items-center"
-      >
-        <Github className="h-4 w-4 mr-2" />
+      <Button variant="outline" onClick={() => signIn()}>
         登录
       </Button>
-    );
+    )
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          {session?.user?.image ? (
-            <Image
-              src={session.user.image}
-              alt={session.user.name || "用户头像"}
-              fill
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <User className="h-5 w-5" />
-          )}
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={session.user?.image || ""} alt={session.user?.name || ""} />
+            <AvatarFallback>
+              {session.user?.name?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          {session?.user?.name || "用户账户"}
-        </DropdownMenuLabel>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <div className="flex items-center justify-start gap-2 p-2">
+          <div className="flex flex-col space-y-1 leading-none">
+            {session.user?.name && <p className="font-medium">{session.user.name}</p>}
+            {session.user?.email && (
+              <p className="w-[200px] truncate text-sm text-muted-foreground">
+                {session.user.email}
+              </p>
+            )}
+          </div>
+        </div>
         <DropdownMenuSeparator />
-        {/*<DropdownMenuItem asChild>*/}
-        {/*  <Link href="/profile">个人资料</Link>*/}
-        {/*</DropdownMenuItem>*/}
-        {/*<DropdownMenuItem asChild>*/}
-        {/*  <Link href="/settings">设置</Link>*/}
-        {/*</DropdownMenuItem>*/}
+        <DropdownMenuItem asChild>
+          <Link href="/profile" className="flex items-center">
+            <User className="mr-2 h-4 w-4" />
+            个人信息
+          </Link>
+        </DropdownMenuItem>
+        {showMyProjects && (
+          <DropdownMenuItem asChild>
+            <Link href="/projects" className="flex items-center">
+              <FolderKanban className="mr-2 h-4 w-4" />
+              我的项目
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="text-red-600 cursor-pointer"
+          className="text-red-600 focus:bg-red-50"
+          onClick={() => signOut()}
         >
-          <LogOut className="h-4 w-4 mr-2" />
+          <LogOut className="mr-2 h-4 w-4" />
           退出登录
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
