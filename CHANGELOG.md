@@ -1,13 +1,3 @@
-## 0.0.25 (2025-05-16)
-
-### 🩹 Fixes
-
-- release ([100917a](https://github.com/unit-mesh/autodev-workbench/commit/100917a))
-
-### ❤️ Thank You
-
-- CGQAQ
-
 ## 0.0.24 (2025-05-16)
 
 This was a version bump only, there were no code changes.

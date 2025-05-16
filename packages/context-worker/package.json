@@ -1,6 +1,6 @@
 {
   "name": "@autodev/context-worker",
-  "version": "0.0.25",
+  "version": "0.0.24",
   "description": "",
   "main": "./dist/autodev-context-worker.js",
   "bin": {
