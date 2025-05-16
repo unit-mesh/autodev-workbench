@@ -8,7 +8,7 @@ import { LanguageIdentifier } from '../../base/common/languages/languages';
 @injectable()
 export class CppProfile implements LanguageProfile {
   languageIds = ['cpp'];
-  fileExtensions = ['cpp', 'hpp', 'c', 'h', 'cc', 'cxx', 'hxx'];
+  fileExtensions = ['cpp', 'hpp', 'cc', 'cxx', 'hxx'];
   grammar = (langService: ILanguageServiceProvider, langId?: LanguageIdentifier) => {
     return langService.getLanguage('cpp');
   };
