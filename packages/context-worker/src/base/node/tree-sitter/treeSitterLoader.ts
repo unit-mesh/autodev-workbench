@@ -100,7 +100,8 @@ export class TreeSitterLoader {
 			if (isDev) {
 				return Path.resolve(process.cwd(), "..", "node_modules", "@unit-mesh", "treesitter-artifacts", "wasm", "tree-sitter-{language}.wasm");
 			} else {
-				return Path.resolve(process.cwd(), "dist", WASM_FILE_PATH_TEMPLATE);
+				// In production, look for modules relative to bin location in node_modules
+				return Path.resolve(__dirname, "node_modules", "@unit-mesh", "treesitter-artifacts", "wasm", "tree-sitter-{language}.wasm");
 			}
 		})();
 
