@@ -1,12 +1,12 @@
-const { defineConfig } = require("rollup");
-const typescript = require("@rollup/plugin-typescript").default;
-const { nodeResolve } = require("@rollup/plugin-node-resolve");
-const commonjs = require("@rollup/plugin-commonjs").default;
-const json = require("@rollup/plugin-json").default;
-const copy = require("rollup-plugin-copy");
-const importAsString = require("rollup-plugin-string-import").default;
+import { defineConfig } from "rollup";
+import typescript from "@rollup/plugin-typescript";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import copy from "rollup-plugin-copy";
+import importAsString from "rollup-plugin-string-import";
 
-module.exports = defineConfig({
+export default defineConfig({
   input: "src/main.ts",
   output: {
     file: "dist/autodev-context-worker.js",
