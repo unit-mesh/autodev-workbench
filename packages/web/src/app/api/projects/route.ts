@@ -45,9 +45,9 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    if (!data || !data.name || !data.gitUrl) {
+    if (!data || !data.name) {
       return NextResponse.json(
-        { error: '缺少必要字段' },
+        { error: '项目名称为必填项' },
         { status: 400 }
       );
     }
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       data: {
         name: data.name,
         description: data.description,
-        gitUrl: data.gitUrl,
+        gitUrl: data.gitUrl || "",
         liveUrl: data.liveUrl,
         jiraUrl: data.jiraUrl,
         jenkinsUrl: data.jenkinsUrl,
