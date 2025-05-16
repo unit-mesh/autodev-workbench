@@ -36,6 +36,7 @@ const projectFormSchema = z.object({
   jiraUrl: z.string().url("请输入有效的Jira URL").optional().or(z.literal("")),
   jenkinsUrl: z.string().url("请输入有效的Jenkins URL").optional().or(z.literal("")),
   isDefault: z.boolean().default(false),
+  isPublic: z.boolean().default(false),
 })
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>
@@ -60,6 +61,7 @@ export function ProjectEditDialog({ project, open, onOpenChange, onSuccess }: Pr
       jiraUrl: project.jiraUrl || "",
       jenkinsUrl: project.jenkinsUrl || "",
       isDefault: project.isDefault,
+      isPublic: project.isPublic,
     },
   })
 
@@ -73,6 +75,7 @@ export function ProjectEditDialog({ project, open, onOpenChange, onSuccess }: Pr
       jiraUrl: project.jiraUrl || "",
       jenkinsUrl: project.jenkinsUrl || "",
       isDefault: project.isDefault,
+      isPublic: project.isPublic,
     });
   }, [project, form]);
 
@@ -235,6 +238,27 @@ export function ProjectEditDialog({ project, open, onOpenChange, onSuccess }: Pr
                     <FormLabel>设为默认项目</FormLabel>
                     <FormDescription>
                       将此项目设为您的默认项目，在进入系统时自动选择此项目
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isPublic"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>公开项目</FormLabel>
+                    <FormDescription>
+                      将此项目设为公开项目，任何人都可以查看
                     </FormDescription>
                   </div>
                 </FormItem>

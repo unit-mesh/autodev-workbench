@@ -9,6 +9,7 @@ export interface Project {
 	createdAt: string
 	updatedAt: string
 	isDefault: boolean
+	isPublic: boolean
 	guidelines: Array<{
 		id: number
 		title: string

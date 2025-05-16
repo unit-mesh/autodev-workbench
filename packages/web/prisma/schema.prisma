@@ -141,7 +141,7 @@ model Project {
   name        String
   description String?  @db.Text
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
 
   // 平台URL地址
   liveUrl    String? // 线上地址
@@ -159,6 +159,7 @@ model Project {
   apiResources        ApiResource[]
 
   isDefault Boolean @default(false)
+  isPublic  Boolean @default(false)
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
@@ -171,7 +172,7 @@ model ConceptDictionary {
   descChinese String   @db.Text // 中文描述
   descEnglish String   @db.Text // 英文描述
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
 
   // Project relation
   projectId String?
