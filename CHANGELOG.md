@@ -1,3 +1,22 @@
+## 0.0.23 (2025-05-16)
+
+### 🚀 Features
+
+- add isPublic field to projects for public visibility control
+
+### 🩹 Fixes
+
+- release
+- fatal: 'release/$(date +%Y%m%d-%H%M%S)' is not a valid branch name
+- **ci:** correct base ref for release workflow
+- **ci:** correct base branch reference in release workflow
+- **release:** update date format for release branch name and reorder steps
+
+### ❤️ Thank You
+
+- CGQAQ
+- Phodal Huang
+
 ## 0.0.22 (2025-05-16)
 
 ### 🩹 Fixes
