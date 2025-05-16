@@ -60,32 +60,32 @@ export class MCPServerImpl {
     installCapabilities(this.mcpInst, impl);
   }
 
-  ensureExpressApp() /* asserts this.expressApp is Application */{
+  private ensureExpressApp() /* asserts this.expressApp is Application */{
     if (!this.expressApp) {
       this.expressApp = express();
       this.expressApp.use(express.json());
     }
   }
 
-  ensureMcpHttpTransportSessions() /* asserts this.mcpHttpTransportSessions is { [sessionId: string]: McpHttpTransport } */{
+  private ensureMcpHttpTransportSessions() /* asserts this.mcpHttpTransportSessions is { [sessionId: string]: McpHttpTransport } */{
     if (!this.mcpHttpTransportSessions) {
       this.mcpHttpTransportSessions = {};
     }
   }
 
-  ensureMcpStdioTransport() /* asserts this.mcpStdioTransport is McpStdioTransport */{
+  private ensureMcpStdioTransport() /* asserts this.mcpStdioTransport is McpStdioTransport */{
     if (!this.mcpStdioTransport) {
       this.mcpStdioTransport = new McpStdioTransport();
     }
   }
 
-  ensureDestroyed() /* asserts this.isDestroyed is false */{
+  private ensureDestroyed() /* asserts this.isDestroyed is false */{
     if (!this.isDestroyed) {
       throw new Error("MCPServer is still running");
     }
   }
 
-  async serveHttp(options: HttpServeOptions) {
+  async serveHttp(options: HttpServeOptions) : Promise<http.Server> {
     this.ensureDestroyed();
     this.ensureExpressApp();
     if (!this.expressApp) throw new Error("Failed to create Express app"); // Type guard
@@ -178,6 +178,8 @@ export class MCPServerImpl {
     } else {
       this.managedHttpServer = this.expressApp.listen(options.port);
     }
+
+    return this.managedHttpServer;
   }
 
   async serveStdio() {

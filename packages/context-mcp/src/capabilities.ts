@@ -8,7 +8,7 @@ import type { ResourceMetadata } from "./capabilities/resources/_typing.js";
 
 // TODO: This metadata is really annoying, we should find a better way to do this.
 export function installCapabilities(mcpInst: McpServer, metadata: ResourceMetadata) {
-    resources.forEach(resource => resource(mcpInst.resource, metadata));
-    tools.forEach(tool => tool(mcpInst.tool));
-    prompts.forEach(prompt => prompt(mcpInst.prompt));
+    resources.forEach(resource => resource(mcpInst.resource.bind(mcpInst), metadata));
+    tools.forEach(tool => tool(mcpInst.tool.bind(mcpInst)));
+    prompts.forEach(prompt => prompt(mcpInst.prompt.bind(mcpInst)));
 }
