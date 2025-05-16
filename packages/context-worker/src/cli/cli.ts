@@ -22,7 +22,8 @@ export class CommandLineParser {
 			.option('-n, --non-interactive', 'Run in non-interactive mode', DEFAULT_CONFIG.nonInteractive)
 			.option('--output-file <file>', 'JSON output file name', DEFAULT_CONFIG.outputJsonFile)
 			.option('--interface', 'Process interface context only', false)
-			.option('--api', 'Process API context only', true);
+			.option('--api', 'Process API context only', true)
+			.option('--project-id <id>', 'Project ID for organization', DEFAULT_CONFIG.projectId);
 
 		program.parse(process.argv);
 
@@ -47,7 +48,8 @@ export class CommandLineParser {
 			outputDir: options.outputDir || DEFAULT_CONFIG.outputDir,
 			nonInteractive: options.nonInteractive || DEFAULT_CONFIG.nonInteractive,
 			contextType,
-			outputJsonFile: options.outputFile || DEFAULT_CONFIG.outputJsonFile
+			outputJsonFile: options.outputFile || DEFAULT_CONFIG.outputJsonFile,
+			projectId: options.projectId || DEFAULT_CONFIG.projectId
 		};
 	}
 }
@@ -92,6 +94,12 @@ export class UserInputHandler {
 				name: 'outputJsonFile',
 				message: '请输入JSON结果输出文件名:',
 				default: currentConfig.outputJsonFile
+			},
+			{
+				type: 'input',
+				name: 'projectId',
+				message: '请输入项目 ID (可选):',
+				default: currentConfig.projectId
 			}
 		]);
 
@@ -106,7 +114,8 @@ export class UserInputHandler {
 			outputDir: answers.outputDir,
 			contextType: currentConfig.contextType,
 			nonInteractive: currentConfig.nonInteractive,
-			outputJsonFile: answers.outputJsonFile
+			outputJsonFile: answers.outputJsonFile,
+			projectId: answers.projectId
 		};
 	}
 }

@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 	await client.connect();
 
 	try {
-		const data: ApiResource[] = await request.json();
+		const { data, projectId } = await request.json();
 
 		if (!data || !Array.isArray(data)) {
 			return NextResponse.json(
@@ -72,8 +72,24 @@ export async function POST(request: Request) {
 		for (const item of data) {
 			const id = generateId()
 			await client.sql`
-				INSERT INTO "ApiResource" ("id", "sourceUrl", "sourceHttpMethod", "packageName", "className", "methodName")
-				VALUES (${id}, ${item.sourceUrl}, ${item.sourceHttpMethod}, ${item.packageName}, ${item.className}, ${item.methodName})
+				INSERT INTO "ApiResource" (
+					"id", 
+					"sourceUrl", 
+					"sourceHttpMethod", 
+					"packageName", 
+					"className", 
+					"methodName",
+					"projectId"
+				)
+				VALUES (
+					${id}, 
+					${item.sourceUrl}, 
+					${item.sourceHttpMethod}, 
+					${item.packageName}, 
+					${item.className}, 
+					${item.methodName},
+					${projectId}
+				)
 				RETURNING id;
 			`;
 		}

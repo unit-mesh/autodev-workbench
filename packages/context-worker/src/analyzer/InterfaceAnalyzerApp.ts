@@ -64,7 +64,10 @@ export class InterfaceAnalyzerApp {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(textResult)
+				body: JSON.stringify({
+					data: textResult,
+					projectId: config.projectId
+				})
 			});
 
 			const data = await response.json();
@@ -92,7 +95,10 @@ export class InterfaceAnalyzerApp {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(result)
+				body: JSON.stringify({
+					data: result,
+					projectId: config.projectId
+				})
 			});
 
 			const data = await response.json();

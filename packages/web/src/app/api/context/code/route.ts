@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   await client.connect();
 
   try {
-    const data = await request.json()
+    const { data, projectId } = await request.json();
 
     if (!data || !Array.isArray(data)) {
       return NextResponse.json(
@@ -71,12 +71,14 @@ export async function POST(request: Request) {
           id, 
           path,
           content,
+          "projectId",
           "createdAt", 
           "updatedAt"
         ) VALUES (
           gen_random_uuid(), 
           ${item.path},
           ${item.content},
+          ${projectId},
           NOW(), 
           NOW()
         ) RETURNING id

@@ -16,6 +16,8 @@ export interface AppConfig {
   contextType: 'api' | 'interface';
   /** JSON 结果输出文件名 */
   outputJsonFile?: string;
+  /** 项目 ID */
+  projectId?: string;
 }
 
 /**
@@ -28,5 +30,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   outputDir: 'materials',
   nonInteractive: false,
   contextType: 'api',
-  outputJsonFile: 'analysis_result.json'
+  outputJsonFile: 'analysis_result.json',
+  projectId: undefined
 };
