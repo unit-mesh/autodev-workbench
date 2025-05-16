@@ -27,6 +27,15 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7.0.8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "chore: release ${{ inputs.version }} version"
+          body: "This PR contains version updates for ${{ inputs.version }} release"
+          base-branch: master
+          head-branch: release/$(date +%Y%m%d-%H%M%S)
+
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -56,13 +65,7 @@ jobs:
 
       - name: Create Release PR
         run: |
-          BRANCH_NAME="release/$(date +%Y%m%d-%H%M%S)"
-          git checkout -b $BRANCH_NAME
           pnpm nx release ${{ inputs.version }} --skip-publish
-          git add .
-          git commit -m "chore: release ${{ inputs.version }} version"
-          git push origin $BRANCH_NAME
-          gh pr create --title "chore: release ${{ inputs.version }} version" --body "This PR contains version updates for ${{ inputs.version }} release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
