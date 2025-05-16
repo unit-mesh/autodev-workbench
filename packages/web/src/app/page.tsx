@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ArrowRight, Plus, CheckCircle2, ClipboardCopy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,9 @@ import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useSession } from 'next-auth/react'
+import { Skeleton } from '@/components/ui/skeleton'
+import Link from "next/link";
 
 interface ProjectData {
   id: string;
@@ -21,9 +24,11 @@ interface ProjectData {
 }
 
 export default function Home() {
+  const { data: session, status } = useSession()
   const [project, setProject] = useState<ProjectData | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [fetchingProject, setFetchingProject] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -33,6 +38,33 @@ export default function Home() {
     jenkinsUrl: ''
   })
 
+  useEffect(() => {
+    async function fetchDefaultProject() {
+      if (session?.user?.id) {
+        try {
+          setFetchingProject(true)
+          const response = await fetch(`/api/projects?userId=${session.user.id}&default=true`)
+          if (response.ok) {
+            const data = await response.json()
+            // Get the default project if it exists
+            const defaultProject = Array.isArray(data) && data.length > 0
+              ? data.find(p => p.isDefault) || data[0]
+              : null
+            setProject(defaultProject)
+          }
+        } catch (error) {
+          console.error("Error fetching default project:", error)
+        } finally {
+          setFetchingProject(false)
+        }
+      } else if (status !== 'loading') {
+        setFetchingProject(false)
+      }
+    }
+
+    fetchDefaultProject()
+  }, [session, status])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -41,6 +73,7 @@ export default function Home() {
   const handleCreate = async () => {
     // 只验证项目名称
     if (!formData.name.trim()) return toast.error('请输入项目名称')
+    if (!session) return toast.error('请先登录')
 
     setIsLoading(true)
 
@@ -100,8 +133,24 @@ export default function Home() {
         </a>
       </div>
 
-      {/* 项目引导模块 */}
-      {!project ? (
+      {status === 'loading' || fetchingProject ? (
+        <Card className="p-6">
+          <Skeleton className="h-6 w-3/4 mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-10 w-full mt-4" />
+        </Card>
+      ) : !session ? (
+        <div className="border-2 border-dashed rounded-xl p-8 text-center">
+          <h3 className="text-xl font-semibold mb-2">请先登录</h3>
+          <p className="text-muted-foreground mb-4">登录后可以查看或创建您的项目。</p>
+          <Button asChild>
+            <Link href="/api/auth/signin" className="text-blue-600 hover:underline">
+              登录 / 注册
+            </Link>
+          </Button>
+        </div>
+      ) : !project ? (
         <div className="border-2 border-dashed rounded-xl p-8 text-center">
           <h3 className="text-xl font-semibold mb-2">尚未创建项目</h3>
           <p className="text-muted-foreground mb-4">创建一个项目以启动 AutoDev CLI 初始化知识。</p>
@@ -113,10 +162,10 @@ export default function Home() {
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4 text-green-600 font-medium">
             <CheckCircle2 className="h-5 w-5"/>
-            项目 <strong>{project.name}</strong> 创建成功！
+            项目 <strong>{project.name}</strong> 已就绪！
           </div>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm flex justify-between items-center">
-            npx @autodev/context-worker --project-id {project.name} your_code_base_path
+            npx @autodev/context-worker --project-id {project.id} your_code_base_path
             <Button variant="ghost" size="icon" onClick={copyCLI}>
               <ClipboardCopy className="w-4 h-4"/>
             </Button>
