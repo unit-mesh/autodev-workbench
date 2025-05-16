@@ -167,7 +167,7 @@ export function ProjectEditDialog({ project, open, onOpenChange, onSuccess }: Pr
               name="gitUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Git 仓库地址*</FormLabel>
+                  <FormLabel>Git 仓库地址</FormLabel>
                   <FormControl>
                     <Input placeholder="https://github.com/username/repo" {...field} />
                   </FormControl>
