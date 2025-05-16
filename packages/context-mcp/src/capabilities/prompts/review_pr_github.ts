@@ -28,7 +28,7 @@ export const installReviewPrGithubPrompt: PromptLike = (installer) => {
             base_branch: z.string().describe("Base branch name"),
             head_branch: z.string().describe("Head branch name"),
             author: z.string().describe("PR author username"),
-            pr_number: z.number().describe("PR number"),
+            pr_number: z.string().describe("PR number"),
             repo: z.string().describe("Repository name"),
             owner: z.string().describe("Repository owner"),
         },
