@@ -1,6 +1,7 @@
 {
   "name": "autodev-work",
-  "private": true,
+  "version": "0.0.18",
+  "private": false,
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",

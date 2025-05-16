@@ -155,11 +155,11 @@ importers:
   packages/context-worker:
     dependencies:
       '@autodev/worker-core':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: workspace:*
+        version: link:../worker-core
       '@autodev/worker-protobuf':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: workspace:*
+        version: link:../worker-protobuf
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.0
         version: 1.11.1
@@ -854,12 +854,6 @@ packages:
 
   '@ast-grep/setup-lang@0.0.3':
     resolution: {integrity: sha512-+ZNOuf0r7ABVwOANrrQpUrUv7xyuhsZGyQ88WZCH/euQmIEvSH3JsUFevg/60M7hi8NVh4vfSQs6ajTpumSzxg==}
-
-  '@autodev/worker-core@0.0.2':
-    resolution: {integrity: sha512-mZksF6w8IAy76oCv+M2trTNavn51xFYfncMqlZ3U1Hwx7CDmjYms6oCHnf1O7lPJ1HG2tsfwamAyKVYg91vOEw==}
-
-  '@autodev/worker-protobuf@0.0.2':
-    resolution: {integrity: sha512-QQyq/eXYcyG+Xhzk1nBaoS/LVP8BydF+P96X9ZxygQW7ThRNFir0LYq8rr+Duvh4ZafhYa2WDMHI7scD16jY2w==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -11867,27 +11861,6 @@ snapshots:
       '@ast-grep/napi-win32-x64-msvc': 0.38.1
 
   '@ast-grep/setup-lang@0.0.3': {}
-
-  '@autodev/worker-core@0.0.2':
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.11.1
-      '@vscode/ripgrep': 1.15.11
-    transitivePeerDependencies:
-      - supports-color
-
-  '@autodev/worker-protobuf@0.0.2':
-    dependencies:
-      '@ast-grep/lang-typescript': 0.0.2(tree-sitter-cli@0.25.4)
-      '@ast-grep/napi': 0.38.1
-      '@autodev/worker-core': link:packages/worker-core
-      '@modelcontextprotocol/sdk': 1.11.1
-      express: 5.1.0
-      protobufjs: 7.5.1
-      vscode-ripgrep: 1.13.2
-      zod: 3.24.4
-    transitivePeerDependencies:
-      - supports-color
-      - tree-sitter-cli
 
   '@babel/code-frame@7.27.1':
     dependencies:
