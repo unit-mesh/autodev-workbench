@@ -59,7 +59,7 @@ export class InterfaceAnalyzerApp {
 			const debugFilePath = path.join(process.cwd(), 'debug_analysis_result.json');
 			fs.writeFileSync(debugFilePath, JSON.stringify(textResult, null, 2));
 
-			const response = await fetch(config.baseUrl + '/code', {
+			const response = await fetch(config.baseUrl + '/api/context/code', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export class InterfaceAnalyzerApp {
 	public async uploadApiCodeResult(result: ApiResource[]): Promise<void> {
 		const config = this.config;
 		try {
-			const response = await fetch(config.baseUrl + '/api', {
+			const response = await fetch(config.baseUrl + '/api/context/api', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

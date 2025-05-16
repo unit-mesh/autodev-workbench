@@ -26,7 +26,7 @@ export interface AppConfig {
 export const DEFAULT_CONFIG: AppConfig = {
   dirPath: process.cwd(),
   upload: false,
-  baseUrl: 'http://localhost:3000/api/context',
+  baseUrl: 'http://localhost:3000/',
   outputDir: 'materials',
   nonInteractive: false,
   contextType: 'api',

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, Plus, CheckCircle2, ClipboardCopy } from 'lucide-react'
+import { ArrowRight, Plus, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useSession } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from "next/link";
+import { CopyCliCommand } from '@/components/CopyCliCommand'
 
 interface ProjectData {
   id: string;
@@ -112,12 +113,6 @@ export default function Home() {
     }
   }
 
-  const copyCLI = () => {
-    if (project)
-      navigator.clipboard.writeText(`npx @autodev/context-worker ${project.id}`)
-        .then(() => toast.success('命令已复制到剪贴板'))
-  }
-
   return (
     <div className="p-8 space-y-8">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
@@ -164,12 +159,7 @@ export default function Home() {
             <CheckCircle2 className="h-5 w-5"/>
             项目 <strong>{project.name}</strong> 已就绪！
           </div>
-          <div className="bg-muted p-4 rounded-lg font-mono text-sm flex justify-between items-center">
-            npx @autodev/context-worker --project-id {project.id} your_code_base_path
-            <Button variant="ghost" size="icon" onClick={copyCLI}>
-              <ClipboardCopy className="w-4 h-4"/>
-            </Button>
-          </div>
+          <CopyCliCommand projectId={project.id} variant="withPath" />
           <p className="text-sm text-muted-foreground mt-2">
             请在您的本地终端中运行以上命令，完成上下文初始化。
           </p>

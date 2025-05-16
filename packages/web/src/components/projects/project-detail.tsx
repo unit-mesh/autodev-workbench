@@ -26,6 +26,7 @@ import { ProjectEditDialog } from "./project-edit-dialog"
 import { toast } from "sonner";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
+import { CopyCliCommand } from "@/components/CopyCliCommand";
 
 // 规范文档状态
 enum GuidelineStatus {
@@ -290,12 +291,6 @@ export function ProjectDetail({ id }: { id: string }) {
       month: 'long',
       day: 'numeric'
     })
-  }
-
-  const copyCLI = () => {
-    if (project)
-      navigator.clipboard.writeText(`npx @autodev/context-worker ${project.id}`)
-        .then(() => toast.success('命令已复制到剪贴板'))
   }
 
   return (
@@ -566,12 +561,7 @@ export function ProjectDetail({ id }: { id: string }) {
                   <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                     <Code className="h-12 w-12 text-gray-300" />
                     <p className="text-center text-gray-500">暂无代码分析</p>
-                    <div className="bg-muted p-4 rounded-lg font-mono text-sm flex justify-between items-center">
-                      npx @autodev/context-worker --project-id {project.id} your_code_base_path
-                      <Button variant="ghost" size="icon" onClick={copyCLI}>
-                        <ClipboardCopy className="w-4 h-4"/>
-                      </Button>
-                    </div>
+                    <CopyCliCommand projectId={project.id} variant="withPath" />
                   </div>
                 )}
               </TabsContent>
