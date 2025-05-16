@@ -30,7 +30,41 @@ This is a collection of tools that can be used to extend the capabilities of the
   - User mentions
   - Collapsible sections for long reviews
 
+## GitLab MR Tools
+
+### MR Operations
+- `gitlab-mr-create`: Create a new merge request
+  - Set title, description
+  - Assign reviewers and assignees
+  - Add labels
+  - Configure source and target branches
+
+- `gitlab-mr-update`: Update an existing merge request
+  - Modify title and description
+  - Update assignees and reviewers
+  - Change labels
+  - Close or reopen MR
+
+- `gitlab-mr-list`: List merge requests with filtering options
+  - Filter by state (opened, closed, merged)
+  - Filter by author, assignee, or reviewer
+  - Filter by labels
+  - Search in title and description
+  - Filter by creation/update dates
+  - Sort and pagination support
+
+### MR Comments
+- `gitlab-mr-comment`: Manage MR comments
+  - Add new comments
+  - Create inline comments
+  - Reply to existing comments
+  - Edit comments
+  - Delete comments
+  - List all comments
+
 ## Usage
 
 Each tool can be used independently and supports various parameters for customization. See individual tool documentation for detailed usage instructions.
+
+Note: GitLab tools require a personal access token with appropriate permissions.
 

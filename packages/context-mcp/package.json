@@ -35,6 +35,7 @@
   "dependencies": {
     "@ast-grep/lang-typescript": "^0.0.2",
     "@ast-grep/napi": "^0.38.1",
+    "@gitbeaker/rest": "^42.5.0",
     "@modelcontextprotocol/sdk": "^1.11.1",
     "@octokit/rest": "^20.1.2",
     "@vscode/ripgrep": "^1.15.11",
