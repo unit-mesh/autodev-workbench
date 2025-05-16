@@ -97,7 +97,7 @@ jobs:
 
       - name: Update changelogs
         run: |
-          pnpm nx release changelog ${{ env.VERSION }} --git-commit=false --git-tag=false --git-push=false --git-remote=not-exist 2>/dev/null
+          pnpm nx release changelog ${{ env.VERSION }} --git-commit=false --git-tag=false --git-push=false --git-remote=not-exist 2>/dev/null || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
