@@ -20,11 +20,13 @@ import {
   Settings
 } from "lucide-react"
 import { Project } from "@/types/project.type";
+import { ProjectEditDialog } from "./project-edit-dialog"
 
 export function ProjectDetail({ id }: { id: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -54,6 +56,10 @@ export function ProjectDetail({ id }: { id: string }) {
 
     fetchProject()
   }, [id])
+
+  const handleEditSuccess = (updatedProject: Project) => {
+    setProject(updatedProject)
+  }
 
   if (loading) {
     return <ProjectDetailSkeleton />
@@ -102,9 +108,9 @@ export function ProjectDetail({ id }: { id: string }) {
             <GitPullRequest className="h-4 w-4 mr-2" />
             同步代码
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Settings className="h-4 w-4 mr-2" />
-            项目设置
+            编辑项目
           </Button>
         </div>
       </div>
@@ -117,6 +123,12 @@ export function ProjectDetail({ id }: { id: string }) {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-gray-500">基本信息</h3>
+              <div className="flex items-center">
+                <ClipboardList className="h-4 w-4 mr-2 text-gray-500" />
+                <span className="text-sm">
+                  项目ID: <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">{project.id}</span>
+                </span>
+              </div>
               <div className="flex items-center">
                 <ClipboardList className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="text-sm">
@@ -400,6 +412,15 @@ export function ProjectDetail({ id }: { id: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {project && (
+        <ProjectEditDialog
+          project={project}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   )
 }

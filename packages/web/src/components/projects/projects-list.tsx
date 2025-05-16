@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, ExternalLink, Github, GitBranch, BookOpen, Code, Database } from "lucide-react"
+import { Plus, ExternalLink, Github, GitBranch, BookOpen, Code, Database, Copy } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ProjectCreateDialog } from "./project-create-dialog"
+import { toast } from "@/hooks/use-toast"
 
 import { Project } from "@/types/project.type";
 
@@ -117,6 +118,24 @@ export function ProjectsList() {
 }
 
 function ProjectCard({ project }: { project: Project }) {
+  const copyProjectId = () => {
+    navigator.clipboard.writeText(project.id)
+      .then(() => {
+        toast({
+          title: "已复制项目ID",
+          description: "项目ID已复制到剪贴板",
+        })
+      })
+      .catch((err) => {
+        console.error("Could not copy text: ", err)
+        toast({
+          title: "复制失败",
+          description: "无法复制项目ID",
+          variant: "destructive",
+        })
+      })
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
@@ -129,6 +148,13 @@ function ProjectCard({ project }: { project: Project }) {
         <CardDescription className="line-clamp-2">
           {project.description || "无项目描述"}
         </CardDescription>
+        <div className="flex items-center mt-2 space-x-1">
+          <span className="text-xs text-gray-500">项目ID:</span>
+          <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-700">{project.id}</code>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyProjectId}>
+            <Copy className="h-3 w-3" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="info">
@@ -221,7 +247,7 @@ function ProjectCard({ project }: { project: Project }) {
           </TabsContent>
         </Tabs>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex justify-between">
         <Link href={`/projects/${project.id}`} className="w-full">
           <Button variant="outline" className="w-full">
             查看详情
