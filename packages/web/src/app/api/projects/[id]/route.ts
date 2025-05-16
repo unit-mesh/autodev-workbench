@@ -46,8 +46,7 @@ export async function GET(
       );
     }
 
-    // Check authorization - only owner or public projects
-    if (project.userId && project.userId !== session?.user?.id) {
+    if (!project.isPublic && project.userId && project.userId !== session?.user?.id) {
       return NextResponse.json(
         { error: '无权访问该项目' },
         { status: 403 }
