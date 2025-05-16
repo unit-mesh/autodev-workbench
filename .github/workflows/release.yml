@@ -17,8 +17,10 @@ on:
           - minor
           - major
   pull_request:
-    types: [closed]
-    branches: ['release/*']
+    types: 
+        - closed
+    branches:
+        - 'releases/**'
 
 jobs:
   create-pr:
@@ -122,7 +124,7 @@ jobs:
   publish:
     name: Publish to npm and create GitHub release
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v4
         with:
