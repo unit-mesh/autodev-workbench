@@ -20,6 +20,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
+    "run-example": "pnpm run build && npx tsx example/server.ts",
     "test": "nx jest:test",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist",
