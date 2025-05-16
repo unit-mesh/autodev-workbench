@@ -17,7 +17,7 @@ export function CopyCliCommand({ projectId, className = "" }: CopyCliCommandProp
 			: '';
 
 		const baseCommand = `npx @autodev/context-worker@latest --project-id ${projectId}`;
-		setCommand(serverUrl ? `${baseCommand} --server-url ${serverUrl} your_code_base_path` : `${baseCommand} your_code_base_path`);
+		setCommand(serverUrl ? `${baseCommand} --server-url ${serverUrl} -p your_code_base_path` : `${baseCommand} -p your_code_base_path`);
 	}, [projectId,]);
 
 	const handleCopy = () => {
