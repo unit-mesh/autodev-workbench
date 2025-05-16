@@ -60,6 +60,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set current date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7.0.8
         with:
@@ -67,7 +70,7 @@ jobs:
           title: "chore: release ${{ inputs.version }} version"
           body: "This PR contains version updates for ${{ inputs.version }} release"
           base: ${{ github.base_ref }}
-          branch: release/${{ steps.date.outputs.date }}
+          branch: release/${{ env.NOW }}
 
   publish:
     name: Publish to npm
