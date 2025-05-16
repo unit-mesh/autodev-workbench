@@ -24,7 +24,7 @@
     "test": "nx jest:test",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "mcp",

@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepublishOnly": "pnpm run build"
   },
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
