@@ -66,7 +66,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "chore: release ${{ inputs.version }} version"
           body: "This PR contains version updates for ${{ inputs.version }} release"
-          base: ${{ github.ref }}
+          base: ${{ github.base_ref }}
           branch: release/$(date +%Y%m%d-%H%M%S)
 
   publish:
