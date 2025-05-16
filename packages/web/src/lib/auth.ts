@@ -13,6 +13,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     }),
   ],
+  secret: process.env.SECRET,
   callbacks: {
     async signIn() {
       // User will be automatically created by the Prisma adapter
