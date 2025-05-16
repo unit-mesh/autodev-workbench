@@ -155,11 +155,11 @@ importers:
   packages/context-worker:
     dependencies:
       '@autodev/worker-core':
-        specifier: 0.0.20
-        version: 0.0.20
+        specifier: workspace:*
+        version: link:../worker-core
       '@autodev/worker-protobuf':
-        specifier: 0.0.20
-        version: 0.0.20
+        specifier: workspace:*
+        version: link:../worker-protobuf
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.0
         version: 1.11.1
@@ -668,8 +668,8 @@ importers:
         specifier: ^0.38.1
         version: 0.38.1
       '@autodev/worker-core':
-        specifier: 0.0.20
-        version: 0.0.20
+        specifier: workspace:*
+        version: link:../worker-core
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.1
         version: 1.11.1
@@ -851,12 +851,6 @@ packages:
 
   '@ast-grep/setup-lang@0.0.3':
     resolution: {integrity: sha512-+ZNOuf0r7ABVwOANrrQpUrUv7xyuhsZGyQ88WZCH/euQmIEvSH3JsUFevg/60M7hi8NVh4vfSQs6ajTpumSzxg==}
-
-  '@autodev/worker-core@0.0.20':
-    resolution: {integrity: sha512-xNfZRJd6zb4Sl3KrJZIoQvYMrSP6l181iS9zoGIpjIoa+WNyK4ENak/o9iTzKvMw7xo0F/VLoj7uVdUlkeGc6A==}
-
-  '@autodev/worker-protobuf@0.0.20':
-    resolution: {integrity: sha512-PQ65SPlwkNKkc3ChBawFbxuZy24/Q09gtlGNED475Z1a6q78UZEWMTdli0se+eXGJypThKcwuJXE54w3heob5Q==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -5044,10 +5038,6 @@ packages:
   afinn-165@1.0.4:
     resolution: {integrity: sha512-7+Wlx3BImrK0HiG6y3lU4xX7SpBPSSu8T9iguPMlaueRFxjbYwAQrp9lqZUuFikqKbd/en8lVREILvP2J80uJA==}
 
-  agent-base@5.1.1:
-    resolution: {integrity: sha512-TMeqbNl2fMW0nMjTEPOwe3J/PRFP4vqeoNuQMG0HlMrtm5QxKqdvAkZ1pRBQ/ulIyDD5Yq0nJ7YbdD8ey0TO3g==}
-    engines: {node: '>= 6.0.0'}
-
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -7258,10 +7248,6 @@ packages:
     resolution: {integrity: sha512-+cbxadF40UXd9T01zUHgA+rlo2Bg1Srer4+B4NwIHdaGxAGGv59nYRnGGDJ9LBk7alpS0US+J+bLLdQOOkJq4A==}
     engines: {node: '>=12'}
     hasBin: true
-
-  https-proxy-agent@4.0.0:
-    resolution: {integrity: sha512-zoDhWrkR3of1l9QAL8/scJZyLu8j/gBkcwcaQOZh7Gyh/+uJQzGVETdgT30akuwkpL8HTRfssqI3BZuV18teDg==}
-    engines: {node: '>= 6.0.0'}
 
   https-proxy-agent@5.0.1:
     resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
@@ -11444,10 +11430,6 @@ packages:
     resolution: {integrity: sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==}
     hasBin: true
 
-  vscode-ripgrep@1.13.2:
-    resolution: {integrity: sha512-RlK9U87EokgHfiOjDQ38ipQQX936gWOcWPQaJpYf+kAkz1PQ1pK2n7nhiscdOmLu6XGjTs7pWFJ/ckonpN7twQ==}
-    deprecated: This package has been renamed to @vscode/ripgrep, please update to the new name
-
   vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
 
@@ -11864,28 +11846,6 @@ snapshots:
       '@ast-grep/napi-win32-x64-msvc': 0.38.1
 
   '@ast-grep/setup-lang@0.0.3': {}
-
-  '@autodev/worker-core@0.0.20':
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.11.1
-      '@vscode/ripgrep': 1.15.11
-      fzf: 0.5.2
-    transitivePeerDependencies:
-      - supports-color
-
-  '@autodev/worker-protobuf@0.0.20':
-    dependencies:
-      '@ast-grep/lang-typescript': 0.0.2(tree-sitter-cli@0.25.4)
-      '@ast-grep/napi': 0.38.1
-      '@autodev/worker-core': 0.0.20
-      '@modelcontextprotocol/sdk': 1.11.1
-      express: 5.1.0
-      protobufjs: 7.5.1
-      vscode-ripgrep: 1.13.2
-      zod: 3.24.4
-    transitivePeerDependencies:
-      - supports-color
-      - tree-sitter-cli
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -17019,8 +16979,6 @@ snapshots:
 
   afinn-165@1.0.4: {}
 
-  agent-base@5.1.1: {}
-
   agent-base@6.0.2:
     dependencies:
       debug: 4.4.0
@@ -19772,13 +19730,6 @@ snapshots:
       url-join: 4.0.1
     transitivePeerDependencies:
       - debug
-      - supports-color
-
-  https-proxy-agent@4.0.0:
-    dependencies:
-      agent-base: 5.1.1
-      debug: 4.4.0
-    transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@5.0.1:
@@ -24619,13 +24570,6 @@ snapshots:
   vscode-languageserver@9.0.1:
     dependencies:
       vscode-languageserver-protocol: 3.17.5
-
-  vscode-ripgrep@1.13.2:
-    dependencies:
-      https-proxy-agent: 4.0.0
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - supports-color
 
   vscode-uri@3.0.8: {}
 
