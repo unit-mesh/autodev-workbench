@@ -125,7 +125,7 @@ export class InterfaceAnalyzerApp {
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (config.upload) {
-			console.log(`正在上传分析结果到 ${config.baseUrl}`);
+			console.log(`正在上传分析结果到 ${config.baseUrl}/projects/${config.projectId}`);
 			await this.uploadCodeResult(result);
 		}
 
