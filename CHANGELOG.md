@@ -1,3 +1,18 @@
+## 0.0.23 (2025-05-16)
+
+### 🚀 Features
+
+- add isPublic field to projects for public visibility control ([9eacef7](https://github.com/unit-mesh/autodev-worker/commit/9eacef7))
+
+### 🩹 Fixes
+
+- **ci:** correct base ref for release workflow ([55c5cc8](https://github.com/unit-mesh/autodev-worker/commit/55c5cc8))
+
+### ❤️ Thank You
+
+- CGQAQ
+- Phodal Huang @phodal
+
 ## 0.0.22 (2025-05-16)
 
 ### 🩹 Fixes
