@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   ArrowLeft,
-  BookOpen, ClipboardCopy,
+  BookOpen,
   ClipboardList,
   Code,
   Database,
