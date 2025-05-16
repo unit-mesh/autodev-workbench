@@ -1,3 +1,13 @@
+## 0.0.22 (2025-05-16)
+
+### 🩹 Fixes
+
+- add back prepublishOnly ([52ab5bf](https://github.com/unit-mesh/autodev-workbench/commit/52ab5bf))
+
+### ❤️ Thank You
+
+- CGQAQ
+
 ## 0.0.21 (2025-05-16)
 
 ### 🚀 Features
