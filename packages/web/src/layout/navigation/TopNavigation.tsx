@@ -7,6 +7,7 @@ import { ModelSelector } from "@/components/biz-ui/model-selector"
 import { Search, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAIAssistant } from "@/context/AIAssistantContext"
+import { UserAuthButton } from "@/components/auth/user-auth-button"
 
 const navigationItems = [
 	{ name: "驾驶舱", href: "/cockpit" },
@@ -70,6 +71,7 @@ export function TopNavigation() {
 								</span>
 							)}
 						</Button>
+						<UserAuthButton />
 					</div>
 				</div>
 			</div>
