@@ -1,3 +1,13 @@
+## 0.0.27 (2025-05-16)
+
+### 🩹 Fixes
+
+- **ci:** correct base branch reference in release workflow ([32b14c6](https://github.com/unit-mesh/autodev-workbench/commit/32b14c6))
+
+### ❤️ Thank You
+
+- CGQAQ
+
 ## 0.0.26 (2025-05-16)
 
 ### 🩹 Fixes
