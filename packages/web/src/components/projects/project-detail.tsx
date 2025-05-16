@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   ArrowLeft,
-  BookOpen,
+  BookOpen, ClipboardCopy,
   ClipboardList,
   Code,
   Database,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { Project } from "@/types/project.type";
 import { ProjectEditDialog } from "./project-edit-dialog"
+import { toast } from "sonner";
 
 export function ProjectDetail({ id }: { id: string }) {
   const [project, setProject] = useState<Project | null>(null)
@@ -82,6 +83,12 @@ export function ProjectDetail({ id }: { id: string }) {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const copyCLI = () => {
+    if (project)
+      navigator.clipboard.writeText(`npx @autodev/context-worker ${project.id}`)
+        .then(() => toast.success('命令已复制到剪贴板'))
   }
 
   return (
@@ -356,9 +363,12 @@ export function ProjectDetail({ id }: { id: string }) {
                   <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                     <Code className="h-12 w-12 text-gray-300" />
                     <p className="text-center text-gray-500">暂无代码分析</p>
-                    <Button size="sm">
-                      分析代码
-                    </Button>
+                    <div className="bg-muted p-4 rounded-lg font-mono text-sm flex justify-between items-center">
+                      npx @autodev/context-worker --project-id {project.id} your_code_base_path
+                      <Button variant="ghost" size="icon" onClick={copyCLI}>
+                        <ClipboardCopy className="w-4 h-4"/>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -402,9 +412,6 @@ export function ProjectDetail({ id }: { id: string }) {
                   <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                     <BookOpen className="h-12 w-12 text-gray-300" />
                     <p className="text-center text-gray-500">暂无概念词典</p>
-                    <Button size="sm">
-                      添加第一个词条
-                    </Button>
                   </div>
                 )}
               </TabsContent>

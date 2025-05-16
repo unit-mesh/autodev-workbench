@@ -81,7 +81,7 @@ export default function Home() {
 
   const copyCLI = () => {
     if (project)
-      navigator.clipboard.writeText(`npx @autodev/context-worker ${project.name}`)
+      navigator.clipboard.writeText(`npx @autodev/context-worker ${project.id}`)
         .then(() => toast.success('命令已复制到剪贴板'))
   }
 
