@@ -1,3 +1,13 @@
+## 0.0.28 (2025-05-16)
+
+### 🩹 Fixes
+
+- fatal: 'release/$(date +%Y%m%d-%H%M%S)' is not a valid branch name ([3f10ab7](https://github.com/unit-mesh/autodev-workbench/commit/3f10ab7))
+
+### ❤️ Thank You
+
+- CGQAQ
+
 ## 0.0.27 (2025-05-16)
 
 ### 🩹 Fixes
