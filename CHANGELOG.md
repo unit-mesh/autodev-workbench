@@ -1,3 +1,13 @@
+## 0.0.26 (2025-05-16)
+
+### 🩹 Fixes
+
+- **ci:** correct base ref for release workflow ([e568a1d](https://github.com/unit-mesh/autodev-workbench/commit/e568a1d))
+
+### ❤️ Thank You
+
+- CGQAQ
+
 ## 0.0.25 (2025-05-16)
 
 ### 🩹 Fixes
