@@ -59,12 +59,12 @@ export function UserAuthButton() {
           {session?.user?.name || "用户账户"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/profile">个人资料</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/settings">设置</Link>
-        </DropdownMenuItem>
+        {/*<DropdownMenuItem asChild>*/}
+        {/*  <Link href="/profile">个人资料</Link>*/}
+        {/*</DropdownMenuItem>*/}
+        {/*<DropdownMenuItem asChild>*/}
+        {/*  <Link href="/settings">设置</Link>*/}
+        {/*</DropdownMenuItem>*/}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => signOut({ callbackUrl: "/" })}
