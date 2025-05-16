@@ -1,3 +1,13 @@
+## 0.2.0-2 (2025-05-16)
+
+### 🩹 Fixes
+
+- update path for tree-sitter WASM files in production ([5dc43aa](https://github.com/unit-mesh/autodev-worker/commit/5dc43aa))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.2.0-1 (2025-05-16)
 
 ### 🩹 Fixes
