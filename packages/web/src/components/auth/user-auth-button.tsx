@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Github, User, LogOut } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 export function UserAuthButton() {
   const { data: session, status } = useSession();
