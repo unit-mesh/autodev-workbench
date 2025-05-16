@@ -30,9 +30,7 @@ export class CommandLineParser {
 		const options = program.opts();
 
 		let contextType: 'api' | 'interface' = 'api';
-		if (options.api && options.interface) {
-			throw new Error('Cannot specify both --api and --interface');
-		} else if (options.interface) {
+		if (options.interface) {
 			contextType = 'interface';
 		}
 
