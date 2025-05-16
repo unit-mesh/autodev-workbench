@@ -1,6 +1,6 @@
 {
   "name": "@autodev/worker-protobuf",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Model Context Protocol implementation",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -40,7 +40,7 @@
     "protobufjs": "^7.5.1",
     "vscode-ripgrep": "^1.13.2",
     "zod": "^3.24.4",
-    "@autodev/worker-core": "workspace:*"
+    "@autodev/worker-core": "0.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
