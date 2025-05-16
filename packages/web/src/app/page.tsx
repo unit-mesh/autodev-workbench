@@ -116,7 +116,7 @@ export default function Home() {
             项目 <strong>{project.name}</strong> 创建成功！
           </div>
           <div className="bg-muted p-4 rounded-lg font-mono text-sm flex justify-between items-center">
-            npx @autodev/context-worker {project.name}
+            npx @autodev/context-worker --project-id {project.name} your_code_base_path
             <Button variant="ghost" size="icon" onClick={copyCLI}>
               <ClipboardCopy className="w-4 h-4"/>
             </Button>
