@@ -12,11 +12,15 @@ on:
           - patch
           - minor
           - major
+  pull_request:
+    types: [closed]
+    branches: ['release/*']
 
 jobs:
   create-pr:
     name: Create Release PR
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,8 +116,7 @@ jobs:
           base: ${{ github.base_ref }}
 
   publish:
-    name: Publish to npm
-    needs: create-pr
+    name: Publish to npm and create GitHub release
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     steps:
