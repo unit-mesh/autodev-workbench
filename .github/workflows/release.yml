@@ -57,20 +57,54 @@ jobs:
       - name: Set current date as env variable
         run: echo "NOW=$(date +'%Y-%m-%d')-$(openssl rand -hex 4)" >> $GITHUB_ENV
 
+      - name: Update versions
+        run: |
+          pnpm nx release version ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract version from git diff
+        id: extract_version
+        run: |
+          # Check for changes in package.json files
+          VERSION=$(git diff -U0 | grep '^\+.*"version"' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          
+          # If not found in direct diff, try looking at all package.json files
+          if [ -z "$VERSION" ]; then
+            # Find the main package.json or any package with recent version changes
+            VERSION=$(grep -o '"version": "[0-9]\+\.[0-9]\+\.[0-9]\+"' package.json 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          fi
+          
+          if [ -n "$VERSION" ]; then
+            echo "Found version: $VERSION"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Could not extract version number from diff"
+            # Fallback to a default format using the increment type
+            echo "VERSION=new-${{ inputs.version }}-version" >> $GITHUB_ENV
+            echo "version=new-${{ inputs.version }}-version" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update changelogs
+        run: |
+          pnpm nx release changelog ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "chore: release ${{ inputs.version }} version"
-          body: "This PR contains version updates for ${{ inputs.version }} release"
-          base: ${{ github.base_ref }}
+          title: "chore: release v${{ env.VERSION }}"
+          body: |
+            This PR contains version updates for release v${{ env.VERSION }}
+            
+            Increment type: `${{ inputs.version }}`
+            
+            Please review the changes. If merged, the 'publish' job will attempt to publish this version.
           branch: release/${{ env.NOW }}
-
-      - name: Do release without publishing
-        run: |
-          pnpm nx release ${{ inputs.version }} --skip-publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.base_ref }}
 
   publish:
     name: Publish to npm
