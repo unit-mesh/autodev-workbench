@@ -26,7 +26,7 @@ importers:
         version: 21.0.3(@babel/traverse@7.27.1)(@types/node@20.17.46)(babel-plugin-macros@3.1.0)(nx@21.0.3)(typescript@5.8.3)
       '@nx/next':
         specifier: 21.0.3
-        version: 21.0.3(@babel/core@7.27.1)(@babel/traverse@7.27.1)(@rspack/core@1.3.10(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(lightningcss@1.29.2)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.98.0)
+        version: 21.0.3(@babel/core@7.27.1)(@babel/traverse@7.27.1)(@rspack/core@1.3.10(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(lightningcss@1.29.2)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.99.8)
       '@nx/rollup':
         specifier: 21.0.3
         version: 21.0.3(@babel/core@7.27.1)(@babel/traverse@7.27.1)(@types/babel__core@7.20.5)(nx@21.0.3)(typescript@5.8.3)
@@ -155,11 +155,11 @@ importers:
   packages/context-worker:
     dependencies:
       '@autodev/worker-core':
-        specifier: 0.0.2
-        version: 0.0.2
+        specifier: 0.0.20
+        version: 0.0.20
       '@autodev/worker-protobuf':
-        specifier: 0.0.5
-        version: 0.0.5
+        specifier: 0.0.20
+        version: 0.0.20
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.0
         version: 1.11.1
@@ -668,8 +668,8 @@ importers:
         specifier: ^0.38.1
         version: 0.38.1
       '@autodev/worker-core':
-        specifier: 0.0.2
-        version: 0.0.2
+        specifier: 0.0.20
+        version: 0.0.20
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.1
         version: 1.11.1
@@ -852,11 +852,11 @@ packages:
   '@ast-grep/setup-lang@0.0.3':
     resolution: {integrity: sha512-+ZNOuf0r7ABVwOANrrQpUrUv7xyuhsZGyQ88WZCH/euQmIEvSH3JsUFevg/60M7hi8NVh4vfSQs6ajTpumSzxg==}
 
-  '@autodev/worker-core@0.0.2':
-    resolution: {integrity: sha512-mZksF6w8IAy76oCv+M2trTNavn51xFYfncMqlZ3U1Hwx7CDmjYms6oCHnf1O7lPJ1HG2tsfwamAyKVYg91vOEw==}
+  '@autodev/worker-core@0.0.20':
+    resolution: {integrity: sha512-xNfZRJd6zb4Sl3KrJZIoQvYMrSP6l181iS9zoGIpjIoa+WNyK4ENak/o9iTzKvMw7xo0F/VLoj7uVdUlkeGc6A==}
 
-  '@autodev/worker-protobuf@0.0.5':
-    resolution: {integrity: sha512-VhSPff7TiLk7tjLOD9HVKV9HSE8yc5PACK9eTSLCt0zxCvnUdOSSub+g/ibcqFQxEFlGB+9lr3d/KVEmSYcLUg==}
+  '@autodev/worker-protobuf@0.0.20':
+    resolution: {integrity: sha512-PQ65SPlwkNKkc3ChBawFbxuZy24/Q09gtlGNED475Z1a6q78UZEWMTdli0se+eXGJypThKcwuJXE54w3heob5Q==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -5044,6 +5044,10 @@ packages:
   afinn-165@1.0.4:
     resolution: {integrity: sha512-7+Wlx3BImrK0HiG6y3lU4xX7SpBPSSu8T9iguPMlaueRFxjbYwAQrp9lqZUuFikqKbd/en8lVREILvP2J80uJA==}
 
+  agent-base@5.1.1:
+    resolution: {integrity: sha512-TMeqbNl2fMW0nMjTEPOwe3J/PRFP4vqeoNuQMG0HlMrtm5QxKqdvAkZ1pRBQ/ulIyDD5Yq0nJ7YbdD8ey0TO3g==}
+    engines: {node: '>= 6.0.0'}
+
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -7254,6 +7258,10 @@ packages:
     resolution: {integrity: sha512-+cbxadF40UXd9T01zUHgA+rlo2Bg1Srer4+B4NwIHdaGxAGGv59nYRnGGDJ9LBk7alpS0US+J+bLLdQOOkJq4A==}
     engines: {node: '>=12'}
     hasBin: true
+
+  https-proxy-agent@4.0.0:
+    resolution: {integrity: sha512-zoDhWrkR3of1l9QAL8/scJZyLu8j/gBkcwcaQOZh7Gyh/+uJQzGVETdgT30akuwkpL8HTRfssqI3BZuV18teDg==}
+    engines: {node: '>= 6.0.0'}
 
   https-proxy-agent@5.0.1:
     resolution: {integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==}
@@ -11436,6 +11444,10 @@ packages:
     resolution: {integrity: sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==}
     hasBin: true
 
+  vscode-ripgrep@1.13.2:
+    resolution: {integrity: sha512-RlK9U87EokgHfiOjDQ38ipQQX936gWOcWPQaJpYf+kAkz1PQ1pK2n7nhiscdOmLu6XGjTs7pWFJ/ckonpN7twQ==}
+    deprecated: This package has been renamed to @vscode/ripgrep, please update to the new name
+
   vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
 
@@ -11853,21 +11865,23 @@ snapshots:
 
   '@ast-grep/setup-lang@0.0.3': {}
 
-  '@autodev/worker-core@0.0.2':
+  '@autodev/worker-core@0.0.20':
     dependencies:
       '@modelcontextprotocol/sdk': 1.11.1
       '@vscode/ripgrep': 1.15.11
+      fzf: 0.5.2
     transitivePeerDependencies:
       - supports-color
 
-  '@autodev/worker-protobuf@0.0.5':
+  '@autodev/worker-protobuf@0.0.20':
     dependencies:
       '@ast-grep/lang-typescript': 0.0.2(tree-sitter-cli@0.25.4)
       '@ast-grep/napi': 0.38.1
-      '@autodev/worker-core': 0.0.2
+      '@autodev/worker-core': 0.0.20
       '@modelcontextprotocol/sdk': 1.11.1
       express: 5.1.0
       protobufjs: 7.5.1
+      vscode-ripgrep: 1.13.2
       zod: 3.24.4
     transitivePeerDependencies:
       - supports-color
@@ -14331,19 +14345,19 @@ snapshots:
       - vue-tsc
       - webpack-cli
 
-  '@nx/next@21.0.3(@babel/core@7.27.1)(@babel/traverse@7.27.1)(@rspack/core@1.3.10(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(lightningcss@1.29.2)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.98.0)':
+  '@nx/next@21.0.3(@babel/core@7.27.1)(@babel/traverse@7.27.1)(@rspack/core@1.3.10(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(lightningcss@1.29.2)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.99.8)':
     dependencies:
       '@babel/plugin-proposal-decorators': 7.27.1(@babel/core@7.27.1)
       '@nx/devkit': 21.0.3(nx@21.0.3)
       '@nx/eslint': 21.0.3(@babel/traverse@7.27.1)(@zkochan/js-yaml@0.0.7)(eslint@8.57.1)(nx@21.0.3)
       '@nx/js': 21.0.3(@babel/traverse@7.27.1)(nx@21.0.3)
-      '@nx/react': 21.0.3(@babel/traverse@7.27.1)(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.98.0)
+      '@nx/react': 21.0.3(@babel/traverse@7.27.1)(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.99.8)
       '@nx/web': 21.0.3(@babel/traverse@7.27.1)(nx@21.0.3)
       '@nx/webpack': 21.0.3(@babel/traverse@7.27.1)(@rspack/core@1.3.10(@swc/helpers@0.5.15))(bufferutil@4.0.9)(lightningcss@1.29.2)(nx@21.0.3)(typescript@5.8.3)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.8.3)
       '@svgr/webpack': 8.1.0(typescript@5.8.3)
-      copy-webpack-plugin: 10.2.4(webpack@5.98.0)
-      file-loader: 6.2.0(webpack@5.98.0)
+      copy-webpack-plugin: 10.2.4(webpack@5.99.8)
+      file-loader: 6.2.0(webpack@5.99.8)
       ignore: 5.3.2
       next: 15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0)
       semver: 7.7.1
@@ -14411,7 +14425,7 @@ snapshots:
   '@nx/nx-win32-x64-msvc@21.0.3':
     optional: true
 
-  '@nx/react@21.0.3(@babel/traverse@7.27.1)(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.98.0)':
+  '@nx/react@21.0.3(@babel/traverse@7.27.1)(@swc/helpers@0.5.15)(@zkochan/js-yaml@0.0.7)(bufferutil@4.0.9)(eslint@8.57.1)(next@15.2.5(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(sass@1.88.0))(nx@21.0.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.8.3)(webpack@5.99.8)':
     dependencies:
       '@nx/devkit': 21.0.3(nx@21.0.3)
       '@nx/eslint': 21.0.3(@babel/traverse@7.27.1)(@zkochan/js-yaml@0.0.7)(eslint@8.57.1)(nx@21.0.3)
@@ -14421,7 +14435,7 @@ snapshots:
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.8.3)
       '@svgr/webpack': 8.1.0(typescript@5.8.3)
       express: 4.21.2
-      file-loader: 6.2.0(webpack@5.98.0)
+      file-loader: 6.2.0(webpack@5.99.8)
       http-proxy-middleware: 3.0.5
       minimatch: 9.0.3
       picocolors: 1.1.1
@@ -17005,6 +17019,8 @@ snapshots:
 
   afinn-165@1.0.4: {}
 
+  agent-base@5.1.1: {}
+
   agent-base@6.0.2:
     dependencies:
       debug: 4.4.0
@@ -17795,6 +17811,16 @@ snapshots:
       schema-utils: 4.3.2
       serialize-javascript: 6.0.2
       webpack: 5.98.0
+
+  copy-webpack-plugin@10.2.4(webpack@5.99.8):
+    dependencies:
+      fast-glob: 3.3.3
+      glob-parent: 6.0.2
+      globby: 12.2.0
+      normalize-path: 3.0.0
+      schema-utils: 4.3.2
+      serialize-javascript: 6.0.2
+      webpack: 5.99.8
 
   core-js-compat@3.42.0:
     dependencies:
@@ -19186,11 +19212,11 @@ snapshots:
     dependencies:
       flat-cache: 4.0.1
 
-  file-loader@6.2.0(webpack@5.98.0):
+  file-loader@6.2.0(webpack@5.99.8):
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.3.0
-      webpack: 5.98.0
+      webpack: 5.99.8
 
   filelist@1.0.4:
     dependencies:
@@ -19746,6 +19772,13 @@ snapshots:
       url-join: 4.0.1
     transitivePeerDependencies:
       - debug
+      - supports-color
+
+  https-proxy-agent@4.0.0:
+    dependencies:
+      agent-base: 5.1.1
+      debug: 4.4.0
+    transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@5.0.1:
@@ -24586,6 +24619,13 @@ snapshots:
   vscode-languageserver@9.0.1:
     dependencies:
       vscode-languageserver-protocol: 3.17.5
+
+  vscode-ripgrep@1.13.2:
+    dependencies:
+      https-proxy-agent: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - supports-color
 
   vscode-uri@3.0.8: {}
 
