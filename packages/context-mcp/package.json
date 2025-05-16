@@ -1,6 +1,6 @@
 {
   "name": "@autodev/context-mcp",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "description": "Model Context Protocol implementation",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

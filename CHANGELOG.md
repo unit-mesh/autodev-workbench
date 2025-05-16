@@ -1,3 +1,7 @@
+## 0.0.29 (2025-05-16)
+
+This was a version bump only, there were no code changes.
+
 ## 0.0.28 (2025-05-16)
 
 ### 🩹 Fixes
