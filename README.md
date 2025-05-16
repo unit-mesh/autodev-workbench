@@ -42,5 +42,7 @@ npx @autodev/context-worker@latest
 git fetch --tags
 pnpm install
 pnpm publish-all
+# Please do `publish-all` first
+pnpm publish-all:confirm
 git push --tags
 ```
