@@ -114,103 +114,109 @@ export function CodeAnalysisList({ codeAnalyses, projectId, onRefresh }: CodeAna
 								<div className="flex-1">
 									<div className="flex items-start">
 										<FileText className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0"/>
-										<h3 className="font-medium text-sm ml-2 text-slate-700 break-all">
-											{displayTitle}
-										</h3>
-									</div>
+										<div className="ml-2 flex-1">
+											<div className="flex items-center justify-between">
+												<h3 className="font-medium text-sm text-slate-700 break-all mr-2">
+													{displayTitle}
+												</h3>
 
-									{item.description ? (
-										<div className="text-sm text-slate-600 mt-1 ml-6">
-											<p className="line-clamp-2">{item.description}</p>
-										</div>
-									) : null}
-
-									<div className="flex items-center space-x-2 mt-2 ml-6">
-										{item.language && (
-											<Badge variant="outline" className="text-xs">
-												{item.language}
-											</Badge>
-										)}
-										<span className="text-xs text-slate-500">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </span>
-
-										{(codeBlocks || item.code || item.content) && (
-											<Dialog>
-												<DialogTrigger asChild>
-													<Button variant="ghost" size="sm" className="text-blue-600 p-0 h-auto">
-														<Code className="h-4 w-4 mr-1"/>
-														查看代码
-													</Button>
-												</DialogTrigger>
-												<DialogContent className="max-w-7xl max-h-[80vh] overflow-hidden">
-													<DialogHeader>
-														<DialogTitle>{displayTitle}</DialogTitle>
-													</DialogHeader>
-													<div className="overflow-y-auto max-h-[calc(80vh-100px)]">
-														{codeBlocks ? (
-															codeBlocks.map((block, blockIndex) => (
-																<div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
-																	<SyntaxHighlighter
-																		language={block.language}
-																		style={vscDarkPlus}
-																		customStyle={{
-																			fontSize: "0.875rem",
-																			maxHeight: "400px",
-																			overflow: "auto",
-																		}}
-																	>
-																		{block.code}
-																	</SyntaxHighlighter>
+												<div className="flex items-center space-x-2 flex-shrink-0">
+													{(codeBlocks || item.code || item.content) && (
+														<Dialog>
+															<DialogTrigger asChild>
+																<Button variant="ghost" className="text-blue-600 p-0 h-auto">
+																	<Code className="h-3.5 w-3.5 mr-1"/>
+																	查看代码
+																</Button>
+															</DialogTrigger>
+															<DialogContent className="max-w-7xl max-h-[80vh] overflow-hidden">
+																<DialogHeader>
+																	<DialogTitle>{displayTitle}</DialogTitle>
+																</DialogHeader>
+																<div className="overflow-y-auto max-h-[calc(80vh-100px)]">
+																	{codeBlocks ? (
+																		codeBlocks.map((block, blockIndex) => (
+																			<div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
+																				<SyntaxHighlighter
+																					language={block.language}
+																					style={vscDarkPlus}
+																					customStyle={{
+																						fontSize: "0.875rem",
+																						maxHeight: "400px",
+																						overflow: "auto",
+																					}}
+																				>
+																					{block.code}
+																				</SyntaxHighlighter>
+																			</div>
+																		))
+																	) : item.code ? (
+																		<SyntaxHighlighter
+																			language={item.language || "text"}
+																			style={vscDarkPlus}
+																			customStyle={{
+																				margin: 0,
+																				borderRadius: "0.375rem",
+																				fontSize: "0.875rem",
+																				maxHeight: "400px",
+																				overflow: "auto",
+																			}}
+																		>
+																			{item.code}
+																		</SyntaxHighlighter>
+																	) : (
+																		<div className="overflow-y-auto max-h-[400px]">
+																			{item.content ? (
+																				<GenifyMarkdownRender content={item.content}/>
+																			) : (
+																				<div className="text-sm text-slate-500 italic">无可用内容</div>
+																			)}
+																		</div>
+																	)}
 																</div>
-															))
-														) : item.code ? (
-															<SyntaxHighlighter
-																language={item.language || "text"}
-																style={vscDarkPlus}
-																customStyle={{
-																	margin: 0,
-																	borderRadius: "0.375rem",
-																	fontSize: "0.875rem",
-																	maxHeight: "400px",
-																	overflow: "auto",
-																}}
-															>
-																{item.code}
-															</SyntaxHighlighter>
-														) : (
-															<div className="overflow-y-auto max-h-[400px]">
-																{item.content ? (
-																	<GenifyMarkdownRender content={item.content}/>
-																) : (
-																	<div className="text-sm text-slate-500 italic">无可用内容</div>
-																)}
-															</div>
-														)}
-													</div>
-												</DialogContent>
-											</Dialog>
-										)}
+															</DialogContent>
+														</Dialog>
+													)}
+
+													{!item.description && (
+														<Button
+															variant="outline"
+															size="sm"
+															className="ml-2 h-7 px-2 flex-shrink-0"
+															disabled={generatingIds.includes(item.id)}
+															onClick={(e) => {
+																e.stopPropagation();
+																handleGenerateAnalysis(item.id);
+															}}
+														>
+															{generatingIds.includes(item.id) ? (
+																<Loader2 className="h-3 w-3 animate-spin mr-1"/>
+															) : null}
+															{generatingIds.includes(item.id) ? "分析中..." : "AI分析"}
+														</Button>
+													)}
+												</div>
+											</div>
+
+											{item.description ? (
+												<div className="text-sm text-slate-600 mt-1">
+													<p className="line-clamp-2">{item.description}</p>
+												</div>
+											) : (
+												<div className="flex items-center space-x-2 mt-1">
+													{item.language && (
+														<Badge variant="outline" className="text-xs">
+															{item.language}
+														</Badge>
+													)}
+													<span className="text-xs text-slate-500">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+												</div>
+											)}
+										</div>
 									</div>
 								</div>
-
-								{!item.description && (
-									<Button
-										variant="outline"
-										size="sm"
-										className="ml-2 h-7 px-2 flex-shrink-0"
-										disabled={generatingIds.includes(item.id)}
-										onClick={(e) => {
-											e.stopPropagation();
-											handleGenerateAnalysis(item.id);
-										}}
-									>
-										{generatingIds.includes(item.id) ? (
-											<Loader2 className="h-3 w-3 animate-spin mr-1"/>
-										) : null}
-										{generatingIds.includes(item.id) ? "分析中..." : "AI分析"}
-									</Button>
-								)}
 							</div>
 						</div>
 					)
