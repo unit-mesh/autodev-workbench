@@ -125,11 +125,11 @@ export class InterfaceAnalyzerApp {
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (config.upload) {
-			console.log(`正在上传分析结果到 ${config.baseUrl}/projects/${config.projectId}`);
+			console.log(`Upload results to ${config.baseUrl}/projects/${config.projectId}`);
 			await this.uploadCodeResult(result);
 		}
 
-		console.log(`分析结果已保存到 ${outputFilePath}`);
+		console.log(`Save results to ${outputFilePath}`);
 		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 
@@ -142,11 +142,17 @@ export class InterfaceAnalyzerApp {
 
 		let codeFiles = await this.codeAnalyzer.initializeFiles(controllerFilter);
 		let apiResources = await this.analysisProtobuf(config);
+
 		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(codeFiles);
 		apiResources = apiResources.concat(normalApis);
 
+		if (apiResources.length === 0) {
+			console.log('No API resources found.');
+			return;
+		}
+
 		if (config.upload) {
-			console.log(`正在上传分析结果到 ${config.baseUrl}`);
+			console.log(`Upload api resources to ${config.baseUrl}`);
 			await this.uploadApiCodeResult(apiResources);
 		}
 
@@ -158,6 +164,11 @@ export class InterfaceAnalyzerApp {
 	private async analysisProtobuf(config: AppConfig): Promise<ApiResource[]> {
 		const protoFiles = await scanProtoFiles(config.dirPath);
 		const results = await analyseProtos(protoFiles);
+
+		if (!results || results.length === 0) {
+			console.log('No proto files found or no analysis result.');
+			return [];
+		}
 
 		const outputFilePath = path.join(process.cwd(), 'protobuf_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
