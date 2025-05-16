@@ -81,6 +81,18 @@ model Guideline {
   project     Project? @relation(fields: [projectId], references: [id])
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  projects Project[]
+}
+
 // 新增项目模型
 model Project {
   id          String   @id @default(cuid())
@@ -104,8 +116,10 @@ model Project {
   conceptDictionaries ConceptDictionary[]
   apiResources        ApiResource[]
 
-  // 是否为默认项目
   isDefault Boolean @default(false)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 }
 
 model ConceptDictionary {
