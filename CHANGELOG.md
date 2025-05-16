@@ -1,3 +1,22 @@
+## 0.0.23 (2025-05-16)
+
+### 🚀 Features
+
+- add isPublic field to projects for public visibility control ([369e14f](https://github.com/unit-mesh/autodev-workbench/commit/369e14f))
+
+### 🩹 Fixes
+
+- release ([100917a](https://github.com/unit-mesh/autodev-workbench/commit/100917a))
+- fatal: 'release/$(date +%Y%m%d-%H%M%S)' is not a valid branch name ([3f10ab7](https://github.com/unit-mesh/autodev-workbench/commit/3f10ab7))
+- **ci:** correct base ref for release workflow ([e568a1d](https://github.com/unit-mesh/autodev-workbench/commit/e568a1d))
+- **ci:** correct base branch reference in release workflow ([32b14c6](https://github.com/unit-mesh/autodev-workbench/commit/32b14c6))
+- **release:** update date format for release branch name and reorder steps ([24c4b95](https://github.com/unit-mesh/autodev-workbench/commit/24c4b95))
+
+### ❤️ Thank You
+
+- CGQAQ
+- Phodal Huang @phodal
+
 ## 0.0.22 (2025-05-16)
 
 ### 🩹 Fixes
