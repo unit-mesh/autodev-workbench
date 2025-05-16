@@ -37,11 +37,12 @@
     "@ast-grep/napi": "^0.38.1",
     "@modelcontextprotocol/sdk": "^1.11.1",
     "@octokit/rest": "^20.1.2",
-    "express": "^5.1.0",
     "@vscode/ripgrep": "^1.15.11",
+    "express": "^5.1.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@octokit/types": "^14.0.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
