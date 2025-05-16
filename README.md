@@ -35,3 +35,12 @@ AutoDev Workbench provides a unified platform for development teams to:
 ```bash
 npx @autodev/context-worker@latest
 ```
+
+### Release
+
+```bash
+git fetch --tags
+pnpm install
+pnpm publish-all
+git push --tags
+```
