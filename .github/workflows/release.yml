@@ -66,8 +66,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "chore: release ${{ inputs.version }} version"
           body: "This PR contains version updates for ${{ inputs.version }} release"
-          base-branch: master
-          head-branch: release/$(date +%Y%m%d-%H%M%S)
+          base: ${{ github.ref_name }}
+          branch: release/$(date +%Y%m%d-%H%M%S)
 
   publish:
     name: Publish to npm
