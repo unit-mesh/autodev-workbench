@@ -5,17 +5,16 @@ import { LanguageProfileUtil } from '../base/LanguageProfileUtil';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { KotlinProfile } from './KotlinProfile';
 import { MemoizedQuery } from '../base/LanguageProfile';
-import { JVMRestApiAnalyser} from '../jvm/JVMRestApiAnalyser';
+import { SpringRestApiAnalyser} from '../jvm/SpringRestApiAnalyser';
 import { StructurerProvider } from "../base/StructurerProvider";
 import { KotlinStructurerProvider } from "./KotlinStructurerProvider";
 
 @injectable()
-export class KotlinSpringControllerAnalyser extends JVMRestApiAnalyser {
+export class KotlinSpringControllerAnalyser extends SpringRestApiAnalyser {
 	protected structurer: StructurerProvider = new KotlinStructurerProvider();
 	readonly langId: LanguageIdentifier = 'kotlin';
 	protected config: LanguageProfile;
 
-	// Query for RestTemplate usages
 	protected restTemplateQuery = new MemoizedQuery(`
     (call_expression
       (navigation_expression

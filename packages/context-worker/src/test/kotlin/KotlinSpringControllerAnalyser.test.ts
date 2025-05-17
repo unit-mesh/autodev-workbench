@@ -2,57 +2,57 @@ import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { JavaSpringControllerAnalyser } from "../../code-context/java/JavaSpringControllerAnalyser";
+import { KotlinSpringControllerAnalyser } from "../../code-context/kotlin/KotlinSpringControllerAnalyser";
 
 const Parser = require('web-tree-sitter');
 
-describe('JavaSpringControllerAnalyser', () => {
+describe('KotlinSpringControllerAnalyser', () => {
   let parser: any;
   let languageService: TestLanguageServiceProvider;
-  let analyser: JavaSpringControllerAnalyser;
+  let analyser: KotlinSpringControllerAnalyser;
 
   beforeEach(async () => {
     await Parser.init();
     parser = new Parser();
     languageService = new TestLanguageServiceProvider(parser);
-    analyser = new JavaSpringControllerAnalyser();
+    analyser = new KotlinSpringControllerAnalyser();
     await analyser.init(languageService);
   });
 
-  it('应该正确识别标准的 Spring RestController', async () => {
-    const javaController = `package com.example.controllers;
+  it('应该正确识别标准的 Kotlin Spring RestController', async () => {
+    const kotlinController = `package com.example.controllers
 
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestBody
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+class UserController {
     
     @GetMapping
-    public List<User> getAllUsers() {
+    fun getAllUsers(): List<User> {
         // 省略实现
-        return new ArrayList<>();
+        return ArrayList()
     }
     
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
+    fun getUserById(@PathVariable id: Long): User {
         // 省略实现
-        return new User();
+        return User()
     }
     
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    fun createUser(@RequestBody user: User): User {
         // 省略实现
-        return user;
+        return user
     }
 }`;
 
-    await analyser.analyse(javaController, 'UserController.java', '/workspace');
+    await analyser.analyse(kotlinController, 'UserController.kt', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
