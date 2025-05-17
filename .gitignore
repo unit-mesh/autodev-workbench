@@ -53,3 +53,4 @@ vitest.config.*.timestamp*
 # Next.js
 .next
 out
+
