@@ -57,8 +57,8 @@ public class UserController {
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
     expect(resources[0]).toMatchObject({
-      url: '/api/users',
-      httpMethod: 'GET',
+      sourceUrl: '/api/users',
+      sourceHttpMethod: 'GET',
       packageName: 'com.example.controllers',
       className: 'UserController',
       methodName: 'getAllUsers'
@@ -66,8 +66,8 @@ public class UserController {
 
     // 检查第二个端点
     expect(resources[1]).toMatchObject({
-      url: '/api/users/{id}',
-      httpMethod: 'GET',
+      sourceUrl: '/api/users/{id}',
+      sourceHttpMethod: 'GET',
       packageName: 'com.example.controllers',
       className: 'UserController',
       methodName: 'getUserById'
@@ -75,8 +75,8 @@ public class UserController {
 
     // 检查第三个端点
     expect(resources[2]).toMatchObject({
-      url: '/api/users',
-      httpMethod: 'POST',
+      sourceUrl: '/api/users',
+      sourceHttpMethod: 'POST',
       packageName: 'com.example.controllers',
       className: 'UserController',
       methodName: 'createUser'

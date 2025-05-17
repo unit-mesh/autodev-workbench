@@ -41,13 +41,15 @@ export class KotlinProfile implements LanguageProfile {
 		    (modifiers
           (annotation
             (user_type
-              (type_identifier) @class-annotation-name)
+              (type_identifier) @class-annotation-name)?
             (constructor_invocation
-              (value_arguments
-                (value_argument
-                  (string_literal) @class-annotation-value)?
-              )?
-            )?
+	            (user_type
+	              (type_identifier) @class-annotation-name)?
+	              (value_arguments
+	                (value_argument
+	                  (string_literal) @class-annotation-value)?
+	              )?
+	            )?
           )?
         )?
 		    (type_identifier) @class-name

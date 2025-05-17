@@ -149,7 +149,7 @@ class HelloController {
                 column: 4,
               },
               end: {
-                row: 12,
+                row: 13,
                 column: 5,
               },
               returnType: 'String',
@@ -173,7 +173,7 @@ class HelloController {
                 column: 4,
               },
               end: {
-                row: 17,
+                row: 18,
                 column: 5,
               },
               returnType: 'String',
@@ -187,7 +187,7 @@ class HelloController {
             column: 0,
           },
           end: {
-            row: 18,
+            row: 19,
             column: 1,
           },
           annotations: [
@@ -323,7 +323,7 @@ class TestController {
     await structurer.init(languageService);
 
     const codeFile = await structurer.parseFile(kotlinWithMethodAnnotations, '');
-    
+
     // 验证方法注解是否被正确解析
     const testMethod = codeFile?.classes[0]?.methods[0];
     expect(testMethod?.annotations).toBeDefined();
