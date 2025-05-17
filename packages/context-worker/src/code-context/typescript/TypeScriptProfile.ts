@@ -127,6 +127,12 @@ export class TypeScriptProfile implements LanguageProfile {
 
 		(program (function_declaration
           name: (identifier) @function-name))
+      
+    (export_statement
+      (function_declaration
+        name: (identifier) @function-name
+      )
+    )
 		`);
 	namespaces = [
 		[
