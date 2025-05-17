@@ -5,12 +5,12 @@ import { LanguageProfileUtil } from '../base/LanguageProfileUtil';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { JavaProfile } from './JavaProfile';
 import { MemoizedQuery } from '../base/LanguageProfile';
-import { JVMRestApiAnalyser } from '../jvm/JVMRestApiAnalyser';
+import { SpringRestApiAnalyser } from '../jvm/SpringRestApiAnalyser';
 import { StructurerProvider } from '../base/StructurerProvider';
 import { JavaStructurerProvider } from "./JavaStructurerProvider";
 
 @injectable()
-export class JavaSpringControllerAnalyser extends JVMRestApiAnalyser {
+export class JavaSpringControllerAnalyser extends SpringRestApiAnalyser {
 	protected structurer: StructurerProvider = new JavaStructurerProvider();
 	readonly langId: LanguageIdentifier = 'java';
 	protected config: LanguageProfile;
