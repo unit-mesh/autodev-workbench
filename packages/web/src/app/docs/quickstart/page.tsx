@@ -110,17 +110,15 @@ export default function QuickStartPage() {
                     <p className="text-gray-600">编辑 <code className="bg-gray-100 px-1.5 py-0.5 rounded">.env</code> 文件，添加以下配置：</p>
                     <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">
                       <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 数据库连接配置 - 替换为实际的用户名和密码</pre>
-                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL_NON_POOLING=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 安全相关配置
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">SECRET="your-secret-key-for-auth-sessions"
-                      </pre><pre>
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># OAuth配置（可选）
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_ID="your-github-client-id"
-                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_SECRET="your-github-client-secret"
-                      </pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL_NON_POOLING=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"></pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 安全相关配置</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">SECRET="your-secret-key-for-auth-sessions"</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># OAuth配置（可选）</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_ID="your-github-client-id"</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_SECRET="your-github-client-secret"</pre>
                     </pre>
                   </div>
                 </li>
@@ -235,18 +233,18 @@ export default function QuickStartPage() {
               <h4 className="text-base font-medium mb-2">四、项目结构说明</h4>
 
               <pre className="bg-gray-800 p-2 rounded mt-1 text-gray-300">
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">autodev-workbench/</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  ├── packages/</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │   └── web/               # 主要的Next.js应用</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── prisma/        # Prisma数据库模型和迁移</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── src/ </pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── app/       # Next.js应用目录</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   ├── api/   # API路由目录</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   └── ...    # 页面组件</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── components/ # 共享组件</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   └── ...</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       └── ...</pre>
-              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  └── ...</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">autodev-workbench/</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  ├── packages/</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │   └── web/               # 主要的Next.js应用</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── prisma/        # Prisma数据库模型和迁移</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── src/ </pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── app/       # Next.js应用目录</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   ├── api/   # API路由目录</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   └── ...    # 页面组件</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── components/ # 共享组件</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   └── ...</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       └── ...</pre>
+                <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  └── ...</pre>
               </pre>
             </div>
 
