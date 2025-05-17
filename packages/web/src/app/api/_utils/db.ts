@@ -137,6 +137,7 @@ export async function getGeneratedCode(conversationId: string) {
 }
 
 // 执行SQL查询并返回结果
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export async function query(sql: string, params: any[] = []) {
   try {
     const result = await pool.query(sql, params)
@@ -148,7 +149,7 @@ export async function query(sql: string, params: any[] = []) {
 }
 
 // 执行SQL模板字符串查询
-export async function sql(strings: TemplateStringsArray, ...values: any[]) {
+export async function sql(strings: TemplateStringsArray, ...values: (string | number | boolean | null | Date)[] | any) {
   try {
     const result = await pool.sql(strings, ...values)
     return result.rows
@@ -174,3 +175,4 @@ export async function transaction<T>(callback: (client: any) => Promise<T>): Pro
     client.release()
   }
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */

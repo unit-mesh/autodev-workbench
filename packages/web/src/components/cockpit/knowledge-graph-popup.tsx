@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -38,7 +38,7 @@ export default function KnowledgeGraphPopup({ onClose }: KnowledgeGraphPopupProp
   const [nodes, setNodes] = useState<Node[]>([]) // 使用状态存储节点
 
   // 知识图谱数据 - 初始节点数据
-  const initialNodes: Node[] = [
+  const initialNodes = useMemo<Node[]>(() => [
     { id: "system", label: "会议室预订系统", type: "system", size: 60 },
     { id: "user", label: "用户", type: "actor", size: 40 },
     { id: "admin", label: "管理员", type: "actor", size: 40 },
@@ -49,7 +49,7 @@ export default function KnowledgeGraphPopup({ onClose }: KnowledgeGraphPopupProp
     { id: "conflict", label: "冲突检测", type: "feature", size: 35 },
     { id: "equipment", label: "会议设备", type: "entity", size: 30 },
     { id: "schedule", label: "日程表", type: "entity", size: 35 }
-  ]
+  ] as Node[], []);
 
   const edges: Edge[] = [
     { source: "system", target: "booking", label: "包含" },
@@ -112,7 +112,7 @@ export default function KnowledgeGraphPopup({ onClose }: KnowledgeGraphPopupProp
 
     // 更新节点状态
     setNodes(nodesWithPositions);
-  }, [containerRef.current]); // 当容器大小可用时计算
+  }, [initialNodes]); // 当容器大小可用时计算
 
   // 处理缩放
   const handleZoomIn = () => {

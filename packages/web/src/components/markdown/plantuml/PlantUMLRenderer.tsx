@@ -5,6 +5,7 @@ import plantumlEncoder from "plantuml-encoder";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { MindMap } from "../mindmap/MindMap";
+import Image from "next/image";
 
 interface PlantUMLRendererProps {
   value: string;
@@ -72,7 +73,14 @@ export default function PlantUMLRenderer({ value }: PlantUMLRendererProps) {
       </Button>
 
       <div className="border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-        <img src={graphUrl} alt="PlantUML Graph" className="max-w-full h-auto" />
+        <Image 
+          src={graphUrl} 
+          alt="PlantUML图表" 
+          className="max-w-full h-auto" 
+          width={800}
+          height={600}
+          style={{ width: '100%', height: 'auto' }}
+        />
       </div>
     </div>
   );

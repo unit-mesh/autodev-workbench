@@ -30,6 +30,7 @@ import PlantUMLRenderer from "@/components/markdown/plantuml/PlantUMLRenderer";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 const defaults = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +59,20 @@ const defaults = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   a: (props: any) => <a className="markdown-link" {...props} />,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  img: (props: any) => <img className="markdown-image" {...props} />,
+  img: (props: any) => {
+    const { src, className, ...rest } = props;
+    return (
+      <Image 
+        src={src} 
+        className={`markdown-image ${className || ""}`} 
+        alt={props.alt || "Markdown内容图片"}
+        width={500}
+        height={300}
+        style={{ width: 'auto', height: 'auto' }}
+        {...rest}
+      />
+    );
+  },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   text: (props: any) => {
     const { children } = props;

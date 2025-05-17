@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Book, Network, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface KnowledgeHubProps {
   activeSource: string | null
@@ -99,7 +100,7 @@ export default function KnowledgeHub({ activeSource, onSourceSelect }: Knowledge
                       <CardTitle className="text-sm font-medium flex items-center">
                         {item.type === "document" && <FileText className="h-3 w-3 mr-1 text-blue-600" />}
                         {item.type === "image" && (
-                          <img src="/placeholder.svg?height=12&width=12" className="h-3 w-3 mr-1" alt="" />
+                          <Image src="/placeholder.svg?height=12&width=12" width={12} height={12} className="h-3 w-3 mr-1" alt="图像占位符" />
                         )}
                         {item.type === "standard" && <Book className="h-3 w-3 mr-1 text-purple-600" />}
                         {item.title}

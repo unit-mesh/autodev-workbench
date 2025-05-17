@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateId, sql, transaction } from '@/app/api/_utils/db';
+import { sql } from '@/app/api/_utils/db';
 
 export type ApiResource = {
 	id?: string;
