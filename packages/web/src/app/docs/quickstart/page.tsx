@@ -78,7 +78,225 @@ export default function QuickStartPage() {
 
         {/* 开始使用 */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">开始使用</h2>
+          <h2 className="text-2xl font-semibold mb-4">项目搭建与问题解决指南</h2>
+
+          <div className="mb-6">
+
+            <p className="text-gray-600 mb-3">本指南将帮助您快速搭建和运行AutoDev Workbench项目，并提供常见问题的解决方案</p>
+
+            <div className="mb-6">
+              <h4 className="text-base font-medium mb-2">一、环境准备与初始化</h4>
+
+              <ol className="list-decimal list-inside space-y-4 text-gray-700">
+                <li>
+                  <span className="font-medium">克隆项目并安装依赖</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-2">
+                    <p className="text-gray-300">运行以下命令</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">git clone &lt;项目仓库地址&gt;</code>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">cd autodev-workbench</code>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">pnpm install</code>
+                  </pre>
+                </li>
+
+                <li>
+                  <span className="font-medium">环境变量配置</span><span className="text-red-500 ml-1">(必要步骤)</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-2">
+                    <p className="text-gray-300">复制环境变量模板文件</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">cd packages/web</code>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">cp env.example .env</code>
+                  </pre>
+
+                  <div className="mt-2 mb-2">
+                    <p className="text-gray-600">编辑 <code className="bg-gray-100 px-1.5 py-0.5 rounded">.env</code> 文件，添加以下配置：</p>
+                    <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 数据库连接配置 - 替换为实际的用户名和密码</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">DATABASE_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL_NON_POOLING=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 安全相关配置
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">SECRET="your-secret-key-for-auth-sessions"
+                      </pre><pre>
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># OAuth配置（可选）
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_ID="your-github-client-id"
+                      </pre><pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_SECRET="your-github-client-secret"
+                      </pre>
+                    </pre>
+                  </div>
+                </li>
+
+                <li>
+                  <span className="font-medium">数据库初始化</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-2">
+                    <p className="text-gray-300">初始化Prisma</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">cd packages/web</code>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma generate</code>
+                    <p className="text-gray-300 mt-2">执行数据库迁移</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate deploy</code>
+                  </pre>
+
+                  <p className="text-gray-600 mt-2">或者直接在 <a href="https://console.neon.tech/" className="text-blue-600 hover:underline">Neon SQL编辑器</a> 中按顺序执行 <code className="bg-gray-100 px-1.5 py-0.5 rounded">web/prisma</code> 目录中的所有SQL文件。</p>
+                </li>
+
+                <li>
+                  <span className="font-medium">安装依赖工具：ripgrep</span><span className="text-gray-500 ml-1">(用于代码搜索)</span>
+                  <div className="space-y-2 mt-2">
+                    <pre className="bg-gray-800 p-2 rounded">
+                      <p className="text-gray-300">macOS安装</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">brew install ripgrep</code>
+
+                      <p className="text-gray-300 mt-3">Linux系统安装</p>
+                      <p className="text-gray-300 mt-1">Debian/Ubuntu</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">sudo apt update && sudo apt install ripgrep</code>
+                      <p className="text-gray-300 mt-1">Fedora</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">sudo dnf install ripgrep</code>
+                      <p className="text-gray-300 mt-1">Arch Linux</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">sudo pacman -S ripgrep</code>
+
+                      <p className="text-gray-300 mt-3">Windows系统安装</p>
+                      <p className="text-gray-300 mt-1">通过scoop（需先安装scoop）</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">iwr -useb get.scoop.sh | iex</code>
+                      <p className="text-gray-300 mt-1">通过scoop安装</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">scoop install ripgrep</code>
+                      <p className="text-gray-300 mt-1">通过Chocolatey</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">choco install ripgrep</code>
+
+                      <p className="text-gray-300 mt-3">验证安装</p>
+                      <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">rg --version</code>
+                    </pre>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-base font-medium mb-2">二、常见问题与解决方案</h4>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="font-medium">1. Prisma 迁移失败问题</p>
+                  <p className="text-gray-600 mt-1"><span className="font-medium">问题表现</span>：执行 <code className="bg-gray-100 px-1.5 py-0.5 rounded">npx prisma migrate deploy</code> 时出现 <code className="bg-gray-100 px-1.5 py-0.5 rounded">P3005</code> 错误，提示 "数据库模式非空"。</p>
+
+                  <p className="text-gray-600 mt-2"><span className="font-medium">解决方案</span>：</p>
+                  <ul className="list-disc list-inside ml-4 text-gray-700">
+                    <li>确保 <code className="bg-gray-100 px-1.5 py-0.5 rounded">.env</code> 文件中配置了正确的 <code className="bg-gray-100 px-1.5 py-0.5 rounded">DATABASE_URL</code></li>
+                    <li>如果是已存在的数据库，使用基线迁移：
+                      <pre className="bg-gray-800 p-2 rounded mt-1 ml-6">
+                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate resolve --applied "init"</code>
+                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate deploy</code>
+                      </pre>
+                    </li>
+                    <li>或者重新创建空数据库后再执行迁移</li>
+                  </ul>
+                </div>
+
+
+
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-base font-medium mb-2">三、项目启动与开发</h4>
+
+              <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                <li>
+                  <span className="font-medium">启动开发服务器</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-1">
+                    <p className="text-gray-300">在项目根目录执行</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">pnpm dev</code>
+                    <p className="text-gray-300 mt-2">或者指定web包</p>
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">pnpm --filter web dev</code>
+                  </pre>
+                </li>
+
+                <li>
+                  <span className="font-medium">浏览器访问</span>
+                  <p className="text-gray-600 mt-1">打开 <a href="http://localhost:3000" className="text-blue-600 hover:underline">http://localhost:3000</a> 查看应用。</p>
+                </li>
+
+                <li>
+                  <span className="font-medium">构建生产版本</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-1">
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">pnpm build</code>
+                  </pre>
+                </li>
+
+                <li>
+                  <span className="font-medium">运行生产版本</span>
+                  <pre className="bg-gray-800 p-2 rounded mt-1">
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">pnpm start</code>
+                  </pre>
+                </li>
+              </ol>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-base font-medium mb-2">四、项目结构说明</h4>
+
+              <pre className="bg-gray-800 p-2 rounded mt-1 text-gray-300">
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">autodev-workbench/</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  ├── packages/</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │   └── web/               # 主要的Next.js应用</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── prisma/        # Prisma数据库模型和迁移</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       ├── src/ </pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── app/       # Next.js应用目录</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   ├── api/   # API路由目录</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   │   └── ...    # 页面组件</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   ├── components/ # 共享组件</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       │   └── ...</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  │       └── ...</pre>
+              <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">  └── ...</pre>
+              </pre>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-base font-medium mb-2">五、进阶使用技巧</h4>
+
+              <ol className="list-decimal list-inside space-y-3 text-gray-700">
+                <li>
+                  <span className="font-medium">数据库操作</span>
+                  <ul className="list-disc list-inside ml-4 mt-1">
+                    <li>使用Prisma Studio查看和编辑数据：
+                      <pre className="bg-gray-800 p-2 rounded mt-1 ml-6">
+                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">cd packages/web</code>
+                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma studio</code>
+                      </pre>
+                    </li>
+                  </ul>
+                </li>
+
+                <li>
+                  <span className="font-medium">API开发</span>
+                  <ul className="list-disc list-inside ml-4 mt-1">
+                    <li>所有API路由都位于 <code className="bg-gray-100 px-1.5 py-0.5 rounded">src/app/api</code> 目录</li>
+                    <li>使用共享的数据库连接池 <code className="bg-gray-100 px-1.5 py-0.5 rounded">pool</code> 而非单独创建连接</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <span className="font-medium">组件开发</span>
+                  <ul className="list-disc list-inside ml-4 mt-1">
+                    <li>确保新组件遵循项目的设计系统和样式规范</li>
+                    <li>对于表单组件，正确处理 <code className="bg-gray-100 px-1.5 py-0.5 rounded">data-empty</code> 属性</li>
+                  </ul>
+                </li>
+
+                <li>
+                  <span className="font-medium">环境变量管理</span>
+                  <ul className="list-disc list-inside ml-4 mt-1">
+                    <li>本地开发使用 <code className="bg-gray-100 px-1.5 py-0.5 rounded">.env</code> 文件</li>
+                    <li>部署到Vercel时，在项目设置中配置环境变量</li>
+                  </ul>
+                </li>
+              </ol>
+            </div>
+
+            <p className="text-gray-600">通过本指南，您应该能够成功搭建和运行AutoDev Workbench项目，并避免常见的配置和开发问题。如有任何疑问，请参考项目文档或向开发团队寻求帮助。</p>
+          </div>
+
+
+
           <div className="bg-gray-900 text-white p-4 rounded-lg">
             <div className="flex items-center mb-2">
               <Terminal className="h-5 w-5 mr-2" />

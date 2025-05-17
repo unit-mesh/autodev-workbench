@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Send, Wand2 } from "lucide-react"
@@ -36,6 +36,25 @@ export default function InputWithSend({
 }: InputWithSendProps) {
   const [isAnalyzingKeywords, setIsAnalyzingKeywords] = useState(false);
   const [extractedKeywords, setExtractedKeywords] = useState<string[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 处理Textarea的输入变化
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // 直接调用父组件的onChange处理函数
+    onChange(e);
+    
+    // 更新data-empty属性以控制placeholder可见性
+    if (textareaRef.current) {
+      textareaRef.current.setAttribute('data-empty', e.target.value === '' ? 'true' : 'false');
+    }
+  };
+
+  // 组件挂载或value变化时更新data-empty属性
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.setAttribute('data-empty', value === '' ? 'true' : 'false');
+    }
+  }, [value]);
 
   const handleSend = async () => {
     if (!keywordsAnalyze || !value.trim()) {
@@ -122,11 +141,13 @@ ${value}
     <div className="flex flex-col">
       <div className={`relative ${className}`}>
         <Textarea
+          ref={textareaRef}
           placeholder={placeholder}
           value={value}
-          onChange={onChange}
+          onChange={handleChange}
           onKeyDown={onKeyDown}
           className={`resize-none pr-20 min-h-[${minHeight}]`}
+          data-empty={value === ''}
         />
         <div className="absolute right-2 bottom-2 flex gap-2">
           {onAnalyze && (

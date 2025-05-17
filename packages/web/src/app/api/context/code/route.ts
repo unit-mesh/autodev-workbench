@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { pool } from '../../_utils/db';
 
 export async function GET() {
-  const client = createClient();
-  await client.connect();
-
   try {
     // Fetch the most recent code analysis results with all fields
-    const result = await client.sql`
+    const result = await pool.sql`
       SELECT 
         id,
         path,
@@ -34,15 +31,10 @@ export async function GET() {
       },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
 export async function POST(request: Request) {
-  const client = createClient();
-  await client.connect();
-
   try {
     const { data, projectId } = await request.json();
 
@@ -66,7 +58,7 @@ export async function POST(request: Request) {
     // Store each item in the database
     const results = [];
     for (const item of data) {
-      const result = await client.sql`
+      const result = await pool.sql`
         INSERT INTO "CodeAnalysis" (
           id, 
           path,
@@ -101,7 +93,5 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }

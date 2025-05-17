@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { pool } from '../../../_utils/db';
 
 // 获取特定项目的词汇表
 export async function GET(
@@ -15,11 +15,8 @@ export async function GET(
 		);
 	}
 
-	const client = createClient();
-	await client.connect();
-
 	try {
-		const result = await client.sql`
+		const result = await pool.sql`
         SELECT id,
                "termChinese",
                "termEnglish",
@@ -44,8 +41,6 @@ export async function GET(
 			},
 			{ status: 500 }
 		);
-	} finally {
-		await client.end();
 	}
 }
 
@@ -63,9 +58,6 @@ export async function PUT(
 		);
 	}
 
-	const client = createClient();
-	await client.connect();
-
 	try {
 		const data = await request.json();
 
@@ -76,7 +68,7 @@ export async function PUT(
 			);
 		}
 
-		const result = await client.sql`
+		const result = await pool.sql`
         UPDATE "ConceptDictionary"
         SET "termChinese" = ${data.termChinese},
             "termEnglish" = ${data.termEnglish},
@@ -110,8 +102,6 @@ export async function PUT(
 			},
 			{ status: 500 }
 		);
-	} finally {
-		await client.end();
 	}
 }
 
@@ -139,11 +129,8 @@ export async function DELETE(
 		);
 	}
 
-	const client = createClient();
-	await client.connect();
-
 	try {
-		const result = await client.sql`
+		const result = await pool.sql`
         DELETE
         FROM "ConceptDictionary"
         WHERE id = ${entryId}
@@ -173,7 +160,5 @@ export async function DELETE(
 			},
 			{ status: 500 }
 		);
-	} finally {
-		await client.end();
 	}
 }

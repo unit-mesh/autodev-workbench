@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { pool } from '../_utils/db';
 
 export async function GET() {
-  const client = createClient();
   try {
-    await client.connect();
-    
     // 检查表是否已存在
-    const { rows } = await client.sql`
+    const result = await pool.sql`
       SELECT EXISTS (
         SELECT 1 
         FROM information_schema.tables 
@@ -15,11 +12,11 @@ export async function GET() {
       );
     `;
     
-    const tableExists = rows[0].exists;
+    const tableExists = result.rows[0].exists;
     
     if (!tableExists) {
       // 创建表
-      await client.sql`
+      await pool.sql`
         CREATE TYPE "Status" AS ENUM ('DRAFT', 'PUBLISHED', 'ARCHIVED');
         
         CREATE TABLE "Guideline" (
@@ -49,7 +46,5 @@ export async function GET() {
       { error: '设置数据库失败' },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
