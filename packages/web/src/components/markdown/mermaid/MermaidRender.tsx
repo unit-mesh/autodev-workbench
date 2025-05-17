@@ -63,7 +63,7 @@ export default function MermaidRender({ graphDefinition }: { graphDefinition: st
 
     if (lastGraphDefinition.current === graphDefinition) return;
     mermaid.render(currentId, graphDefinition, ref.current)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then(({ svg, bindFunctions }: any) => {
         ref.current!.innerHTML = svg;
         bindFunctions?.(ref.current!);
@@ -97,7 +97,7 @@ export default function MermaidRender({ graphDefinition }: { graphDefinition: st
       });
 
     lastGraphDefinition.current = graphDefinition;
-  }, [graphDefinition]);
+  }, [graphDefinition, currentId]);
 
   useEffect(() => {
     const handleSpaceDown = (e: KeyboardEvent) => {

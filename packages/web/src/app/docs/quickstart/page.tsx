@@ -115,10 +115,10 @@ export default function QuickStartPage() {
                       <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">POSTGRES_URL_NON_POOLING=postgresql://YOUR_USER:YOUR_PASSWORD@ep-holy-mode</pre>
                       <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"></pre>
                       <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># 安全相关配置</pre>
-                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">SECRET="your-secret-key-for-auth-sessions"</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">SECRET=&quot;your-secret-key-for-auth-sessions&quot;</pre>
                       <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300"># OAuth配置（可选）</pre>
-                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_ID="your-github-client-id"</pre>
-                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_SECRET="your-github-client-secret"</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_ID=&quot;your-github-client-id&quot;</pre>
+                      <pre className="bg-gray-800 p-2 rounded mt-2 text-gray-300">GITHUB_CLIENT_SECRET=&quot;your-github-client-secret&quot;</pre>
                     </pre>
                   </div>
                 </li>
@@ -174,14 +174,14 @@ export default function QuickStartPage() {
               <div className="space-y-4">
                 <div>
                   <p className="font-medium">1. Prisma 迁移失败问题</p>
-                  <p className="text-gray-600 mt-1"><span className="font-medium">问题表现</span>：执行 <code className="bg-gray-100 px-1.5 py-0.5 rounded">npx prisma migrate deploy</code> 时出现 <code className="bg-gray-100 px-1.5 py-0.5 rounded">P3005</code> 错误，提示 "数据库模式非空"。</p>
+                  <p className="text-gray-600 mt-1"><span className="font-medium">问题表现</span>：执行 <code className="bg-gray-100 px-1.5 py-0.5 rounded">npx prisma migrate deploy</code> 时出现 <code className="bg-gray-100 px-1.5 py-0.5 rounded">P3005</code> 错误，提示 &quot;数据库模式非空&quot;。</p>
 
                   <p className="text-gray-600 mt-2"><span className="font-medium">解决方案</span>：</p>
                   <ul className="list-disc list-inside ml-4 text-gray-700">
                     <li>确保 <code className="bg-gray-100 px-1.5 py-0.5 rounded">.env</code> 文件中配置了正确的 <code className="bg-gray-100 px-1.5 py-0.5 rounded">DATABASE_URL</code></li>
                     <li>如果是已存在的数据库，使用基线迁移：
                       <pre className="bg-gray-800 p-2 rounded mt-1 ml-6">
-                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate resolve --applied "init"</code>
+                        <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate resolve --applied &quot;init&quot;</code>
                         <code className="bg-gray-100 px-1.5 py-0.5 rounded block my-1">npx prisma migrate deploy</code>
                       </pre>
                     </li>

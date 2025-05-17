@@ -36,8 +36,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const [validConcepts, setValidConcepts] = useState<string[]>([])
   const [invalidConcepts, setInvalidConcepts] = useState<{ term: string; reason: string }[]>([])
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [knowledgeItems, setKnowledgeItems] = useState<any[]>([])
+  const [knowledgeItems, setKnowledgeItems] = useState<Record<string, unknown>[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
   const fetchExtractedConcepts = async (code: string) => {
@@ -51,7 +50,6 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
       })
       const data = await response.json()
       setConcepts(data)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       const results = await englishExtractConcepts(code);
       setConcepts(results)
@@ -61,7 +59,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const [extractedConcepts, setExtractedConcepts] = useState<string[]>([])
   useEffect(() => {
     fetchExtractedConcepts(code)
-  }, [setExtractedConcepts])
+  }, [setExtractedConcepts, code])
 
   const handleExtractConcepts = async () => {
     setIsValidating(true)

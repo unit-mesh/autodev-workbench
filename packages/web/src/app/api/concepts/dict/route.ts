@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { sql, transaction } from '../../_utils/db';
+import { sql } from '../../_utils/db';
 
 // 获取所有词汇表条目
 export async function GET() {

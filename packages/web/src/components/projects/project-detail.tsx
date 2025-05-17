@@ -24,6 +24,7 @@ import { ProjectEditDialog } from "./project-edit-dialog"
 import { CopyCliCommand } from "@/components/CopyCliCommand";
 import { GuidelineCreateModal } from "./guideline-create-modal";
 import { CodeAnalysisList } from "@/components/code-analysis/code-analysis-list";
+import Image from "next/image";
 
 export function ProjectDetail({ id }: { id: string }) {
 	const [project, setProject] = useState<Project | null>(null)
@@ -159,8 +160,13 @@ export function ProjectDetail({ id }: { id: string }) {
 								<div className="flex items-center">
 									<div className="h-5 w-5 rounded-full bg-gray-200 mr-2 overflow-hidden">
 										{project.user.image ? (
-											<img src={project.user.image} alt={project.user.name || "用户"}
-											     className="h-full w-full object-cover"/>
+											<Image 
+												src={project.user.image} 
+												alt={project.user.name || "用户"}
+												width={20}
+												height={20}
+												className="h-full w-full object-cover"
+											/>
 										) : null}
 									</div>
 									<span className="text-sm">
