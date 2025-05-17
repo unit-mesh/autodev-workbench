@@ -16,7 +16,7 @@ export interface Annotation {
 }
 
 @injectable()
-export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
+export abstract class SpringRestApiAnalyser extends RestApiAnalyser {
 	protected parser: Parser | undefined;
 	protected language: Parser.Language | undefined;
 	protected abstract config: LanguageProfile;
@@ -149,11 +149,9 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 					break;
 			}
 
-			// If we found an HTTP method and path, we can stop
 			if (httpMethod && path) break;
 		}
 
-		// If we found an HTTP method, add it to our resources
 		if (httpMethod) {
 			const fullPath = this.combinePaths(baseUrl, path);
 
@@ -175,7 +173,6 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 			return annotation.keyValues[0].value;
 		}
 
-		// Otherwise look for the 'value' key
 		const valueKeyValue = annotation.keyValues.find(kv => kv.key === 'value');
 		return valueKeyValue ? valueKeyValue.value : '';
 	}
@@ -212,6 +209,7 @@ export abstract class JVMRestApiAnalyser extends RestApiAnalyser {
 						// Determine HTTP method from method name
 						let httpMethod = '';
 						const methodName = currentInvocation.methodName.toLowerCase();
+
 						if (methodName.startsWith('get')) httpMethod = 'GET';
 						else if (methodName.startsWith('post')) httpMethod = 'POST';
 						else if (methodName.startsWith('delete')) httpMethod = 'DELETE';
