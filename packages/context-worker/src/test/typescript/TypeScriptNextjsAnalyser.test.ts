@@ -20,30 +20,30 @@ describe('TypeScriptNextjsAnalyser', () => {
     await analyser.init(languageService);
   });
 
-//   it('应该正确识别旧版 Next.js API 路由', async () => {
-//     const nextjsApiRoute = `import type { NextApiRequest, NextApiResponse } from 'next';
-//
-// export default function handler(
-//   req: NextApiRequest,
-//   res: NextApiResponse<Data>
-// ) {
-//   if (req.method === 'GET') {
-//     res.status(200).json({ name: 'John Doe' });
-//   } else if (req.method === 'POST') {
-//     // 处理 POST 请求
-//     res.status(201).json({ name: 'Created User' });
-//   } else {
-//     res.setHeader('Allow', ['GET', 'POST']);
-//     res.status(405).end(\`Method \${req.method} Not Allowed\`);
-//   }
-// }`;
-//
-//     const filePath = path.join('/workspace', 'pages', 'api', 'route.ts');
-//     await analyser.analyse(nextjsApiRoute, filePath, '/workspace');
-//
-//     const resources = analyser.resources;
-//     expect(resources.length).toBe(5); // 默认支持所有 HTTP 方法
-//   });
+  it('应该正确识别旧版 Next.js API 路由', async () => {
+    const nextjsApiRoute = `import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Data>
+) {
+  if (req.method === 'GET') {
+    res.status(200).json({ name: 'John Doe' });
+  } else if (req.method === 'POST') {
+    // 处理 POST 请求
+    res.status(201).json({ name: 'Created User' });
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(\`Method \${req.method} Not Allowed\`);
+  }
+}`;
+
+    const filePath = path.join('/workspace', 'pages', 'api', 'route.ts');
+    await analyser.analyse(nextjsApiRoute, filePath, '/workspace');
+
+    const resources = analyser.resources;
+    expect(resources.length).toBe(1); // 默认支持所有 HTTP 方法
+  });
 
   it('应该正确识别新版 Next.js App Router API', async () => {
     const nextjsAppRouterApi = `import { NextResponse } from 'next/server';

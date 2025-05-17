@@ -96,6 +96,13 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 					const lastField = lastClass_.fields!![lastClass_.fields!!.length - 1];
 					lastField.type = text;
 					break;
+				case 'function-name':
+					const functionNode = capture.node?.parent ?? null;
+					if (functionNode) {
+						const functionObj = this.createFunction(functionNode, text);
+						codeFile.functions.push(functionObj);
+					}
+					break;
 				default:
 					break;
 			}
