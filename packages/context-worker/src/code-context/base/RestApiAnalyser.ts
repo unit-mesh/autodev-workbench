@@ -4,26 +4,16 @@ import { ILanguageServiceProvider } from '../../base/common/languages/languageSe
 import { ApiResource } from "@autodev/worker-core";
 import { CodeFile } from "../../codemodel/CodeElement";
 
-/**
- * API call representation
- */
 export interface ApiDemand {
-  // Source of the API call (class name)
   sourceCaller: string;
-  // Target URL
   targetUrl: string;
-  // Target HTTP method
   targetHttpMethod: string;
 }
 
 @injectable()
 export abstract class RestApiAnalyser {
-  // Language identifier that this analyser supports
   abstract readonly langId: LanguageIdentifier;
-
-  // API resources extracted from code
   resources: ApiResource[] = [];
-  // API demands extracted from code
   demands: ApiDemand[] = [];
 
   /**

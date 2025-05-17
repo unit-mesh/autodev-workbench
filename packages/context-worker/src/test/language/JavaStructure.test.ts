@@ -75,7 +75,7 @@ public class ExampleClass {
 					],
 					name: 'ExampleClass',
 					canonicalName: 'com.example.ExampleClass',
-					package: '',
+					package: 'com.example',
 					implements: [],
 					start: {
 						row: 3,
@@ -124,12 +124,24 @@ public class CreateBlogRequest {
 			classes: [
 				{
 					type: 'class',
+					// "annotations": Array [
+					//         Object {
+					//           "keyValues": Array [],
+					//           "name": "Data",
+					//         },
+					//       ],
+					annotations: [
+						{
+							name: 'Data',
+							keyValues: [],
+						}
+					],
 					canonicalName: 'cc.unitmesh.untitled.demo.dto.CreateBlogRequest',
 					constant: [],
 					extends: [],
 					methods: [],
 					name: 'CreateBlogRequest',
-					package: '',
+					package: 'cc.unitmesh.untitled.demo.dto',
 					implements: [],
 					start: { row: 6, column: 0 },
 					end: { row: 11, column: 1 },
