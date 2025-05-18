@@ -55,8 +55,11 @@ export class PythonProfile implements LanguageProfile {
 			)
 		)
 		
-		(function_definition
-			name: (identifier) @function-name
+		; 明确指定模块级别的顶层函数
+		(module 
+			(function_definition
+				name: (identifier) @toplevel-function-name
+			)
 		)
 	`);
 	namespaces = [['class', 'function', 'parameter', 'variable']];

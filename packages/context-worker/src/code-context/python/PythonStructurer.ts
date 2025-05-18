@@ -35,7 +35,40 @@ export class PythonStructurer extends BaseStructurerProvider {
 		};
 
 		let classObj: CodeStructure = this.createEmptyClassStructure();
+		
+		// 存储已处理的函数节点，避免重复添加
+		const processedFunctionNodes = new Set<Parser.SyntaxNode>();
+		// 存储类方法节点，用于排除顶级函数
+		const classMethodNodes = new Set<Parser.SyntaxNode>();
 
+		// 第一遍：识别所有类和类方法
+		for (const element of captures) {
+			const capture: Parser.QueryCapture = element!!;
+			
+			switch (capture.name) {
+				case 'class-name':
+					// 标记类节点存在
+					const classNode = capture.node?.parent;
+					if (classNode) {
+						// 处理类体中的内容
+						const bodyNode = this.findChildNode(classNode, 'block');
+						if (bodyNode) {
+							// 将所有类中的函数定义节点添加到集合中
+							this.collectFunctionNodesInBlock(bodyNode, classMethodNodes);
+						}
+					}
+					break;
+				case 'class-method-name':
+					// 将类方法节点添加到集合
+					const methodNode = capture.node?.parent;
+					if (methodNode) {
+						classMethodNodes.add(methodNode);
+					}
+					break;
+			}
+		}
+
+		// 第二遍：正式处理所有节点
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
 			const text = capture.node.text;
@@ -67,8 +100,12 @@ export class PythonStructurer extends BaseStructurerProvider {
 				case 'class-method-name':
 					// 将方法添加到当前类
 					if (codeFile.classes.length > 0) {
-						const methodFunc = this.createFunction(capture.node, text);
-						codeFile.classes[codeFile.classes.length - 1].methods.push(methodFunc);
+						const methodNode = capture.node?.parent;
+						if (methodNode && !processedFunctionNodes.has(methodNode)) {
+							const methodFunc = this.createFunction(capture.node, text);
+							codeFile.classes[codeFile.classes.length - 1].methods.push(methodFunc);
+							processedFunctionNodes.add(methodNode);
+						}
 					}
 					break;
 				case 'class-attribute-name':
@@ -79,12 +116,17 @@ export class PythonStructurer extends BaseStructurerProvider {
 						lastClass.fields.push(this.createVariable(capture.node, text, ''));
 					}
 					break;
-				case 'function-name':
-					// 只添加顶级函数（非类方法）
-					const parentType = capture.node.parent?.parent?.type;
-					if (parentType !== 'class_definition') {
+				// 使用明确标记的顶层函数
+				case 'toplevel-function-name':
+					const toplevelFunctionNode = capture.node?.parent;
+					if (toplevelFunctionNode && !processedFunctionNodes.has(toplevelFunctionNode)) {
 						codeFile.functions.push(this.createFunction(capture.node, text));
+						processedFunctionNodes.add(toplevelFunctionNode);
 					}
+					break;
+				// 保留原来的函数处理逻辑但不添加到顶层函数
+				case 'function-name':
+					// 不再将这类函数添加到顶层函数中，除非确认它不是类方法
 					break;
 			}
 		}
@@ -93,6 +135,32 @@ export class PythonStructurer extends BaseStructurerProvider {
 		this.mergeClasses(codeFile);
 
 		return Promise.resolve(codeFile);
+	}
+
+	// 查找指定类型的子节点
+	private findChildNode(node: Parser.SyntaxNode, type: string): Parser.SyntaxNode | null {
+		for (let i = 0; i < node.childCount; i++) {
+			const child = node.child(i);
+			if (child && child.type === type) {
+				return child;
+			}
+		}
+		return null;
+	}
+
+	// 收集块内的所有函数定义节点
+	private collectFunctionNodesInBlock(blockNode: Parser.SyntaxNode, collection: Set<Parser.SyntaxNode>): void {
+		for (let i = 0; i < blockNode.childCount; i++) {
+			const child = blockNode.child(i);
+			if (child && child.type === 'function_definition') {
+				collection.add(child);
+			} else if (child && child.childCount > 0) {
+				// 递归处理嵌套块
+				if (child.type === 'block') {
+					this.collectFunctionNodesInBlock(child, collection);
+				}
+			}
+		}
 	}
 
 	// 创建空的类结构对象
