@@ -85,4 +85,26 @@ export class PythonProfile implements LanguageProfile {
 		'Ellipsis',
 		'object',
 	];
+	
+	// 添加 FastAPI 路由查询
+	fastApiRouteQuery = new MemoizedQuery(`
+		; 捕获FastAPI路由定义
+		(decorated_definition
+			(decorator
+				(call
+					function: (attribute 
+						object: (identifier) @router-object
+						attribute: (identifier) @http-method
+					)
+					arguments: (argument_list
+						(string) @route-path
+					)?
+				)
+			)
+			definition: (function_definition
+				name: (identifier) @endpoint-function
+				parameters: (parameters)? @function-params
+			)
+		)
+	`);
 }
