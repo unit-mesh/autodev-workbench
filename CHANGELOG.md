@@ -1,3 +1,23 @@
+## 0.2.1 (2025-05-18)
+
+### 🚀 Features
+
+- **api:** add TypeScriptNextjsAnalyser for Next.js API route analysis ([5ae80df](https://github.com/unit-mesh/autodev-worker/commit/5ae80df))
+- **api:** enhance TypeScriptNextjsAnalyser to support function declaration exports ([35707db](https://github.com/unit-mesh/autodev-worker/commit/35707db))
+- **api:** enhance Python structurer to support top-level function identification and avoid duplicates ([559fddf](https://github.com/unit-mesh/autodev-worker/commit/559fddf))
+- **python:** add FastAPI route analyzer ([b8c3003](https://github.com/unit-mesh/autodev-worker/commit/b8c3003))
+
+### 🩹 Fixes
+
+- improve logging messages and handle empty results in analysis ([cc7076b](https://github.com/unit-mesh/autodev-worker/commit/cc7076b))
+- remove redundant file extension from CppProfile ([115c0fe](https://github.com/unit-mesh/autodev-worker/commit/115c0fe))
+- refactor ProjectsList component for improved readability and structure ([77c4080](https://github.com/unit-mesh/autodev-worker/commit/77c4080))
+- rename JVMRestApiAnalyser to SpringRestApiAnalyser and update references ([6903e7c](https://github.com/unit-mesh/autodev-worker/commit/6903e7c))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.2.0 (2025-05-18)
 
 ### 🚀 Features
