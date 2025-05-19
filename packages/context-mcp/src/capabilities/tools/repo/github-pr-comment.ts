@@ -1,4 +1,4 @@
-import { ToolLike } from "./_typing.js";
+import { ToolLike } from "../_typing.js";
 import { z } from "zod";
 import { Octokit } from "@octokit/rest";
 import type { RestEndpointMethodTypes } from "@octokit/rest";

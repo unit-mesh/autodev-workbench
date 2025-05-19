@@ -3,7 +3,6 @@ import { MCPServerImpl } from '../server';
 import { Implementation } from '@modelcontextprotocol/sdk/types.js';
 import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { z } from 'zod';
 import http from 'node:http';
 
 describe('MCPServerImpl', () => {
@@ -78,6 +77,7 @@ describe('MCPServerImpl', () => {
       const tools = (await client.listTools()).tools;
       expect(tools).toBeDefined();
       expect(tools.length).toBeGreaterThan(0);
+      console.log(tools);
 
       const resources = (await client.listResources()).resources;
       expect(resources).toBeDefined();
