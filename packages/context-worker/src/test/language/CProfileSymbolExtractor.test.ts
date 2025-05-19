@@ -123,7 +123,7 @@ int main() {
 
     // 按类型分组捕获的符号
     const structs = captures.filter(c => c.name === 'definition.struct');
-    const typedefs = captures.filter(c => c.name === 'definition.typedef');
+    const typedefs = captures.filter(c => c.name === 'definition.type');
     const functions = captures.filter(c => c.name === 'definition.function');
     const variables = captures.filter(c => c.name === 'definition.variable');
     const macros = captures.filter(c => c.name === 'definition.macro');
