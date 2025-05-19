@@ -144,4 +144,46 @@ export class PHPProfile implements LanguageProfile {
     "Closure",
     "Generator",
   ];
+  symbolExtractor = new MemoizedQuery(`
+(
+  [(comment) @comment]
+  . (class_declaration 
+      name: (name) @name 
+      body: (declaration_list) @body) @definition.class
+)
+(
+  [(comment) @comment]
+  . (method_declaration 
+      name: (name) @name 
+      body: (compound_statement) @body) @definition.method
+)
+(
+  [(comment) @comment]
+  . (property_declaration 
+      (property_element (variable_name) @name)) @definition.field
+)
+(
+  [(comment) @comment]
+  . (interface_declaration 
+      name: (name) @name 
+      body: (declaration_list) @body) @definition.interface
+)
+(
+  [(comment) @comment]
+  . (trait_declaration 
+      name: (name) @name 
+      body: (declaration_list) @body) @definition.trait
+)
+(
+  [(comment) @comment]
+  . (function_definition 
+      name: (name) @name 
+      body: (compound_statement) @body) @definition.function
+)
+(
+  [(comment) @comment]
+  . (const_declaration 
+      (const_element (name) @name)) @definition.constant
+)
+`);
 }
