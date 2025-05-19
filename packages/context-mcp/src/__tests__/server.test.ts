@@ -77,7 +77,6 @@ describe('MCPServerImpl', () => {
       const tools = (await client.listTools()).tools;
       expect(tools).toBeDefined();
       expect(tools.length).toBeGreaterThan(0);
-      console.log(tools);
 
       const resources = (await client.listResources()).resources;
       expect(resources).toBeDefined();
