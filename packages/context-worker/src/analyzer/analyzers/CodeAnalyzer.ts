@@ -112,8 +112,13 @@ export class CodeAnalyzer {
 	}
 
 	async parseCodeStructures(files: string[]): Promise<CodeFile[]> {
+		const supportedFiles = await this.getSupportedFiles(files);
+		return await this.parseFiles(supportedFiles);
+	}
+
+	private async getSupportedFiles(files: string[]): Promise<{file: string, content: string, language: string}[]> {
 		const silentExtensions = ['.svg', '.json', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', '.woff2', '.eot', '.css', '.scss', '.less'];
-		const parsedFiles: CodeFile[] = [];
+		const supportedFiles: {file: string, content: string, language: string}[] = [];
 
 		for (const file of files) {
 			try {
@@ -127,21 +132,40 @@ export class CodeAnalyzer {
 					continue;
 				}
 
-				const content = await this.fileScanner.readFileContent(file);
 				const structurer = this.structurerManager.getStructurer(language);
 				if (!structurer) {
 					console.warn(`No structurer found for language ${language}, skipping file ${file}`);
 					continue;
 				}
 
+				const content = await this.fileScanner.readFileContent(file);
+				supportedFiles.push({ file, content, language });
+			} catch (error) {
+				console.error(`检查文件 ${file} 支持性时出错:`, error);
+			}
+		}
+
+		return supportedFiles;
+	}
+
+	/**
+	 * Second step: Parse the content of supported files
+	 * @param supportedFiles Array of supported files with their content
+	 * @returns Array of parsed CodeFile objects
+	 */
+	private async parseFiles(supportedFiles: {file: string, content: string, language: string}[]): Promise<CodeFile[]> {
+		const parsedFiles: CodeFile[] = [];
+
+		for (const { file, content, language } of supportedFiles) {
+			try {
+				const structurer = this.structurerManager.getStructurer(language);
 				await structurer.init(this.serviceProvider);
 				const codeFile: CodeFile = await structurer.parseFile(content, file);
 
 				this.codeCollector.addCodeFile(file, codeFile);
 				parsedFiles.push(codeFile);
-
 			} catch (error) {
-				console.error(`处理文件 ${file} 时出错:`, error);
+				console.error(`解析文件 ${file} 时出错:`, error);
 			}
 		}
 
