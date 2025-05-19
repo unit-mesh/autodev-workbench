@@ -140,4 +140,64 @@ export class RustProfile implements LanguageProfile {
 		"impl Iterator",// 对应 Java 的 Stream，Rust 中流式处理可以用 Iterator 实现
 		"Option<T>",    // 对应 Java 的 Optional，Rust 中的 Option 类型
 	];
+
+	symbolExtractor = new MemoizedQuery(`
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (struct_item 
+      name: (type_identifier) @struct-name 
+      body: (field_declaration_list)? @body) @definition.struct
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (function_item 
+      name: (identifier) @function-name 
+      body: (block) @body) @definition.function
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (impl_item 
+      type: (type_identifier) @impl-type
+      body: (declaration_list 
+              (function_item 
+                name: (identifier) @method-name 
+                body: (block) @body)) @body) @definition.method
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (trait_item 
+      name: (type_identifier) @trait-name 
+      body: (declaration_list) @body) @definition.trait
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (enum_item 
+      name: (type_identifier) @enum-name 
+      body: (enum_variant_list) @body) @definition.enum
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (const_item 
+      name: (identifier) @constant-name) @definition.constant
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (field_declaration 
+      name: (field_identifier) @field-name) @definition.field
+)
+(
+  [(line_comment)* @comment
+   (block_comment)* @comment]
+  . (mod_item 
+      name: (identifier) @module-name 
+      body: (_)? @body) @definition.module
+)
+`)
 }
