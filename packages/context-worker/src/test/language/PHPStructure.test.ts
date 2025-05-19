@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { TestLanguageServiceProvider } from "../TestLanguageService";
 import { PHPStructurer } from "../../code-context/php/PHPStructurer";
-import { CodeFile } from "../../codemodel/CodeElement";
 
 const Parser = require('web-tree-sitter');
 
@@ -32,8 +31,6 @@ class User {
     await structurer.init(languageService);
 
     const codeFile = await structurer.parseFile(phpSimpleClass, 'User.php');
-    console.log(codeFile);
-    /// classes size
     expect(codeFile?.classes.length).toBe(1);
     expect(codeFile?.classes[0].name).toBe('User');
   });

@@ -2,6 +2,7 @@ packages:
   - packages/*
 ignoredBuiltDependencies:
   - esbuild
+  - '@unit-mesh/treesitter-artifacts'
 onlyBuiltDependencies:
   - '@vscode/ripgrep'
   - nodejieba
