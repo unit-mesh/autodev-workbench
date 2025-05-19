@@ -1,6 +1,9 @@
 import { Range } from '../../base/common/range';
 import { Stack } from '../../base/common/collections/stack';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
+import { LanguageProfile } from "./LanguageProfile";
+import { LanguageProfileUtil } from "./LanguageProfileUtil";
+import { LanguageIdentifier } from "../../base/common/languages/languages";
 
 export enum SymbolKind {
   Class = 0,
@@ -43,7 +46,7 @@ export class CodeSymbol {
 export class SymbolExtractor {
   private queriesCache = new Map<string, any>();
 
-  constructor(private readonly languageId: string,
+  constructor(private readonly languageId: LanguageIdentifier,
               private readonly languageService: ILanguageServiceProvider) {}
 
   async findMatches(content: string, query: string) {
@@ -57,9 +60,11 @@ export class SymbolExtractor {
     return { tree, matches };
   }
 
-  async executeQuery(filePath: string, content: string, query: string): Promise<CodeSymbol[]> {
+  async executeQuery(filePath: string, content: string): Promise<CodeSymbol[]> {
+    const profile: LanguageProfile = LanguageProfileUtil.from(this.languageId)!!;
     let result;
     try {
+      let query = profile.symbolExtractor.queryString();
       result = await this.findMatches(content, query);
       let symbolStack = new Stack<CodeSymbol>();
       let symbols: CodeSymbol[] = [];
@@ -215,7 +220,9 @@ export class SymbolExtractor {
       case 'import': return SymbolKind.Import;
       case 'wildcard': return SymbolKind.Wildcard;
       case 'alias': return SymbolKind.Alias;
-      default: throw new Error(`不支持的符号类型: ${kind}`);
+      default:
+        console.warn(`不支持的符号类型: ${kind}，将使用默认类型 Variable`);
+        return SymbolKind.Variable;
     }
   }
 

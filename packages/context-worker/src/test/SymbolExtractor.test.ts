@@ -63,11 +63,7 @@ int main() {
       languageService = new TestLanguageServiceProvider(parser);
 
       const symbolExtractor = new SymbolExtractor('cpp', languageService);
-      const symbols = await symbolExtractor.executeQuery(
-        '/test/person.cpp',
-        cppCode,
-        cppProfile.symbolExtractor.queryString()
-      );
+      const symbols = await symbolExtractor.executeQuery('/test/person.cpp', cppCode);
 
       expect(symbols.length).toBeGreaterThan(0);
 
@@ -139,8 +135,7 @@ fn main() {
 
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.rs',
-        rustCode,
-        rustProfile.symbolExtractor.queryString()
+        rustCode
       );
 
       // 验证基本的符号提取
@@ -225,8 +220,7 @@ func main() {
 
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.go',
-        goCode,
-        goProfile.symbolExtractor.queryString()
+        goCode
       );
 
       // 验证基本的符号提取
@@ -344,8 +338,7 @@ int main() {
 
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.c',
-        cCode,
-        cProfile.symbolExtractor.queryString()
+        cCode
       );
 
       // 验证基本的符号提取
@@ -420,8 +413,7 @@ fun main() {
       const symbolExtractor = new SymbolExtractor('kotlin', languageService);
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.kt',
-        kotlinCode,
-        kotlinProfile.symbolExtractor.queryString()
+        kotlinCode
       );
 
       // 验证基本的符号提取
@@ -508,8 +500,7 @@ public class Person {
       const symbolExtractor = new SymbolExtractor('java', languageService);
       const symbols = await symbolExtractor.executeQuery(
         '/test/Person.java',
-        javaCode,
-        javaProfile.symbolExtractor.queryString()
+        javaCode
       );
 
       // 验证基本的符号提取
@@ -602,8 +593,7 @@ main();
       const symbolExtractor = new SymbolExtractor('php', languageService);
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.php',
-        phpCode,
-        phpProfile.symbolExtractor.queryString()
+        phpCode
       );
 
       // 验证基本的符号提取
@@ -722,8 +712,7 @@ if __name__ == "__main__":
       const symbolExtractor = new SymbolExtractor('python', languageService);
       const symbols = await symbolExtractor.executeQuery(
         '/test/person.py',
-        pythonCode,
-        pythonProfile.symbolExtractor.queryString()
+        pythonCode
       );
 
       // 验证基本的符号提取
@@ -783,9 +772,6 @@ if __name__ == "__main__":
 
       // 测试null或undefined情况
       expect(SymbolExtractor.kindFromString(null)).toBe(SymbolKind.Variable);
-
-      // 测试未知类型时的异常抛出
-      expect(() => SymbolExtractor.kindFromString('unknown.type')).toThrow('不支持的符号类型');
     });
   });
 });
