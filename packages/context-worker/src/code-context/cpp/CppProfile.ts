@@ -145,4 +145,66 @@ export class CppProfile implements LanguageProfile {
     'queue', 'stack', 'deque', 'array', 'bitset', 'pair', 'tuple',
     'shared_ptr', 'unique_ptr', 'weak_ptr', 'auto'
   ];
+
+  symbolExtractor = new MemoizedQuery(`
+(
+  ((comment)* @comment)
+  . (class_specifier name: (type_identifier) @name) @definition.class
+)
+(
+  ((comment)* @comment)
+  . (struct_specifier name: (type_identifier) @name) @definition.struct
+)
+(
+  ((comment)* @comment)
+  . (namespace_definition name: (namespace_identifier) @name) @definition.namespace
+)
+(
+  ((comment)* @comment)
+  . (enum_specifier name: (type_identifier) @name) @definition.enum
+)
+(
+  ((comment)* @comment)
+  . (function_definition 
+      declarator: (function_declarator 
+        declarator: (identifier) @name)) @definition.function
+)
+(
+  ((comment)* @comment)
+  . (function_definition 
+      declarator: (function_declarator 
+        declarator: (field_identifier) @name)) @definition.method
+)
+(
+  ((comment)* @comment)
+  . (declaration 
+      type: (_) @type 
+      declarator: (init_declarator 
+        declarator: (identifier) @name)) @definition.variable
+)
+(
+  ((comment)* @comment)
+  . (field_declaration 
+      type: (_) @type 
+      declarator: (field_identifier) @name) @definition.field
+)
+(
+  ((comment)* @comment)
+  . (template_declaration) @definition.template
+)
+(
+  ((comment)* @comment)
+  . (preproc_def name: (identifier) @name) @definition.macro
+)
+(
+  ((comment)* @comment)
+  . (type_definition 
+      declarator: (type_identifier) @name) @definition.typedef
+)
+(
+  ((comment)* @comment)
+  . (alias_declaration 
+      name: (type_identifier) @name) @definition.using
+)
+  `);
 }
