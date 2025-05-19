@@ -19,6 +19,7 @@ export enum StructureType {
 	Enum = 'enum',
 	Struct = 'struct',
 	Annotation = 'annotation',
+	Trait = 'trait',
 }
 
 export interface CodeStructure extends PositionElement, CodeElement {

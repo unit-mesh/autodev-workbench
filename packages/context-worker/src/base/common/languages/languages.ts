@@ -9,6 +9,7 @@ type SupportedLanguage =
 	| 'java'
 	| 'kotlin'
 	| 'python'
+	| 'php'
 	| 'rust'
 	| 'javascript'
 	| 'javascriptreact'
@@ -27,6 +28,7 @@ export const SUPPORTED_LANGUAGES: LanguageIdentifier[] = [
 	'python',
 	'kt',
 	'rust',
+	'php',
 	'javascript',
 	'javascriptreact',
 	'typescript',
@@ -66,6 +68,11 @@ const SupportLanguagesList: LanguageItem[] = [
 	{
 		languageId: 'javascript',
 		fileExts: ['.js', '.cjs', '.mjs'],
+	},
+	// php
+	{
+		languageId: 'php',
+		fileExts: ['.php'],
 	},
 	// {
 	// 	languageId: 'javascriptreact',
