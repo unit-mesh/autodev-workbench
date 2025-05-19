@@ -150,9 +150,9 @@ export class RustProfile implements LanguageProfile {
       body: (field_declaration_list)? @body) @definition.struct
 )
 (
-  [(line_comment)* @comment
-   (block_comment)* @comment]
-  (source_file . (function_item 
+  (source_file
+   [(line_comment)* @comment (block_comment)* @comment]
+   (function_item 
       name: (identifier) @name 
       body: (block) @body) @definition.function
   )
@@ -165,7 +165,7 @@ export class RustProfile implements LanguageProfile {
       body: (declaration_list 
               (function_item 
                 name: (identifier) @name 
-                body: (block) @body)) @body) @definition.method
+                body: (block) @body)) @definition.method)
 )
 (
   [(line_comment)* @comment

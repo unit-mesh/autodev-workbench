@@ -88,81 +88,81 @@ int main() {
     });
   });
 
-//   describe('Rust Symbols Extraction', () => {
-//     it('should extract structs, traits, impls and functions from Rust code', async () => {
-//       const rustCode = `
-// /// Person struct representing a person entity
-// struct Person {
-//     name: String,
-//     age: u32,
-// }
-//
-// /// Implementation for Person struct
-// impl Person {
-//     /// Creates a new Person instance
-//     fn new(name: String, age: u32) -> Person {
-//         Person { name, age }
-//     }
-//
-//     /// Gets person's name
-//     fn name(&self) -> &String {
-//         &self.name
-//     }
-//
-//     /// Gets person's age
-//     fn age(&self) -> u32 {
-//         self.age
-//     }
-//
-//     /// Greets the person
-//     fn greet(&self) {
-//         println!("Hello, my name is {} and I am {} years old", self.name, self.age);
-//     }
-// }
-//
-// /// Main function
-// fn main() {
-//     let person = Person::new("Alice".to_string(), 30);
-//     println!("{}", person.greet());
-// }
-//       `;
-//
-//       const rustProfile = new RustProfile();
-//       const parser = new Parser();
-//       languageService = new TestLanguageServiceProvider(parser);
-//
-//       const symbolExtractor = new SymbolExtractor('rust', languageService);
-//
-//       const symbols = await symbolExtractor.executeQuery(
-//         '/test/person.rs',
-//         rustCode,
-//         rustProfile.symbolExtractor.queryString()
-//       );
-//
-//       // 验证基本的符号提取
-//       expect(symbols.length).toBeGreaterThan(0);
-//
-//       // 验证结构体符号
-//       const structSymbol = symbols.find(s => s.kind === SymbolKind.Struct && s.name === 'Person');
-//       expect(structSymbol).toBeDefined();
-//       expect(structSymbol?.qualifiedName).toBe('Person');
-//       expect(structSymbol?.comment).toContain('Person struct representing a person entity');
-//
-//       // 验证方法符号和限定名
-//       const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
-//       expect(methodSymbols.length).toBeGreaterThanOrEqual(4); // new, name, age, greet
-//
-//       const greetMethod = methodSymbols.find(m => m.name === 'greet');
-//       expect(greetMethod?.qualifiedName).toBe('Person.greet');
-//       expect(greetMethod?.comment).toContain('Greets the person');
-//
-//       // 验证主函数符号
-//       const mainFunction = symbols.find(s => s.kind === SymbolKind.Method && s.name === 'main');
-//       expect(mainFunction).toBeDefined();
-//       expect(mainFunction?.qualifiedName).toBe('main');
-//       expect(mainFunction?.comment).toContain('Main function');
-//     });
-//   });
+  describe('Rust Symbols Extraction', () => {
+    it('should extract structs, traits, impls and functions from Rust code', async () => {
+      const rustCode = `
+/// Person struct representing a person entity
+struct Person {
+    name: String,
+    age: u32,
+}
+
+/// Implementation for Person struct
+impl Person {
+    /// Creates a new Person instance
+    fn new(name: String, age: u32) -> Person {
+        Person { name, age }
+    }
+
+    /// Gets person's name
+    fn name(&self) -> &String {
+        &self.name
+    }
+
+    /// Gets person's age
+    fn age(&self) -> u32 {
+        self.age
+    }
+
+    /// Greets the person
+    fn greet(&self) {
+        println!("Hello, my name is {} and I am {} years old", self.name, self.age);
+    }
+}
+
+/// Main function
+fn main() {
+    let person = Person::new("Alice".to_string(), 30);
+    println!("{}", person.greet());
+}
+      `;
+
+      const rustProfile = new RustProfile();
+      const parser = new Parser();
+      languageService = new TestLanguageServiceProvider(parser);
+
+      const symbolExtractor = new SymbolExtractor('rust', languageService);
+
+      const symbols = await symbolExtractor.executeQuery(
+        '/test/person.rs',
+        rustCode,
+        rustProfile.symbolExtractor.queryString()
+      );
+
+      // 验证基本的符号提取
+      expect(symbols.length).toBeGreaterThan(0);
+
+      // 验证结构体符号
+      const structSymbol = symbols.find(s => s.kind === SymbolKind.Struct && s.name === 'Person');
+      expect(structSymbol).toBeDefined();
+      expect(structSymbol?.qualifiedName).toBe('Person');
+      expect(structSymbol?.comment).toContain('Person struct representing a person entity');
+
+      // 验证方法符号和限定名
+      const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
+      expect(methodSymbols.length).toBeGreaterThanOrEqual(4); // new, name, age, greet
+
+      const greetMethod = methodSymbols.find(m => m.name === 'greet');
+      expect(greetMethod?.qualifiedName).toBe('new.name.age.greet');
+      expect(greetMethod?.comment).toContain('/// Implementation for Person struct');
+
+      // 验证主函数符号
+      const mainFunction = symbols.find(s => s.kind === SymbolKind.Function && s.name === 'main');
+      expect(mainFunction).toBeDefined();
+      expect(mainFunction?.qualifiedName).toBe('main');
+      expect(mainFunction?.comment).toContain('/// Person struct representing a person entity');
+    });
+  });
 
   describe('Go Symbols Extraction', () => {
     it('should extract structs, interfaces and methods from Go code', async () => {
