@@ -6,6 +6,9 @@ import { CppProfile } from '../code-context/cpp/CppProfile';
 import { RustProfile } from '../code-context/rust/RustProfile';
 import { GolangProfile } from '../code-context/go/GolangProfile';
 import { CProfile } from '../code-context/c/CProfile';
+import { KotlinProfile } from '../code-context/kotlin/KotlinProfile';
+import { JavaProfile } from '../code-context/java/JavaProfile';
+import { PHPProfile } from '../code-context/php/PHPProfile';
 
 const Parser = require('web-tree-sitter');
 
@@ -366,6 +369,269 @@ int main() {
       const createPersonFunc = symbols.find(s => s.kind === SymbolKind.Method && s.name === 'create_person');
       expect(createPersonFunc).toBeDefined();
       expect(createPersonFunc?.comment).toContain('Creates a new person');
+    });
+  });
+
+  describe('Kotlin Symbols Extraction', () => {
+    it('should extract classes, functions, and properties from Kotlin code', async () => {
+      const kotlinCode = `
+package com.example
+
+/**
+ * Person class representing a person entity
+ */
+class Person(private val name: String, private val age: Int) {
+    /**
+     * Returns person's name
+     */
+    fun getName(): String {
+        return name
+    }
+    
+    /**
+     * Returns person's age
+     */
+    fun getAge(): Int {
+        return age
+    }
+    
+    /**
+     * Greets the person
+     */
+    fun greet() {
+        println("Hello, my name is $name and I am $age years old.")
+    }
+}
+
+/**
+ * Main function
+ */
+fun main() {
+    val person = Person("Alice", 30)
+    person.greet()
+}
+      `;
+
+      const kotlinProfile = new KotlinProfile();
+      const parser = new Parser();
+      languageService = new TestLanguageServiceProvider(parser);
+
+      const symbolExtractor = new SymbolExtractor('kotlin', languageService);
+      const symbols = await symbolExtractor.executeQuery(
+        '/test/person.kt',
+        kotlinCode,
+        kotlinProfile.symbolExtractor.queryString()
+      );
+
+      // 验证基本的符号提取
+      expect(symbols.length).toBeGreaterThan(0);
+
+      // 验证类符号
+      const classSymbol = symbols.find(s => s.kind === SymbolKind.Class && s.name === 'Person');
+      expect(classSymbol).toBeDefined();
+      expect(classSymbol?.qualifiedName).toBe('Person');
+      expect(classSymbol?.comment).toContain('Person class representing a person entity');
+
+      // 验证方法符号
+      const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
+      expect(methodSymbols.length).toBeGreaterThanOrEqual(3); // getName, getAge, greet
+
+      const greetMethod = methodSymbols.find(m => m.name === 'greet');
+      expect(greetMethod).toBeDefined();
+      expect(greetMethod?.qualifiedName.includes('greet')).toBe(true);
+      expect(greetMethod?.comment).toContain('Greets the person');
+
+      // 验证主函数符号
+      const mainFunction = symbols.find(s => s.kind === SymbolKind.Method && s.name === 'main');
+      expect(mainFunction).toBeDefined();
+      expect(mainFunction?.qualifiedName).toBe('main');
+      expect(mainFunction?.comment).toContain('Main function');
+    });
+  });
+
+  describe('Java Symbols Extraction', () => {
+    it('should extract classes, methods, and fields from Java code', async () => {
+      const javaCode = `
+package com.example;
+
+/**
+ * Person class representing a person entity
+ */
+public class Person {
+    private String name;
+    private int age;
+    
+    /**
+     * Constructor for Person
+     */
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    /**
+     * Returns person's name
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Returns person's age
+     */
+    public int getAge() {
+        return age;
+    }
+    
+    /**
+     * Greets the person
+     */
+    public void greet() {
+        System.out.println("Hello, my name is " + name + " and I am " + age + " years old.");
+    }
+    
+    /**
+     * Main method
+     */
+    public static void main(String[] args) {
+        Person person = new Person("Alice", 30);
+        person.greet();
+    }
+}
+      `;
+
+      const javaProfile = new JavaProfile();
+      const parser = new Parser();
+      languageService = new TestLanguageServiceProvider(parser);
+
+      const symbolExtractor = new SymbolExtractor('java', languageService);
+      const symbols = await symbolExtractor.executeQuery(
+        '/test/Person.java',
+        javaCode,
+        javaProfile.symbolExtractor.queryString()
+      );
+
+      // 验证基本的符号提取
+      expect(symbols.length).toBeGreaterThan(0);
+
+      // 验证类符号
+      const classSymbol = symbols.find(s => s.kind === SymbolKind.Class && s.name === 'Person');
+      expect(classSymbol).toBeDefined();
+      expect(classSymbol?.qualifiedName).toBe('Person');
+      expect(classSymbol?.comment).toContain('Person class representing a person entity');
+
+      // 验证方法符号
+      const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
+      expect(methodSymbols.length).toBeGreaterThanOrEqual(4); // constructor, getName, getAge, greet, main
+
+      const greetMethod = methodSymbols.find(m => m.name === 'greet');
+      expect(greetMethod).toBeDefined();
+      expect(greetMethod?.qualifiedName).toBe('Person.greet');
+      expect(greetMethod?.comment).toContain('Greets the person');
+
+      // 验证字段符号
+      const fieldSymbols = symbols.filter(s => s.kind === SymbolKind.Field);
+      expect(fieldSymbols.length).toBeGreaterThanOrEqual(2); // name, age
+
+      // 验证主方法符号
+      const mainMethod = methodSymbols.find(m => m.name === 'main');
+      expect(mainMethod).toBeDefined();
+      expect(mainMethod?.qualifiedName).toBe('Person.main');
+      expect(mainMethod?.comment).toContain('Main method');
+    });
+  });
+
+  describe('PHP Symbols Extraction', () => {
+    it('should extract classes, methods, and properties from PHP code', async () => {
+      const phpCode = `<?php
+/**
+ * Person class representing a person entity
+ */
+class Person {
+    // Person name 
+    private $name;
+    // Person age
+    private $age;
+    
+    /**
+     * Constructor for Person
+     */
+    public function __construct(string $name, int $age) {
+        $this->name = $name;
+        $this->age = $age;
+    }
+    
+    /**
+     * Returns person's name
+     */
+    public function getName(): string {
+        return $this->name;
+    }
+    
+    /**
+     * Returns person's age
+     */
+    public function getAge(): int {
+        return $this->age;
+    }
+    
+    /**
+     * Greets the person
+     */
+    public function greet(): void {
+        echo "Hello, my name is " . $this->name . " and I am " . $this->age . " years old.\\n";
+    }
+}
+
+/**
+ * Main function
+ */
+function main() {
+    $person = new Person("Alice", 30);
+    $person->greet();
+}
+
+main();
+      `;
+
+      const phpProfile = new PHPProfile();
+      const parser = new Parser();
+      languageService = new TestLanguageServiceProvider(parser);
+
+      const symbolExtractor = new SymbolExtractor('php', languageService);
+      const symbols = await symbolExtractor.executeQuery(
+        '/test/person.php',
+        phpCode,
+        phpProfile.symbolExtractor.queryString()
+      );
+
+      // 验证基本的符号提取
+      expect(symbols.length).toBeGreaterThan(0);
+
+      // 验证类符号
+      const classSymbol = symbols.find(s => s.kind === SymbolKind.Class && s.name === 'Person');
+      expect(classSymbol).toBeDefined();
+      expect(classSymbol?.qualifiedName).toBe('Person');
+      expect(classSymbol?.comment).toContain('Person class representing a person entity');
+
+      // 验证方法符号
+      const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
+      expect(methodSymbols.length).toBeGreaterThanOrEqual(4); // __construct, getName, getAge, greet
+
+      const greetMethod = methodSymbols.find(m => m.name === 'greet');
+      expect(greetMethod).toBeDefined();
+      expect(greetMethod?.qualifiedName).toBe('Person.greet');
+      expect(greetMethod?.comment).toContain('Greets the person');
+
+      // 验证字段符号
+      const fieldSymbols = symbols.filter(s => s.kind === SymbolKind.Field);
+      expect(fieldSymbols.length).toBeGreaterThanOrEqual(2); // $name, $age
+
+      // 验证主函数符号
+      const mainFunction = symbols.find(s => s.kind === SymbolKind.Function && s.name === 'main');
+      expect(mainFunction).toBeDefined();
+      expect(mainFunction?.qualifiedName).toBe('main');
+      expect(mainFunction?.comment).toContain('Main function');
     });
   });
 

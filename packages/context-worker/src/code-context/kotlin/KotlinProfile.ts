@@ -133,7 +133,7 @@ export class KotlinProfile implements LanguageProfile {
 	`);
 	symbolExtractor = new MemoizedQuery(`
 (
-  [(multiline_comment) @comment (line_comment)* @comment]
+  [(package_header (multiline_comment) @comment) (multiline_comment) @comment (line_comment)* @comment]
   . (class_declaration (type_identifier) @name (class_body) @body) @definition.class
 )
 (
