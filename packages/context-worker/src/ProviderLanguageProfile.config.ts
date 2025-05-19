@@ -11,11 +11,13 @@ import { KotlinProfile } from "./code-context/kotlin/KotlinProfile";
 import { CProfile } from "./code-context/c/CProfile";
 import { PHPProfile } from "./code-context/php/PHPProfile";
 import { CppProfile } from "./code-context/cpp/CppProfile";
+import { JavaScriptProfile } from "./code-context/javascript/JavaScriptProfile";
 
 const languageContainer = new Container();
 
 languageContainer.bind(ILanguageProfile).to(JavaProfile);
 languageContainer.bind(ILanguageProfile).to(TypeScriptProfile);
+languageContainer.bind(ILanguageProfile).to(JavaScriptProfile);
 languageContainer.bind(ILanguageProfile).to(GolangProfile);
 languageContainer.bind(ILanguageProfile).to(PythonProfile);
 languageContainer.bind(ILanguageProfile).to(CSharpProfile)

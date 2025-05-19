@@ -20,6 +20,9 @@ import { CStructurer } from "../code-context/c/CStructurer";
 import { CSharpStructurer } from "../code-context/csharp/CSharpStructurer";
 import { analyseProtos, ProtoApiResourceGenerator, scanProtoFiles } from "@autodev/worker-protobuf";
 import { ApiResource } from "@autodev/worker-core";
+import { JavaScriptStructurer } from "../code-context/javascript/JavaScriptStructurer";
+import { TypeScriptNextjsAnalyser } from "../code-context/typescript/TypeScriptNextjsAnalyser";
+import { FastApiAnalyser } from "../code-context/python/FastApiAnalyser";
 
 export class InterfaceAnalyzerApp {
 	private instantiationService: InstantiationService;
@@ -33,6 +36,7 @@ export class InterfaceAnalyzerApp {
 
 		providerContainer.bind(IStructurerProvider).to(JavaStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(KotlinStructurerProvider);
+		providerContainer.bind(IStructurerProvider).to(JavaScriptStructurer);
 		providerContainer.bind(IStructurerProvider).to(TypeScriptStructurer);
 		providerContainer.bind(IStructurerProvider).to(GoStructurerProvider);
 		providerContainer.bind(IStructurerProvider).to(PythonStructurer);
@@ -42,6 +46,8 @@ export class InterfaceAnalyzerApp {
 
 		providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
 		providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
+		providerContainer.bind(IRestApiAnalyser).to(TypeScriptNextjsAnalyser);
+		providerContainer.bind(IRestApiAnalyser).to(FastApiAnalyser);
 
 		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, config);
 	}
