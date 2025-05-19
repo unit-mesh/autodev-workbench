@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import { readdir } from "fs/promises";
 import { join } from "path";

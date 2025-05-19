@@ -2,6 +2,35 @@
 
 This is a collection of tools that can be used to extend the capabilities of the MCP server.
 
+## System Tools
+
+### File Operations
+- `ls`: List files and directories
+  - Show file types with icons
+  - Display directory contents
+  - Handle errors gracefully
+
+### Code Search
+- `ripgrep`: Advanced file search using ripgrep
+  - Basic and advanced search modes
+  - Case-sensitive/insensitive search
+  - File type filteringdd
+  - Context lines
+  - Word matching
+  - Hidden files support
+  - Line numbers
+  - Color output
+  - Count matches
+  - List files
+  - List file types
+
+- `ast-grep`: Search code using AST patterns
+  - Pattern-based code search
+  - TypeScript/JavaScript support
+  - Detailed match information
+  - Range and kind information
+  - Error handling
+
 ## GitHub PR Tools
 
 ### PR Operations
