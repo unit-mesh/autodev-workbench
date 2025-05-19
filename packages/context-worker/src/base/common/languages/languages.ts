@@ -47,8 +47,12 @@ type LanguageItem = {
 
 const SupportLanguagesList: LanguageItem[] = [
 	{
+		languageId: 'c',
+		fileExts: ['.c', '.h'],
+	},
+	{
 		languageId: 'cpp',
-		fileExts: ['.c', '.cc', '.cpp', '.cxx', '.hh', '.h', '.hpp', '.ino', '.m', '.pc', '.pcc'],
+		fileExts: ['.cc', '.cpp', '.cxx', '.hh', '.hpp', '.ino', '.m', '.pc', '.pcc'],
 	},
 	{
 		languageId: 'csharp',
@@ -69,15 +73,10 @@ const SupportLanguagesList: LanguageItem[] = [
 		languageId: 'javascript',
 		fileExts: ['.js', '.cjs', '.mjs'],
 	},
-	// php
 	{
 		languageId: 'php',
 		fileExts: ['.php'],
 	},
-	// {
-	// 	languageId: 'javascriptreact',
-	// 	fileExts: ['.jsx'],
-	// },
 	{ languageId: 'typescript', fileExts: ['.ts', '.mts'] },
 	{
 		languageId: 'typescriptreact',

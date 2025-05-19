@@ -22,12 +22,8 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 
 	const app = new InterfaceAnalyzerApp(config);
 	console.info('config:', config)
-	if (config.contextType === 'interface') {
-		await app.handleInterfaceContext();
-		await app.handleApiContext();
-	} else {
-		await app.handleApiContext();
-	}
+	await app.handleInterfaceContext();
+	await app.handleApiContext();
 }
 
 if (require.main === module) {

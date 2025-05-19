@@ -1,6 +1,7 @@
 import { languageContainer } from "../../ProviderLanguageProfile.config";
 import { ILanguageProfile } from "../../ProviderTypes";
 import { LanguageProfile } from "./LanguageProfile";
+import { TypeScriptProfile } from "../typescript/TypeScriptProfile";
 
 /**
  * Utility class for working with tree-sitter languages.

@@ -78,6 +78,7 @@ export class SymbolExtractor {
 
       return symbols;
     } catch (e) {
+      console.error('Error executing symbol query path: ', filePath);
       console.error('Error executing symbol query:', e);
       return [];
     } finally {
