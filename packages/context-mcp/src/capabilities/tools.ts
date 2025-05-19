@@ -8,7 +8,7 @@ import { installGitlabMrListTool } from "./tools/repo/gitlab-mr-list.js";
 import { installGitlabMrUpdateTool } from "./tools/repo/gitlab-mr-update.js";
 import { installGitlabMrCommentTool } from "./tools/repo/gitlab-mr-comment.js";
 
-import { installLsTool } from "./tools/sys/ls.js";
+import { installLsTool } from "./tools/sys/posix/ls.js";
 import { installAstGrepTool } from "./tools/sys/ast_grep.js";
 import { installRipGrepTool } from "./tools/sys/rip_grep.js";
 
