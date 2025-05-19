@@ -3,7 +3,6 @@ import { MCPServerImpl } from '../server';
 import { Implementation } from '@modelcontextprotocol/sdk/types.js';
 import { Client as McpClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { z } from 'zod';
 import http from 'node:http';
 
 describe('MCPServerImpl', () => {
