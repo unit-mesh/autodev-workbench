@@ -25,6 +25,10 @@ export default defineConfig([
     plugins: [
       resolve({
         preferBuiltins: true,
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+        mainFields: ['module', 'main'],
+        modulesOnly: true,
+        ignore: ['.node$']
       }),
       commonjs(),
       json(),

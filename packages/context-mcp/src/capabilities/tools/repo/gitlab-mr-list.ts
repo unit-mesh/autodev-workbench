@@ -1,4 +1,4 @@
-import { ToolLike } from "./_typing.js";
+import { ToolLike } from "../_typing.js";
 import { z } from "zod";
 import { Gitlab } from '@gitbeaker/rest';
 

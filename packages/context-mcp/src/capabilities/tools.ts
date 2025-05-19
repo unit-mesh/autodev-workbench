@@ -18,7 +18,6 @@ import { installSortTool } from "./tools/sys/posix/sort.js";
 import { installUniqTool } from "./tools/sys/posix/uniq.js";
 import { installCutTool } from "./tools/sys/posix/cut.js";
 import { installPasteTool } from "./tools/sys/posix/paste.js";
-import { installDiffTool } from "./tools/sys/posix/diff.js";
 import { installFreeTool } from "./tools/sys/posix/free.js";
 import { installDfTool } from "./tools/sys/posix/df.js";
 import { installFindTool } from "./tools/sys/posix/find.js";
@@ -49,7 +48,6 @@ export const tools: ToolLike[] = [
     installUniqTool,
     installCutTool,
     installPasteTool,
-    installDiffTool,
     installFreeTool,
     installDfTool,
     installFindTool,
