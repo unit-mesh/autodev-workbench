@@ -44,6 +44,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@octokit/types": "^14.0.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
