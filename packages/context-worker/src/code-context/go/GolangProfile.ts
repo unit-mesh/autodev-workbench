@@ -57,6 +57,28 @@ export class GolangProfile implements LanguageProfile {
           (slice_type (qualified_type)  @method-returnType))?
     )
 	`);
+	symbolExtractor = new MemoizedQuery(`
+(
+  ((comment)* @comment)
+  . (type_declaration (type_spec name: (_) @name type: (struct_type (field_declaration_list) @body))) @definition.struct
+)
+(
+  ((comment)* @comment)
+  . (type_declaration (type_spec name: (_) @name type: (interface_type (_)) @body)) @definition.interface
+)
+(
+  ((comment)* @comment)
+  . (method_declaration receiver: (parameter_list (parameter_declaration type: [(type_identifier) @receiver (pointer_type (type_identifier) @receiver)] )) name: (_) @name body: (_) @body) @definition.method
+)
+(
+  ((comment)* @comment)
+  . (function_declaration name: (_) @name) @definition.method
+)
+(
+  ((comment)* @comment)
+  . (field_declaration name: (_) @name) @definition.field
+)
+	`);
 	structureQuery = new MemoizedQuery(`
 			(package_clause
 			  (package_identifier) @package-name)

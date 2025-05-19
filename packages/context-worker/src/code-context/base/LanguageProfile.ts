@@ -44,6 +44,11 @@ export interface LanguageProfile {
 	// structurer query
 	structureQuery: MemoizedQuery;
 
+	/**
+	 * For extract core information from the code.
+	 */
+	symbolExtractor: MemoizedQuery;
+
 	// Namespaces defined by this language,
 	// E.g.: type namespace, variable namespace, function namespace
 	namespaces: NameSpaces;

@@ -62,6 +62,16 @@ export class PythonProfile implements LanguageProfile {
 			)
 		)
 	`);
+	symbolExtractor = new MemoizedQuery(`
+(
+  ((comment)* @comment)
+  . (class_definition name: (_) @name body: (_) @body) @definition.class
+)
+(
+  ((comment)* @comment)
+  . (function_definition name: (_) @name body: (_) @body) @definition.method
+)
+`);
 	namespaces = [['class', 'function', 'parameter', 'variable']];
 	autoSelectInsideParent = [];
 	builtInTypes = [

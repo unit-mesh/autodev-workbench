@@ -24,8 +24,8 @@ export class KotlinProfile implements LanguageProfile {
         (type_identifier) @name.definition.class) @definition.class
     `);
 	blockCommentQuery = new MemoizedQuery(`
-		((block_comment) @block_comment
-			(#match? @block_comment "^\\\\/\\\\*\\\\*")) @docComment`);
+		((multiline_comment) @multiline_comment
+			(#match? @multiline_comment "^\\\\/\\\\*\\\\*")) @docComment`);
 	packageQuery = new MemoizedQuery(`
 		(package_header
 			(identifier) @package-name)
@@ -131,26 +131,35 @@ export class KotlinProfile implements LanguageProfile {
 			(integer_literal | string_literal | boolean_literal)? @field-value
 		) @field-declaration
 	`);
-
-	interfaceQuery = new MemoizedQuery(`
-		(class_declaration
-			(type_identifier) @interface-name
-			(class_body
-				(property_declaration
-					(binding_pattern_kind)?
-					(variable_declaration
-						(simple_identifier) @interface-property-name
-						(user_type (type_identifier)) @interface-property-type
-					)
-				)?
-				(function_declaration
-					(simple_identifier) @interface-method-name
-					(function_value_parameters)?
-					(function_body)? @interface-method-body
-				)?
-			)
-		)
-	`);
+	symbolExtractor = new MemoizedQuery(`
+(
+  [(multiline_comment) @comment (line_comment)* @comment]
+  . (class_declaration (type_identifier) @name (class_body) @body) @definition.class
+)
+(
+  [(multiline_comment) @comment (line_comment)* @comment]
+  . (function_declaration 
+      (simple_identifier) @name 
+      (function_body)? @body) @definition.method
+)
+(
+  [(multiline_comment) @comment (line_comment)* @comment]
+  . (property_declaration 
+      (variable_declaration 
+        (simple_identifier) @name)) @definition.field
+)
+(
+  [((line_comment)* @comment) ((multiline_comment)* @comment)]
+  . (enum_entry 
+      (simple_identifier) @name) @definition.enum_variant
+)
+(
+  [(multiline_comment) @comment (line_comment)* @comment]
+  . (object_declaration
+      (type_identifier) @name
+      (class_body) @body) @definition.object
+)
+`);
 	namespaces = [
 		[
 			// variables

@@ -134,6 +134,31 @@ export class TypeScriptProfile implements LanguageProfile {
       )
     )
 		`);
+	symbolExtractor = new MemoizedQuery(`
+(
+  ((comment)* @comment)
+	.
+  [
+    (class_declaration name: (_) @name body: (_) @body) @definition.class
+    (interface_declaration name: (_) @name body: (_) @body) @definition.interface
+    (type_alias_declaration name: (type_identifier) @name) @definition.type
+    (abstract_class_declaration name: (type_identifier) @name) @definition.class
+    (enum_declaration name: (identifier) @name) @definition.type
+  ]
+)
+(
+  ((comment)* @comment)
+  .
+  [
+    (method_definition name: (_) @name body: (_) @body) @definition.method
+    (function_declaration name: (_) @name body: (_) @body) @definition.function
+    (function_signature name: (identifier) @name) @definition.function
+    (method_signature name: (property_identifier) @name) @definition.method
+    (abstract_method_signature name: (property_identifier) @name) @definition.method
+    (variable_declarator name: (identifier) @name type: (type_annotation (type_identifier)))
+  ]
+)
+`);
 	namespaces = [
 		[
 			//variables

@@ -137,6 +137,37 @@ export class JavaProfile implements LanguageProfile {
 			)
 		) @field-declaration
 	`);
+symbolExtractor = new MemoizedQuery(`
+(
+  [(block_comment) @comment (line_comment)* @comment]
+  . (class_declaration name: (identifier) @name body: (class_body) @body) @definition.class
+)
+(
+  [(block_comment) @comment (line_comment)* @comment]
+  . (constructor_declaration name: (identifier) @name body: (constructor_body) @body) @definition.method
+)
+(
+  [(block_comment) @comment (line_comment)* @comment]
+  .(method_declaration name: (identifier) @name body: (block)? @body) @definition.method
+)
+(
+  [(block_comment) @comment (line_comment)* @comment]
+  .(interface_declaration name: (identifier) @name body: (interface_body) @body) @definition.interface
+)
+(
+  [(block_comment) @comment (line_comment)* @comment]
+  .(field_declaration declarator: (variable_declarator name: (identifier) @name)) @definition.field
+)
+(
+  [((line_comment)* @comment) ((block_comment)* @comment)]
+  .(enum_declaration name: (_) @name body: (_) @body) @definition.enum
+)
+(
+  [((line_comment)* @comment) ((block_comment)* @comment)]
+  . (enum_constant name: (identifier) @name) @definition.enum_variant
+)
+`);
+
 	namespaces = [
 		[
 			// variables
