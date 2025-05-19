@@ -32,3 +32,12 @@ jobs:
 
       - name: Web Build
         run: pnpm --filter web build
+
+      - name: Run Core Tests
+        run: pnpm --filter worker-core test
+
+      - name: Run Web Tests
+        run: pnpm --filter web test
+
+      - name: Run MCP Tests
+        run: pnpm --filter context-mcp test
