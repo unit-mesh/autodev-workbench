@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../../test/TestLanguageService";
-import { SymbolExtractor, SymbolKind } from "./SymbolExtractor";
-import { CppProfile } from '../cpp/CppProfile';
-import { RustProfile } from '../rust/RustProfile';
-import { GolangProfile } from '../go/GolangProfile';
-import { CProfile } from '../c/CProfile';
+import { TestLanguageServiceProvider } from "./TestLanguageService";
+import { SymbolExtractor, SymbolKind } from "../code-context/base/SymbolExtractor";
+import { CppProfile } from '../code-context/cpp/CppProfile';
+import { RustProfile } from '../code-context/rust/RustProfile';
+import { GolangProfile } from '../code-context/go/GolangProfile';
+import { CProfile } from '../code-context/c/CProfile';
 
 const Parser = require('web-tree-sitter');
 
