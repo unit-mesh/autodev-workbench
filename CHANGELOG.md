@@ -1,3 +1,51 @@
+## 0.2.2 (2025-05-19)
+
+### 🚀 Features
+
+- add common posix tools ([2d84a9d](https://github.com/unit-mesh/autodev-worker/commit/2d84a9d))
+- **api:** add TypeScriptNextjsAnalyser for Next.js API route analysis ([99cb40a](https://github.com/unit-mesh/autodev-worker/commit/99cb40a))
+- **api:** enhance TypeScriptNextjsAnalyser to support function declaration exports ([9e4bcdd](https://github.com/unit-mesh/autodev-worker/commit/9e4bcdd))
+- **api:** enhance Python structurer to support top-level function identification and avoid duplicates ([1e29118](https://github.com/unit-mesh/autodev-worker/commit/1e29118))
+- **api:** update FastApiAnalyser to support Python language identification ([610d123](https://github.com/unit-mesh/autodev-worker/commit/610d123))
+- **api:** remove FastAPI route query from PythonProfile ([cef7de7](https://github.com/unit-mesh/autodev-worker/commit/cef7de7))
+- **c:** add symbol extractor queries for TypeScript definitions ([c31781a](https://github.com/unit-mesh/autodev-worker/commit/c31781a))
+- **ci:** add context-worker build and test steps to CI pipeline ([c26f7d3](https://github.com/unit-mesh/autodev-worker/commit/c26f7d3))
+- **cpp:** add symbol extractor queries for C++ definitions ([970744e](https://github.com/unit-mesh/autodev-worker/commit/970744e))
+- **csharp:** add symbol extractor queries for C# definitions and improve language loading ([10633f6](https://github.com/unit-mesh/autodev-worker/commit/10633f6))
+- **go:** add symbol extractor queries for Go definitions and improve comment extraction ([d5c8b81](https://github.com/unit-mesh/autodev-worker/commit/d5c8b81))
+- **javascript:** add JavaScript language support ([979d507](https://github.com/unit-mesh/autodev-worker/commit/979d507))
+- **kotlin:** add symbol extraction tests for classes and functions in Kotlin ([c39e81a](https://github.com/unit-mesh/autodev-worker/commit/c39e81a))
+- **languages:** add PHP language support and update language profiles ([6435d5c](https://github.com/unit-mesh/autodev-worker/commit/6435d5c))
+- **languages:** add C language support ([32c83af](https://github.com/unit-mesh/autodev-worker/commit/32c83af))
+- **php:** add syntax highlighting scopes and definitions for PHP language ([bbbaa54](https://github.com/unit-mesh/autodev-worker/commit/bbbaa54))
+- **php:** add symbol extractor queries for PHP definitions ([ca8a6d1](https://github.com/unit-mesh/autodev-worker/commit/ca8a6d1))
+- **php:** improve parameter handling and clean up code structure ([488a7d9](https://github.com/unit-mesh/autodev-worker/commit/488a7d9))
+- **profiles:** add symbol extractor queries for multiple languages ([f81223f](https://github.com/unit-mesh/autodev-worker/commit/f81223f))
+- **python:** add FastAPI route analyzer ([9347a91](https://github.com/unit-mesh/autodev-worker/commit/9347a91))
+- **python:** add symbol extraction for classes, methods, and functions in Python ([f31cb43](https://github.com/unit-mesh/autodev-worker/commit/f31cb43))
+- **rust:** add symbol extractor queries for Rust definitions ([e066cfa](https://github.com/unit-mesh/autodev-worker/commit/e066cfa))
+- **rust:** add symbol extractor queries for Rust definitions ([64f5ea8](https://github.com/unit-mesh/autodev-worker/commit/64f5ea8))
+- **rust:** add queryString method and clean up code formatting ([3b76f08](https://github.com/unit-mesh/autodev-worker/commit/3b76f08))
+- **rust:** enable extraction of structs, traits, and functions in Rust symbols test ([777f707](https://github.com/unit-mesh/autodev-worker/commit/777f707))
+- **symbol-analysis:** add symbol analyzer and C++ support ([5040d26](https://github.com/unit-mesh/autodev-worker/commit/5040d26))
+- **tools:** add multiple POSIX tools to enhance system capabilities ([50f67d3](https://github.com/unit-mesh/autodev-worker/commit/50f67d3))
+- **ts:** refactor SymbolExtractor to utilize LanguageProfile and simplify query execution ([fd659a0](https://github.com/unit-mesh/autodev-worker/commit/fd659a0))
+
+### 🩹 Fixes
+
+- improve logging messages and handle empty results in analysis ([cc7076b](https://github.com/unit-mesh/autodev-worker/commit/cc7076b))
+- remove redundant file extension from CppProfile ([115c0fe](https://github.com/unit-mesh/autodev-worker/commit/115c0fe))
+- refactor ProjectsList component for improved readability and structure ([77c4080](https://github.com/unit-mesh/autodev-worker/commit/77c4080))
+- rename JVMRestApiAnalyser to SpringRestApiAnalyser and update references ([099d72f](https://github.com/unit-mesh/autodev-worker/commit/099d72f))
+- **tests:** rename method references to functions in GolangProfileSymbolExtractor tests ([d78db6c](https://github.com/unit-mesh/autodev-worker/commit/d78db6c))
+- **tests:** update typedefs filter to use 'definition.type' in CProfileSymbolExtractor tests ([38d31bd](https://github.com/unit-mesh/autodev-worker/commit/38d31bd))
+- **typescript:** prevent duplicate imports and extends/implements ([bfb11db](https://github.com/unit-mesh/autodev-worker/commit/bfb11db))
+
+### ❤️ Thank You
+
+- CGQAQ
+- Phodal Huang @phodal
+
 ## 0.2.1 (2025-05-18)
 
 ### 🚀 Features
