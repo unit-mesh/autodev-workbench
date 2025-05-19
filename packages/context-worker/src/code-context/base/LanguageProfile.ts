@@ -86,6 +86,10 @@ export class MemoizedQuery {
 		this.queryStr = scopeQuery;
 	}
 
+	queryString() {
+		return this.queryStr;
+	}
+
 	query(language: Language): Query {
 		if (this.compiledQuery) {
 			return this.compiledQuery;

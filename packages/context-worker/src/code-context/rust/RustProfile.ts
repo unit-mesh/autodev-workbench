@@ -146,14 +146,14 @@ export class RustProfile implements LanguageProfile {
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (struct_item 
-      name: (type_identifier) @struct-name 
+      name: (type_identifier) @name 
       body: (field_declaration_list)? @body) @definition.struct
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (function_item 
-      name: (identifier) @function-name 
+      name: (identifier) @name 
       body: (block) @body) @definition.function
 )
 (
@@ -163,40 +163,40 @@ export class RustProfile implements LanguageProfile {
       type: (type_identifier) @impl-type
       body: (declaration_list 
               (function_item 
-                name: (identifier) @method-name 
+                name: (identifier) @name 
                 body: (block) @body)) @body) @definition.method
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (trait_item 
-      name: (type_identifier) @trait-name 
+      name: (type_identifier) @name 
       body: (declaration_list) @body) @definition.trait
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (enum_item 
-      name: (type_identifier) @enum-name 
+      name: (type_identifier) @name 
       body: (enum_variant_list) @body) @definition.enum
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (const_item 
-      name: (identifier) @constant-name) @definition.constant
+      name: (identifier) @name) @definition.constant
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (field_declaration 
-      name: (field_identifier) @field-name) @definition.field
+      name: (field_identifier) @name) @definition.field
 )
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
   . (mod_item 
-      name: (identifier) @module-name 
+      name: (identifier) @name 
       body: (_)? @body) @definition.module
 )
 `)
