@@ -35,6 +35,7 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 		};
 
 		let classObj: CodeStructure = this.createEmptyClassStructure();
+		const processedImports = new Set<string>();
 
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
@@ -42,7 +43,11 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 
 			switch (capture.name) {
 				case 'import-source':
-					codeFile.imports.push(text);
+					// 避免重复添加相同的导入
+					if (!processedImports.has(text)) {
+						codeFile.imports.push(text);
+						processedImports.add(text);
+					}
 					break;
 				case 'class-name':
 					// 创建新的类对象
@@ -58,17 +63,21 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 					}
 					break;
 				case 'extend-name':
-					// 将扩展的类名添加到当前类的extends数组中
+					// 将扩展的类名添加到当前类的extends数组中（避免重复）
 					if (codeFile.classes.length > 0) {
 						let currentClass = codeFile.classes[codeFile.classes.length - 1];
-						currentClass.extends.push(text);
+						if (!currentClass.extends.includes(text)) {
+							currentClass.extends.push(text);
+						}
 					}
 					break;
 				case 'implements-name':
-					// 将实现的接口名添加到当前类的implements数组中
+					// 将实现的接口名添加到当前类的implements数组中（避免重复）
 					if (codeFile.classes.length > 0) {
 						let currentClass = codeFile.classes[codeFile.classes.length - 1];
-						currentClass.implements.push(text);
+						if (!currentClass.implements.includes(text)) {
+							currentClass.implements.push(text);
+						}
 					}
 					break;
 				case 'class-method-name':
@@ -110,6 +119,9 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 
 		// 合并重复的类
 		this.mergeClasses(codeFile);
+		
+		// 确保导入不重复 (捕获的问题表明可能有重复)
+		codeFile.imports = [...new Set(codeFile.imports)];
 
 		return Promise.resolve(codeFile);
 	}
