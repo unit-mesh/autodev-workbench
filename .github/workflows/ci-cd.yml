@@ -27,11 +27,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Core Build
+      - name: Worker Core Build
         run: pnpm --filter worker-core build
 
       - name: Web Build
         run: pnpm --filter web build
+
+      - name: ProtobufWorker Build
+        run: pnpm --filter worker-protobuf build
 
       - name: ContextWorker Build
         run: pnpm --filter context-worker build
