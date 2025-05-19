@@ -2,11 +2,29 @@
 
 First, run the development server:
 
-Create a .env.local file in the web directory and fill in the environment variables.
+Create a .env file in the web directory and fill in the environment variables.
 ```bash
-cp env.example .env.local
+cp env.example .env
 ```
-Open the prisma folder in the project web/prisma directory and execute all SQL files in Neon's https://console.neon.tech/ SQL Editor in order.
+Postgres DB recommends using Neon's services https://console.neon.tech/ 
+
+```bash
+POSTGRES_URL=your posteres url
+POSTGRES_URL_NON_POOLING=your posteres url
+DATABASE_URL=your database url here
+GLM_TOKEN=your token here
+SECRET="your secret here"
+GITHUB_CLIENT_ID="your id here"
+GITHUB_CLIENT_SECRET="your secret here"
+```
+
+To view the Db table, you can open the Prisma folder in the project's web/Prisma directory
+Initialize database tables, you can perform Prisma migration bash.
+Prisma uses the DATABASE_URL in. env
+```bash
+cd web
+npx prisma migrate dev
+```
 
 ```bash
 pnpm dev

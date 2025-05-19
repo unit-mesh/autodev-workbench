@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { TopNavigation } from "@/layout/navigation/TopNavigation";
@@ -8,7 +7,10 @@ import { AIAssistantWrapper } from "@/layout/AIAssistantWrapper";
 import { AIAssistantProvider } from "@/context/AIAssistantContext";
 import { AuthProvider } from "@/context/AuthProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+// 使用本地字体，避免Google Fonts加载问题
+const inter = {
+  className: 'font-sans',
+};
 
 export const metadata: Metadata = {
   title: "AutoDev Workbench",

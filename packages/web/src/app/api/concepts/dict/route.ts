@@ -1,95 +1,65 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { sql, transaction } from '../../_utils/db';
 
 // 获取所有词汇表条目
 export async function GET() {
-  const client = createClient();
-  await client.connect();
-
   try {
-    const result = await client.sql`
-      SELECT 
-        id,
-        "termChinese",
-        "termEnglish",
-        "descChinese",
-        "descEnglish",
-        "projectId",
-        "createdAt",
-        "updatedAt"
-      FROM "ConceptDictionary"
+    const rows = await sql`
+      SELECT * FROM "ConceptDictionary"
       ORDER BY "createdAt" DESC
     `;
 
-    return NextResponse.json(result.rows);
+    return NextResponse.json(rows);
   } catch (error) {
     console.error('获取词汇表失败:', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: '获取词汇表失败',
-        error: error instanceof Error ? error.message : '未知错误'
-      },
+      { error: '获取词汇表失败' },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
-// 创建新词汇条目
+// 创建新的词汇表条目
 export async function POST(request: Request) {
-  const client = createClient();
-  await client.connect();
-
   try {
-    const data = await request.json();
+    const body = await request.json();
 
-    if (!data || !data.termChinese || !data.termEnglish || !data.descChinese || !data.descEnglish) {
+    // 确保所需字段都存在
+    if (!body.term || !body.definition) {
       return NextResponse.json(
-        { error: '缺少必要字段' },
+        { error: '术语名称和定义是必填字段' },
         { status: 400 }
       );
     }
 
-    const result = await client.sql`
+    const now = new Date();
+
+    const result = await sql`
       INSERT INTO "ConceptDictionary" (
-        id,
-        "termChinese",
-        "termEnglish",
-        "descChinese",
-        "descEnglish",
-        "projectId",
+        "term",
+        "definition",
+        "category",
+        "relatedTerms",
         "createdAt",
         "updatedAt"
-      ) VALUES (
-        gen_random_uuid(),
-        ${data.termChinese},
-        ${data.termEnglish},
-        ${data.descChinese},
-        ${data.descEnglish},
-        ${data.projectId || null},
-        NOW(),
-        NOW()
-      ) RETURNING id
+      )
+      VALUES (
+        ${body.term},
+        ${body.definition},
+        ${body.category || '通用'},
+        ${body.relatedTerms ? JSON.stringify(body.relatedTerms) : '[]'},
+        ${now},
+        ${now}
+      )
+      RETURNING *
     `;
 
-    return NextResponse.json({
-      success: true,
-      message: '词汇条目创建成功',
-      id: result.rows[0].id
-    });
+    return NextResponse.json(result[0]);
   } catch (error) {
-    console.error('创建词汇条目失败:', error);
+    console.error('创建词汇表条目失败:', error);
     return NextResponse.json(
-      {
-        success: false,
-        message: '创建词汇条目失败',
-        error: error instanceof Error ? error.message : '未知错误'
-      },
+      { error: '创建词汇表条目失败' },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }

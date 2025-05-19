@@ -1,6 +1,6 @@
 /// AI Generate
 import { NextResponse } from 'next/server';
-import { createClient } from '@vercel/postgres';
+import { pool } from '../../_utils/db';
 import { reply } from "@/app/api/_utils/reply";
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
@@ -51,15 +51,14 @@ ${content}
 }
 
 export async function POST() {
-  const client = createClient();
-  await client.connect();
-
   try {
-    const { rows: codeAnalyses } = await client.sql`
+    const result = await pool.sql`
       SELECT id, path, content
       FROM "CodeAnalysis"
       WHERE description IS NULL
     `;
+
+    const codeAnalyses = result.rows;
 
     await Promise.all(codeAnalyses.map(async (analysis) => {
       let analysisResult: CodeAnalysis;
@@ -70,7 +69,7 @@ export async function POST() {
         return analysis;
       }
 
-      const result = await client.sql`
+      await pool.sql`
         UPDATE "CodeAnalysis"
         SET 
           title = ${analysisResult.title},
@@ -79,7 +78,7 @@ export async function POST() {
         WHERE id = ${analysis.id}
       `;
 
-      return result.rows[0];
+      return analysis;
     }));
 
     console.log('Updated all code analyses with descriptions');
@@ -94,7 +93,5 @@ export async function POST() {
       },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }

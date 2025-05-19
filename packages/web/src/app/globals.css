@@ -2,8 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 添加系统字体配置 */
+@layer base {
+  html {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+                 "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", 
+                 sans-serif, "Apple Color Emoji", "Segoe UI Emoji", 
+                 "Segoe UI Symbol", "Noto Color Emoji";
+  }
+  
+  /* 修复TextArea清空内容后仍显示placeholder的问题 */
+  textarea[data-empty="true"]::placeholder {
+    opacity: 0;
+  }
+}
+
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+                 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 @layer utilities {

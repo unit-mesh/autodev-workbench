@@ -44,18 +44,20 @@ export default function RequirementsWorkspace({
 	                                              isDocumentUpdating = false,
 	                                              isQualityChecking = false,
                                               }: RequirementsWorkspaceProps) {
-	const [activeTab, setActiveTab] = useState("conversation")
+	const [activeTab, setActiveTab] = useState<"conversation" | "document">("conversation")
 	const [editingId, setEditingId] = useState<string | null>(null)
 	const [editContent, setEditContent] = useState("")
 	const [isAnalyzing, setIsAnalyzing] = useState(false)
 	const messagesEndRef = useRef<HTMLDivElement>(null)
+	const [isInitialized, setIsInitialized] = useState(false) // 添加初始化标志
 
-	// Set default requirement if empty and conversation is empty
+	// 只在组件首次加载时设置默认值，而不是在每次currentRequirement变为空时
 	useEffect(() => {
-		if (conversation.length === 0 && !currentRequirement) {
+		if (!isInitialized && conversation.length === 0 && !currentRequirement) {
 			setCurrentRequirement(DEFAULT_REQUIREMENT);
+			setIsInitialized(true);
 		}
-	}, [conversation.length, currentRequirement, setCurrentRequirement]);
+	}, [conversation.length, currentRequirement, setCurrentRequirement, isInitialized]);
 
 	useEffect(() => {
 		if (messagesEndRef.current && activeTab === "conversation") {
@@ -65,21 +67,20 @@ export default function RequirementsWorkspace({
 
 	const handleSend = () => {
 		if (currentRequirement.trim()) {
-			onSendMessage(currentRequirement)
+			onSendMessage(currentRequirement.trim())
 			setCurrentRequirement("")
 		}
 	}
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter") {
-			if (e.altKey) {
-				// Alt+Enter 换行，不做处理
-				return
-			} else if (!e.shiftKey) {
-				e.preventDefault()
-				handleSend()
-			}
+		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+			e.preventDefault()
+			handleSend()
 		}
+	}
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setCurrentRequirement(e.target.value)
 	}
 
 	const analyzeRequirement = async () => {
@@ -240,7 +241,7 @@ export default function RequirementsWorkspace({
 						</div>
 						<InputWithSend
 							value={currentRequirement}
-							onChange={(e) => setCurrentRequirement(e.target.value)}
+							onChange={handleInputChange}
 							onSend={handleSend}
 							keywordsAnalyze={true}
 							onAnalyze={analyzeRequirement}
@@ -248,7 +249,7 @@ export default function RequirementsWorkspace({
 							isAnalyzing={isAnalyzing}
 							minHeight={conversation.length === 0 ? "100px" : "80px"}
 							onKeyDown={handleKeyDown}
-							onKeywordsExtracted={onKeywordsExtracted} // 添加关键词提取回调
+							onKeywordsExtracted={onKeywordsExtracted}
 							placeholder={conversation.length === 0
 								? "例如：我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。"
 								: "输入您的回复..."}
