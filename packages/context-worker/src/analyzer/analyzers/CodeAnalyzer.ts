@@ -83,20 +83,6 @@ export class CodeAnalyzer {
 		return await this.parseCodeStructures(this.filesInDir);
 	}
 
-	/**
-	 * 通用的文件名过滤器生成函数
-	 * @param patterns 文件名应匹配的模式数组
-	 * @returns 过滤函数
-	 */
-	public static createFileNameFilter(patterns: string[]): (fileName: string) => boolean {
-		return (fileName: string) => {
-			const baseName = path.basename(fileName);
-			return patterns.some(pattern =>
-				baseName.toLowerCase().endsWith(pattern.toLowerCase())
-			);
-		};
-	}
-
 	public async analyzeDirectory(): Promise<CodeAnalysisResult> {
 		const [interfaceAnalysis, extensionAnalysis] = await Promise.all([
 			this.analyzers[0].analyze(this.codeCollector),
@@ -104,7 +90,7 @@ export class CodeAnalyzer {
 		]);
 
 		const markdownAnalysisResult = await this.analyzeMarkdownFiles(this.markdownFilesInDir);
-		const symbolAnalysisResult = await this.symbolAnalyser.analyzeByDir(this.filesInDir);
+		const symbolAnalysisResult = await this.symbolAnalyser.analyze(this.codeCollector);
 
 		return {
 			interfaceAnalysis,
@@ -116,6 +102,7 @@ export class CodeAnalyzer {
 
 	async parseCodeStructures(files: string[]): Promise<CodeFile[]> {
 		const supportedFiles = await this.getSupportedFiles(files);
+		this.codeCollector.setAllFiles(supportedFiles)
 		return await this.parseFiles(supportedFiles);
 	}
 
@@ -151,11 +138,6 @@ export class CodeAnalyzer {
 		return supportedFiles;
 	}
 
-	/**
-	 * Second step: Parse the content of supported files
-	 * @param supportedFiles Array of supported files with their content
-	 * @returns Array of parsed CodeFile objects
-	 */
 	private async parseFiles(supportedFiles: {file: string, content: string, language: string}[]): Promise<CodeFile[]> {
 		const parsedFiles: CodeFile[] = [];
 
@@ -251,21 +233,10 @@ export class CodeAnalyzer {
 		};
 	}
 
-	/**
-	 * 生成学习材料
-	 * @param result 代码分析结果
-	 * @param outputDir 输出目录
-	 * @returns 生成的文件路径数组
-	 */
 	public async generateLearningMaterials(result: CodeAnalysisResult, outputDir?: string): Promise<string[]> {
 		return this.reporter.generateLearningMaterials(result, outputDir);
 	}
 
-	/**
-	 * 将分析结果转换为列表形式
-	 * @param result 代码分析结果
-	 * @param targetDir 目标目录
-	 */
 	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{
 		path: string;
 		content: string

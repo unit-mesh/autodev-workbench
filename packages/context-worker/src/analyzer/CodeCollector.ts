@@ -6,7 +6,7 @@ export class CodeCollector {
 	private classMap = new Map<string, { file: string, class: CodeStructure }>();
 	private implementationMap = new Map<string, any[]>();
 	private extensionMap = new Map<string, any[]>();
-	private allFiles: CodeFile[] = [];
+	private allFiles: string[] = [];
 
 	constructor() {}
 
@@ -15,7 +15,6 @@ export class CodeCollector {
 	}
 
 	public addCodeFile(filePath: string, codeFile: CodeFile): void {
-		this.allFiles.push(codeFile);
 		if (!codeFile.classes) return;
 
 		const fileInterfaces: CodeStructure[] = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
@@ -140,7 +139,11 @@ export class CodeCollector {
 		return this.extensionMap;
 	}
 
-	public getAllFiles(): CodeFile[] {
+	public setAllFiles(files: {file: string, content: string, language: string}[]): void {
+		this.allFiles = files.map(file => file.file);
+	}
+
+	public getAllFiles(): string[] {
 		return this.allFiles;
 	}
 }
