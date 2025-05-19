@@ -3,7 +3,7 @@ import Parser, { SyntaxNode } from 'web-tree-sitter';
 
 import { RestApiAnalyser } from '../base/RestApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
-import { CodeFile, CodeStructure } from '../../codemodel/CodeElement';
+import { CodeFile } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { StructurerProvider } from "../base/StructurerProvider";
@@ -14,7 +14,7 @@ import { PythonStructurer } from "./PythonStructurer";
 @injectable()
 export class FastApiAnalyser extends RestApiAnalyser {
 	isApplicable(lang: LanguageIdentifier): boolean {
-		return lang == "java"
+		return lang === "python";
 	}
 
 	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
