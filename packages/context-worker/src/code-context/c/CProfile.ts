@@ -79,7 +79,12 @@ export class CProfile implements LanguageProfile {
 )
 (
   ((comment)* @comment)
-  . (type_definition type: (struct_specifier) declarator: (type_identifier) @name) @definition.typedef
+  . (type_definition type: (struct_specifier) declarator: (type_identifier) @name) @definition.type
+)
+(
+ ((comment)* @comment)
+ . (function_definition 
+  (pointer_declarator  .(function_declarator declarator: (identifier) @name))) @definition.method
 )
 (
   ((comment)* @comment)

@@ -68,11 +68,11 @@ export class GolangProfile implements LanguageProfile {
 )
 (
   ((comment)* @comment)
-  . (method_declaration receiver: (parameter_list (parameter_declaration type: [(type_identifier) @receiver (pointer_type (type_identifier) @receiver)] )) name: (_) @name body: (_) @body) @definition.method
+  . (method_declaration receiver: (parameter_list (parameter_declaration type: [(type_identifier) @receiver (pointer_type (type_identifier) @receiver)] )) name: (_) @name body: (_) @body) @definition.function
 )
 (
   ((comment)* @comment)
-  . (function_declaration name: (_) @name) @definition.method
+  . (function_declaration name: (_) @name) @definition.function
 )
 (
   ((comment)* @comment)

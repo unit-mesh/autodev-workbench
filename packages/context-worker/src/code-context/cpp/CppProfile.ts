@@ -176,6 +176,11 @@ export class CppProfile implements LanguageProfile {
         declarator: (field_identifier) @name)) @definition.method
 )
 (
+ ((comment)* @comment)
+ (function_definition 
+  (pointer_declarator  .(function_declarator declarator: (identifier) @name))) @definition.method
+)
+(
   ((comment)* @comment)
   . (declaration 
       type: (_) @type 

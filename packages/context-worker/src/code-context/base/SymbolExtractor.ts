@@ -30,6 +30,7 @@ export class CodeSymbol {
     public readonly uri: string,
     public readonly qualifiedName: string,
     public readonly name: string,
+    public readonly comment: string,
     public readonly commentRange: Range,
     public readonly nameRange: Range,
     public readonly bodyRange: Range,
@@ -136,10 +137,16 @@ export class SymbolExtractor {
       return null;
     }
 
+    // 提取注释内容
+    const commentText = commentStart > 0 && commentEnd > 0
+      ? content.substring(commentStart, commentEnd)
+      : '';
+
     const symbol = new CodeSymbol(
       filePath,
       '',
       '',
+      commentText,
       Range.fromBounds(commentStart, commentEnd),
       Range.fromBounds(nameStart, nameEnd),
       Range.fromBounds(bodyStart, bodyEnd),
@@ -159,6 +166,7 @@ export class SymbolExtractor {
         filePath,
         qualifiedName,
         symbolName.substring(symbolName.lastIndexOf('.') + 1),
+        commentText,
         symbol.commentRange,
         symbol.nameRange,
         symbol.bodyRange,
@@ -200,6 +208,7 @@ export class SymbolExtractor {
       case 'definition.trait': return SymbolKind.Trait;
       case 'definition.type': return SymbolKind.Type;
       case 'type': return SymbolKind.Type;
+      case 'impl-type': return SymbolKind.Type;
       case 'definition.union': return SymbolKind.Union;
       case 'definition.variable': return SymbolKind.Variable;
       case 'reference': return SymbolKind.Reference;

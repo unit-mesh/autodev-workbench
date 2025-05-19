@@ -152,9 +152,10 @@ export class RustProfile implements LanguageProfile {
 (
   [(line_comment)* @comment
    (block_comment)* @comment]
-  . (function_item 
+  (source_file . (function_item 
       name: (identifier) @name 
       body: (block) @body) @definition.function
+  )
 )
 (
   [(line_comment)* @comment
