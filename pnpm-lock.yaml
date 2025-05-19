@@ -188,8 +188,8 @@ importers:
         specifier: ^2.6.12
         version: 2.6.12
       '@unit-mesh/treesitter-artifacts':
-        specifier: ^1.7.1
-        version: 1.7.1(tree-sitter@0.22.1)
+        specifier: ^1.7.2
+        version: 1.7.2(tree-sitter@0.22.1)
       cheerio:
         specifier: ^1.0.0-rc.12
         version: 1.0.0
@@ -4865,8 +4865,8 @@ packages:
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
 
-  '@unit-mesh/treesitter-artifacts@1.7.1':
-    resolution: {integrity: sha512-rl6+jmFO8YFi2W0gGWHqR6RiuVnFVd3wv1AS6o8a8kXF2MUkfR3Gyrve5nmdfWsVLqoPuCAHqZsE3ydKlvXeXg==}
+  '@unit-mesh/treesitter-artifacts@1.7.2':
+    resolution: {integrity: sha512-E7DRtGo0jY7jSQzI6eyWuzjl/R9F+R8SyCRlQXmnonRnuQIUwbQ31dQ1FEzIIaMfbKHpsLhhyCJS90fRfN4UpA==}
     engines: {node: '>=18.0.0'}
 
   '@unrs/resolver-binding-darwin-arm64@1.7.2':
@@ -17099,7 +17099,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@unit-mesh/treesitter-artifacts@1.7.1(tree-sitter@0.22.1)':
+  '@unit-mesh/treesitter-artifacts@1.7.2(tree-sitter@0.22.1)':
     dependencies:
       '@tlaplus/tree-sitter-tlaplus': 1.5.0(tree-sitter-cli@0.20.8)
       '@tree-sitter-grammars/tree-sitter-markdown': 0.2.3(tree-sitter@0.22.1)

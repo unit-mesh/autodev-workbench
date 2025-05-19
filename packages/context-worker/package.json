@@ -22,7 +22,7 @@
     "@octokit/rest": "^20.1.1",
     "@types/inquirer": "^9.0.8",
     "@types/node-fetch": "^2.6.12",
-    "@unit-mesh/treesitter-artifacts": "^1.7.1",
+    "@unit-mesh/treesitter-artifacts": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
     "commander": "^13.1.0",
     "csv-parse": "^5.5.5",
