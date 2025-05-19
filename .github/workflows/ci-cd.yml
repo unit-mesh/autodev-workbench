@@ -33,11 +33,17 @@ jobs:
       - name: Web Build
         run: pnpm --filter web build
 
+      - name: ContextWorker Build
+        run: pnpm --filter context-worker build
+
       - name: Run Core Tests
         run: pnpm --filter worker-core vitest run
 
       - name: Run Web Tests
         run: pnpm --filter web vitest run
+
+      - name: Run Context Worker Tests
+        run: pnpm --filter context-worker test
 
       - name: Run MCP Tests
         run: pnpm --filter context-mcp vitest run
