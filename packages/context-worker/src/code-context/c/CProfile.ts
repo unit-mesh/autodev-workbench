@@ -72,6 +72,36 @@ export class CProfile implements LanguageProfile {
     (preproc_def
       name: (identifier) @macro-name)
   `);
+  symbolExtractor = new MemoizedQuery(`
+(
+  ((comment)* @comment)
+  . (struct_specifier name: (type_identifier) @name) @definition.struct
+)
+(
+  ((comment)* @comment)
+  . (type_definition type: (struct_specifier) declarator: (type_identifier) @name) @definition.typedef
+)
+(
+  ((comment)* @comment)
+  . (function_definition declarator: (function_declarator declarator: (identifier) @name)) @definition.function
+)
+(
+  ((comment)* @comment)
+  . (declaration type: (_) @type declarator: (init_declarator declarator: (identifier) @name)) @definition.variable
+)
+(
+  ((comment)* @comment)
+  . (preproc_def name: (identifier) @name) @definition.macro
+)
+(
+  ((comment)* @comment)
+  . (enum_specifier name: (type_identifier) @name) @definition.enum
+)
+(
+  ((comment)* @comment)
+  . (field_declaration declarator: (field_identifier) @name) @definition.field
+)
+  `);
   namespaces = [
     [
       // variables
