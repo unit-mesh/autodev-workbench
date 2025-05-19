@@ -47,7 +47,7 @@ export class PHPStructurer extends BaseStructurerProvider {
 
     // 用于跟踪参数解析状态
     let paramCollection: { params: CodeVariable[]; } | null = null;
-    
+
     // 跟踪已处理过的字段名，防止重复
     const processedFields = new Set<string>();
 
@@ -83,7 +83,7 @@ export class PHPStructurer extends BaseStructurerProvider {
             classMap.set(text, currentClass);
             codeFile.classes.push(currentClass);
           }
-          
+
           // 重置处理过的字段集合
           processedFields.clear();
           break;
@@ -109,20 +109,19 @@ export class PHPStructurer extends BaseStructurerProvider {
           // 添加属性到当前类
           if (currentClass) {
             const propName = text.replace('$', ''); // 移除PHP变量前缀$
-            
+
             // 检查是否已处理过该字段
             if (!processedFields.has(propName)) {
               processedFields.add(propName);
-              
-              const propVisibility = captures.find(c => 
-                c.name === 'property-visibility' && 
+
+              const propVisibility = captures.find(c =>
+                c.name === 'property-visibility' &&
                 Math.abs(c.node.startPosition.row - capture.node.startPosition.row) < 2
               )?.node.text || 'public';
-              
+
               currentClass.fields!!.push({
                 name: propName,
                 type: '',
-                visibility: propVisibility,
                 start: { row: capture.node.startPosition.row, column: capture.node.startPosition.column },
                 end: { row: capture.node.endPosition.row, column: capture.node.endPosition.column }
               });
@@ -133,20 +132,17 @@ export class PHPStructurer extends BaseStructurerProvider {
         case 'method-name':
           // 将方法添加到当前类
           if (currentClass) {
-            const methodVisibility = captures.find(c => 
-              c.name === 'method-visibility' && 
+            const methodVisibility = captures.find(c =>
+              c.name === 'method-visibility' &&
               Math.abs(c.node.startPosition.row - capture.node.startPosition.row) < 2
             )?.node.text || 'public';
-            
-            const isStatic = !!captures.find(c => 
-              c.name === 'method-static' && 
+
+            const isStatic = !!captures.find(c =>
+              c.name === 'method-static' &&
               Math.abs(c.node.startPosition.row - capture.node.startPosition.row) < 2
             );
 
             currentFunction = this.createFunction(capture.node, text);
-            currentFunction.visibility = methodVisibility;
-            currentFunction.isStatic = isStatic;
-            
             currentClass.methods = currentClass.methods || [];
             currentClass.methods.push(currentFunction);
 
@@ -265,21 +261,6 @@ export class PHPStructurer extends BaseStructurerProvider {
     }
   }
 
-  // 创建函数对象
-  private createFunction(node: Parser.SyntaxNode, name: string): CodeFunction {
-    return {
-      name: name,
-      parameters: [],
-      visibility: 'public', // 默认可见性
-      isStatic: false,
-      returnType: '',
-      start: { row: node.startPosition.row, column: node.startPosition.column },
-      end: { row: node.endPosition.row, column: node.endPosition.column },
-      vars: []
-    };
-  }
-
-  // 创建空的类结构对象
   private createEmptyClassStructure(): CodeStructure {
     return {
       type: StructureType.Class,
@@ -315,7 +296,7 @@ export class PHPStructurer extends BaseStructurerProvider {
         // 合并字段，避免重复
         if (structure.fields && structure.fields.length > 0) {
           const existingFieldNames = new Set(existing.fields?.map(f => f.name) || []);
-          
+
           const newFields = structure.fields.filter(field => !existingFieldNames.has(field.name));
           existing.fields = [...(existing.fields || []), ...newFields];
         }
