@@ -34,10 +34,10 @@ jobs:
         run: pnpm --filter web build
 
       - name: Run Core Tests
-        run: pnpm --filter worker-core test
+        run: pnpm --filter worker-core vitest run
 
       - name: Run Web Tests
-        run: pnpm --filter web test
+        run: pnpm --filter web vitest run
 
       - name: Run MCP Tests
-        run: pnpm --filter context-mcp test
+        run: pnpm --filter context-mcp vitest run

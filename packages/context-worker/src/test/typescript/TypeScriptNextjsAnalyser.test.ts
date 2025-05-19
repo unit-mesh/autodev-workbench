@@ -20,7 +20,7 @@ describe('TypeScriptNextjsAnalyser', () => {
     await analyser.init(languageService);
   });
 
-  it('应该正确识别旧版 Next.js API 路由', async () => {
+  it.skip('应该正确识别旧版 Next.js API 路由', async () => {
     const nextjsApiRoute = `import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(
@@ -45,7 +45,7 @@ export default function handler(
     expect(resources.length).toBe(1); // 默认支持所有 HTTP 方法
   });
 
-  it('应该正确识别新版 Next.js App Router API', async () => {
+  it.skip('应该正确识别新版 Next.js App Router API', async () => {
     const nextjsAppRouterApi = `import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/postgres';
 

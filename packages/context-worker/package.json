@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "node dist/autodev-context-worker.js",
-    "test": "nx vite:test run",
+    "test": "nx vite:test --run",
     "test:watch": "nx vite:test",
     "test:coverage": "nx vite:test run --coverage",
     "prepublishOnly": "pnpm run build"
