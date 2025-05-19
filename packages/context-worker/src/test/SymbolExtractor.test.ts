@@ -9,6 +9,7 @@ import { CProfile } from '../code-context/c/CProfile';
 import { KotlinProfile } from '../code-context/kotlin/KotlinProfile';
 import { JavaProfile } from '../code-context/java/JavaProfile';
 import { PHPProfile } from '../code-context/php/PHPProfile';
+import { PythonProfile } from '../code-context/python/PythonProfile';
 
 const Parser = require('web-tree-sitter');
 
@@ -629,6 +630,136 @@ main();
 
       // 验证主函数符号
       const mainFunction = symbols.find(s => s.kind === SymbolKind.Function && s.name === 'main');
+      expect(mainFunction).toBeDefined();
+      expect(mainFunction?.qualifiedName).toBe('main');
+      expect(mainFunction?.comment).toContain('Main function');
+    });
+  });
+
+  describe('Python Symbols Extraction', () => {
+    it('should extract classes, methods, and functions from Python code', async () => {
+      const pythonCode = `
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Module docstring: Person module
+"""
+
+class Person:
+    """
+    Person class representing a person entity
+    """
+    
+    def __init__(self, name, age):
+        """
+        Constructor for Person
+        
+        Args:
+            name (str): The person's name
+            age (int): The person's age
+        """
+        self.name = name
+        self.age = age
+    
+    def get_name(self):
+        """
+        Returns person's name
+        
+        Returns:
+            str: The person's name
+        """
+        return self.name
+    
+    def get_age(self):
+        """
+        Returns person's age
+        
+        Returns:
+            int: The person's age
+        """
+        return self.age
+    
+    def greet(self):
+        """
+        Greets the person
+        
+        Prints a greeting message with the person's name and age
+        """
+        print(f"Hello, my name is {self.name} and I am {self.age} years old.")
+
+
+def create_person(name, age):
+    """
+    Creates a new Person
+    
+    Args:
+        name (str): The person's name
+        age (int): The person's age
+        
+    Returns:
+        Person: A new Person instance
+    """
+    return Person(name, age)
+
+
+def main():
+    """
+    Main function
+    """
+    person = create_person("Alice", 30)
+    person.greet()
+
+
+if __name__ == "__main__":
+    main()
+      `;
+
+      const pythonProfile = new PythonProfile();
+      const parser = new Parser();
+      languageService = new TestLanguageServiceProvider(parser);
+
+      const symbolExtractor = new SymbolExtractor('python', languageService);
+      const symbols = await symbolExtractor.executeQuery(
+        '/test/person.py',
+        pythonCode,
+        pythonProfile.symbolExtractor.queryString()
+      );
+
+      // 验证基本的符号提取
+      expect(symbols.length).toBeGreaterThan(0);
+
+      // 验证类符号
+      const classSymbol = symbols.find(s => s.kind === SymbolKind.Class && s.name === 'Person');
+      expect(classSymbol).toBeDefined();
+      expect(classSymbol?.qualifiedName).toBe('Person');
+      expect(classSymbol?.comment).toContain('Person class representing a person entity');
+
+      // 验证方法符号
+      const methodSymbols = symbols.filter(s => s.kind === SymbolKind.Method);
+      expect(methodSymbols.length).toBeGreaterThanOrEqual(4); // __init__, get_name, get_age, greet
+
+      const initMethod = methodSymbols.find(m => m.name === '__init__');
+      expect(initMethod).toBeDefined();
+      expect(initMethod?.qualifiedName).toBe('Person.__init__'); // 修改期望的限定名格式
+      expect(initMethod?.comment).toContain('Constructor for Person');
+
+      const greetMethod = methodSymbols.find(m => m.name === 'greet');
+      expect(greetMethod).toBeDefined();
+      expect(greetMethod?.qualifiedName).toBe('Person.greet');
+      expect(greetMethod?.comment).toContain('Greets the person');
+
+      // 验证函数符号
+      const functionSymbols = symbols.filter(s => s.kind === SymbolKind.Function);
+      expect(functionSymbols.length).toBeGreaterThanOrEqual(2); // create_person, main
+
+      const createPersonFunc = functionSymbols.find(f => f.name === 'create_person');
+      expect(createPersonFunc).toBeDefined();
+      expect(createPersonFunc?.qualifiedName).toBe('create_person');
+      expect(createPersonFunc?.comment).toContain('Creates a new Person');
+
+      // 验证主函数符号
+      const mainFunction = functionSymbols.find(f => f.name === 'main');
       expect(mainFunction).toBeDefined();
       expect(mainFunction?.qualifiedName).toBe('main');
       expect(mainFunction?.comment).toContain('Main function');

@@ -64,12 +64,53 @@ export class PythonProfile implements LanguageProfile {
 	`);
 	symbolExtractor = new MemoizedQuery(`
 (
-  ((comment)* @comment)
-  . (class_definition name: (_) @name body: (_) @body) @definition.class
+  (class_definition
+    name: (identifier) @name
+    body: (block
+      (expression_statement
+        (string) @comment
+      )?
+    ) @body
+  ) @definition.class
+)
+
+(
+  (module
+    (function_definition
+      name: (identifier) @name
+      body: (block
+        .
+        (expression_statement
+          (string) @comment
+        )?
+        .
+        (_)* @body
+      )
+    ) @definition.function
+  )
+)
+
+(
+  (class_definition
+    name: (identifier) @class_name
+    body: (block
+      (function_definition
+        name: (identifier) @name
+        body: (block
+          (expression_statement
+            (string) @comment
+          )?
+        ) (_)* @body
+      ) @definition.method
+    )
+  )
 )
 (
-  ((comment)* @comment)
-  . (function_definition name: (_) @name body: (_) @body) @definition.method
+  (module
+    (expression_statement
+      (string) @comment
+    )?
+  )
 )
 `);
 	namespaces = [['class', 'function', 'parameter', 'variable']];
