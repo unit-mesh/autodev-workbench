@@ -119,4 +119,42 @@ export class CSharpProfile implements LanguageProfile {
 		"string",
 		"object"
 	];
+	symbolExtractor = new MemoizedQuery(`
+(
+  [(comment)* @comment]
+  . (class_declaration name: (identifier) @name body: (declaration_list) @body) @definition.class
+)
+(
+  [(comment)* @comment]
+  . (method_declaration name: (identifier) @name body: (block)? @body) @definition.method
+)
+(
+  [(comment)* @comment]
+  . (property_declaration name: (identifier) @name) @definition.property
+)
+(
+  [(comment)* @comment]
+  . (field_declaration (variable_declaration type: (predefined_type) @name)) @definition.field
+)
+(
+  [(comment)* @comment]
+  . (interface_declaration name: (identifier) @name body: (declaration_list) @body) @definition.interface
+)
+(
+  [(comment)* @comment]
+  . (enum_declaration name: (identifier) @name body: (enum_member_declaration_list) @body) @definition.enum
+)
+(
+  [(comment)* @comment]
+  . (enum_member_declaration name: (identifier) @name) @definition.enum_variant
+)
+(
+  [(comment)* @comment]
+  . (struct_declaration name: (identifier) @name body: (declaration_list) @body) @definition.struct
+)
+(
+  [(comment)* @comment]
+  . (namespace_declaration name: (qualified_name) @name ) @definition.namespace
+)
+`);
 }

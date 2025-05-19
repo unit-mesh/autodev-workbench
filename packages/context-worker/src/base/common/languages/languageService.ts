@@ -66,7 +66,6 @@ export class LanguageServiceProvider implements ILanguageServiceProvider {
 	}
 
 	async getLanguage(identifier: LanguageIdentifier): Promise<Parser.Language | undefined> {
-		console.log(identifier)
 		const parser = await this.getParser(identifier);
 		return parser?.getLanguage();
 	}

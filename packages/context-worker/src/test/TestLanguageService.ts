@@ -25,15 +25,27 @@ export class TestLanguageServiceProvider implements ILanguageServiceProvider {
 
 	async getLanguage(langId: string): Promise<Language | undefined> {
 		const nodeModulesPath = path.join(ROOT_DIR, 'node_modules');
+
+
+		let lang = langId
+		if (lang == 'csharp') {
+			lang = 'c_sharp'
+		}
+
 		const wasmPath = path.join(
 			nodeModulesPath,
 			'@unit-mesh',
 			'treesitter-artifacts',
 			'wasm',
-			`tree-sitter-${langId}.wasm`,
+			`tree-sitter-${lang}.wasm`,
 		);
+		let bits: NonSharedBuffer;
+		try {
+			bits = fs.readFileSync(wasmPath);
+		} catch (e) {
+			throw new Error(`Failed to load language ${wasmPath}: ${e}`);
+		}
 
-		const bits = fs.readFileSync(wasmPath);
 		await Parser.init();
 		return await Parser.Language.load(bits);
 	}
