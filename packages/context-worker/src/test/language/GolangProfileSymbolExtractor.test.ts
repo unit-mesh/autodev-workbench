@@ -73,13 +73,13 @@ func SayHello(name string) string {
     // 按类型分组捕获的符号
     const structs = captures.filter(c => c.name === 'definition.struct');
     const interfaces = captures.filter(c => c.name === 'definition.interface');
-    const methods = captures.filter(c => c.name === 'definition.method');
+    const functions = captures.filter(c => c.name === 'definition.function');
     const fields = captures.filter(c => c.name === 'definition.field');
 
     // 验证每种符号类型是否被正确捕获
     expect(structs.length).toBe(1);
     expect(interfaces.length).toBe(1);
-    expect(methods.length).toBe(2); // Greet方法和SayHello函数
+    expect(functions.length).toBe(2); // Greet方法和SayHello函数
     expect(fields.length).toBe(2);  // Name和Age字段
 
     // 验证结构体名称
@@ -103,7 +103,7 @@ func SayHello(name string) string {
     expect(interfaceNames).toContain('Greeter');
 
     // 验证方法名称
-    const methodNames = methods.map(m => {
+    const methodNames = functions.map(m => {
       const nameCapture = captures.find(cap =>
         cap.name === 'name' &&
         Math.abs(cap.node.startPosition.row - m.node.startPosition.row) < 5
@@ -128,7 +128,7 @@ func SayHello(name string) string {
     expect(comments.length).toBeGreaterThan(0);
 
     // 验证接收器和方法的关系
-    const methodWithReceiver = methods.find(m => {
+    const methodWithReceiver = functions.find(m => {
       const nameCapture = captures.find(cap =>
         cap.name === 'name' &&
         Math.abs(cap.node.startPosition.row - m.node.startPosition.row) < 5 &&
