@@ -101,6 +101,28 @@ export interface MarkdownAnalysisResult {
     totalCount: number;
 }
 
+export interface SymbolInfo {
+	name: string;
+	qualifiedName: string;
+	kind: number;
+	filePath: string;
+	comment: string;
+	position: {
+		start: { row: number, column: number },
+		end: { row: number, column: number }
+	};
+}
+
+export interface SymbolAnalysisResult {
+	symbols: SymbolInfo[];
+	stats: {
+		totalSymbols: number;
+		classesByFile?: Map<string, number>;
+		methodsByFile?: Map<string, number>;
+		symbolsByKind?: Map<number, number>;
+	};
+}
+
 export interface CodeAnalysisResult {
 	interfaceAnalysis: {
 		interfaces: InterfaceImplementation[];
@@ -123,4 +145,5 @@ export interface CodeAnalysisResult {
 		};
 	};
 	markdownAnalysis?: MarkdownAnalysisResult;
+	symbolAnalysis?: SymbolAnalysisResult;
 }

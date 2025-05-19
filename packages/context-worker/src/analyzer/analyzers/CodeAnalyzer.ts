@@ -16,6 +16,7 @@ import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser"
 import { AppConfig } from "../../types/AppConfig";
 import { HttpApiAnalyser } from "./HttpApiAnalyser";
 import { ApiResource } from "@autodev/worker-core";
+import { SymbolAnalyser } from "./SymbolAnalyser";
 
 export class CodeAnalyzer {
 	private serviceProvider: ILanguageServiceProvider;
@@ -26,6 +27,7 @@ export class CodeAnalyzer {
 	private markdownAnalyser: MarkdownAnalyser;
 	private config: AppConfig;
 	private httpApiAnalyser: HttpApiAnalyser;
+	private symbolAnalyser: SymbolAnalyser;
 
 	constructor(instantiationService: InstantiationService, config?: Partial<AppConfig>) {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
@@ -34,6 +36,7 @@ export class CodeAnalyzer {
 		this.codeCollector = new CodeCollector();
 		this.markdownAnalyser = new MarkdownAnalyser();
 		this.httpApiAnalyser = new HttpApiAnalyser();
+		this.symbolAnalyser = new SymbolAnalyser(this.serviceProvider);
 
 		this.analyzers = [
 			new InterfaceAnalyzer(),
@@ -98,10 +101,13 @@ export class CodeAnalyzer {
 		]);
 
 		const markdownAnalysisResult = await this.analyzeMarkdownFiles(this.markdownFilesInDir);
+		const symbolAnalysisResult = await this.symbolAnalyser.analyzeByDir(this.filesInDir);
+
 		return {
 			interfaceAnalysis,
 			extensionAnalysis,
-			markdownAnalysis: markdownAnalysisResult
+			markdownAnalysis: markdownAnalysisResult,
+			symbolAnalysis: symbolAnalysisResult
 		};
 	}
 
@@ -278,7 +284,97 @@ export class CodeAnalyzer {
 			}
 		}
 
+		// 添加对符号分析结果的处理
+		if (result.symbolAnalysis && result.symbolAnalysis.symbols.length > 0) {
+			const symbolsDir = path.join(targetDir, 'symbols');
+			if (!fs.existsSync(symbolsDir)) {
+				fs.mkdirSync(symbolsDir, { recursive: true });
+			}
+
+			// 按文件分组符号
+			const fileGroups: { [key: string]: any[] } = {};
+			for (const symbol of result.symbolAnalysis.symbols) {
+				const filePath = symbol.filePath;
+				if (!fileGroups[filePath]) {
+					fileGroups[filePath] = [];
+				}
+				fileGroups[filePath].push(symbol);
+			}
+
+			for (const [filePath, symbols] of Object.entries(fileGroups)) {
+				const content = await this.generateSymbolsContent(filePath, symbols);
+				const fileName = this.sanitizeFileName(`${path.basename(filePath)}_symbols.txt`);
+				const docFilePath = path.join(symbolsDir, fileName);
+
+				await fs.promises.writeFile(docFilePath, content);
+				generatedFiles.push(docFilePath);
+			}
+		}
+
 		return generatedFiles;
+	}
+
+	private async generateSymbolsContent(filePath: string, symbols: any[]): Promise<string> {
+		let content = '';
+		content += `文件: ${filePath}\n`;
+		content += `共发现 ${symbols.length} 个符号\n\n`;
+
+		// 按类型分组
+		const symbolsByKind: { [key: number]: any[] } = {};
+		for (const symbol of symbols) {
+			if (!symbolsByKind[symbol.kind]) {
+				symbolsByKind[symbol.kind] = [];
+			}
+			symbolsByKind[symbol.kind].push(symbol);
+		}
+
+		// 获取文件的代码内容
+		const fileContent = await this.fileScanner.readFileContent(filePath);
+
+		for (const [kind, kindSymbols] of Object.entries(symbolsByKind)) {
+			content += `== ${this.getSymbolKindName(parseInt(kind))} (${kindSymbols.length}) ==\n\n`;
+
+			for (const symbol of kindSymbols) {
+				content += `- ${symbol.qualifiedName}\n`;
+				if (symbol.comment) {
+					content += `  注释: ${symbol.comment.trim()}\n`;
+				}
+
+				try {
+					const symbolCode = this.extractCodeFromContent(fileContent, symbol.position);
+					content += "```\n";
+					content += symbolCode;
+					content += "\n```\n\n";
+				} catch (error) {
+					content += `  无法提取代码: ${error}\n\n`;
+				}
+			}
+		}
+
+		return content;
+	}
+
+	private extractCodeFromContent(content: string, position: any): string {
+		const lines = content.split('\n');
+		const startRow = position.start.row;
+		const endRow = position.end.row;
+
+		// 提取代码行
+		return lines.slice(startRow, endRow + 1).join('\n');
+	}
+
+	private getSymbolKindName(kind: number): string {
+		const kindNames = [
+			"类", "常量", "枚举", "枚举成员", "字段", "函数",
+			"实现", "接口", "宏", "方法", "模块", "结构体",
+			"特征", "类型", "联合类型", "变量", "引用", "导入",
+			"通配符", "别名"
+		];
+
+		if (kind >= 0 && kind < kindNames.length) {
+			return kindNames[kind];
+		}
+		return "未知类型";
 	}
 
 	public async convertToList(result: CodeAnalysisResult, targetDir?: string): Promise<{
