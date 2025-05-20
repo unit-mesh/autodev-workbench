@@ -505,22 +505,7 @@ export function ProjectDetail({ id }: { id: string }) {
 														</div>
 													</CardHeader>
 													<CardContent className="p-4 pt-2">
-														{symbol.detail && (
-															<div className="space-y-2 mt-2">
-																{symbol.detail.classSummary && (
-																	<div>
-																		<h4 className="text-sm font-medium">类摘要</h4>
-																		<p className="text-sm text-gray-600">{symbol.detail.classSummary}</p>
-																	</div>
-																)}
-																{symbol.detail.functionSummary && (
-																	<div>
-																		<h4 className="text-sm font-medium">函数摘要</h4>
-																		<p className="text-sm text-gray-600">{symbol.detail.functionSummary}</p>
-																	</div>
-																)}
-															</div>
-														)}
+														{symbol.detail && <p>${JSON.stringify(symbol.detail)}</p>}
 														<div className="text-xs text-gray-400 mt-2">
 															更新于: {new Date(symbol.updatedAt).toLocaleString()}
 														</div>
