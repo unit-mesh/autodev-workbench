@@ -2,16 +2,16 @@ import { providerContainer } from "../base/common/instantiation/instantiationSer
 import { RestApiAnalyser } from "./base/RestApiAnalyser";
 import { IRestApiAnalyser } from "../ProviderTypes";
 
-export class ControllerAnalyserManager {
-	private static instance: ControllerAnalyserManager;
+export class HttpApiAnalyserManager {
+	private static instance: HttpApiAnalyserManager;
 
 	private constructor() {}
 
-	static getInstance(): ControllerAnalyserManager {
-		if (!ControllerAnalyserManager.instance) {
-			ControllerAnalyserManager.instance = new ControllerAnalyserManager();
+	static getInstance(): HttpApiAnalyserManager {
+		if (!HttpApiAnalyserManager.instance) {
+			HttpApiAnalyserManager.instance = new HttpApiAnalyserManager();
 		}
-		return ControllerAnalyserManager.instance;
+		return HttpApiAnalyserManager.instance;
 	}
 
 	getAnalyser(): RestApiAnalyser[] {

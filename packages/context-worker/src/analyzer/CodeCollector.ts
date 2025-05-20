@@ -7,11 +7,19 @@ export class CodeCollector {
 	private implementationMap = new Map<string, any[]>();
 	private extensionMap = new Map<string, any[]>();
 	private allFiles: string[] = [];
+	private workspacePath: string;
 
-	constructor() {}
+	constructor(workspacePath: string) {
+		this.allFiles = [];
+		this.workspacePath = workspacePath;
+	}
 
 	public inferLanguage(filePath: string): string | null {
 		return inferLanguage(filePath);
+	}
+
+	public getWorkspacePath(): string {
+		return this.workspacePath;
 	}
 
 	public addCodeFile(filePath: string, codeFile: CodeFile): void {
@@ -139,7 +147,7 @@ export class CodeCollector {
 		return this.extensionMap;
 	}
 
-	public setAllFiles(files: {file: string, content: string, language: string}[]): void {
+	public setAllFiles(files: { file: string, content: string, language: string }[]): void {
 		this.allFiles = files.map(file => file.file);
 	}
 

@@ -14,7 +14,7 @@ import { ClassHierarchyAnalyzer } from "./ClassHierarchyAnalyzer";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 import { AppConfig } from "../../types/AppConfig";
-import { HttpApiAnalyser } from "./HttpApiAnalyser";
+import { HttpApiCodeAnalyser } from "./HttpApiCodeAnalyser";
 import { ApiResource } from "@autodev/worker-core";
 import { SymbolAnalyser } from "./SymbolAnalyser";
 import { CodeAnalysisReporter } from "./CodeAnalysisReporter";
@@ -27,7 +27,7 @@ export class CodeAnalyzer {
 	private analyzers: ICodeAnalyzer[];
 	private markdownAnalyser: MarkdownAnalyser;
 	private config: AppConfig;
-	private httpApiAnalyser: HttpApiAnalyser;
+	private httpApiAnalyser: HttpApiCodeAnalyser;
 	private symbolAnalyser: SymbolAnalyser;
 	private reporter: CodeAnalysisReporter;
 
@@ -35,9 +35,9 @@ export class CodeAnalyzer {
 		this.serviceProvider = instantiationService.get(ILanguageServiceProvider);
 		this.structurerManager = StructurerProviderManager.getInstance();
 		this.fileScanner = new FileSystemScanner();
-		this.codeCollector = new CodeCollector();
+		this.codeCollector = new CodeCollector(config.dirPath);
 		this.markdownAnalyser = new MarkdownAnalyser();
-		this.httpApiAnalyser = new HttpApiAnalyser();
+		this.httpApiAnalyser = new HttpApiCodeAnalyser();
 		this.symbolAnalyser = new SymbolAnalyser(this.serviceProvider);
 
 		this.analyzers = [

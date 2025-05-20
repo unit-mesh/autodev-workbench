@@ -35,10 +35,4 @@ export abstract class RestApiAnalyser {
    * @param workspacePath the workspace path
    */
   abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]>;
-
-  /**
-   * Perform analysis on the code file
-   * @param codeFile the code file to analyse
-   */
-  abstract analysis(codeFile: CodeFile): Promise<ApiResource[]>;
 }
