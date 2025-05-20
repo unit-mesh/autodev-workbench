@@ -18,6 +18,12 @@ export interface AppConfig {
   outputJsonFile?: string;
   /** 项目 ID */
   projectId?: string;
+  /** 要运行的分析类型 */
+  analysisTypes: {
+    interface: boolean;
+    api: boolean;
+    symbol: boolean;
+  };
 }
 
 /**
@@ -31,5 +37,10 @@ export const DEFAULT_CONFIG: AppConfig = {
   nonInteractive: false,
   contextType: 'api',
   outputJsonFile: 'analysis_result.json',
-  projectId: undefined
+  projectId: undefined,
+  analysisTypes: {
+    interface: true,
+    api: true,
+    symbol: true
+  }
 };

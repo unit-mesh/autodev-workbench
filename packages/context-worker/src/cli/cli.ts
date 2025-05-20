@@ -23,7 +23,13 @@ export class CommandLineParser {
 			.option('--output-file <file>', 'JSON output file name', DEFAULT_CONFIG.outputJsonFile)
 			.option('--interface', 'Process interface context only', false)
 			.option('--api', 'Process API context only', true)
-			.option('--project-id <id>', 'Project ID for organization', DEFAULT_CONFIG.projectId);
+			.option('--project-id <id>', 'Project ID for organization', DEFAULT_CONFIG.projectId)
+			.option('--run-interface', 'Run interface analysis', true)
+			.option('--run-api', 'Run API analysis', true)
+			.option('--run-symbol', 'Run symbol analysis', true)
+			.option('--skip-interface', 'Skip interface analysis', false)
+			.option('--skip-api', 'Skip API analysis', false)
+			.option('--skip-symbol', 'Skip symbol analysis', false);
 
 		program.parse(process.argv);
 
@@ -39,6 +45,13 @@ export class CommandLineParser {
 			dirPath = path.resolve(process.cwd(), dirPath);
 		}
 
+		// 处理分析类型选项
+		const analysisTypes = {
+			interface: options.runInterface && !options.skipInterface,
+			api: options.runApi && !options.skipApi,
+			symbol: options.runSymbol && !options.skipSymbol
+		};
+
 		return {
 			dirPath,
 			upload: options.upload || DEFAULT_CONFIG.upload,
@@ -47,7 +60,8 @@ export class CommandLineParser {
 			nonInteractive: options.nonInteractive || DEFAULT_CONFIG.nonInteractive,
 			contextType,
 			outputJsonFile: options.outputFile || DEFAULT_CONFIG.outputJsonFile,
-			projectId: options.projectId || DEFAULT_CONFIG.projectId
+			projectId: options.projectId || DEFAULT_CONFIG.projectId,
+			analysisTypes
 		};
 	}
 }
@@ -98,12 +112,49 @@ export class UserInputHandler {
 				name: 'projectId',
 				message: '请输入项目 ID (可选):',
 				default: currentConfig.projectId
+			},
+			{
+				type: 'checkbox',
+				name: 'analysisTypes',
+				message: '请选择要运行的分析类型:',
+				choices: [
+					{
+						name: '接口分析',
+						value: 'interface',
+						checked: currentConfig.analysisTypes.interface
+					},
+					{
+						name: 'API分析',
+						value: 'api',
+						checked: currentConfig.analysisTypes.api
+					},
+					{
+						name: '符号分析',
+						value: 'symbol',
+						checked: currentConfig.analysisTypes.symbol
+					}
+				]
 			}
 		]);
 
 		const dirPath = path.isAbsolute(answers.dirPath)
 			? answers.dirPath
 			: path.resolve(process.cwd(), answers.dirPath);
+
+		// 转换用户选择的分析类型
+		const selectedTypes = answers.analysisTypes || [];
+		const analysisTypes = {
+			interface: selectedTypes.includes('interface'),
+			api: selectedTypes.includes('api'),
+			symbol: selectedTypes.includes('symbol')
+		};
+
+		// 如果用户没有选择任何类型，启用所有类型
+		if (!selectedTypes.length) {
+			analysisTypes.interface = true;
+			analysisTypes.api = true;
+			analysisTypes.symbol = true;
+		}
 
 		return {
 			dirPath,
@@ -113,7 +164,8 @@ export class UserInputHandler {
 			contextType: currentConfig.contextType,
 			nonInteractive: currentConfig.nonInteractive,
 			outputJsonFile: answers.outputJsonFile,
-			projectId: answers.projectId
+			projectId: answers.projectId,
+			analysisTypes
 		};
 	}
 }
