@@ -11,7 +11,6 @@ export async function GET(request: Request) {
     let query;
 
     if (searchTerm) {
-      // Search within functionSummary and classSummary in the detail JSON
       query = sql`
         SELECT 
           id,
@@ -23,10 +22,7 @@ export async function GET(request: Request) {
           "createdAt",
           "updatedAt"
         FROM "SymbolAnalysis"
-        WHERE (
-          detail->>'functionSummary' ILIKE ${'%' + searchTerm + '%'} OR
-          detail->>'classSummary' ILIKE ${'%' + searchTerm + '%'}
-        )
+        WHERE detail::text ILIKE ${'%' + searchTerm + '%'}
         ${projectId ? sql`AND "projectId" = ${projectId}` : sql``}
         ORDER BY "createdAt" DESC
         LIMIT ${limit}
@@ -82,20 +78,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // 存储符号分析结果
     const results = [];
-
     for (const fileData of data) {
       if (!fileData.filePath || !fileData.symbols || !Array.isArray(fileData.symbols)) {
-        continue; // 跳过格式无效的数据
+        continue;
       }
 
       const filePath = fileData.filePath;
-      const classSummary = fileData.summary?.class || '';
-      const functionSummary = fileData.summary?.function || '';
+      const summary = fileData.summary || {};
 
-      // 为每个文件创建一个摘要记录
-      if (classSummary || functionSummary) {
+      if (Object.keys(summary).length > 0) {
         const summaryResult = await sql`
           INSERT INTO "SymbolAnalysis" (
             id, 
@@ -112,8 +104,7 @@ export async function POST(request: Request) {
             ${0},
             ${filePath},
             ${JSON.stringify({
-              classSummary,
-              functionSummary,
+              summary,
               totalSymbols: fileData.symbols.length
             })},
             ${projectId},
@@ -138,7 +129,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: '符号分析结果存储成功',
-      id: results[0], // 返回第一个ID作为主ID
+      id: results[0],
       count: results.length
     });
   } catch (error) {

@@ -163,61 +163,67 @@ export class InterfaceAnalyzerApp {
 		filePath: string;
 		symbols: SymbolInfo[];
 		summary: {
-			class: Array<{
-				name: string;
-				comment: string;
-				line: number;
-			}>;
-			function: Array<{
-				name: string;
-				comment: string;
-				line: number;
-			}>;
-		};
+			[className: string]: {
+				_classComment: string;
+				[methodName: string]: string;
+			}
+		}
 	}> {
 		const { fileSymbols } = result;
 		const simplifiedResult: Array<{
 			filePath: string;
 			symbols: SymbolInfo[];
 			summary: {
-				class: Array<{
-					name: string;
-					comment: string;
-					line: number;
-				}>;
-				function: Array<{
-					name: string;
-					comment: string;
-					line: number;
-				}>;
-			};
+				[className: string]: {
+					_classComment: string;
+					[methodName: string]: string;
+				}
+			}
 		}> = [];
 
 		for (const [filePath, fileSymbol] of Object.entries(fileSymbols)) {
 			const classSymbols = fileSymbol.symbols
 				.filter(s => s.kind === SymbolKind.Class || s.kind === SymbolKind.Interface
-					|| s.kind === SymbolKind.Struct || SymbolKind.Trait || SymbolKind.Type)
-				.map(s => ({
-					name: s.name,
-					comment: s.comment || '',
-					line: s.position?.start.row || 0
-				}));
+					|| s.kind === SymbolKind.Struct || SymbolKind.Trait || SymbolKind.Type);
 
-			const functionSymbols = fileSymbol.symbols
-				.filter(s => s.kind === SymbolKind.Method || s.kind === SymbolKind.Interface)
-				.map(s => ({
-					name: s.qualifiedName || s.name,
-					comment: s.comment || '',
-					line: s.position?.start.row || 0
-				}));
+			const summary: {
+				[className: string]: {
+					_classComment: string;
+					[methodName: string]: string;
+				}
+			} = {};
+
+			for (const classSymbol of classSymbols) {
+				summary[classSymbol.name] = {
+					_classComment: classSymbol.comment || ''
+				};
+			}
+
+			for (const symbol of fileSymbol.symbols) {
+				if (symbol.kind === SymbolKind.Method || symbol.kind === SymbolKind.Function) {
+					const parts = (symbol.qualifiedName || symbol.name).split('.');
+					if (parts.length === 2) {
+						const [className, methodName] = parts;
+						if (summary[className]) {
+							summary[className][methodName] = symbol.comment || '';
+						}
+					} else if (parts.length === 1 && symbol.qualifiedName) {
+						const methodName = parts[0];
+						const classSymbol = classSymbols.find(c =>
+							symbol.qualifiedName?.startsWith(c.name + '.')
+						);
+
+						if (classSymbol) {
+							summary[classSymbol.name][methodName] = symbol.comment || '';
+						}
+					}
+				}
+			}
 
 			simplifiedResult.push({
 				filePath,
 				symbols: fileSymbol.symbols,
-				summary: {
-					class: classSymbols,
-					function: functionSymbols
-				}
+				summary
 			});
 		}
 
