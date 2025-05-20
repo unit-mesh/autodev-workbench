@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { BookOpen, Code, Search } from "lucide-react"
 import { Project } from "@/types/project.type"
 import { CopyCliCommand } from "@/components/CopyCliCommand"
-import { CodeAnalysisList } from "@/components/code-analysis/code-analysis-list"
+import { CodeAnalysisItem, CodeAnalysisList } from "@/components/code-analysis/code-analysis-list"
 import { Input } from "@/components/ui/input"
 import { Dispatch, SetStateAction } from "react"
 
@@ -115,7 +115,7 @@ export function ProjectResources({
             {project.codeAnalyses.length > 0 ? (
               <div className="space-y-4">
                 <CodeAnalysisList
-                  codeAnalyses={project.codeAnalyses as any}
+                  codeAnalyses={project.codeAnalyses as CodeAnalysisItem[]}
                   projectId={project.id}
                   onRefresh={refreshProject}
                 />
@@ -125,7 +125,6 @@ export function ProjectResources({
                 className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                 <Code className="h-12 w-12 text-gray-300"/>
                 <p className="text-center text-gray-500">暂无代码分析</p>
-                <CopyCliCommand projectId={project.id}/>
               </div>
             )}
           </TabsContent>
@@ -184,31 +183,12 @@ export function ProjectResources({
           </TabsContent>
 
           <TabsContent value="symbols" className="mt-4">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="搜索函数或类的摘要..."
-                  value={symbolSearch}
-                  onChange={(e) => setSymbolSearch(e.target.value)}
-                  className="max-w-sm"
-                />
-                <Button size="sm" variant="outline" onClick={handleSymbolSearch} disabled={symbolLoading}>
-                  <Search className="h-4 w-4 mr-2" />
-                  搜索
-                </Button>
-              </div>
-
-              {symbolLoading ? (
+            <div>
+              {symbols.length > 0 ? (
                 <div className="space-y-2">
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              ) : symbols.length > 0 ? (
-                <div className="space-y-4">
                   {symbols.map((symbol) => (
-                    <Card key={symbol.id} className="overflow-hidden">
-                      <CardHeader className="p-4 pb-2">
+                    <Card key={symbol.id} className="overflow-hidden py-2 gap-0">
+                      <CardHeader className="p-2">
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-base">
@@ -218,13 +198,10 @@ export function ProjectResources({
                               {symbol.path}
                             </CardDescription>
                           </div>
-                          <Badge variant="outline">
-                            {symbol.kind === 0 ? "文件" : symbol.kind === 1 ? "类" : symbol.kind === 2 ? "函数" : "其他"}
-                          </Badge>
                         </div>
                       </CardHeader>
-                      <CardContent className="p-4 pt-2">
-                        {symbol.detail && <p>${JSON.stringify(symbol.detail)}</p>}
+                      <CardContent className="px-2">
+                        {symbol.detail && <span className="text-xs">${JSON.stringify(symbol.detail)}</span>}
                         <div className="text-xs text-gray-400 mt-2">
                           更新于: {new Date(symbol.updatedAt).toLocaleString()}
                         </div>
@@ -233,10 +210,10 @@ export function ProjectResources({
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
-                  <Code className="h-12 w-12 text-gray-300" />
+                <div
+                  className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
+                  <Code className="h-12 w-12 text-gray-300"/>
                   <p className="text-center text-gray-500">暂无符号分析数据</p>
-                  <CopyCliCommand projectId={project.id} />
                 </div>
               )}
             </div>

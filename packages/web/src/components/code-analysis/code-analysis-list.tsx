@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender"
 
-interface CodeAnalysisItem {
+export interface CodeAnalysisItem {
 	id: string
 	title?: string
 	path: string
