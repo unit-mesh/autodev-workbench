@@ -7,6 +7,7 @@ import { CodeFile } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ApiResource } from "@autodev/worker-core";
 import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
+import { PythonProfile } from "./PythonProfile";
 
 @injectable()
 export class FastApiAnalyser extends HttpApiAnalyser {
