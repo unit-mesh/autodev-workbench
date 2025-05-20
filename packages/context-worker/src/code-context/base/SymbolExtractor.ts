@@ -1,9 +1,9 @@
-import { Range } from '../../base/common/range';
 import { Stack } from '../../base/common/collections/stack';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile } from "./LanguageProfile";
 import { LanguageProfileUtil } from "./LanguageProfileUtil";
 import { LanguageIdentifier } from "../../base/common/languages/languages";
+import { Range } from 'web-tree-sitter';
 
 export enum SymbolKind {
   Class = 0,
@@ -96,10 +96,7 @@ export class SymbolExtractor {
   }
 
   private createSymbolRange(stack: Stack<CodeSymbol>, filePath: string, content: string, captures: any[]): CodeSymbol | null {
-    let commentStart = 0, commentEnd = 0;
-    let extentStart = 0, extentEnd = 0;
-    let nameStart = 0, nameEnd = 0;
-    let bodyStart = 0, bodyEnd = 0;
+    let commentNode = null, extentNode = null, nameNode = null, bodyNode = null;
     let kind: string | null = null;
     let receiver: string | null = null;
 
@@ -108,44 +105,72 @@ export class SymbolExtractor {
       const name = capture.name;
 
       if (name === 'name') {
-        nameStart = capture.node.startIndex;
-        nameEnd = capture.node.endIndex;
+        nameNode = capture.node;
       } else if (name === 'reference') {
-        nameStart = capture.node.startIndex;
-        nameEnd = capture.node.endIndex;
-        extentStart = capture.node.startIndex;
-        extentEnd = capture.node.endIndex;
+        nameNode = capture.node;
+        extentNode = capture.node;
         kind = name;
       } else if (name === 'body') {
-        bodyStart = capture.node.startIndex;
-        bodyEnd = capture.node.endIndex;
+        bodyNode = capture.node;
       } else if (name === 'comment') {
-        commentStart = commentStart === 0 ? capture.node.startIndex : Math.min(commentStart, capture.node.startIndex);
-        commentEnd = Math.max(commentEnd, capture.node.endIndex);
+        commentNode = commentNode === null ? capture.node :
+          (commentNode.startIndex > capture.node.startIndex ? capture.node : commentNode);
       } else if (name === 'receiver') {
-        receiver = Range.fromBounds(capture.node.startIndex, capture.node.endIndex).getText(content);
+        receiver = content.substring(capture.node.startIndex, capture.node.endIndex);
       } else {
-        extentStart = capture.node.startIndex;
-        extentEnd = capture.node.endIndex;
+        extentNode = capture.node;
         kind = name;
       }
     }
 
     if (kind === 'definition.module.filescoped') {
-      bodyEnd = content.length;
-      extentEnd = bodyEnd;
+      if (bodyNode) {
+        bodyNode.endIndex = content.length;
+      }
+      if (extentNode) {
+        extentNode.endIndex = content.length;
+      }
     }
 
-    const extentRange = Range.fromBounds(extentStart, extentEnd);
-
-    const hasRange = extentStart > 0 || extentEnd > 0 || nameStart > 0 || nameEnd > 0;
-    if (!hasRange) {
+    if (!extentNode && !nameNode) {
       return null;
     }
 
+    // Create ranges from tree-sitter nodes
+    const createRangeFromNode = (node: any): Range | null => {
+      if (!node) return null;
+      return {
+        startIndex: node.startIndex,
+        endIndex: node.endIndex,
+        startPosition: { row: node.startPosition.row, column: node.startPosition.column },
+        endPosition: { row: node.endPosition.row, column: node.endPosition.column }
+      };
+    };
+
+    const commentRange = createRangeFromNode(commentNode) || {
+      startIndex: 0, endIndex: 0,
+      startPosition: { row: 0, column: 0 },
+      endPosition: { row: 0, column: 0 }
+    };
+    const nameRange = createRangeFromNode(nameNode) || {
+      startIndex: 0, endIndex: 0,
+      startPosition: { row: 0, column: 0 },
+      endPosition: { row: 0, column: 0 }
+    };
+    const bodyRange = createRangeFromNode(bodyNode) || {
+      startIndex: 0, endIndex: 0,
+      startPosition: { row: 0, column: 0 },
+      endPosition: { row: 0, column: 0 }
+    };
+    const extentRange = createRangeFromNode(extentNode) || {
+      startIndex: 0, endIndex: 0,
+      startPosition: { row: 0, column: 0 },
+      endPosition: { row: 0, column: 0 }
+    };
+
     // 提取注释内容
-    const commentText = commentStart > 0 && commentEnd > 0
-      ? content.substring(commentStart, commentEnd)
+    const commentText = commentRange.startIndex > 0 && commentRange.endIndex > 0
+      ? content.substring(commentRange.startIndex, commentRange.endIndex)
       : '';
 
     const symbol = new CodeSymbol(
@@ -153,9 +178,9 @@ export class SymbolExtractor {
       '',
       '',
       commentText,
-      Range.fromBounds(commentStart, commentEnd),
-      Range.fromBounds(nameStart, nameEnd),
-      Range.fromBounds(bodyStart, bodyEnd),
+      commentRange,
+      nameRange,
+      bodyRange,
       extentRange,
       SymbolExtractor.kindFromString(kind),
       0
@@ -164,7 +189,8 @@ export class SymbolExtractor {
     if (symbol) {
       SymbolExtractor.updateScopesForSymbol(stack, symbol);
 
-      const symbolName = symbol.nameRange.getText(content);
+      const symbolName = nameRange.startIndex > 0 ?
+        content.substring(nameRange.startIndex, nameRange.endIndex) : '';
       let qualifiedName = this.createNameFromScopes(content, stack.toArray());
       qualifiedName = receiver ? `${receiver}.${qualifiedName}` : qualifiedName;
 
@@ -173,10 +199,10 @@ export class SymbolExtractor {
         qualifiedName,
         symbolName.substring(symbolName.lastIndexOf('.') + 1),
         commentText,
-        symbol.commentRange,
-        symbol.nameRange,
-        symbol.bodyRange,
-        symbol.extentRange,
+        commentRange,
+        nameRange,
+        bodyRange,
+        extentRange,
         symbol.kind,
         0
       );
@@ -186,11 +212,16 @@ export class SymbolExtractor {
   }
 
   static updateScopesForSymbol(stack: Stack<CodeSymbol>, symbol: CodeSymbol) {
-    while (stack.tryPeek() && !stack.peek()?.extentRange.containsRange(symbol.extentRange)) {
+    while (stack.tryPeek() && !this.rangeContains(stack.peek()?.extentRange, symbol.extentRange)) {
       stack.pop();
     }
 
     stack.push(symbol);
+  }
+
+  static rangeContains(outer: Range | undefined, inner: Range): boolean {
+    if (!outer) return false;
+    return outer.startIndex <= inner.startIndex && outer.endIndex >= inner.endIndex;
   }
 
   static kindFromString(kind: string | null): SymbolKind {
@@ -228,6 +259,6 @@ export class SymbolExtractor {
   }
 
   private createNameFromScopes(content: string, scopes: CodeSymbol[]): string {
-    return scopes.map(s => s.nameRange.getText(content)).join('.');
+    return scopes.map(s => content.substring(s.nameRange.startIndex, s.nameRange.endIndex)).join('.');
   }
 }
