@@ -12,7 +12,7 @@ import { GoStructurerProvider } from "../code-context/go/GoStructurerProvider";
 import { KotlinStructurerProvider } from "../code-context/kotlin/KotlinStructurerProvider";
 import { KotlinSpringControllerAnalyser } from "../code-context/kotlin/KotlinSpringControllerAnalyser";
 import { CodeAnalyzer } from "./analyzers/CodeAnalyzer";
-import { CodeAnalysisResult, SymbolAnalysisResult } from "./CodeAnalysisResult";
+import { CodeAnalysisResult, SymbolAnalysisResult, SymbolInfo } from "./CodeAnalysisResult";
 import { PythonStructurer } from "../code-context/python/PythonStructurer";
 import { AppConfig } from "../types/AppConfig";
 import { RustStructurer } from "../code-context/rust/RustStructurer";
@@ -129,13 +129,14 @@ export class InterfaceAnalyzerApp {
 	public async uploadSymbolResult(result: SymbolAnalysisResult): Promise<void> {
 		const config = this.config;
 		try {
+			const simplifiedResult = this.simplifySymbolResult(result);
 			const response = await fetch(config.baseUrl + '/api/context/symbol', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					data: result,
+					data: simplifiedResult,
 					projectId: config.projectId
 				})
 			});
@@ -150,6 +151,51 @@ export class InterfaceAnalyzerApp {
 		} catch (error) {
 			console.error('上传过程中发生错误:', error);
 		}
+	}
+
+	/**
+	 * 将符号分析结果简化为只包含必要信息的格式
+	 * @param result 原始符号分析结果
+	 * @returns 简化后的结果
+	 */
+	private simplifySymbolResult(result: SymbolAnalysisResult): Array<{
+		filePath: string;
+		symbols: SymbolInfo[];
+		summary: {
+			class: string;
+			function: string;
+		};
+	}> {
+		const { fileSymbols } = result;
+		const simplifiedResult: Array<{
+			filePath: string;
+			symbols: SymbolInfo[];
+			summary: {
+				class: string;
+				function: string;
+			};
+		}> = [];
+
+		for (const [filePath, fileSymbol] of Object.entries(fileSymbols)) {
+			const classNames = fileSymbol.symbols
+				.filter(s => s.kind === 1 || s.kind === 5 || s.kind === 23) // Class, Interface, Struct
+				.map(s => s.name);
+
+			const functionNames = fileSymbol.symbols
+				.filter(s => s.kind === 2 || s.kind === 3) // Method, Function
+				.map(s => s.name);
+
+			simplifiedResult.push({
+				filePath,
+				symbols: fileSymbol.symbols,
+				summary: {
+					class: classNames.join(', '),
+					function: functionNames.join(', ')
+				}
+			});
+		}
+
+		return simplifiedResult;
 	}
 
 	async handleInterfaceContext() {
@@ -200,7 +246,7 @@ export class InterfaceAnalyzerApp {
 		const result: SymbolAnalysisResult = await this.symbolAnalyser.analyze(codeCollector);
 
 		const outputFilePath = path.join(process.cwd(), 'symbol_analysis_result.json');
-		fs.writeFileSync(outputFilePath, JSON.stringify(result.fileSymbols, null, 2));
+		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 		console.log(`Save symbol analysis results to ${outputFilePath}`);
 
 		if (config.upload) {
