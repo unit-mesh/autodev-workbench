@@ -39,6 +39,13 @@ export async function GET(request: Request) {
               language: true
             },
             take: 5
+          },
+          symbolAnalyses: {
+            select: {
+              id: true,
+              name: true,
+              detail: true,
+            }
           }
         }
       });

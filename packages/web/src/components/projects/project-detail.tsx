@@ -306,7 +306,7 @@ export function ProjectDetail({ id }: { id: string }) {
 									<Code className="h-4 w-4 mr-2 text-purple-500"/>
 									<div>
 										<p className="text-xs text-gray-500">符号分析</p>
-										<p className="text-sm font-medium">{project.symbolAnalyses.length}</p>
+										<p className="text-sm font-medium">{project.symbolAnalyses?.length}</p>
 									</div>
 								</div>
 							</div>
