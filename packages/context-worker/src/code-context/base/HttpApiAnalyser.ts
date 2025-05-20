@@ -19,7 +19,6 @@ export abstract class HttpApiAnalyser {
 		return true
 	}
 
-
 	/**
 	 * Check if this analyser is applicable for a given language
 	 * @param lang the language to check
@@ -38,7 +37,7 @@ export abstract class HttpApiAnalyser {
 	 * @param filePath the file path of the source code
 	 * @param workspacePath the workspace path
 	 */
-	abstract analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]>;
+	abstract sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]>;
 
 	/**
 	 * Perform analysis on the code file

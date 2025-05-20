@@ -16,9 +16,26 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 		for (let path of codeFiles) {
 			const sourceCode = await fs.promises.readFile(path, 'utf-8');
 			for (let analyser of this.analysers) {
+				let allCodeFiles = codeCollector.getAllCodeFiles();
+				let filteredFiles = allCodeFiles.filter((codeFile) => {
+					return analyser.fileFilter(codeFile);
+				});
 
+				if (filteredFiles.length === 0) {
+					continue;
+				}
 
-				let result: ApiResource[] = await analyser.analyse(sourceCode, path, codeCollector.getWorkspacePath());
+				let result: ApiResource[] = [];
+				for (let filteredFile of filteredFiles) {
+					result.concat(await analyser.analysis(filteredFile));
+				}
+
+				if (result && result.length > 0) {
+					apiResources = apiResources.concat(result);
+					continue;
+				}
+
+				result = await analyser.sourceCodeAnalysis(sourceCode, path, codeCollector.getWorkspacePath());
 				if (result && result.length > 0) {
 					apiResources = apiResources.concat(result);
 				}

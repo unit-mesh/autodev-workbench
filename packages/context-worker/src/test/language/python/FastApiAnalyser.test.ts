@@ -44,7 +44,7 @@ def create_item(item: dict):
     return {"item_name": item["name"], "item_id": "123"}
 `;
 
-    await analyser.analyse(fastApiCode, 'main.py', '/workspace');
+    await analyser.sourceCodeAnalysis(fastApiCode, 'main.py', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
@@ -97,7 +97,7 @@ def create_user(user: dict):
 app.include_router(router)
 `;
 
-    await analyser.analyse(fastApiRouterCode, 'users.py', '/workspace');
+    await analyser.sourceCodeAnalysis(fastApiRouterCode, 'users.py', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
@@ -146,7 +146,7 @@ def get_product(product_id: int):
 app.include_router(router, prefix="/store/v1")
 `;
 
-    await analyser.analyse(fastApiMountedCode, 'products.py', '/workspace');
+    await analyser.sourceCodeAnalysis(fastApiMountedCode, 'products.py', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(2);

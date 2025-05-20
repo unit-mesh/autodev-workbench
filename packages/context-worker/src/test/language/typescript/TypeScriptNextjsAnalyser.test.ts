@@ -39,7 +39,7 @@ export default function handler(
 }`;
 
     const filePath = path.join('/workspace', 'pages', 'api', 'route.ts');
-    await analyser.analyse(nextjsApiRoute, filePath, '/workspace');
+    await analyser.sourceCodeAnalysis(nextjsApiRoute, filePath, '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(1); // 默认支持所有 HTTP 方法
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 }`;
 
     const filePath = path.join('/workspace', 'app', 'api', 'context', 'code', 'route.ts');
-    await analyser.analyse(nextjsAppRouterApi, filePath, '/workspace');
+    await analyser.sourceCodeAnalysis(nextjsAppRouterApi, filePath, '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(2);

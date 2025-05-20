@@ -7,10 +7,12 @@ export class CodeCollector {
 	private implementationMap = new Map<string, any[]>();
 	private extensionMap = new Map<string, any[]>();
 	private allFiles: string[] = [];
+	private allCodeFiles: CodeFile[] = [];
 	private workspacePath: string;
 
 	constructor(workspacePath: string) {
 		this.allFiles = [];
+		this.allCodeFiles = [];
 		this.workspacePath = workspacePath;
 	}
 
@@ -18,12 +20,9 @@ export class CodeCollector {
 		return inferLanguage(filePath);
 	}
 
-	public getWorkspacePath(): string {
-		return this.workspacePath;
-	}
-
 	public addCodeFile(filePath: string, codeFile: CodeFile): void {
 		if (!codeFile.classes) return;
+		this.allCodeFiles.push(codeFile)
 
 		const fileInterfaces: CodeStructure[] = codeFile.classes.filter(cls => cls.type === StructureType.Interface);
 		for (const intf of fileInterfaces) {
@@ -153,5 +152,13 @@ export class CodeCollector {
 
 	public getAllFiles(): string[] {
 		return this.allFiles;
+	}
+
+	public getWorkspacePath(): string {
+		return this.workspacePath;
+	}
+
+	public getAllCodeFiles(): CodeFile[] {
+		return this.allCodeFiles;
 	}
 }

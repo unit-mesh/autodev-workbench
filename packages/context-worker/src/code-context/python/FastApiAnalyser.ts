@@ -127,7 +127,7 @@ export class FastApiAnalyser extends HttpApiAnalyser {
 		await this.structurer.init(langService);
 	}
 
-	async analyse(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
+	async sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
 		if (!this.language || !this.parser) {
 			console.warn(`FastApiAnalyser not initialized for ${this.langId}`);
 			return [];

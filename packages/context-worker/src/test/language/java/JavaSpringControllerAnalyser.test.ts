@@ -52,7 +52,7 @@ public class UserController {
     }
 }`;
 
-    await analyser.analyse(javaController, 'UserController.java', '/workspace');
+    await analyser.sourceCodeAnalysis(javaController, 'UserController.java', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);

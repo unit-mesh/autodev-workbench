@@ -52,7 +52,7 @@ class UserController {
     }
 }`;
 
-    await analyser.analyse(kotlinController, 'UserController.kt', '/workspace');
+    await analyser.sourceCodeAnalysis(kotlinController, 'UserController.kt', '/workspace');
 
     const resources = analyser.resources;
     expect(resources.length).toBe(3);
