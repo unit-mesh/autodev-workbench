@@ -243,9 +243,6 @@ export class CodeAnalyzer {
 		return this.reporter.convertToList(result, targetDir);
 	}
 
-	/**
-	 * 分析API
-	 */
 	analyzeApi(): Promise<ApiResource[]> {
 		return this.httpApiAnalyser.analyze(this.codeCollector);
 	}

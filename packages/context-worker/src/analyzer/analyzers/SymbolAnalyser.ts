@@ -118,6 +118,9 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 	}
 
 	private convertToSymbolInfo(symbol: CodeSymbol, filePath: string): SymbolInfo {
+		let startPosition = symbol.nameRange.startPosition;
+		let endPosition = symbol.nameRange.endPosition;
+
 		return {
 			name: symbol.name,
 			qualifiedName: symbol.qualifiedName,
@@ -125,8 +128,8 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 			filePath: filePath,
 			comment: symbol.comment,
 			position: {
-				start: { row: symbol.nameRange.start, column: 0 },
-				end: { row: symbol.nameRange.end, column: 0 }
+				start: { row: startPosition.row, column: startPosition.column },
+				end: { row: endPosition.row, column: endPosition.column }
 			}
 		};
 	}
