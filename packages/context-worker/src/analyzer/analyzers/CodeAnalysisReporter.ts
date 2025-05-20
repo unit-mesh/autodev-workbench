@@ -91,15 +91,6 @@ export class CodeAnalysisReporter {
 				}
 				fileGroups[filePath].push(symbol);
 			}
-
-			for (const [filePath, symbols] of Object.entries(fileGroups)) {
-				const content = await this.generateSymbolsContent(filePath, symbols);
-				const fileName = this.sanitizeFileName(`${path.basename(filePath)}_symbols.txt`);
-				const docFilePath = path.join(symbolsDir, fileName);
-
-				await fs.promises.writeFile(docFilePath, content);
-				generatedFiles.push(docFilePath);
-			}
 		}
 
 		return generatedFiles;
