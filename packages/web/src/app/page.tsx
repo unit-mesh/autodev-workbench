@@ -13,20 +13,11 @@ import { useSession } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from "next/link";
 import { CopyCliCommand } from '@/components/CopyCliCommand'
-
-interface ProjectData {
-  id: string;
-  name: string;
-  description?: string;
-  gitUrl?: string;
-  liveUrl?: string;
-  jiraUrl?: string;
-  jenkinsUrl?: string;
-}
+import { Project } from "@/types/project.type";
 
 export default function Home() {
   const { data: session, status } = useSession()
-  const [project, setProject] = useState<ProjectData | null>(null)
+  const [project, setProject] = useState<Project | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [fetchingProject, setFetchingProject] = useState(true)
