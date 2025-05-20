@@ -187,7 +187,7 @@ export class MCPServerImpl {
     this.ensureMcpStdioTransport();
     if (!this.mcpStdioTransport) throw new Error("Failed to create MCP STDIO transport"); // Type guard
 
-    this.mcpInst.connect(this.mcpStdioTransport);
+    await this.mcpInst.connect(this.mcpStdioTransport);
   }
 
   /**

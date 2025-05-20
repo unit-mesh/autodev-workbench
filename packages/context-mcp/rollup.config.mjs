@@ -25,10 +25,10 @@ export default defineConfig([
     plugins: [
       resolve({
         preferBuiltins: true,
-        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+        extensions: ['.js', '.ts', '.json'],
         mainFields: ['module', 'main'],
         modulesOnly: true,
-        ignore: ['.node$']
+        skip: ['@ast-grep/napi-win32-x64-msvc']
       }),
       commonjs(),
       json(),
