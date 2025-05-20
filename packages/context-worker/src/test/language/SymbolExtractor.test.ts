@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { TestLanguageServiceProvider } from "./TestLanguageService";
-import { SymbolExtractor, SymbolKind } from "../code-context/base/SymbolExtractor";
-import { CppProfile } from '../code-context/cpp/CppProfile';
-import { RustProfile } from '../code-context/rust/RustProfile';
-import { GolangProfile } from '../code-context/go/GolangProfile';
-import { CProfile } from '../code-context/c/CProfile';
-import { KotlinProfile } from '../code-context/kotlin/KotlinProfile';
-import { JavaProfile } from '../code-context/java/JavaProfile';
-import { PHPProfile } from '../code-context/php/PHPProfile';
-import { PythonProfile } from '../code-context/python/PythonProfile';
+import { TestLanguageServiceProvider } from "../TestLanguageService";
+import { SymbolExtractor, SymbolKind } from "../../code-context/base/SymbolExtractor";
+import { CppProfile } from '../../code-context/cpp/CppProfile';
+import { RustProfile } from '../../code-context/rust/RustProfile';
+import { GolangProfile } from '../../code-context/go/GolangProfile';
+import { CProfile } from '../../code-context/c/CProfile';
+import { KotlinProfile } from '../../code-context/kotlin/KotlinProfile';
+import { JavaProfile } from '../../code-context/java/JavaProfile';
+import { PHPProfile } from '../../code-context/php/PHPProfile';
+import { PythonProfile } from '../../code-context/python/PythonProfile';
 
 const Parser = require('web-tree-sitter');
 
