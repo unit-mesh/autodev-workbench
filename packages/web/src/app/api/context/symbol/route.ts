@@ -23,8 +23,8 @@ export async function GET() {
   } catch (error) {
     console.error('获取符号分析结果失败:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: '获取符号分析结果失败',
         error: error instanceof Error ? error.message : '未知错误'
       },
@@ -37,44 +37,63 @@ export async function POST(request: Request) {
   try {
     const { data, projectId } = await request.json();
 
-    if (!data || typeof data !== 'object' || !data.symbols || !Array.isArray(data.symbols)) {
+    if (!data || !Array.isArray(data)) {
       return NextResponse.json(
-        { error: '无效的数据格式。需要一个包含symbols数组的对象' },
+        { error: '无效的数据格式。需要一个文件符号分析结果数组' },
+        { status: 400 }
+      );
+    }
+
+    if (!projectId) {
+      return NextResponse.json(
+        { error: '缺少项目ID' },
         { status: 400 }
       );
     }
 
     // 存储符号分析结果
     const results = [];
-    for (const symbol of data.symbols) {
-      if (!symbol.name || !symbol.kind) {
-        continue; // 跳过无效的符号
+
+    for (const fileData of data) {
+      if (!fileData.filePath || !fileData.symbols || !Array.isArray(fileData.symbols)) {
+        continue; // 跳过格式无效的数据
       }
 
-      const result = await sql`
-        INSERT INTO "SymbolAnalysis" (
-          id, 
-          name,
-          kind,
-          path,
-          detail,
-          "projectId",
-          "createdAt", 
-          "updatedAt"
-        ) VALUES (
-          gen_random_uuid(), 
-          ${symbol.name},
-          ${symbol.kind},
-          ${symbol.path || ''},
-          ${JSON.stringify(symbol.detail || {})},
-          ${projectId},
-          NOW(), 
-          NOW()
-        ) RETURNING id
-      `;
-      
-      if (result && result.length > 0) {
-        results.push(result[0].id);
+      const filePath = fileData.filePath;
+      const classSummary = fileData.summary?.class || '';
+      const functionSummary = fileData.summary?.function || '';
+
+      // 为每个文件创建一个摘要记录
+      if (classSummary || functionSummary) {
+        const summaryResult = await sql`
+          INSERT INTO "SymbolAnalysis" (
+            id, 
+            name,
+            kind,
+            path,
+            detail,
+            "projectId",
+            "createdAt", 
+            "updatedAt"
+          ) VALUES (
+            gen_random_uuid(), 
+            ${`Summary for ${filePath}`},
+            ${0},
+            ${filePath},
+            ${JSON.stringify({
+              classSummary,
+              functionSummary,
+              totalSymbols: fileData.symbols.length
+            })},
+            ${projectId},
+            NOW(), 
+            NOW()
+          ) RETURNING id
+        `;
+
+        if (summaryResult && summaryResult.length > 0) {
+          results.push(summaryResult[0].id);
+        }
       }
     }
 
@@ -94,8 +113,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('处理符号分析结果失败:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: '处理符号分析结果失败',
         error: error instanceof Error ? error.message : '未知错误'
       },
