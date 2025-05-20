@@ -31,7 +31,7 @@ jobs:
         run: pnpm --filter worker-core build
 
       - name: Web Build
-        run: pnpm --filter web build
+        run: pnpm --filter web build:ci
 
       - name: ProtobufWorker Build
         run: pnpm --filter worker-protobuf build
