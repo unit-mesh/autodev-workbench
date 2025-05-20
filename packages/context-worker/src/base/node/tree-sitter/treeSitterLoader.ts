@@ -1,8 +1,6 @@
 import Parser from 'web-tree-sitter';
 import * as Path from "node:path";
 
-const WASM_FILE_PATH_TEMPLATE = 'tree-sitter-wasms/tree-sitter-{language}.wasm';
-
 function formatWasmFileName(template: string, languageId: string) {
 	return template.replace('{language}', languageId);
 }

@@ -22,14 +22,12 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
   }
 
   fileFilter: (codeFile: CodeFile) => boolean = (codeFile: CodeFile): boolean => {
-    let filePath = codeFile.path;
+    let filePath = codeFile.filepath;
     let isInLocation = filePath.includes('/pages/api/') || filePath.includes('/app/api/');
 
-    if (!filePath.endsWith('route.ts') && !filePath.endsWith('route.js')) {
-      return isInLocation
-    }
+    if (isInLocation === false) return false;
 
-    return isInLocation
+    return filePath.endsWith('route.ts') || filePath.endsWith('route.js');
   }
 
   // 旧版 Next.js pages API 的查询 - 检测条件语句中的 req.method 判断
@@ -86,7 +84,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
   }
 
   async analysis(codeFile: CodeFile): Promise<ApiResource[]> {
-    const filePath = codeFile.path;
+    const filePath = codeFile.filepath;
     const sourceCode = await fs.promises.readFile(filePath, 'utf-8');
 
     const tree = this.parser.parse(sourceCode);

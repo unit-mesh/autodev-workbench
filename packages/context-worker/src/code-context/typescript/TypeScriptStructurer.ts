@@ -28,7 +28,6 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 			filepath: filepath,
 			language: this.langId,
 			functions: [],
-			path: '',
 			package: '',
 			imports: [],
 			classes: [],
@@ -119,7 +118,7 @@ export class TypeScriptStructurer extends BaseStructurerProvider {
 
 		// 合并重复的类
 		this.mergeClasses(codeFile);
-		
+
 		// 确保导入不重复 (捕获的问题表明可能有重复)
 		codeFile.imports = [...new Set(codeFile.imports)];
 

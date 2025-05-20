@@ -28,7 +28,6 @@ export class JavaScriptStructurer extends BaseStructurerProvider {
 			filepath: filepath,
 			language: this.langId,
 			functions: [],
-			path: '',
 			package: '',
 			imports: [],
 			classes: [],
@@ -88,7 +87,7 @@ export class JavaScriptStructurer extends BaseStructurerProvider {
 
 		// 合并重复的类
 		this.mergeClasses(codeFile);
-		
+
 		// 确保导入不重复
 		codeFile.imports = [...new Set(codeFile.imports)];
 

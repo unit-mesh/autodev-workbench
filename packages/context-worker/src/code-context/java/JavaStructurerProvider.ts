@@ -50,7 +50,6 @@ export class JavaStructurerProvider extends BaseStructurerProvider {
 			filepath: filepath,
 			language: this.langId,
 			functions: [],
-			path: '',
 			package: '',
 			imports: [],
 			classes: [],

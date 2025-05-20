@@ -124,7 +124,6 @@ export class InterfaceAnalyzerApp {
 		const config = this.config;
 		this.codeAnalyzer.updateConfig(config);
 
-		console.log(`正在扫描目录: ${config.dirPath}`);
 		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
 		const outputFilePath = path.join(process.cwd(), 'interface_analysis_result.json');

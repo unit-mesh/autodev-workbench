@@ -28,14 +28,13 @@ export class PythonStructurer extends BaseStructurerProvider {
 			filepath: filepath,
 			language: this.langId,
 			functions: [],
-			path: '',
 			package: '',
 			imports: [],
 			classes: [],
 		};
 
 		let classObj: CodeStructure = this.createEmptyClassStructure();
-		
+
 		// 存储已处理的函数节点，避免重复添加
 		const processedFunctionNodes = new Set<Parser.SyntaxNode>();
 		// 存储类方法节点，用于排除顶级函数
@@ -44,7 +43,7 @@ export class PythonStructurer extends BaseStructurerProvider {
 		// 第一遍：识别所有类和类方法
 		for (const element of captures) {
 			const capture: Parser.QueryCapture = element!!;
-			
+
 			switch (capture.name) {
 				case 'class-name':
 					// 标记类节点存在

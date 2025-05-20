@@ -24,8 +24,8 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 			for (let analyser of this.analysers) {
 				await analyser.init(this.languageService);
 
-				let allCodeFiles = codeCollector.getAllCodeFiles();
-				let filteredFiles = allCodeFiles.filter((codeFile) => {
+				let codeStructure = codeCollector.getAllCodeStructure();
+				let filteredFiles = codeStructure.filter((codeFile) => {
 					return analyser.fileFilter(codeFile);
 				});
 
@@ -35,7 +35,7 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 
 				let result: ApiResource[] = [];
 				for (let filteredFile of filteredFiles) {
-					result.concat(await analyser.analysis(filteredFile));
+					result = result.concat(await analyser.analysis(filteredFile));
 				}
 
 				if (result && result.length > 0) {

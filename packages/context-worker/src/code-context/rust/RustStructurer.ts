@@ -28,7 +28,6 @@ export class RustStructurer extends BaseStructurerProvider {
 			filepath: filepath,
 			language: this.langId,
 			functions: [],
-			path: '',
 			package: '',
 			imports: [],
 			classes: [], // 在Rust中，这将包含struct、trait和impl

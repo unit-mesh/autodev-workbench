@@ -158,7 +158,7 @@ export class CodeCollector {
 		return this.workspacePath;
 	}
 
-	public getAllCodeFiles(): CodeFile[] {
+	public getAllCodeStructure(): CodeFile[] {
 		return this.allCodeFiles;
 	}
 }

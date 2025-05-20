@@ -8,7 +8,6 @@ describe('PlantUMLPresenter', () => {
 			package: 'com.example',
 			filepath: 'ExampleClass.java',
 			language: 'java',
-			path: 'com/example',
 			functions: [],
 			imports: ['import java.util.List'],
 			classes: [

@@ -28,7 +28,6 @@ export class PHPStructurer extends BaseStructurerProvider {
       filepath: filepath,
       language: this.langId,
       functions: [],
-      path: '',
       package: '',
       imports: [],
       classes: [], // 在PHP中，这将包含class、interface和trait
