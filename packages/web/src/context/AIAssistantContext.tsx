@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, use, useState } from "react"
 
 interface AIAssistantContextType {
   isOpen: boolean
@@ -26,7 +26,7 @@ export function AIAssistantProvider({ children }: { children: React.ReactNode })
 }
 
 export function useAIAssistant() {
-  const context = useContext(AIAssistantContext)
+  const context = use(AIAssistantContext)
   if (context === undefined) {
     throw new Error("useAIAssistant must be used within an AIAssistantProvider")
   }
