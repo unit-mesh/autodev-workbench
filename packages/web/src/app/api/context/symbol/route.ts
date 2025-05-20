@@ -85,6 +85,7 @@ export async function POST(request: Request) {
       }
 
       const filePath = fileData.filePath;
+      const fileName = filePath.split('/').pop() || '';
       const summary = fileData.summary || {};
 
       if (Object.keys(summary).length > 0) {
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
             "updatedAt"
           ) VALUES (
             gen_random_uuid(), 
-            ${`Summary for ${filePath}`},
+            ${fileName},
             ${0},
             ${filePath},
             ${JSON.stringify({

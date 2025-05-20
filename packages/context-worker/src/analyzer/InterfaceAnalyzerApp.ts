@@ -130,7 +130,7 @@ export class InterfaceAnalyzerApp {
 	public async uploadSymbolResult(result: SymbolAnalysisResult): Promise<void> {
 		const config = this.config;
 		try {
-			const simplifiedResult = this.simplifySymbolResult(result);
+			const simplifiedResult = this.simplifySymbolResult(result, config.dirPath);
 			const response = await fetch(config.baseUrl + '/api/context/symbol', {
 				method: 'POST',
 				headers: {
@@ -157,9 +157,10 @@ export class InterfaceAnalyzerApp {
 	/**
 	 * 将符号分析结果简化为只包含必要信息的格式
 	 * @param result 原始符号分析结果
+	 * @param dirPath
 	 * @returns 简化后的结果
 	 */
-	private simplifySymbolResult(result: SymbolAnalysisResult): Array<{
+	private simplifySymbolResult(result: SymbolAnalysisResult, dirPath: string): Array<{
 		filePath: string;
 		symbols: SymbolInfo[];
 		summary: {
@@ -220,8 +221,9 @@ export class InterfaceAnalyzerApp {
 				}
 			}
 
+			const relativePath = path.relative(dirPath, filePath);
 			simplifiedResult.push({
-				filePath,
+				filePath: relativePath,
 				symbols: fileSymbol.symbols,
 				summary
 			});
