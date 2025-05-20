@@ -1,5 +1,6 @@
 import { createPool } from '@vercel/postgres'
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface MockPool {
 	query: (sql: string, params?: any[]) => Promise<{ rows: any[], rowCount: number }>;
 	sql: (strings: TemplateStringsArray, ...values: any[]) => Promise<{ rows: any[], rowCount: number }>;
