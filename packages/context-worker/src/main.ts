@@ -24,7 +24,7 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 	console.info('config:', config)
 	await app.handleInterfaceContext();
 	await app.handleHttpApiContext();
-	/// todo process symbolsContext
+	await app.handleSymbolContext();
 }
 
 if (require.main === module) {

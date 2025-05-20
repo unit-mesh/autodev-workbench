@@ -12,7 +12,7 @@ import { GoStructurerProvider } from "../code-context/go/GoStructurerProvider";
 import { KotlinStructurerProvider } from "../code-context/kotlin/KotlinStructurerProvider";
 import { KotlinSpringControllerAnalyser } from "../code-context/kotlin/KotlinSpringControllerAnalyser";
 import { CodeAnalyzer } from "./analyzers/CodeAnalyzer";
-import { CodeAnalysisResult } from "./CodeAnalysisResult";
+import { CodeAnalysisResult, SymbolAnalysisResult } from "./CodeAnalysisResult";
 import { PythonStructurer } from "../code-context/python/PythonStructurer";
 import { AppConfig } from "../types/AppConfig";
 import { RustStructurer } from "../code-context/rust/RustStructurer";
@@ -23,10 +23,12 @@ import { ApiResource } from "@autodev/worker-core";
 import { JavaScriptStructurer } from "../code-context/javascript/JavaScriptStructurer";
 import { TypeScriptNextjsAnalyser } from "../code-context/typescript/TypeScriptNextjsAnalyser";
 import { FastApiAnalyser } from "../code-context/python/FastApiAnalyser";
+import { SymbolAnalyser } from "./analyzers/SymbolAnalyser";
 
 export class InterfaceAnalyzerApp {
 	private instantiationService: InstantiationService;
 	private codeAnalyzer: CodeAnalyzer;
+	private symbolAnalyser: SymbolAnalyser;
 	private config: AppConfig;
 
 	constructor(config: AppConfig) {
@@ -50,6 +52,7 @@ export class InterfaceAnalyzerApp {
 		providerContainer.bind(IHttpApiAnalyser).to(FastApiAnalyser);
 
 		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, config);
+		this.symbolAnalyser = new SymbolAnalyser(this.instantiationService.get(ILanguageServiceProvider));
 	}
 
 	/**
@@ -119,6 +122,36 @@ export class InterfaceAnalyzerApp {
 		}
 	}
 
+	/**
+	 * Upload symbol analysis result to the server
+	 * @param result
+	 */
+	public async uploadSymbolResult(result: SymbolAnalysisResult): Promise<void> {
+		const config = this.config;
+		try {
+			const response = await fetch(config.baseUrl + '/api/context/symbol', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					data: result,
+					projectId: config.projectId
+				})
+			});
+
+			const data = await response.json();
+			if (data.success) {
+				console.log('符号分析结果上传成功!');
+				console.log(`ID: ${data.id}`);
+			} else {
+				console.error('上传失败:', data);
+			}
+		} catch (error) {
+			console.error('上传过程中发生错误:', error);
+		}
+	}
+
 	async handleInterfaceContext() {
 		await this.codeAnalyzer.initializeFiles();
 		const config = this.config;
@@ -157,6 +190,23 @@ export class InterfaceAnalyzerApp {
 
 		const outputFilePath = path.join(process.cwd(), 'api_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(apiResources, null, 2));
+	}
+
+	async handleSymbolContext() {
+		await this.codeAnalyzer.initializeFiles();
+		const config = this.config;
+
+		const codeCollector = this.codeAnalyzer.getCodeCollector();
+		const result: SymbolAnalysisResult = await this.symbolAnalyser.analyze(codeCollector);
+
+		const outputFilePath = path.join(process.cwd(), 'symbol_analysis_result.json');
+		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+		console.log(`Save symbol analysis results to ${outputFilePath}`);
+
+		if (config.upload) {
+			console.log(`Upload symbol analysis results to ${config.baseUrl}/projects/${config.projectId}`);
+			await this.uploadSymbolResult(result);
+		}
 	}
 
 	private async analysisProtobuf(config: AppConfig): Promise<ApiResource[]> {

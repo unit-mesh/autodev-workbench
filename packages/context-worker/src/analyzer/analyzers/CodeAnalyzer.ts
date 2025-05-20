@@ -249,5 +249,9 @@ export class CodeAnalyzer {
 	analyzeApi(): Promise<ApiResource[]> {
 		return this.httpApiAnalyser.analyze(this.codeCollector);
 	}
+
+	public getCodeCollector(): CodeCollector {
+		return this.codeCollector;
+	}
 }
 
