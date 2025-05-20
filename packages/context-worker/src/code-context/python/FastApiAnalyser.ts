@@ -8,6 +8,7 @@ import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ApiResource } from "@autodev/worker-core";
 import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 import { PythonProfile } from "./PythonProfile";
+import { PythonStructurer } from "./PythonStructurer";
 
 @injectable()
 export class FastApiAnalyser extends HttpApiAnalyser {
@@ -16,6 +17,7 @@ export class FastApiAnalyser extends HttpApiAnalyser {
 	constructor() {
 		super();
 		this.config = LanguageProfileUtil.from(this.langId) || new PythonProfile();
+		this.structurer = new PythonStructurer();
 	}
 
 	isApplicable(lang: LanguageIdentifier): boolean {
