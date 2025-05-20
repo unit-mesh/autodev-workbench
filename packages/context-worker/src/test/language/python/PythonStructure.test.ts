@@ -28,7 +28,6 @@ class ExampleClass:
       filepath: '',
       language: 'python',
       functions: [], // 确保顶级函数为空，因为这里只有类方法
-      path: '',
       package: '',
       imports: ['sys'],
       classes: [

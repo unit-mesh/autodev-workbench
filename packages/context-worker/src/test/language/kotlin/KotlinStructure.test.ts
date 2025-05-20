@@ -32,7 +32,6 @@ class ExampleClass {
       filepath: '',
       language: 'kotlin',
       functions: [],
-      path: '',
       package: 'com.example',
       imports: ['kotlin.collections.List'],
       classes: [
@@ -115,7 +114,6 @@ class HelloController {
       filepath: '',
       language: 'kotlin',
       functions: [],
-      path: '',
       package: 'com.example.demo.controller',
       imports: [
         'org.springframework.web.bind.annotation.GetMapping',
@@ -225,7 +223,6 @@ data class User(
       filepath: '',
       language: 'kotlin',
       functions: [],
-      path: '',
       package: 'com.example.model',
       imports: [],
       classes: [

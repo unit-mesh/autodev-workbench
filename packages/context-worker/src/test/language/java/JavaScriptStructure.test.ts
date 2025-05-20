@@ -41,7 +41,6 @@ export class ExampleClass extends BaseAnalyzer {
 			filepath: 'example.js',
 			language: 'javascript',
 			functions: [],
-			path: '',
 			package: '',
 			imports: ["'inversify'", "'./BaseAnalyzer'"],
 			classes: [
@@ -128,7 +127,6 @@ function helperFunction(data) {
 			name: 'functions.js',
 			filepath: 'functions.js',
 			language: 'javascript',
-			path: '',
 			package: '',
 			imports: ["'path'"],
 			classes: [],
@@ -195,7 +193,6 @@ export const helper = (data) => {
 			name: 'utility.js',
 			filepath: 'utility.js',
 			language: 'javascript',
-			path: '',
 			package: '',
 			imports: ["'react'"],
 			classes: [

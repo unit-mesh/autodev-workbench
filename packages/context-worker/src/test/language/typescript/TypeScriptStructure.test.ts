@@ -39,7 +39,6 @@ export class ExampleClass extends BaseAnalyzer implements IAnalyzer {
 			filepath: 'example.ts',
 			language: 'typescript',
 			functions: [],
-			path: '',
 			package: '',
 			imports: ["'inversify'", "'./BaseAnalyzer'"],
 			classes: [
@@ -116,7 +115,6 @@ export interface IStructurer {
 			filepath: 'interfaces.ts',
 			language: 'typescript',
 			functions: [],
-			path: '',
 			package: '',
 			imports: ['"../model/CodeElement"'],
 			classes: [
@@ -184,7 +182,6 @@ function helperFunction(data: string): string {
 			name: 'functions.ts',
 			filepath: 'functions.ts',
 			language: 'typescript',
-			path: '',
 			package: '',
 			imports: ["'path'"],
 			classes: [],

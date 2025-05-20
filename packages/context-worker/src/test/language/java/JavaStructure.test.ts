@@ -32,7 +32,6 @@ public class ExampleClass {
 			filepath: '',
 			language: 'java',
 			functions: [],
-			path: '',
 			package: 'com.example',
 			imports: ['java.util.List'],
 			classes: [
@@ -118,7 +117,6 @@ public class CreateBlogRequest {
 			filepath: '',
 			language: 'java',
 			functions: [],
-			path: '',
 			package: 'cc.unitmesh.untitled.demo.dto',
 			imports: ['cc.unitmesh.untitled.demo.entity.User', 'lombok.Data'],
 			classes: [
