@@ -112,8 +112,7 @@ export default function Home() {
       project.guidelines?.length > 0 ||
       project.codeAnalyses?.length > 0 ||
       project.conceptDictionaries?.length > 0 ||
-      project.apiResources?.length > 0 ||
-      project.symbolAnalyses?.length > 0
+      project.apiResources?.length > 0
     );
   };
 
