@@ -3,15 +3,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { BookOpen, Code, Search } from "lucide-react"
+import { BookOpen, Code, Search, Loader2 } from "lucide-react"
 import { Project } from "@/types/project.type"
-import { CopyCliCommand } from "@/components/CopyCliCommand"
 import { CodeAnalysisItem, CodeAnalysisList } from "@/components/code-analysis/code-analysis-list"
 import { Input } from "@/components/ui/input"
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useState } from "react"
+import { toast } from "@/hooks/use-toast"
 
 interface ProjectResourcesProps {
   project: Project
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   symbols: any[]
   symbolSearch: string
   symbolLoading: boolean
@@ -31,6 +32,8 @@ export function ProjectResources({
   refreshProject,
   onOpenGuidelineModal
 }: ProjectResourcesProps) {
+  const [analyzingSymbolIds, setAnalyzingSymbolIds] = useState<string[]>([]);
+
   const handleSymbolSearch = () => {
     fetchSymbols(symbolSearch);
   };
@@ -38,6 +41,44 @@ export function ProjectResources({
   const handleTabChange = (value: string) => {
     if (value === "symbols" && symbols.length === 0) {
       fetchSymbols();
+    }
+  };
+
+  const handleAnalyzeSymbol = async (symbolId: string) => {
+    setAnalyzingSymbolIds(prev => [...prev, symbolId]);
+    try {
+      const response = await fetch("/api/symbols/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          symbolId,
+          projectId: project.id
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "成功",
+          description: "符号分析已完成，概念已添加到词典",
+          variant: "default"
+        });
+        refreshProject();
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "错误",
+          description: errorData.message || "符号分析失败",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "错误",
+        description: "处理符号分析时出错",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzingSymbolIds(prev => prev.filter(id => id !== symbolId));
     }
   };
 
@@ -183,8 +224,35 @@ export function ProjectResources({
           </TabsContent>
 
           <TabsContent value="symbols" className="mt-4">
-            <div>
-              {symbols.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Input
+                  placeholder="搜索符号..."
+                  value={symbolSearch}
+                  onChange={(e) => setSymbolSearch(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Button variant="outline" size="sm" onClick={handleSymbolSearch} disabled={symbolLoading}>
+                  {symbolLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                  搜索
+                </Button>
+              </div>
+
+              {symbolLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((n) => (
+                    <Card key={n} className="overflow-hidden">
+                      <CardHeader className="p-4">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-4 w-64 mt-2" />
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <Skeleton className="h-16 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : symbols.length > 0 ? (
                 <div className="space-y-2">
                   {symbols.map((symbol) => (
                     <Card key={symbol.id} className="overflow-hidden py-2 gap-0">
@@ -198,6 +266,19 @@ export function ProjectResources({
                               {symbol.path}
                             </CardDescription>
                           </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAnalyzeSymbol(symbol.id)}
+                            disabled={analyzingSymbolIds.includes(symbol.id)}
+                          >
+                            {analyzingSymbolIds.includes(symbol.id) ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                分析中...
+                              </>
+                            ) : "AI分析"}
+                          </Button>
                         </div>
                       </CardHeader>
                       <CardContent className="px-2">
