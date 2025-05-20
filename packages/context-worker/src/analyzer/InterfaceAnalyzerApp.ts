@@ -139,7 +139,7 @@ export class InterfaceAnalyzerApp {
 		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 
-	async handleApiContext() {
+	async handleHttpApiContext() {
 		const config = this.config;
 
 		let apiResources = await this.analysisProtobuf(config);

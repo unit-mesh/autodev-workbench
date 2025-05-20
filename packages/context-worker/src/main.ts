@@ -23,7 +23,8 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 	const app = new InterfaceAnalyzerApp(config);
 	console.info('config:', config)
 	await app.handleInterfaceContext();
-	await app.handleApiContext();
+	await app.handleHttpApiContext();
+	/// todo process symbolsContext
 }
 
 if (require.main === module) {
