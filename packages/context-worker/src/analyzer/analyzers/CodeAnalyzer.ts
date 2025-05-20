@@ -36,7 +36,7 @@ export class CodeAnalyzer {
 		this.fileScanner = new FileSystemScanner();
 		this.codeCollector = new CodeCollector(config.dirPath);
 		this.markdownAnalyser = new MarkdownAnalyser();
-		this.httpApiAnalyser = new HttpApiCodeAnalyser();
+		this.httpApiAnalyser = new HttpApiCodeAnalyser(this.serviceProvider);
 		this.symbolAnalyser = new SymbolAnalyser(this.serviceProvider);
 
 		this.analyzers = [

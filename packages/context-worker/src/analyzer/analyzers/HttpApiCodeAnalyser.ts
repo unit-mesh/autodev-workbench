@@ -3,8 +3,15 @@ import { ApiResource } from "@autodev/worker-core";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeCollector } from "../CodeCollector";
 import fs from "fs";
+import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 
 export class HttpApiCodeAnalyser implements ICodeAnalyzer {
+	private readonly languageService: ILanguageServiceProvider;
+
+	constructor(languageService: ILanguageServiceProvider) {
+		this.languageService = languageService;
+	}
+
 	private manager: HttpApiAnalyserManager = HttpApiAnalyserManager.getInstance()
 	private analysers = this.manager.getAnalyser();
 
@@ -15,6 +22,8 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 		for (let path of codeFiles) {
 			const sourceCode = await fs.promises.readFile(path, 'utf-8');
 			for (let analyser of this.analysers) {
+				await analyser.init(this.languageService);
+
 				let allCodeFiles = codeCollector.getAllCodeFiles();
 				let filteredFiles = allCodeFiles.filter((codeFile) => {
 					return analyser.fileFilter(codeFile);
