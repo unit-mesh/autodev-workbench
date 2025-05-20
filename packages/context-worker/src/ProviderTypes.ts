@@ -24,4 +24,4 @@ export const IStructurerProvider: interfaces.ServiceIdentifier<StructurerProvide
  * REST API analysis, extract API resources and demands from code structure
  * see in {@link HttpApiAnalyser#analyse}
  */
-export const IRestApiAnalyser: interfaces.ServiceIdentifier<HttpApiAnalyser> = Symbol('IRestApiAnalyser');
+export const IHttpApiAnalyser: interfaces.ServiceIdentifier<HttpApiAnalyser> = Symbol('IHttpApiAnalyser');

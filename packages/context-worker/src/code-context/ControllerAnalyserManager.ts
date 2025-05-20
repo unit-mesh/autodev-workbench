@@ -1,6 +1,6 @@
 import { providerContainer } from "../base/common/instantiation/instantiationService";
 import { HttpApiAnalyser } from "./base/HttpApiAnalyser";
-import { IRestApiAnalyser } from "../ProviderTypes";
+import { IHttpApiAnalyser } from "../ProviderTypes";
 
 export class HttpApiAnalyserManager {
 	private static instance: HttpApiAnalyserManager;
@@ -15,6 +15,6 @@ export class HttpApiAnalyserManager {
 	}
 
 	getAnalyser(): HttpApiAnalyser[] {
-		return providerContainer.getAll(IRestApiAnalyser);
+		return providerContainer.getAll(IHttpApiAnalyser);
 	}
 }

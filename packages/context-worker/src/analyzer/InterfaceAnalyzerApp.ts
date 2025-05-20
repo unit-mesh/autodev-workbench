@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 
 import { InstantiationService, providerContainer } from "../base/common/instantiation/instantiationService";
 import { ILanguageServiceProvider, LanguageServiceProvider } from "../base/common/languages/languageService";
-import { IRestApiAnalyser, IStructurerProvider } from "../ProviderTypes";
+import { IHttpApiAnalyser, IStructurerProvider } from "../ProviderTypes";
 import { JavaStructurerProvider } from "../code-context/java/JavaStructurerProvider";
 import { JavaSpringControllerAnalyser } from "../code-context/java/JavaSpringControllerAnalyser";
 import { TypeScriptStructurer } from "../code-context/typescript/TypeScriptStructurer";
@@ -44,10 +44,10 @@ export class InterfaceAnalyzerApp {
 		providerContainer.bind(IStructurerProvider).to(CStructurer);
 		providerContainer.bind(IStructurerProvider).to(CSharpStructurer);
 
-		providerContainer.bind(IRestApiAnalyser).to(JavaSpringControllerAnalyser);
-		providerContainer.bind(IRestApiAnalyser).to(KotlinSpringControllerAnalyser);
-		providerContainer.bind(IRestApiAnalyser).to(TypeScriptNextjsAnalyser);
-		providerContainer.bind(IRestApiAnalyser).to(FastApiAnalyser);
+		providerContainer.bind(IHttpApiAnalyser).to(JavaSpringControllerAnalyser);
+		providerContainer.bind(IHttpApiAnalyser).to(KotlinSpringControllerAnalyser);
+		providerContainer.bind(IHttpApiAnalyser).to(TypeScriptNextjsAnalyser);
+		providerContainer.bind(IHttpApiAnalyser).to(FastApiAnalyser);
 
 		this.codeAnalyzer = new CodeAnalyzer(this.instantiationService, config);
 	}
