@@ -13,6 +13,7 @@ interface ConceptDictionaryEntry {
   relatedTerms?: string[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function analyzeSymbol(symbolName: string, symbolPath: string, symbolDetail: any): Promise<ConceptDictionaryEntry[]> {
   const answer = await reply([
     {
