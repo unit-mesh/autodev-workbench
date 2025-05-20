@@ -24,6 +24,7 @@ import { JavaScriptStructurer } from "../code-context/javascript/JavaScriptStruc
 import { TypeScriptNextjsAnalyser } from "../code-context/typescript/TypeScriptNextjsAnalyser";
 import { FastApiAnalyser } from "../code-context/python/FastApiAnalyser";
 import { SymbolAnalyser } from "./analyzers/SymbolAnalyser";
+import { SymbolKind } from "../code-context/base/SymbolExtractor";
 
 export class InterfaceAnalyzerApp {
 	private instantiationService: InstantiationService;
@@ -178,12 +179,13 @@ export class InterfaceAnalyzerApp {
 
 		for (const [filePath, fileSymbol] of Object.entries(fileSymbols)) {
 			const classNames = fileSymbol.symbols
-				.filter(s => s.kind === 1 || s.kind === 5 || s.kind === 23) // Class, Interface, Struct
+				.filter(s => s.kind === SymbolKind.Class || s.kind === SymbolKind.Interface
+					|| s.kind === SymbolKind.Struct || SymbolKind.Trait || SymbolKind.Type)
 				.map(s => s.name);
 
 			const functionNames = fileSymbol.symbols
-				.filter(s => s.kind === 2 || s.kind === 3) // Method, Function
-				.map(s => s.name);
+				.filter(s => s.kind === SymbolKind.Method || s.kind === SymbolKind.Interface) // Method, Function
+				.map(s => s.qualifiedName || s.name);
 
 			simplifiedResult.push({
 				filePath,
