@@ -18,8 +18,9 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
       return lang === this.langId;
   }
   analysis(codeFile: CodeFile): Promise<ApiResource[]> {
-    return Promise.resolve(this.resources);
+    return Promise.resolve([]);
   }
+
   protected parser: Parser | undefined;
   protected language: Parser.Language | undefined;
   protected config: LanguageProfile;

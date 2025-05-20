@@ -18,7 +18,7 @@ export class FastApiAnalyser extends HttpApiAnalyser {
 	}
 
 	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
-		throw new Error("Method not implemented.");
+		return Promise.resolve([]);
 	}
 
 	readonly langId: LanguageIdentifier = 'python';

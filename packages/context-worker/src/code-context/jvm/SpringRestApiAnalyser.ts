@@ -25,6 +25,14 @@ export abstract class SpringRestApiAnalyser extends HttpApiAnalyser {
 
 	abstract override readonly langId: LanguageIdentifier;
 
+	fileFilter: (codeFile: CodeFile) => boolean = (codeFile: CodeFile): boolean => {
+		let filepath = codeFile.filepath;
+		return filepath.endsWith('Controller.java') ||
+			filepath.endsWith('RestController.java') ||
+			filepath.endsWith('Controller.kt') ||
+			filepath.endsWith('RestController.kt');
+	}
+
 	async init(langService: ILanguageServiceProvider): Promise<void> {
 		const parser = await langService.getParser(this.langId);
 		const language = await this.config.grammar(langService, this.langId);
