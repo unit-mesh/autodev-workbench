@@ -16,7 +16,7 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 
 	public async analyze(codeCollector: CodeCollector): Promise<SymbolAnalysisResult> {
 		const allSymbols: SymbolInfo[] = [];
-		const fileSymbolsArray: FileSymbols[] = [];
+		const fileSymbolsMap: Record<string, FileSymbols> = {}; // 改为使用对象而非数组
 		const classesByFileMap = new Map<string, number>();
 		const methodsByFileMap = new Map<string, number>();
 		const symbolsByKindMap = new Map<number, number>();
@@ -24,19 +24,16 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 		for (let path of codeCollector.getAllFiles()) {
 			const fileSymbols = await this.analyzeFile(path);
 			if (fileSymbols) {
-				fileSymbolsArray.push(fileSymbols);
+				fileSymbolsMap[path] = fileSymbols; // 使用文件路径作为键存储
 				allSymbols.push(...fileSymbols.symbols);
 
-				// 更新全局统计信息
 				classesByFileMap.set(path, fileSymbols.stats.classCount);
 				methodsByFileMap.set(path, fileSymbols.stats.methodCount);
 
-				// 更新符号类型统计
 				this.updateSymbolsByKind(fileSymbols.symbols, symbolsByKindMap);
 			}
 		}
 
-		// 将Map转换为数组形式
 		const classesByFile = Array.from(classesByFileMap.entries())
 			.filter(([_, count]) => count > 0)
 			.map(([filePath, count]) => ({
@@ -59,7 +56,7 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 
 		return {
 			symbols: allSymbols,
-			fileSymbols: fileSymbolsArray,
+			fileSymbols: fileSymbolsMap, // 返回文件路径到符号的映射
 			stats: {
 				totalSymbols: allSymbols.length,
 				classesByFile,

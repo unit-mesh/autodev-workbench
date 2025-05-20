@@ -200,7 +200,7 @@ export class InterfaceAnalyzerApp {
 		const result: SymbolAnalysisResult = await this.symbolAnalyser.analyze(codeCollector);
 
 		const outputFilePath = path.join(process.cwd(), 'symbol_analysis_result.json');
-		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+		fs.writeFileSync(outputFilePath, JSON.stringify(result.fileSymbols, null, 2));
 		console.log(`Save symbol analysis results to ${outputFilePath}`);
 
 		if (config.upload) {

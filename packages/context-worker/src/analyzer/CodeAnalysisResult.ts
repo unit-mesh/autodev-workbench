@@ -125,7 +125,7 @@ export interface FileSymbols {
 
 export interface SymbolAnalysisResult {
 	symbols: SymbolInfo[];
-	fileSymbols: FileSymbols[];
+	fileSymbols: Record<string, FileSymbols>; // 修改这里，从数组改为以filepath为键的Record
 	stats: {
 		totalSymbols: number;
 		classesByFile: Array<{filePath: string, count: number}>;
