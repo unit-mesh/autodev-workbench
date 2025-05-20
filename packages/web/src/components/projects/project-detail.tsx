@@ -36,7 +36,7 @@ export function ProjectDetail({ id }: { id: string }) {
 	const [isGuidelineModalOpen, setIsGuidelineModalOpen] = useState(false)
 	const router = useRouter()
 
-	// Add states for symbol analysis
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const [symbols, setSymbols] = useState<any[]>([]);
 	const [symbolSearch, setSymbolSearch] = useState("");
 	const [symbolLoading, setSymbolLoading] = useState(false);
@@ -300,6 +300,13 @@ export function ProjectDetail({ id }: { id: string }) {
 									<div>
 										<p className="text-xs text-gray-500">概念词典</p>
 										<p className="text-sm font-medium">{project.conceptDictionaries.length}</p>
+									</div>
+								</div>
+								<div className="flex items-center bg-gray-50 p-2 rounded">
+									<Code className="h-4 w-4 mr-2 text-purple-500"/>
+									<div>
+										<p className="text-xs text-gray-500">符号分析</p>
+										<p className="text-sm font-medium">{project.symbolAnalyses.length}</p>
 									</div>
 								</div>
 							</div>

@@ -45,6 +45,15 @@ export interface Project {
 		className: string
 		methodName: string
 	}>
+	symbolAnalyses: Array<{
+		id: string
+		name: string
+		kind: string
+		path: string | null
+		detail: string | null
+		createdAt: string
+		updatedAt: string
+	}>
 	user: {
 		name: string | null
 		email: string | null

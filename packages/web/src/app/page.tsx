@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowRight, Plus, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, Plus, CheckCircle2, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -104,6 +104,19 @@ export default function Home() {
     }
   }
 
+  // Function to check if project has any data
+  const hasProjectData = (project: Project | null): boolean => {
+    if (!project) return false;
+
+    return (
+      project.guidelines?.length > 0 ||
+      project.codeAnalyses?.length > 0 ||
+      project.conceptDictionaries?.length > 0 ||
+      project.apiResources?.length > 0 ||
+      project.symbolAnalyses?.length > 0
+    );
+  };
+
   return (
     <div className="p-8 space-y-8">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
@@ -146,14 +159,41 @@ export default function Home() {
         </div>
       ) : (
         <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4 text-green-600 font-medium">
-            <CheckCircle2 className="h-5 w-5"/>
-            项目 <strong>{project.name}</strong> 已就绪！
-          </div>
-          <CopyCliCommand projectId={project.id} />
-          <p className="text-sm text-muted-foreground mt-2">
-            请在您的本地终端中运行以上命令，完成上下文初始化。
-          </p>
+          {hasProjectData(project) ? (
+            <>
+              <div className="flex items-center gap-3 mb-4 text-blue-600 font-medium">
+                <BookOpen className="h-5 w-5"/>
+                项目 <strong>{project.name}</strong> 数据已准备就绪！
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                您已经有项目数据，可以浏览项目内容或继续使用 CLI 进行更新。
+              </p>
+              <div className="flex gap-3">
+                <Button asChild>
+                  <Link href={`/projects/${project.id}`}>
+                    浏览项目 <ArrowRight className="ml-2 h-4 w-4"/>
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={() => document.getElementById('cli-command')?.focus()}>
+                  使用 CLI
+                </Button>
+              </div>
+              <div className="mt-4">
+                <CopyCliCommand projectId={project.id} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-4 text-green-600 font-medium">
+                <CheckCircle2 className="h-5 w-5"/>
+                项目 <strong>{project.name}</strong> 已就绪！
+              </div>
+              <CopyCliCommand projectId={project.id} />
+              <p className="text-sm text-muted-foreground mt-2">
+                请在您的本地终端中运行以上命令，完成上下文初始化。
+              </p>
+            </>
+          )}
         </Card>
       )}
 
