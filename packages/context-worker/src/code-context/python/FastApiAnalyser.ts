@@ -2,17 +2,18 @@ import { injectable } from "inversify";
 import Parser, { SyntaxNode } from 'web-tree-sitter';
 
 import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
-import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
+import { MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
-import { StructurerProvider } from "../base/StructurerProvider";
 import { ApiResource } from "@autodev/worker-core";
 import { PythonProfile } from "./PythonProfile";
 import { PythonStructurer } from "./PythonStructurer";
 
 @injectable()
 export class FastApiAnalyser extends HttpApiAnalyser {
+	readonly langId: LanguageIdentifier = 'python';
+
 	isApplicable(lang: LanguageIdentifier): boolean {
 		return lang === "python";
 	}
@@ -20,12 +21,6 @@ export class FastApiAnalyser extends HttpApiAnalyser {
 	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
 		return Promise.resolve([]);
 	}
-
-	readonly langId: LanguageIdentifier = 'python';
-	protected parser: Parser | undefined;
-	protected language: Parser.Language | undefined;
-	protected config: LanguageProfile;
-	protected structurer: StructurerProvider;
 
 	protected _restTemplateQuery: MemoizedQuery = new MemoizedQuery(`
         (call

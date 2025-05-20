@@ -1,11 +1,10 @@
 import { injectable } from 'inversify';
 
-import { LanguageProfile } from '../base/LanguageProfile';
+import { MemoizedQuery } from '../base/LanguageProfile';
 import { LanguageProfileUtil } from '../base/LanguageProfileUtil';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { KotlinProfile } from './KotlinProfile';
-import { MemoizedQuery } from '../base/LanguageProfile';
-import { SpringRestApiAnalyser} from '../jvm/SpringRestApiAnalyser';
+import { SpringRestApiAnalyser } from '../jvm/SpringRestApiAnalyser';
 import { StructurerProvider } from "../base/StructurerProvider";
 import { KotlinStructurerProvider } from "./KotlinStructurerProvider";
 
@@ -13,7 +12,6 @@ import { KotlinStructurerProvider } from "./KotlinStructurerProvider";
 export class KotlinSpringControllerAnalyser extends SpringRestApiAnalyser {
 	protected structurer: StructurerProvider = new KotlinStructurerProvider();
 	readonly langId: LanguageIdentifier = 'kotlin';
-	protected config: LanguageProfile;
 
 	protected restTemplateQuery = new MemoizedQuery(`
     (call_expression
@@ -42,7 +40,6 @@ export class KotlinSpringControllerAnalyser extends SpringRestApiAnalyser {
 	}
 
 	protected cleanStringLiteral(text: string): string {
-		// Remove quotes from string literals
 		return text.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
 	}
 }

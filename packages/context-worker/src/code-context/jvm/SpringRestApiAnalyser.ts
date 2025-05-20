@@ -1,12 +1,10 @@
-
 import { injectable } from "inversify";
-import Parser, { SyntaxNode } from 'web-tree-sitter';
+import { SyntaxNode } from 'web-tree-sitter';
 
 import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
-import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
+import { MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile, CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
-import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { StructurerProvider } from "../base/StructurerProvider";
 import { ApiResource } from "@autodev/worker-core";
 
@@ -17,9 +15,6 @@ export interface Annotation {
 
 @injectable()
 export abstract class SpringRestApiAnalyser extends HttpApiAnalyser {
-	protected parser: Parser | undefined;
-	protected language: Parser.Language | undefined;
-	protected abstract config: LanguageProfile;
 	protected abstract structurer: StructurerProvider;
 	protected abstract get restTemplateQuery(): MemoizedQuery;
 
@@ -31,15 +26,6 @@ export abstract class SpringRestApiAnalyser extends HttpApiAnalyser {
 			filepath.endsWith('RestController.java') ||
 			filepath.endsWith('Controller.kt') ||
 			filepath.endsWith('RestController.kt');
-	}
-
-	async init(langService: ILanguageServiceProvider): Promise<void> {
-		const parser = await langService.getParser(this.langId);
-		const language = await this.config.grammar(langService, this.langId);
-		parser!.setLanguage(language);
-		this.parser = parser;
-		this.language = language;
-		await this.structurer.init(langService)
 	}
 
 	async sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {

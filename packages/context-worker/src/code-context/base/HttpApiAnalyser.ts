@@ -3,6 +3,9 @@ import { LanguageIdentifier } from '../../base/common/languages/languages';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { ApiResource } from "@autodev/worker-core";
 import { CodeFile } from "../../codemodel/CodeElement";
+import Parser from "web-tree-sitter";
+import { LanguageProfile } from "./LanguageProfile";
+import { StructurerProvider } from "./StructurerProvider";
 
 export interface ApiDemand {
 	sourceCaller: string;
@@ -15,6 +18,12 @@ export abstract class HttpApiAnalyser {
 	abstract readonly langId: LanguageIdentifier;
 	resources: ApiResource[] = [];
 	demands: ApiDemand[] = [];
+	private initialized: boolean = false;
+	protected parser: Parser | undefined;
+	protected language: Parser.Language | undefined;
+	protected config: LanguageProfile;
+	protected structurer: StructurerProvider;
+
 	fileFilter: (codeFile: CodeFile) => boolean = (codeFile: CodeFile): boolean => {
 		return true
 	}
@@ -29,7 +38,27 @@ export abstract class HttpApiAnalyser {
 	 * Initialize the analyser with language service
 	 * @param langService the language service provider
 	 */
-	abstract init(langService: ILanguageServiceProvider): Promise<void>;
+	async init(langService: ILanguageServiceProvider): Promise<void> {
+		if (this.initialized) {
+			return;
+		}
+
+		await this.initializeAnalyser(langService);
+		this.initialized = true;
+	}
+
+	/**
+	 * Implementation of analyzer initialization
+	 * @param langService the language service provider
+	 */
+	protected async initializeAnalyser(langService: ILanguageServiceProvider): Promise<void> {
+		const parser = await langService.getParser(this.langId);
+		const language = await this.config.grammar(langService, this.langId);
+		parser!.setLanguage(language);
+		this.parser = parser;
+		this.language = language;
+		await this.structurer.init(langService);
+	}
 
 	/**
 	 * Analyse source code to extract API resources and demands
