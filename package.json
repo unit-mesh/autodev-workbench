@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build:ci",
+    "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
     "lint": "pnpm --filter web lint",
     "publish-all:confirm": "nx release",

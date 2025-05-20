@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "build:ci": "cp env.example .env && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "prepublishOnly": "pnpm run build"
