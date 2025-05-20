@@ -13,7 +13,6 @@ import { JavaStructurerProvider } from "./JavaStructurerProvider";
 export class JavaSpringControllerAnalyser extends SpringRestApiAnalyser {
 	protected structurer: StructurerProvider = new JavaStructurerProvider();
 	readonly langId: LanguageIdentifier = 'java';
-	protected config: LanguageProfile;
 
 	protected restTemplateQuery = new MemoizedQuery(`
     (method_invocation

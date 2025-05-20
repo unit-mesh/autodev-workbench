@@ -5,14 +5,17 @@ import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
 import { MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
-import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { ApiResource } from "@autodev/worker-core";
-import { PythonProfile } from "./PythonProfile";
-import { PythonStructurer } from "./PythonStructurer";
+import { LanguageProfileUtil } from "../base/LanguageProfileUtil";
 
 @injectable()
 export class FastApiAnalyser extends HttpApiAnalyser {
 	readonly langId: LanguageIdentifier = 'python';
+
+	constructor() {
+		super();
+		this.config = LanguageProfileUtil.from(this.langId) || new PythonProfile();
+	}
 
 	isApplicable(lang: LanguageIdentifier): boolean {
 		return lang === "python";
@@ -100,26 +103,8 @@ export class FastApiAnalyser extends HttpApiAnalyser {
         )
     `);
 
-	constructor(
-		private pythonProfile: PythonProfile,
-		private pythonStructurer: PythonStructurer
-	) {
-		super();
-		this.config = pythonProfile;
-		this.structurer = pythonStructurer;
-	}
-
 	get restTemplateQuery(): MemoizedQuery {
 		return this._restTemplateQuery;
-	}
-
-	async init(langService: ILanguageServiceProvider): Promise<void> {
-		const parser = await langService.getParser(this.langId);
-		const language = await this.config.grammar(langService, this.langId);
-		parser!.setLanguage(language);
-		this.parser = parser;
-		this.language = language;
-		await this.structurer.init(langService);
 	}
 
 	async sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
