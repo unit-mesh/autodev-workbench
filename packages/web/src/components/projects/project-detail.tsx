@@ -18,6 +18,7 @@ import {
 	Github,
 	GitPullRequest,
 	Settings,
+	Search,
 } from "lucide-react"
 import { Project } from "@/types/project.type";
 import { ProjectEditDialog } from "./project-edit-dialog"
@@ -25,6 +26,7 @@ import { CopyCliCommand } from "@/components/CopyCliCommand";
 import { GuidelineCreateModal } from "./guideline-create-modal";
 import { CodeAnalysisList } from "@/components/code-analysis/code-analysis-list";
 import Image from "next/image";
+import { Input } from "@/components/ui/input"
 
 export function ProjectDetail({ id }: { id: string }) {
 	const [project, setProject] = useState<Project | null>(null)
@@ -33,6 +35,43 @@ export function ProjectDetail({ id }: { id: string }) {
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 	const [isGuidelineModalOpen, setIsGuidelineModalOpen] = useState(false)
 	const router = useRouter()
+
+	// Add states for symbol analysis
+	const [symbols, setSymbols] = useState<any[]>([]);
+	const [symbolSearch, setSymbolSearch] = useState("");
+	const [symbolLoading, setSymbolLoading] = useState(false);
+
+	// Function to fetch symbols
+	const fetchSymbols = async (query = "") => {
+		setSymbolLoading(true);
+		try {
+			const params = new URLSearchParams();
+			if (query) params.append("query", query);
+			params.append("projectId", id);
+
+			const response = await fetch(`/api/context/symbol?${params.toString()}`);
+			if (response.ok) {
+				const data = await response.json();
+				setSymbols(data);
+			}
+		} catch (error) {
+			console.error("Error fetching symbols:", error);
+		} finally {
+			setSymbolLoading(false);
+		}
+	};
+
+	// Search handler for symbols
+	const handleSymbolSearch = () => {
+		fetchSymbols(symbolSearch);
+	};
+
+	// Fetch symbols when tab changes to symbols
+	const handleTabChange = (value: string) => {
+		if (value === "symbols" && symbols.length === 0) {
+			fetchSymbols();
+		}
+	};
 
 	useEffect(() => {
 		async function fetchProject() {
@@ -160,8 +199,8 @@ export function ProjectDetail({ id }: { id: string }) {
 								<div className="flex items-center">
 									<div className="h-5 w-5 rounded-full bg-gray-200 mr-2 overflow-hidden">
 										{project.user.image ? (
-											<Image 
-												src={project.user.image} 
+											<Image
+												src={project.user.image}
 												alt={project.user.name || "用户"}
 												width={20}
 												height={20}
@@ -274,11 +313,12 @@ export function ProjectDetail({ id }: { id: string }) {
 						<CardDescription>浏览项目的所有资源</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Tabs defaultValue="guidelines">
-							<TabsList className="grid w-full grid-cols-3">
+						<Tabs defaultValue="guidelines" onValueChange={handleTabChange}>
+							<TabsList className="grid w-full grid-cols-4">
 								<TabsTrigger value="guidelines">规范文档</TabsTrigger>
 								<TabsTrigger value="code">代码分析</TabsTrigger>
 								<TabsTrigger value="dictionary">概念词典</TabsTrigger>
+								<TabsTrigger value="symbols">符号分析</TabsTrigger>
 							</TabsList>
 
 							<TabsContent value="guidelines" className="mt-4">
@@ -415,6 +455,80 @@ export function ProjectDetail({ id }: { id: string }) {
 										<p className="text-center text-gray-500">暂无概念词典</p>
 									</div>
 								)}
+							</TabsContent>
+
+							<TabsContent value="symbols" className="mt-4">
+								<div className="space-y-4">
+									<div className="flex items-center space-x-2">
+										<Input
+											placeholder="搜索函数或类的摘要..."
+											value={symbolSearch}
+											onChange={(e) => setSymbolSearch(e.target.value)}
+											className="max-w-sm"
+										/>
+										<Button size="sm" variant="outline" onClick={handleSymbolSearch} disabled={symbolLoading}>
+											<Search className="h-4 w-4 mr-2" />
+											搜索
+										</Button>
+									</div>
+
+									{symbolLoading ? (
+										<div className="space-y-2">
+											<Skeleton className="h-24 w-full" />
+											<Skeleton className="h-24 w-full" />
+											<Skeleton className="h-24 w-full" />
+										</div>
+									) : symbols.length > 0 ? (
+										<div className="space-y-4">
+											{symbols.map((symbol) => (
+												<Card key={symbol.id} className="overflow-hidden">
+													<CardHeader className="p-4 pb-2">
+														<div className="flex justify-between items-start">
+															<div>
+																<CardTitle className="text-base">
+																	{symbol.name}
+																</CardTitle>
+																<CardDescription className="text-xs font-mono mt-1">
+																	{symbol.path}
+																</CardDescription>
+															</div>
+															<Badge variant="outline">
+																{symbol.kind === 0 ? "文件" : symbol.kind === 1 ? "类" : symbol.kind === 2 ? "函数" : "其他"}
+															</Badge>
+														</div>
+													</CardHeader>
+													<CardContent className="p-4 pt-2">
+														{symbol.detail && (
+															<div className="space-y-2 mt-2">
+																{symbol.detail.classSummary && (
+																	<div>
+																		<h4 className="text-sm font-medium">类摘要</h4>
+																		<p className="text-sm text-gray-600">{symbol.detail.classSummary}</p>
+																	</div>
+																)}
+																{symbol.detail.functionSummary && (
+																	<div>
+																		<h4 className="text-sm font-medium">函数摘要</h4>
+																		<p className="text-sm text-gray-600">{symbol.detail.functionSummary}</p>
+																	</div>
+																)}
+															</div>
+														)}
+														<div className="text-xs text-gray-400 mt-2">
+															更新于: {new Date(symbol.updatedAt).toLocaleString()}
+														</div>
+													</CardContent>
+												</Card>
+											))}
+										</div>
+									) : (
+										<div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
+											<Code className="h-12 w-12 text-gray-300" />
+											<p className="text-center text-gray-500">暂无符号分析数据</p>
+											<CopyCliCommand projectId={project.id} />
+										</div>
+									)}
+								</div>
 							</TabsContent>
 						</Tabs>
 					</CardContent>

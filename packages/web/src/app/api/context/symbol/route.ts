@@ -32,7 +32,6 @@ export async function GET(request: Request) {
         LIMIT ${limit}
       `;
     } else {
-      // Original query if no search term is provided
       query = sql`
         SELECT 
           id,
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
           "createdAt",
           "updatedAt"
         FROM "SymbolAnalysis"
-        ${projectId ? sql`WHERE "projectId" = ${projectId}` : sql``}
+        WHERE "projectId" = ${projectId}
         ORDER BY "createdAt" DESC
         LIMIT ${limit}
       `;
