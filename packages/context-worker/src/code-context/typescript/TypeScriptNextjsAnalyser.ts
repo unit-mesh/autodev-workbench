@@ -11,21 +11,30 @@ import { ApiResource } from "@autodev/worker-core";
 import { TypeScriptProfile } from './TypeScriptProfile';
 import path from "path";
 import { TypeScriptStructurer } from './TypeScriptStructurer';
+import fs from "fs";
 
 @injectable()
 export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
-  isApplicable(lang: LanguageIdentifier): boolean {
-      return lang === this.langId;
-  }
-  analysis(codeFile: CodeFile): Promise<ApiResource[]> {
-    return Promise.resolve([]);
-  }
-
   protected parser: Parser | undefined;
   protected language: Parser.Language | undefined;
   protected config: LanguageProfile;
   protected structurer: StructurerProvider = new TypeScriptStructurer();
   readonly langId: LanguageIdentifier = 'typescript';
+
+  isApplicable(lang: LanguageIdentifier): boolean {
+    return lang === this.langId;
+  }
+
+  fileFilter: (codeFile: CodeFile) => boolean = (codeFile: CodeFile): boolean => {
+    let filePath = codeFile.path;
+    let isInLocation = filePath.includes('/pages/api/') || filePath.includes('/app/api/');
+
+    if (!filePath.endsWith('route.ts') && !filePath.endsWith('route.js')) {
+      return isInLocation
+    }
+
+    return isInLocation
+  }
 
   // 旧版 Next.js pages API 的查询 - 检测条件语句中的 req.method 判断
   protected httpMethodQuery = new MemoizedQuery(`
@@ -85,36 +94,17 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     await this.structurer.init(langService);
   }
 
-  async sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
-    if (!this.language || !this.parser) {
-      console.warn(`${this.constructor.name} not initialized for ${this.langId}`);
-      return [];
-    }
+  sourceCodeAnalysis(sourceCode: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
+    return Promise.resolve([]);
+  }
 
-    if (!sourceCode) {
-      console.warn('No source code available for analysis');
-      return [];
-    }
-
-    const isApiRoute = this.isNextApiRoute(filePath);
-    if (!isApiRoute) {
-      return [];
-    }
-
-    const codeFile = await this.structurer.parseFile(sourceCode, filePath);
-    if (!codeFile) {
-      console.warn('No code structures found in the source code');
-      return [];
-    }
-
-    if (!filePath.endsWith('route.ts') && !filePath.endsWith('route.js')) {
-      return [];
-    }
+  async analysis(codeFile: CodeFile): Promise<ApiResource[]> {
+    const filePath = codeFile.path;
+    const sourceCode = await fs.promises.readFile(filePath, 'utf-8');
 
     const tree = this.parser.parse(sourceCode);
     const apiUrl = this.extractApiUrlFromFilePath(filePath);
 
-    // 分析文件中的 API 处理函数
     const isAppRouter = filePath.includes('/app/api/');
     if (isAppRouter) {
       return this.analyseNextAppRouterApi(codeFile, tree.rootNode, apiUrl, filePath);
@@ -123,29 +113,19 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     }
   }
 
-  protected isNextApiRoute(filePath: string): boolean {
-    // 检查文件是否在 pages/api 或 app/api 目录下
-    return filePath.includes('/pages/api/') || filePath.includes('/app/api/');
-  }
-
   protected extractApiUrlFromFilePath(filePath: string): string {
-    // 从文件路径中提取 API URL
-    // 例如: /pages/api/users/[id].ts -> /api/users/[id]
     const apiDirIndex = filePath.indexOf('/api/');
     if (apiDirIndex === -1) return '';
 
     let apiPath = filePath.substring(apiDirIndex);
 
-    // 移除文件扩展名
     const extName = path.extname(apiPath);
     apiPath = apiPath.substring(0, apiPath.length - extName.length);
 
-    // 处理索引路由
     if (apiPath.endsWith('/index')) {
       apiPath = apiPath.substring(0, apiPath.length - 6);
     }
 
-    // 处理 App Router 中的路由文件
     if (apiPath.endsWith('/route')) {
       apiPath = apiPath.substring(0, apiPath.length - 6);
     }
@@ -159,7 +139,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     const httpMethods = this.extractAppRouterHttpMethods(rootNode);
     for (const method of httpMethods) {
       if (method !== 'GET' && method !== 'POST' && method !== 'PUT' && method !== 'DELETE' && method !== 'PATCH') {
-        continue; // 只处理 GET、POST、PUT、DELETE 和 PATCH 方法
+        continue;
       }
 
       this.resources.push({
@@ -296,8 +276,8 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
 
           // 如果我们有API客户端调用的所有部分
           if (currentInvocation.clientName &&
-              currentInvocation.methodName &&
-              currentInvocation.urlArg) {
+            currentInvocation.methodName &&
+            currentInvocation.urlArg) {
 
             // 确定 HTTP 方法
             let httpMethod = '';
