@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { GolangProfile } from "../../code-context/go/GolangProfile";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { GolangProfile } from "../../../code-context/go/GolangProfile";
 
 const Parser = require('web-tree-sitter');
 

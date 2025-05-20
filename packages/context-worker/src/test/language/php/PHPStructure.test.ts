@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { PHPStructurer } from "../../code-context/php/PHPStructurer";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { PHPStructurer } from "../../../code-context/php/PHPStructurer";
 
 const Parser = require('web-tree-sitter');
 

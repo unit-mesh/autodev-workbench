@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { CSharpProfile } from "../../code-context/csharp/CSharpProfile";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { CSharpProfile } from "../../../code-context/csharp/CSharpProfile";
 
 const Parser = require('web-tree-sitter');
 
@@ -104,15 +104,15 @@ namespace Demo.Example
     await Parser.init();
     const parser = new Parser();
     const languageService = new TestLanguageServiceProvider(parser);
-    
+
     const csharpProfile = new CSharpProfile();
     const csharpLanguage = await languageService.getLanguage('csharp');
     parser.setLanguage(csharpLanguage);
-    
+
     const tree = parser.parse(csharpCode);
     const symbolExtractorQuery = csharpProfile.symbolExtractor.query(csharpLanguage);
     const captures = symbolExtractorQuery.captures(tree.rootNode);
-    
+
     // 按类型分组捕获的符号
     const classes = captures.filter(c => c.name === 'definition.class');
     const methods = captures.filter(c => c.name === 'definition.method');
@@ -123,7 +123,7 @@ namespace Demo.Example
     const enumVariants = captures.filter(c => c.name === 'definition.enum_variant');
     const structs = captures.filter(c => c.name === 'definition.struct');
     const namespaces = captures.filter(c => c.name === 'definition.namespace');
-    
+
     // 验证各种符号类型是否被正确捕获
     expect(classes.length).toBe(1);
     expect(methods.length).toBeGreaterThanOrEqual(2); // 至少2个方法: DoSomething在类和接口中，Reset在结构体中
@@ -134,18 +134,18 @@ namespace Demo.Example
     expect(enumVariants.length).toBe(2); // First和Second枚举值
     expect(structs.length).toBe(1);
     expect(namespaces.length).toBe(1);
-    
+
     // 验证符号名称是否正确
     const classNames = classes.map(c => {
-      const nameCapture = captures.find(cap => 
-        cap.name === 'name' && 
+      const nameCapture = captures.find(cap =>
+        cap.name === 'name' &&
         cap.node.type === 'identifier' &&
         Math.abs(cap.node.startPosition.row - c.node.startPosition.row) < 5
       );
       return nameCapture?.node.text;
     });
     expect(classNames).toContain('DemoClass');
-    
+
     // 验证是否获取到了注释
     const comments = captures.filter(c => c.name === 'comment');
     expect(comments.length).toBeGreaterThan(0);

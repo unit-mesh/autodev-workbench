@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { KotlinStructurerProvider } from "../../code-context/kotlin/KotlinStructurerProvider";
-import { CodeFile } from "../../codemodel/CodeElement";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { KotlinStructurerProvider } from "../../../code-context/kotlin/KotlinStructurerProvider";
+import { CodeFile } from "../../../codemodel/CodeElement";
 
 const Parser = require('web-tree-sitter');
 

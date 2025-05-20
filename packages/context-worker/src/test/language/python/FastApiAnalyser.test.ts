@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { FastApiAnalyser } from "../../code-context/python/FastApiAnalyser";
-import { PythonProfile } from '../../code-context/python/PythonProfile';
-import { PythonStructurer } from '../../code-context/python/PythonStructurer';
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { FastApiAnalyser } from "../../../code-context/python/FastApiAnalyser";
+import { PythonProfile } from '../../../code-context/python/PythonProfile';
+import { PythonStructurer } from '../../../code-context/python/PythonStructurer';
 
 const Parser = require('web-tree-sitter');
 

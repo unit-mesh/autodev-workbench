@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { CProfile } from "../../code-context/c/CProfile";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { CProfile } from "../../../code-context/c/CProfile";
 
 const Parser = require('web-tree-sitter');
 

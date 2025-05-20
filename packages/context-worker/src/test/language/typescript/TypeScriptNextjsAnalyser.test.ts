@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
 import * as path from 'path';
 
-import { TestLanguageServiceProvider } from "../TestLanguageService";
-import { TypeScriptNextjsAnalyser } from "../../code-context/typescript/TypeScriptNextjsAnalyser";
+import { TestLanguageServiceProvider } from "../../TestLanguageService";
+import { TypeScriptNextjsAnalyser } from "../../../code-context/typescript/TypeScriptNextjsAnalyser";
 
 const Parser = require('web-tree-sitter');
 
