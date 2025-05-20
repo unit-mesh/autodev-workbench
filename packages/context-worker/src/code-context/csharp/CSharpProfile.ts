@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import csharpscm from '../../code-search/schemas/indexes/c_sharp.scm';
 import { LanguageProfile, MemoizedQuery } from "../base/LanguageProfile";
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 
@@ -10,7 +9,6 @@ export class CSharpProfile implements LanguageProfile {
 	fileExtensions = ['csharp'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('csharp');
 	isTestFile = (filePath: string) => filePath.endsWith('Test.cs') && filePath.includes('src/test');
-	scopeQuery = new MemoizedQuery(csharpscm);
 	hoverableQuery = new MemoizedQuery(`
       [(identifier)
        (type_identifier)] @hoverable

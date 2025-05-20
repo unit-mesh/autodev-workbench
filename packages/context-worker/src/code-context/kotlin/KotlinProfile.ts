@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import kotlinscm from '../../code-search/schemas/indexes/kotlin.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 
@@ -10,7 +9,6 @@ export class KotlinProfile implements LanguageProfile {
 	fileExtensions = ['kt'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('kotlin');
 	isTestFile = (filePath: string) => filePath.endsWith('Test.kt') && filePath.includes('src/test');
-	scopeQuery = new MemoizedQuery(kotlinscm);
 	hoverableQuery = new MemoizedQuery(`
       [(simple_identifier)
        (user_type (type_identifier))] @hoverable

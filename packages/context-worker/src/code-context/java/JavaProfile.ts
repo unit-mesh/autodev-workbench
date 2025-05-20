@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import javascm from '../../code-search/schemas/indexes/java.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 
@@ -10,7 +9,6 @@ export class JavaProfile implements LanguageProfile {
 	fileExtensions = ['java'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('java');
 	isTestFile = (filePath: string) => filePath.endsWith('Test.java') && filePath.includes('src/test');
-	scopeQuery = new MemoizedQuery(javascm);
 	hoverableQuery = new MemoizedQuery(`
       [(identifier)
        (type_identifier)] @hoverable

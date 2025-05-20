@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import tsscm from '../../code-search/schemas/indexes/typescript.scm';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -17,7 +16,6 @@ export class TypeScriptProfile implements LanguageProfile {
 		return langService.getLanguage('typescript');
 	};
 	isTestFile = (filePath: string) => filePath.endsWith('.test.ts') || filePath.endsWith('.spec.ts');
-	scopeQuery = new MemoizedQuery(tsscm);
 	hoverableQuery = new MemoizedQuery(`
       [(identifier)
         (property_identifier)

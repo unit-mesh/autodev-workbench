@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import goscm from '../../code-search/schemas/indexes/go.scm';
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 import { LanguageProfile, MemoizedQuery } from "../base/LanguageProfile";
 
@@ -10,7 +9,6 @@ export class GolangProfile implements LanguageProfile {
 	fileExtensions = ['go'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('go');
 	isTestFile = (filePath: string) => filePath.endsWith('_test.go');
-	scopeQuery = new MemoizedQuery(goscm);
 	hoverableQuery = new MemoizedQuery(`
      [(identifier)
        (type_identifier)

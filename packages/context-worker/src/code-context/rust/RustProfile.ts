@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import rust from '../../code-search/schemas/indexes/rust.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 
@@ -10,7 +9,6 @@ export class RustProfile implements LanguageProfile {
 	fileExtensions = ['rs'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('rust');
 	isTestFile = (filePath: string) => filePath.endsWith('test.rs');
-	scopeQuery = new MemoizedQuery(rust);
 	hoverableQuery = new MemoizedQuery(`
      [(identifier)
          (shorthand_field_identifier)

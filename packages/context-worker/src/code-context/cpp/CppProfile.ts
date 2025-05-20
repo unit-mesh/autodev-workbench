@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import cppscm from '../../code-search/schemas/indexes/cpp.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -13,8 +12,6 @@ export class CppProfile implements LanguageProfile {
     return langService.getLanguage('cpp');
   };
   isTestFile = (filePath: string) => filePath.endsWith('_test.cpp') || filePath.endsWith('_spec.cpp') || filePath.includes('/test/');
-  scopeQuery = new MemoizedQuery(cppscm);
-
   hoverableQuery = new MemoizedQuery(`
     [(identifier) 
      (type_identifier)] @hoverable

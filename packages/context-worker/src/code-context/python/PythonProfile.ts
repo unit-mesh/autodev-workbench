@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import python from '../../code-search/schemas/indexes/python.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 
@@ -10,7 +9,6 @@ export class PythonProfile implements LanguageProfile {
 	fileExtensions = ['py'];
 	grammar = (langService: ILanguageServiceProvider) => langService.getLanguage('python');
 	isTestFile = (filePath: string) => filePath.endsWith('_test.py');
-	scopeQuery = new MemoizedQuery(python);
 	hoverableQuery = new MemoizedQuery(`
      (identifier) @hoverable
   `);

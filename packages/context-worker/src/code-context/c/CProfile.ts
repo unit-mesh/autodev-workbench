@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 
-import cscm from '../../code-search/schemas/indexes/c.scm';
 import { ILanguageServiceProvider } from '../../base/common/languages/languageService';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -13,7 +12,6 @@ export class CProfile implements LanguageProfile {
     return langService.getLanguage('c');
   };
   isTestFile = (filePath: string) => filePath.endsWith('_test.c') || filePath.endsWith('_spec.c') || filePath.includes('/test/');
-  scopeQuery = new MemoizedQuery(cscm);
   hoverableQuery = new MemoizedQuery(`
     [(identifier)
      (field_identifier)

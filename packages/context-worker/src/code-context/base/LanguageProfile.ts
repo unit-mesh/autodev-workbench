@@ -19,9 +19,6 @@ export interface LanguageProfile {
 	// tree-sitter grammar for this language
 	grammar: (langService: ILanguageServiceProvider, langId?: LanguageIdentifier) => Promise<Language | undefined>;
 
-	// Compiled tree-sitter node query for this language.
-	scopeQuery: MemoizedQuery;
-
 	// Compiled tree-sitter hoverables query
 	hoverableQuery: MemoizedQuery;
 
