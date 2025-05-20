@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { sql } from '@/app/api/_utils/db';
+import { createClient } from "@vercel/postgres";
+import { generateId } from "@/app/api/_utils/db";
 
 export type ApiResource = {
 	id?: string;
@@ -14,65 +15,93 @@ export type ApiResource = {
 
 export async function GET() {
 	try {
-		const rows = await sql`
-			SELECT 
-				a.*,
-				p.name as "projectName"
-			FROM 
-				"ApiResource" a
-			LEFT JOIN 
-				"Project" p ON a."projectId" = p.id
-			ORDER BY 
-				a.id DESC
+		const client = createClient();
+		await client.connect();
+
+		const { rows } = await client.sql`
+        SELECT id,
+               "sourceUrl",
+               "sourceHttpMethod",
+               "packageName",
+               "className",
+               "methodName"
+        FROM "ApiResource"
+        ORDER BY "id";
 		`;
 
-		return NextResponse.json(rows);
+		await client.end();
+
+		if (rows.length === 0) {
+			return NextResponse.json([], {
+				status: 200,
+				headers: {
+					'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59'
+				}
+			});
+		}
+
+		return NextResponse.json(rows, {
+			status: 200,
+			headers: {
+				'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59'
+			}
+		});
 	} catch (error) {
-		console.error('获取API资源列表失败:', error);
+		console.error("Error fetching API resources:", error);
 		return NextResponse.json(
-			{ error: '获取API资源列表失败' },
+			{ error: "Error fetching API resources", details: error },
 			{ status: 500 }
 		);
 	}
 }
 
 export async function POST(request: Request) {
-	try {
-		const body = await request.json();
+	const client = createClient();
+	await client.connect();
 
-		// 验证必要字段
-		if (!body.name || !body.swaggerJson) {
+	try {
+		const { data, projectId } = await request.json();
+
+		if (!data || !Array.isArray(data)) {
 			return NextResponse.json(
-				{ error: 'API名称和Swagger JSON是必填项' },
+				{ error: "Invalid data format. Expected an array of analysis results" },
 				{ status: 400 }
 			);
 		}
 
-		// 插入新API资源，移除createdAt和updatedAt字段
-		const result = await sql`
-			INSERT INTO "ApiResource" (
-				"name",
-				"description",
-				"swaggerJson",
-				"version",
-				"baseUrl",
-				"projectId"
-			) VALUES (
-				${body.name},
-				${body.description || ''},
-				${body.swaggerJson},
-				${body.version || '1.0.0'},
-				${body.baseUrl || ''},
-				${body.projectId}
-			) RETURNING *
-		`;
+		for (const item of data) {
+			const id = generateId()
+			await client.sql`
+				INSERT INTO "ApiResource" (
+					"id", 
+					"sourceUrl", 
+					"sourceHttpMethod", 
+					"packageName", 
+					"className", 
+					"methodName",
+					"projectId"
+				)
+				VALUES (
+					${id}, 
+					${item.sourceUrl}, 
+					${item.sourceHttpMethod}, 
+					${item.packageName}, 
+					${item.className}, 
+					${item.methodName},
+					${projectId}
+				)
+				RETURNING id;
+			`;
+		}
 
-		return NextResponse.json(result[0]);
+		return NextResponse.json({ success: true }, { status: 200 });
 	} catch (error) {
-		console.error('创建API资源失败:', error);
+		console.error("Error inserting API resources:", error);
 		return NextResponse.json(
-			{ error: '创建API资源失败' },
+			{ error: "Error inserting API resources", details: error },
 			{ status: 500 }
 		);
+	} finally {
+		await client.end();
 	}
 }
