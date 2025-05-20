@@ -1,5 +1,4 @@
 import path from "path";
-import fs from "fs";
 
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 import { inferLanguage } from "../../base/common/languages/languages";
@@ -247,8 +246,8 @@ export class CodeAnalyzer {
 	/**
 	 * 分析API
 	 */
-	analyzeApi(files: CodeFile[]): Promise<ApiResource[]> {
-		return this.httpApiAnalyser.analyze(files);
+	analyzeApi(): Promise<ApiResource[]> {
+		return this.httpApiAnalyser.analyze(this.codeCollector);
 	}
 }
 

@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import Parser, { SyntaxNode } from 'web-tree-sitter';
 
-import { RestApiAnalyser } from '../base/RestApiAnalyser';
+import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile, CodeFunction } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -13,7 +13,7 @@ import path from "path";
 import { TypeScriptStructurer } from './TypeScriptStructurer';
 
 @injectable()
-export class TypeScriptNextjsAnalyser extends RestApiAnalyser {
+export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
   isApplicable(lang: LanguageIdentifier): boolean {
       return lang === this.langId;
   }

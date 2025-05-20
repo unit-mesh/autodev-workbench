@@ -1,5 +1,5 @@
 import { providerContainer } from "../base/common/instantiation/instantiationService";
-import { RestApiAnalyser } from "./base/RestApiAnalyser";
+import { HttpApiAnalyser } from "./base/HttpApiAnalyser";
 import { IRestApiAnalyser } from "../ProviderTypes";
 
 export class HttpApiAnalyserManager {
@@ -14,7 +14,7 @@ export class HttpApiAnalyserManager {
 		return HttpApiAnalyserManager.instance;
 	}
 
-	getAnalyser(): RestApiAnalyser[] {
+	getAnalyser(): HttpApiAnalyser[] {
 		return providerContainer.getAll(IRestApiAnalyser);
 	}
 }

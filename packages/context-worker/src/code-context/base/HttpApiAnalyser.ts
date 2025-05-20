@@ -11,7 +11,7 @@ export interface ApiDemand {
 }
 
 @injectable()
-export abstract class RestApiAnalyser {
+export abstract class HttpApiAnalyser {
   abstract readonly langId: LanguageIdentifier;
   resources: ApiResource[] = [];
   demands: ApiDemand[] = [];

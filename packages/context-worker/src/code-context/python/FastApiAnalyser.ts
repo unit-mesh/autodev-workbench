@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import Parser, { SyntaxNode } from 'web-tree-sitter';
 
-import { RestApiAnalyser } from '../base/RestApiAnalyser';
+import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -12,7 +12,7 @@ import { PythonProfile } from "./PythonProfile";
 import { PythonStructurer } from "./PythonStructurer";
 
 @injectable()
-export class FastApiAnalyser extends RestApiAnalyser {
+export class FastApiAnalyser extends HttpApiAnalyser {
 	isApplicable(lang: LanguageIdentifier): boolean {
 		return lang === "python";
 	}

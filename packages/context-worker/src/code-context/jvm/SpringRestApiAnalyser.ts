@@ -2,7 +2,7 @@
 import { injectable } from "inversify";
 import Parser, { SyntaxNode } from 'web-tree-sitter';
 
-import { RestApiAnalyser } from '../base/RestApiAnalyser';
+import { HttpApiAnalyser } from '../base/HttpApiAnalyser';
 import { LanguageProfile, MemoizedQuery } from '../base/LanguageProfile';
 import { CodeFile, CodeFunction, CodeStructure } from '../../codemodel/CodeElement';
 import { LanguageIdentifier } from '../../base/common/languages/languages';
@@ -16,7 +16,7 @@ export interface Annotation {
 }
 
 @injectable()
-export abstract class SpringRestApiAnalyser extends RestApiAnalyser {
+export abstract class SpringRestApiAnalyser extends HttpApiAnalyser {
 	protected parser: Parser | undefined;
 	protected language: Parser.Language | undefined;
 	protected abstract config: LanguageProfile;

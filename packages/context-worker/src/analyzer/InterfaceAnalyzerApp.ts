@@ -141,15 +141,9 @@ export class InterfaceAnalyzerApp {
 
 	async handleApiContext() {
 		const config = this.config;
-		const controllerFilter = (fileName: string) => {
-			const baseName = path.basename(fileName);
-			return baseName.includes('controller') || baseName.includes('Controller');
-		};
 
-		let codeFiles = await this.codeAnalyzer.initializeFiles(controllerFilter);
 		let apiResources = await this.analysisProtobuf(config);
-
-		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi(codeFiles);
+		let normalApis: ApiResource[] = await this.codeAnalyzer.analyzeApi();
 		apiResources = apiResources.concat(normalApis);
 
 		if (apiResources.length === 0) {
@@ -179,8 +173,7 @@ export class InterfaceAnalyzerApp {
 		const outputFilePath = path.join(process.cwd(), 'protobuf_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(results, null, 2));
 
-		const resourceAnalyser = new ProtoApiResourceGenerator();
-		const apiResources = resourceAnalyser.generateApiResources(results.flatMap(result => result.dataStructures));
-		return apiResources
+		const generator = new ProtoApiResourceGenerator();
+		return generator.generateApiResources(results.flatMap(result => result.dataStructures))
 	}
 }
