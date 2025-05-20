@@ -2,6 +2,18 @@
 
 Model Context Protocol implementation for AutoDev.
 
+## Using in cursor
+```json
+{
+  "mcpServers": {
+    "autodev-context-mcp": {
+      "command": "npx",
+      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp"]
+    }
+  }
+}
+```
+
 ## Installation
 
 ```bash
