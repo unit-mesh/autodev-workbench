@@ -118,9 +118,6 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 	}
 
 	private convertToSymbolInfo(symbol: CodeSymbol, filePath: string): SymbolInfo {
-		const { startLine: startRow, startColumn } = this.getLineAndColumn(symbol.extentRange.start);
-		const { startLine: endRow, startColumn: endColumn } = this.getLineAndColumn(symbol.extentRange.end);
-
 		return {
 			name: symbol.name,
 			qualifiedName: symbol.qualifiedName,
@@ -128,16 +125,9 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 			filePath: filePath,
 			comment: symbol.comment,
 			position: {
-				start: { row: startRow, column: startColumn },
-				end: { row: endRow, column: endColumn }
+				start: { row: symbol.nameRange.start, column: 0 },
+				end: { row: symbol.nameRange.end, column: 0 }
 			}
-		};
-	}
-
-	private getLineAndColumn(offset: number): { startLine: number, startColumn: number } {
-		return {
-			startLine: 0,
-			startColumn: offset
 		};
 	}
 }

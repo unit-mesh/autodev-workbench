@@ -163,8 +163,16 @@ export class InterfaceAnalyzerApp {
 		filePath: string;
 		symbols: SymbolInfo[];
 		summary: {
-			class: string;
-			function: string;
+			class: Array<{
+				name: string;
+				comment: string;
+				line: number;
+			}>;
+			function: Array<{
+				name: string;
+				comment: string;
+				line: number;
+			}>;
 		};
 	}> {
 		const { fileSymbols } = result;
@@ -172,27 +180,43 @@ export class InterfaceAnalyzerApp {
 			filePath: string;
 			symbols: SymbolInfo[];
 			summary: {
-				class: string;
-				function: string;
+				class: Array<{
+					name: string;
+					comment: string;
+					line: number;
+				}>;
+				function: Array<{
+					name: string;
+					comment: string;
+					line: number;
+				}>;
 			};
 		}> = [];
 
 		for (const [filePath, fileSymbol] of Object.entries(fileSymbols)) {
-			const classNames = fileSymbol.symbols
+			const classSymbols = fileSymbol.symbols
 				.filter(s => s.kind === SymbolKind.Class || s.kind === SymbolKind.Interface
 					|| s.kind === SymbolKind.Struct || SymbolKind.Trait || SymbolKind.Type)
-				.map(s => s.name);
+				.map(s => ({
+					name: s.name,
+					comment: s.comment || '',
+					line: s.position?.start.row || 0
+				}));
 
-			const functionNames = fileSymbol.symbols
-				.filter(s => s.kind === SymbolKind.Method || s.kind === SymbolKind.Interface) // Method, Function
-				.map(s => s.qualifiedName || s.name);
+			const functionSymbols = fileSymbol.symbols
+				.filter(s => s.kind === SymbolKind.Method || s.kind === SymbolKind.Interface)
+				.map(s => ({
+					name: s.qualifiedName || s.name,
+					comment: s.comment || '',
+					line: s.position?.start.row || 0
+				}));
 
 			simplifiedResult.push({
 				filePath,
 				symbols: fileSymbol.symbols,
 				summary: {
-					class: classNames.join(', '),
-					function: functionNames.join(', ')
+					class: classSymbols,
+					function: functionSymbols
 				}
 			});
 		}
