@@ -1,7 +1,8 @@
-import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
-import { SymbolAnalysisResult, SymbolInfo } from "../CodeAnalysisResult";
-import { CodeSymbol, SymbolExtractor, SymbolKind } from "../../code-context/base/SymbolExtractor";
 import fs from "fs";
+
+import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
+import { FileSymbols, SymbolAnalysisResult, SymbolInfo } from "../CodeAnalysisResult";
+import { CodeSymbol, SymbolExtractor, SymbolKind } from "../../code-context/base/SymbolExtractor";
 import { inferLanguage } from "../../base/common/languages/languages";
 import { CodeCollector } from "../CodeCollector";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
@@ -14,60 +15,108 @@ export class SymbolAnalyser implements ICodeAnalyzer {
 	}
 
 	public async analyze(codeCollector: CodeCollector): Promise<SymbolAnalysisResult> {
-		const symbolInfoArray: SymbolInfo[] = [];
+		const allSymbols: SymbolInfo[] = [];
+		const fileSymbolsArray: FileSymbols[] = [];
+		const classesByFileMap = new Map<string, number>();
+		const methodsByFileMap = new Map<string, number>();
+		const symbolsByKindMap = new Map<number, number>();
+
 		for (let path of codeCollector.getAllFiles()) {
-			const content = fs.readFileSync(path, { encoding: 'utf-8' });
-			const language = inferLanguage(path);
+			const fileSymbols = await this.analyzeFile(path);
+			if (fileSymbols) {
+				fileSymbolsArray.push(fileSymbols);
+				allSymbols.push(...fileSymbols.symbols);
 
-			if (!language) {
-				continue;
-			}
+				// 更新全局统计信息
+				classesByFileMap.set(path, fileSymbols.stats.classCount);
+				methodsByFileMap.set(path, fileSymbols.stats.methodCount);
 
-			try {
-				const symbolExtractor = new SymbolExtractor(language, this.languageService);
-				const symbols = await symbolExtractor.executeQuery(path, content);
-
-				for (const symbol of symbols) {
-					symbolInfoArray.push(this.convertToSymbolInfo(symbol, path));
-				}
-			} catch (error) {
-				console.error(`分析文件 ${path} 的符号时出错:`, error);
+				// 更新符号类型统计
+				this.updateSymbolsByKind(fileSymbols.symbols, symbolsByKindMap);
 			}
 		}
 
+		// 将Map转换为数组形式
+		const classesByFile = Array.from(classesByFileMap.entries())
+			.filter(([_, count]) => count > 0)
+			.map(([filePath, count]) => ({
+				filePath,
+				count
+			}));
+
+		const methodsByFile = Array.from(methodsByFileMap.entries())
+			.filter(([_, count]) => count > 0)
+			.map(([filePath, count]) => ({
+				filePath,
+				count
+			}));
+
+		const symbolsByKind = Array.from(symbolsByKindMap.entries())
+			.map(([kind, count]) => ({
+				kind,
+				count
+			}));
+
 		return {
-			symbols: symbolInfoArray,
+			symbols: allSymbols,
+			fileSymbols: fileSymbolsArray,
 			stats: {
-				totalSymbols: symbolInfoArray.length,
-				// classesByFile,
-				// methodsByFile,
-				// symbolsByKind
+				totalSymbols: allSymbols.length,
+				classesByFile,
+				methodsByFile,
+				symbolsByKind
 			}
 		};
 	}
 
-
-	private updateStats(
-		symbol: CodeSymbol,
-		filePath: string,
-		classesByFile: Map<string, number>,
-		methodsByFile: Map<string, number>,
-		symbolsByKind: Map<number, number>
-	): void {
-		const kindCount = symbolsByKind.get(symbol.kind) || 0;
-		symbolsByKind.set(symbol.kind, kindCount + 1);
-
-		if (symbol.kind === SymbolKind.Class ||
-			symbol.kind === SymbolKind.Interface ||
-			symbol.kind === SymbolKind.Struct) {
-			const classCount = classesByFile.get(filePath) || 0;
-			classesByFile.set(filePath, classCount + 1);
+	private updateSymbolsByKind(symbols: SymbolInfo[], symbolsByKindMap: Map<number, number>): void {
+		for (const symbol of symbols) {
+			const count = symbolsByKindMap.get(symbol.kind) || 0;
+			symbolsByKindMap.set(symbol.kind, count + 1);
 		}
+	}
 
-		if (symbol.kind === SymbolKind.Method ||
-			symbol.kind === SymbolKind.Function) {
-			const methodCount = methodsByFile.get(filePath) || 0;
-			methodsByFile.set(filePath, methodCount + 1);
+	private async analyzeFile(path: string): Promise<FileSymbols | null> {
+		try {
+			const content = fs.readFileSync(path, { encoding: 'utf-8' });
+			const language = inferLanguage(path);
+
+			if (!language) {
+				return null;
+			}
+
+			const symbolExtractor = new SymbolExtractor(language, this.languageService);
+			const symbols = await symbolExtractor.executeQuery(path, content);
+			const symbolInfos = symbols.map(symbol => this.convertToSymbolInfo(symbol, path));
+
+			if (symbolInfos.length === 0) {
+				return null;
+			}
+
+			// 计算文件中的类和方法数量
+			const classCount = symbolInfos.filter(s =>
+				s.kind === SymbolKind.Class ||
+				s.kind === SymbolKind.Interface ||
+				s.kind === SymbolKind.Struct
+			).length;
+
+			const methodCount = symbolInfos.filter(s =>
+				s.kind === SymbolKind.Method ||
+				s.kind === SymbolKind.Function
+			).length;
+
+			return {
+				filePath: path,
+				symbols: symbolInfos,
+				stats: {
+					classCount,
+					methodCount,
+					totalSymbols: symbolInfos.length
+				}
+			};
+		} catch (error) {
+			console.error(`分析文件 ${path} 的符号时出错:`, error);
+			return null;
 		}
 	}
 

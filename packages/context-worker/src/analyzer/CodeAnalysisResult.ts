@@ -113,13 +113,24 @@ export interface SymbolInfo {
 	};
 }
 
+export interface FileSymbols {
+    filePath: string;
+    symbols: SymbolInfo[];
+    stats: {
+        classCount: number;
+        methodCount: number;
+        totalSymbols: number;
+    };
+}
+
 export interface SymbolAnalysisResult {
 	symbols: SymbolInfo[];
+	fileSymbols: FileSymbols[];
 	stats: {
 		totalSymbols: number;
-		classesByFile?: Map<string, number>;
-		methodsByFile?: Map<string, number>;
-		symbolsByKind?: Map<number, number>;
+		classesByFile: Array<{filePath: string, count: number}>;
+		methodsByFile: Array<{filePath: string, count: number}>;
+		symbolsByKind: Array<{kind: number, count: number}>;
 	};
 }
 
