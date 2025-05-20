@@ -12,3 +12,4 @@ onlyBuiltDependencies:
   - sqlite3
   - vscode-ripgrep
 publishBranch: "main|master|gitbutler/workspace"
+nodeLinker: "hoisted"
