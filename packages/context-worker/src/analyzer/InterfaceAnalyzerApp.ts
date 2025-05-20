@@ -127,7 +127,7 @@ export class InterfaceAnalyzerApp {
 		console.log(`正在扫描目录: ${config.dirPath}`);
 		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
-		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'interface_analysis_result.json');
+		const outputFilePath = path.join(process.cwd(), 'interface_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
 		if (config.upload) {
@@ -156,8 +156,7 @@ export class InterfaceAnalyzerApp {
 			await this.uploadApiCodeResult(apiResources);
 		}
 
-		// write to file
-		const outputFilePath = path.join(process.cwd(), config.outputJsonFile || 'api_analysis_result.json');
+		const outputFilePath = path.join(process.cwd(), 'api_analysis_result.json');
 		fs.writeFileSync(outputFilePath, JSON.stringify(apiResources, null, 2));
 	}
 
