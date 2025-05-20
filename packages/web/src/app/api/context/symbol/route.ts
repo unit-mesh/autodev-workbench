@@ -1,24 +1,56 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/app/api/_utils/db';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // 获取最近的符号分析结果，使用SQL而非Prisma
-    const result = await sql`
-      SELECT 
-        id,
-        name,
-        kind,
-        path,
-        detail,
-        "projectId",
-        "createdAt",
-        "updatedAt"
-      FROM "SymbolAnalysis"
-      ORDER BY "createdAt" DESC
-      LIMIT 50
-    `;
+    const url = new URL(request.url);
+    const searchTerm = url.searchParams.get('query') || '';
+    const projectId = url.searchParams.get('projectId');
+    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
 
+    let query;
+
+    if (searchTerm) {
+      // Search within functionSummary and classSummary in the detail JSON
+      query = sql`
+        SELECT 
+          id,
+          name,
+          kind,
+          path,
+          detail,
+          "projectId",
+          "createdAt",
+          "updatedAt"
+        FROM "SymbolAnalysis"
+        WHERE (
+          detail->>'functionSummary' ILIKE ${'%' + searchTerm + '%'} OR
+          detail->>'classSummary' ILIKE ${'%' + searchTerm + '%'}
+        )
+        ${projectId ? sql`AND "projectId" = ${projectId}` : sql``}
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      // Original query if no search term is provided
+      query = sql`
+        SELECT 
+          id,
+          name,
+          kind,
+          path,
+          detail,
+          "projectId",
+          "createdAt",
+          "updatedAt"
+        FROM "SymbolAnalysis"
+        ${projectId ? sql`WHERE "projectId" = ${projectId}` : sql``}
+        ORDER BY "createdAt" DESC
+        LIMIT ${limit}
+      `;
+    }
+
+    const result = await query;
     return NextResponse.json(result);
   } catch (error) {
     console.error('获取符号分析结果失败:', error);
