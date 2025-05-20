@@ -4,6 +4,8 @@ import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeCollector } from "../CodeCollector";
 import fs from "fs";
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
+import { CodeFile } from "../../codemodel/CodeElement";
+import { inferLanguage } from "../../base/common/languages/languages";
 
 export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 	private readonly languageService: ILanguageServiceProvider;
@@ -19,23 +21,25 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 		const codeFiles: string[] = codeCollector.getAllFiles();
 		let apiResources: ApiResource[] = [];
 
+		let codeStructure = codeCollector.getAllCodeStructure();
+		let pathCodeFileMap: Map<string, CodeFile> = new Map();
+		for (let codeFile of codeStructure) {
+			pathCodeFileMap.set(codeFile.filepath, codeFile);
+		}
+
 		for (let path of codeFiles) {
 			const sourceCode = await fs.promises.readFile(path, 'utf-8');
 			for (let analyser of this.analysers) {
-				await analyser.init(this.languageService);
-
-				let codeStructure = codeCollector.getAllCodeStructure();
-				let filteredFiles = codeStructure.filter((codeFile) => {
-					return analyser.fileFilter(codeFile);
-				});
-
-				if (filteredFiles.length === 0) {
+				if (!analyser.isApplicable(inferLanguage(path))) {
 					continue;
 				}
 
+				await analyser.init(this.languageService);
+
+				let codeFile = pathCodeFileMap.get(path);
 				let result: ApiResource[] = [];
-				for (let filteredFile of filteredFiles) {
-					result = result.concat(await analyser.analysis(filteredFile));
+				if (analyser.fileFilter(codeFile)) {
+					result = result.concat(await analyser.analysis(codeFile));
 				}
 
 				if (result && result.length > 0) {
