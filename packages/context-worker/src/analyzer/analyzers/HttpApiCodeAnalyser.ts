@@ -1,8 +1,9 @@
-import { HttpApiAnalyserManager } from "../../code-context/HttpApiAnalyserManager";
+import fs from "fs";
 import { ApiResource } from "@autodev/worker-core";
+
+import { HttpApiAnalyserManager } from "../../code-context/HttpApiAnalyserManager";
 import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeCollector } from "../CodeCollector";
-import fs from "fs";
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 import { CodeFile } from "../../codemodel/CodeElement";
 import { inferLanguage } from "../../base/common/languages/languages";

@@ -1,4 +1,5 @@
 import path from "path";
+import { ApiResource } from "@autodev/worker-core";
 
 import { ILanguageServiceProvider } from "../../base/common/languages/languageService";
 import { inferLanguage } from "../../base/common/languages/languages";
@@ -14,7 +15,6 @@ import { ICodeAnalyzer } from "./ICodeAnalyzer";
 import { CodeDocument, MarkdownAnalyser } from "../../document/MarkdownAnalyser";
 import { AppConfig } from "../../types/AppConfig";
 import { HttpApiCodeAnalyser } from "./HttpApiCodeAnalyser";
-import { ApiResource } from "@autodev/worker-core";
 import { SymbolAnalyser } from "./SymbolAnalyser";
 import { CodeAnalysisReporter } from "./CodeAnalysisReporter";
 
