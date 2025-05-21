@@ -51,10 +51,10 @@ export abstract class SpringRestApiAnalyser extends HttpApiAnalyser {
 			return;
 		}
 
-		return this.analysis(codeFile);
+		return this.analysis(codeFile, workspacePath);
 	}
 
-	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
+	analysis(codeFile: CodeFile, workspacePath: string): Promise<ApiResource[]> {
 		for (const node of codeFile.classes) {
 			const classAnnotations = node.annotations
 			const isController = this.isSpringController(classAnnotations);

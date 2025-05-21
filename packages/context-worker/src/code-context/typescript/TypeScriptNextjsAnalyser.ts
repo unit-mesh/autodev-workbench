@@ -83,7 +83,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     return Promise.resolve([]);
   }
 
-  async analysis(codeFile: CodeFile): Promise<ApiResource[]> {
+  async analysis(codeFile: CodeFile, workspacePath: string): Promise<ApiResource[]> {
     const filePath = codeFile.filepath;
     const sourceCode = await fs.promises.readFile(filePath, 'utf-8');
 
@@ -92,9 +92,9 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
 
     const isAppRouter = filePath.includes('/app/api/');
     if (isAppRouter) {
-      return this.analyseNextAppRouterApi(codeFile, tree.rootNode, apiUrl, filePath);
+      return this.analyseNextAppRouterApi(codeFile, tree.rootNode, apiUrl, filePath, workspacePath);
     } else {
-      return this.analyseNextApiRoute(codeFile, tree.rootNode, apiUrl, filePath);
+      return this.analyseNextApiRoute(codeFile, tree.rootNode, apiUrl, filePath, workspacePath);
     }
   }
 
@@ -118,7 +118,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     return apiPath;
   }
 
-  protected async analyseNextAppRouterApi(codeFile: CodeFile, rootNode: SyntaxNode, apiUrl: string, filePath: string): Promise<ApiResource[]> {
+  protected async analyseNextAppRouterApi(codeFile: CodeFile, rootNode: SyntaxNode, apiUrl: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
     if (!this.language) return [];
     this.resources = [];
     const httpMethods = this.extractAppRouterHttpMethods(rootNode);
@@ -127,11 +127,12 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
         continue;
       }
 
+      let packageName = path.relative(workspacePath, filePath)
       this.resources.push({
         id: "",
         sourceUrl: apiUrl,
         sourceHttpMethod: method,
-        packageName: path.dirname(filePath),
+        packageName: packageName,
         className: path.basename(filePath),
         methodName: method,
         supplyType: "Nextjs",
@@ -165,7 +166,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     return methods;
   }
 
-  protected async analyseNextApiRoute(codeFile: CodeFile, rootNode: SyntaxNode, apiUrl: string, filePath: string): Promise<ApiResource[]> {
+  protected async analyseNextApiRoute(codeFile: CodeFile, rootNode: SyntaxNode, apiUrl: string, filePath: string, workspacePath: string): Promise<ApiResource[]> {
     if (!this.language) return [];
     this.resources = [];
     const handlerFunction = codeFile.functions.find(f => f.name === 'handler' || f.name === 'GET' || f.name === 'POST' || f.name === 'PUT' || f.name === 'DELETE' || f.name === 'PATCH');
@@ -174,13 +175,14 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
     }
 
     const supportedMethods = this.extractSupportedHttpMethods(rootNode);
+    let packageName = path.relative(workspacePath, filePath)
     if (supportedMethods.length > 0) {
       for (const method of supportedMethods) {
         this.resources.push({
           id: "",
           sourceUrl: apiUrl,
           sourceHttpMethod: method,
-          packageName: path.dirname(filePath),
+          packageName: packageName,
           className: path.basename(filePath),
           methodName: handlerFunction[0] || 'handler',
           supplyType: "Nextjs",
@@ -193,7 +195,7 @@ export class TypeScriptNextjsAnalyser extends HttpApiAnalyser {
           id: "",
           sourceUrl: apiUrl,
           sourceHttpMethod: method,
-          packageName: path.dirname(filePath),
+          packageName: packageName,
           className: path.basename(filePath),
           methodName: handlerFunction.name || 'handler',
           supplyType: "Nextjs",

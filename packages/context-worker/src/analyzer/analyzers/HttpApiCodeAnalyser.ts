@@ -21,6 +21,7 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 	async analyze(codeCollector: CodeCollector): Promise<ApiResource[]> {
 		const codeFiles: string[] = codeCollector.getAllFiles();
 		let apiResources: ApiResource[] = [];
+		const workspacePath = codeCollector.getWorkspacePath();
 
 		let codeStructure = codeCollector.getAllCodeStructure();
 		let pathCodeFileMap: Map<string, CodeFile> = new Map();
@@ -40,7 +41,7 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 				let codeFile = pathCodeFileMap.get(path);
 				let result: ApiResource[] = [];
 				if (analyser.fileFilter(codeFile)) {
-					result = result.concat(await analyser.analysis(codeFile));
+					result = result.concat(await analyser.analysis(codeFile, workspacePath));
 				}
 
 				if (result && result.length > 0) {
@@ -48,7 +49,7 @@ export class HttpApiCodeAnalyser implements ICodeAnalyzer {
 					continue;
 				}
 
-				result = await analyser.sourceCodeAnalysis(sourceCode, path, codeCollector.getWorkspacePath());
+				result = await analyser.sourceCodeAnalysis(sourceCode, path, workspacePath);
 				if (result && result.length > 0) {
 					apiResources = apiResources.concat(result);
 				}

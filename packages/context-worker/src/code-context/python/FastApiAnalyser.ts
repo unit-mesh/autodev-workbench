@@ -24,7 +24,7 @@ export class FastApiAnalyser extends HttpApiAnalyser {
 		return lang === "python";
 	}
 
-	analysis(codeFile: CodeFile): Promise<ApiResource[]> {
+	analysis(codeFile: CodeFile, workspacePath: string): Promise<ApiResource[]> {
 		return Promise.resolve([]);
 	}
 

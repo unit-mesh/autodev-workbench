@@ -71,6 +71,7 @@ export abstract class HttpApiAnalyser {
 	/**
 	 * Perform analysis on the code file
 	 * @param codeFile the code file to analyse
+	 * @param workspacePath the workspace path
 	 */
-	abstract analysis(codeFile: CodeFile): Promise<ApiResource[]>;
+	abstract analysis(codeFile: CodeFile, workspacePath: string): Promise<ApiResource[]>;
 }
