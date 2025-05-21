@@ -28,6 +28,7 @@ interface ConceptDictionary {
   termChinese: string
   termEnglish: string
   descChinese: string
+  relatedTerms?: string[] // Optional: if you fetch this directly
 }
 
 type DuplicateGroup = {
@@ -43,7 +44,15 @@ type MergeSuggestion = {
     termChinese: string;
     termEnglish: string;
     descChinese: string;
+    relatedTerms?: string[]; // Added relatedTerms here
   };
+}
+
+type RelatedTermAnalysis = {
+  termId: string;
+  relatedTermIds: string[];
+  relationshipType: string;
+  reason: string;
 }
 
 interface ConceptDictionaryTabProps {
@@ -57,6 +66,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
   const [analysisResults, setAnalysisResults] = useState<{
     duplicates: DuplicateGroup[];
     mergeSuggestions: MergeSuggestion[];
+    relatedTerms: RelatedTermAnalysis[]; // Added for top-level related terms analysis
     analysis: string;
   } | null>(null)
   const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({})
@@ -102,6 +112,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
         setAnalysisResults({
           duplicates: data.duplicates || [],
           mergeSuggestions: data.mergeSuggestions || [],
+          relatedTerms: data.relatedTerms || [], // Store top-level related terms
           analysis: data.analysis || ""
         })
         setShowAnalysisDialog(true)
@@ -264,7 +275,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
     if (selectedIds.length < 2) {
       toast({
         title: "合并失败",
-        description: "请至少选择两个概念进行合并",
+        description: "��至少选择两个概念进行合并",
         variant: "destructive"
       })
       return
@@ -278,7 +289,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
           conceptIds: selectedIds,
           // If from mergeSuggestions, use suggested merged term, otherwise use empty
           mergedTerm: groupType === 'mergeSuggestions'
-            ? (group as MergeSuggestion).mergedTerm
+            ? (group as MergeSuggestion).mergedTerm // This now includes relatedTerms if AI provided it
             : undefined
         }]
       }
@@ -641,7 +652,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                 </div>
               )}
 
-              {/* 重复概念 */}
+              {/* 重��概念 */}
               {analysisResults.duplicates.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -751,6 +762,9 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                           <p>中文术语：{suggestion.mergedTerm.termChinese}</p>
                           <p>英文术语：{suggestion.mergedTerm.termEnglish}</p>
                           <p>描述：{suggestion.mergedTerm.descChinese}</p>
+                          {suggestion.mergedTerm.relatedTerms && suggestion.mergedTerm.relatedTerms.length > 0 && (
+                            <p>关联术语ID：{suggestion.mergedTerm.relatedTerms.join(', ')}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -758,8 +772,30 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                 </div>
               )}
 
+              {/* General Related Terms Analysis (Optional Display) */}
+              {analysisResults.relatedTerms && analysisResults.relatedTerms.length > 0 && (
+                <div>
+                  <h4 className="font-medium flex items-center mb-2">
+                    <BookOpen className="h-4 w-4 text-purple-500 mr-2" />
+                    识别到的关联术语 ({analysisResults.relatedTerms.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {analysisResults.relatedTerms.map((related, idx) => (
+                      <div key={`rel-${idx}`} className="p-3 border rounded-md bg-purple-50 text-sm">
+                        <p><span className="font-medium">术语ID：</span>{related.termId}</p>
+                        <p><span className="font-medium">关联ID：</span>{related.relatedTermIds.join(', ')}</p>
+                        <p><span className="font-medium">关系类型：</span>{related.relationshipType}</p>
+                        <p><span className="font-medium">原因：</span>{related.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 无问题情况 */}
-              {analysisResults.duplicates.length === 0 && analysisResults.mergeSuggestions.length === 0 && (
+              {analysisResults.duplicates.length === 0 &&
+                analysisResults.mergeSuggestions.length === 0 &&
+                (!analysisResults.relatedTerms || analysisResults.relatedTerms.length === 0) && (
                 <div className="text-center p-4">
                   <p className="text-green-600">您的概念词典没有检测到重复或需要合并的概念。</p>
                 </div>

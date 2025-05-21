@@ -167,13 +167,14 @@ model Project {
 }
 
 model ConceptDictionary {
-  id          String   @id @default(cuid())
-  termChinese String // 中文词汇
-  termEnglish String // 英文词汇
-  descChinese String   @db.Text // 中文描述
-  descEnglish String   @db.Text // 英文描述
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  termChinese  String // 中文词汇
+  termEnglish  String // 英文词汇
+  descChinese  String   @db.Text // 中文描述
+  descEnglish  String   @db.Text // 英文描述
+  relatedTerms String[] @default([]) // IDs of related concepts
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
 
   // Project relation
   projectId String?
@@ -194,7 +195,6 @@ model ApiResource {
   project   Project? @relation(fields: [projectId], references: [id])
 }
 
-// 新增 SymbolAnalysis 模型
 model SymbolAnalysis {
   id        String   @id @default(cuid())
   name      String

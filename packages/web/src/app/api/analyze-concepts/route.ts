@@ -38,6 +38,7 @@ export async function analyzeConcepts(concepts: Array<{
 			success: true,
 			duplicates: [],
 			mergeSuggestions: [],
+			relatedTerms: [],
 			message: "概念词典中条目不足，无法优化"
 		};
 	}
@@ -52,7 +53,8 @@ ${concepts.map(c => `- ID: ${c.id}, 中文: ${c.termChinese}, 英文: ${c.termEn
 请执行以下分析:
 1. 识别重复的概念（完全相同或非常相似的条目）
 2. 识别可以合并的相关概念（表达相同或相似意思的不同术语）
-3. 提供优化建议
+3. 识别相关的术语（例如，一个术语是另一个术语的组成部分，或者它们之间存在层级关系或依赖关系），并建议如何关联它们。
+4. 提供优化建议
 
 请以JSON格式返回结果:
 {
@@ -70,7 +72,8 @@ ${concepts.map(c => `- ID: ${c.id}, 中文: ${c.termChinese}, 英文: ${c.termEn
       "mergedTerm": {
         "termChinese": "建议的中文术语",
         "termEnglish": "建议的英文术语",
-        "descChinese": "建议的描述"
+        "descChinese": "建议的描述",
+        "relatedTerms": ["id2", "id3"]
       }
     }
   ],

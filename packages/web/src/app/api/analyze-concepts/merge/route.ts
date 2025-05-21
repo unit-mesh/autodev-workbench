@@ -8,6 +8,7 @@ type MergeGroup = {
     termChinese: string;
     termEnglish: string;
     descChinese: string;
+    relatedTerms?: string[]; // Ensure this is present
   };
 };
 
@@ -62,10 +63,11 @@ export async function POST(request: Request) {
         const now = new Date();
 
         // Prepare merged concept data
-        const mergedConcept = {
+        const mergedConceptData = {
           termChinese: mergedTerm?.termChinese || keepConcept.termChinese,
           termEnglish: mergedTerm?.termEnglish || keepConcept.termEnglish,
           descChinese: mergedTerm?.descChinese || keepConcept.descChinese,
+          relatedTerms: mergedTerm?.relatedTerms || keepConcept.relatedTerms || [], // Use existing if not provided, default to empty array
         };
 
         // Update the kept concept with merged information
@@ -74,14 +76,16 @@ export async function POST(request: Request) {
            SET "termChinese" = $1, 
                "termEnglish" = $2, 
                "descChinese" = $3, 
-               "updatedAt" = $4 
-           WHERE id = $5 
+               "updatedAt" = $4,
+               "relatedTerms" = $5
+           WHERE id = $6 
            RETURNING *`,
           [
-            mergedConcept.termChinese,
-            mergedConcept.termEnglish,
-            mergedConcept.descChinese,
+            mergedConceptData.termChinese,
+            mergedConceptData.termEnglish,
+            mergedConceptData.descChinese,
             now,
+            mergedConceptData.relatedTerms, // Add relatedTerms to query parameters
             keepConcept.id
           ]
         );
