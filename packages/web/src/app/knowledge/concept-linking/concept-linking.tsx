@@ -69,7 +69,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
 
     if (useAI && concepts.length > 0) {
       try {
-        const response = await fetch("/api/validate-concepts", {
+        const response = await fetch("/api/concepts/actions/validate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

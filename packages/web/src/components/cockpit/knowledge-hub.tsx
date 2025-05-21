@@ -173,7 +173,7 @@ export default function KnowledgeHub({
     setValidationResults(null);
 
     try {
-      const response = await fetch('/api/validate-concepts', {
+      const response = await fetch('/api/concepts/actions/validate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
