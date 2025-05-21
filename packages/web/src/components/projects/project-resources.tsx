@@ -58,7 +58,7 @@ export function ProjectResources({
             <TabsTrigger value="dictionary">概念词典</TabsTrigger>
             <TabsTrigger value="code">代码上下文</TabsTrigger>
             <TabsTrigger value="api">API资源</TabsTrigger>
-            <TabsTrigger value="symbols">代码符号</TabsTrigger>
+            <TabsTrigger value="symbols">关键代码标识</TabsTrigger>
           </TabsList>
 
           <TabsContent value="guidelines" className="mt-4">
