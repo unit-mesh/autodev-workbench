@@ -9,6 +9,7 @@ import { CodeAnalysisItem, CodeAnalysisList } from "@/components/code-analysis/c
 import { Input } from "@/components/ui/input"
 import { Dispatch, SetStateAction, useState } from "react"
 import { toast } from "@/hooks/use-toast"
+import { ApiResourceList } from "./ApiResourceList"
 
 interface ProjectResourcesProps {
   project: Project
@@ -310,72 +311,11 @@ export function ProjectResources({
 
           <TabsContent value="api" className="mt-4">
             <div className="space-y-4">
-              {isLoadingApiResources ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((n) => (
-                    <Card key={n} className="overflow-hidden">
-                      <CardHeader className="p-4">
-                        <Skeleton className="h-5 w-40" />
-                        <Skeleton className="h-4 w-64 mt-2" />
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              ) : apiResourcesError ? (
-                <div className="text-sm text-red-500 p-4 border border-red-200 rounded-lg">
-                  {apiResourcesError}
-                </div>
-              ) : apiResources.length > 0 ? (
-                <div className="space-y-2">
-                  {apiResources.map((api, index) => (
-                    <Card key={index} className="overflow-hidden py-2 gap-0">
-                      <CardHeader className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-base font-mono">
-                              {/* HTTP Method 颜色区分 */}
-                              <span className={`
-            font-bold
-            ${api.sourceHttpMethod === 'GET' ? 'text-green-600' :
-                                api.sourceHttpMethod === 'POST' ? 'text-yellow-600' :
-                                  api.sourceHttpMethod === 'PUT' ? 'text-blue-600' :
-                                    api.sourceHttpMethod === 'DELETE' ? 'text-red-600' :
-                                      'text-gray-600'}
-          `}>
-            {api.sourceHttpMethod}
-          </span>
-                              {' '}
-                              <span className="text-gray-800">{api.sourceUrl}</span>
-                            </CardTitle>
-                            <CardDescription className="mt-2 space-y-1">
-                              <div className="flex items-baseline gap-2 text-sm">
-                                <span className="text-gray-500 font-medium">Package:</span>
-                                <span className="font-mono text-gray-700">{api.packageName}</span>
-                              </div>
-                              <div className="flex items-baseline gap-2 text-sm">
-                                <span className="text-gray-500 font-medium">Class:</span>
-                                <span className="font-mono text-blue-600">{api.className}</span>
-                              </div>
-                              <div className="flex items-baseline gap-2 text-sm">
-                                <span className="text-gray-500 font-medium">Method:</span>
-                                <span className="font-mono text-green-600">{api.methodName}()</span>
-                              </div>
-                            </CardDescription>
-                          </div>
-                          <Badge variant="outline">
-                            {api.type || 'REST'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
-                  <Code className="h-12 w-12 text-gray-300"/>
-                  <p className="text-center text-gray-500">暂无API资源</p>
-                </div>
-              )}
+              <ApiResourceList 
+                apiResources={apiResources} 
+                isLoading={isLoadingApiResources} 
+                error={apiResourcesError} 
+              />
             </div>
           </TabsContent>
         </Tabs>
