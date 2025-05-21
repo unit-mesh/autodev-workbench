@@ -157,19 +157,45 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
     return groupItems.filter(item => selectedItems[item.id]).length;
   }
 
-  // New function to handle merging all selected concepts
+  // Modified to handle merging concepts with new API structure
   const handleMergeAllConcepts = async () => {
     if (!analysisResults) return
 
-    // Get all selected concept IDs across all groups
-    const selectedIds = Object.entries(selectedItems)
-      .filter(([, isSelected]) => isSelected)
-      .map(([id]) => id)
+    // Group selected concepts by their groups
+    const selectedGroups = [];
 
-    if (selectedIds.length < 2) {
+    // Process duplicates groups
+    for (const group of analysisResults.duplicates) {
+      const selectedIdsInGroup = group.group
+        .filter(item => selectedItems[item.id])
+        .map(item => item.id);
+
+      if (selectedIdsInGroup.length >= 2) {
+        selectedGroups.push({
+          conceptIds: selectedIdsInGroup,
+          mergedTerm: undefined // Let backend select first concept as base
+        });
+      }
+    }
+
+    // Process merge suggestion groups
+    for (const [index, group] of analysisResults.mergeSuggestions.entries()) {
+      const selectedIdsInGroup = group.group
+        .filter(item => selectedItems[item.id])
+        .map(item => item.id);
+
+      if (selectedIdsInGroup.length >= 2) {
+        selectedGroups.push({
+          conceptIds: selectedIdsInGroup,
+          mergedTerm: group.mergedTerm
+        });
+      }
+    }
+
+    if (selectedGroups.length === 0) {
       toast({
         title: "合并失败",
-        description: "请至少选择两个概念进行合并",
+        description: "请至少选择一组有效的概念进行合并",
         variant: "destructive"
       })
       return
@@ -177,18 +203,14 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
 
     setMerging(true)
     try {
-      const mergeData = {
-        conceptIds: selectedIds,
-        // Use empty mergedTerm to let backend select the first concept as base
-        mergedTerm: undefined
-      }
-
       const response = await fetch('/api/analyze-concepts/merge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(mergeData),
+        body: JSON.stringify({
+          groups: selectedGroups
+        }),
       })
 
       const data = await response.json()
@@ -196,7 +218,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
       if (data.success) {
         toast({
           title: "合并成功",
-          description: `已成功合并${selectedIds.length}个所选概念`,
+          description: `已成功合并${data.results.length}组概念`,
           variant: "default"
         })
 
@@ -223,7 +245,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
     }
   }
 
-  // Modified to keep track of which group is being merged
+  // Updated to use the new API structure
   const handleMergeConcepts = async (groupType: 'duplicates' | 'mergeSuggestions', groupIndex: number) => {
     if (!analysisResults) return
 
@@ -245,11 +267,13 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
     setMergingGroupIndex(groupIndex)
     try {
       const mergeData = {
-        conceptIds: selectedIds,
-        // If from mergeSuggestions, use suggested merged term, otherwise use empty
-        mergedTerm: groupType === 'mergeSuggestions'
-          ? (group as MergeSuggestion).mergedTerm
-          : undefined
+        groups: [{
+          conceptIds: selectedIds,
+          // If from mergeSuggestions, use suggested merged term, otherwise use empty
+          mergedTerm: groupType === 'mergeSuggestions'
+            ? (group as MergeSuggestion).mergedTerm
+            : undefined
+        }]
       }
 
       const response = await fetch('/api/analyze-concepts/merge', {
