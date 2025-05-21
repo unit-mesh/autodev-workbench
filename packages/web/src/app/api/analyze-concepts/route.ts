@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 			)
 		}
 
-		const analysisResults = await analyzeConcepts(concepts)
+		const analysisResults = await optimizeConcepts(concepts)
 
 		return NextResponse.json(analysisResults)
 	} catch (error) {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 	}
 }
 
-export async function analyzeConcepts(concepts: Array<{
+async function optimizeConcepts(concepts: Array<{
 	id: string;
 	termChinese: string;
 	termEnglish: string;
