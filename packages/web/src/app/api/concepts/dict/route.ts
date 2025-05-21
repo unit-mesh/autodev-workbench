@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sql } from '../../_utils/db';
 
-// 获取所有词汇表条目
 export async function GET() {
   try {
     const rows = await sql`
@@ -19,12 +18,9 @@ export async function GET() {
   }
 }
 
-// 创建新的词汇表条目
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    // 确保所需字段都存在
     if (!body.term || !body.definition) {
       return NextResponse.json(
         { error: '术语名称和定义是必填字段' },
@@ -33,7 +29,6 @@ export async function POST(request: Request) {
     }
 
     const now = new Date();
-
     const result = await sql`
       INSERT INTO "ConceptDictionary" (
         "term",
@@ -56,7 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result[0]);
   } catch (error) {
-    console.error('创建���汇表条目失败:', error);
+    console.error('创建词汇表表条目失败:', error);
     return NextResponse.json(
       { error: '创建词汇表条目失败' },
       { status: 500 }
@@ -69,7 +64,6 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    // 单个删除
     if (id) {
       const result = await sql`
         DELETE FROM "ConceptDictionary"
@@ -87,7 +81,6 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true, id: result[0].id });
     }
 
-    // 批量删除
     const body = await request.json();
     if (Array.isArray(body.ids) && body.ids.length > 0) {
       const result = await sql`
