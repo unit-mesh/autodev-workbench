@@ -88,26 +88,21 @@ export default function RequirementsWorkspace({
 
 		setIsAnalyzing(true)
 		try {
-			const response = await fetch('/api/chat', {
+			const response = await fetch('/api/requirements/enrich', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					messages: [
-						{
-							role: 'system',
-							content: '你是一个需求分析专家。请分析用户输入的需求，提取关键信息，并给出更完整、结构化的需求陈述。'
-						},
-						{ role: 'user', content: `请分析并扩展以下需求：${currentRequirement}` }
-					]
+					text: currentRequirement,
+					systemPrompt: '你是一个需求分析专家，善于丰富需求上下文和完善需求细节，同时保持原始需求的核心意图。'
 				})
 			})
 
 			const data = await response.json()
-			if (data.text) {
+			if (data.success && data.text) {
 				setCurrentRequirement(data.text)
 			}
 		} catch (error) {
-			console.error('Error analyzing requirement:', error)
+			console.error('Error enriching requirement:', error)
 		} finally {
 			setIsAnalyzing(false)
 		}
@@ -341,4 +336,3 @@ export default function RequirementsWorkspace({
 		</div>
 	)
 }
-
