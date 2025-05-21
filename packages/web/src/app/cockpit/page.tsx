@@ -139,7 +139,7 @@ export default function Home() {
 			const documentForAnalysis = documentContent.map(item => item.content).join("\n\n")
 
 			// 调用专用的需求分析 API
-			const response = await fetch("/api/analyze-requirements", {
+			const response = await fetch("/api/requirements/actions/analyze", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ document: documentForAnalysis })
