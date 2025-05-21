@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { BookOpen, RotateCw, AlertTriangle, GitMerge, Check } from "lucide-react"
+import { BookOpen, RotateCw, AlertTriangle, GitMerge } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -142,29 +142,18 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
     setSelectedItems(newSelectedItems);
   }
 
-  // Check if all items in a group are selected
   const areAllSelectedInGroup = (groupItems: { id: string; term: string }[]) => {
     return groupItems.every(item => selectedItems[item.id]);
   }
 
-  // Check if any items in a group are selected
-  const hasSelectionInGroup = (groupItems: { id: string; term: string }[]) => {
-    return groupItems.some(item => selectedItems[item.id]);
-  }
-
-  // Count selected items in a group
   const countSelectedInGroup = (groupItems: { id: string; term: string }[]) => {
     return groupItems.filter(item => selectedItems[item.id]).length;
   }
 
-  // Modified to handle merging concepts with new API structure
   const handleMergeAllConcepts = async () => {
     if (!analysisResults) return
-
-    // Group selected concepts by their groups
     const selectedGroups = [];
 
-    // Process duplicates groups
     for (const group of analysisResults.duplicates) {
       const selectedIdsInGroup = group.group
         .filter(item => selectedItems[item.id])
@@ -178,8 +167,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
       }
     }
 
-    // Process merge suggestion groups
-    for (const [index, group] of analysisResults.mergeSuggestions.entries()) {
+    for (const [, group] of analysisResults.mergeSuggestions.entries()) {
       const selectedIdsInGroup = group.group
         .filter(item => selectedItems[item.id])
         .map(item => item.id);
@@ -222,10 +210,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
           variant: "default"
         })
 
-        // Clear all selections
         setSelectedItems({})
-
-        // Close the dialog
         setShowAnalysisDialog(false)
       } else {
         toast({
@@ -391,13 +376,11 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
 
           {analysisResults && (
             <div className="space-y-4">
-              {/* 整体分析 */}
               <div className="p-4 bg-gray-50 rounded-md">
                 <h4 className="font-medium mb-2">整体分析</h4>
                 <p className="text-sm">{analysisResults.analysis}</p>
               </div>
 
-              {/* 全局操作区域 */}
               {(analysisResults.duplicates.length > 0 || analysisResults.mergeSuggestions.length > 0) && (
                 <div className="flex justify-between items-center border-b pb-2">
                   <div className="flex items-center space-x-2">
@@ -465,7 +448,7 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                             <div key={item.id} className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
                               <Checkbox
                                 id={`dup-${idx}-${item.id}`}
-                                checked={!!selectedItems[item.id]}
+                                checked={selectedItems[item.id]}
                                 onCheckedChange={() => toggleItemSelection(item.id)}
                               />
                               <label htmlFor={`dup-${idx}-${item.id}`} className="cursor-pointer">{item.term}</label>
