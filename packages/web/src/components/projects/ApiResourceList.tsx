@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Code } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ApiResource {
 	sourceHttpMethod: string;
@@ -115,113 +116,116 @@ export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceL
 	});
 
 	return (
-		<div className="space-y-6">
-			{/* HTTP APIs Section */}
-			{httpResources.length > 0 && (
-				<Card className="overflow-hidden bg-blue-50/50">
-					<CardHeader className="p-4"> {/* Increased padding */}
-						<CardTitle className="text-lg font-semibold text-blue-700">
-							HTTP APIs <Badge variant="outline" className="ml-2 bg-white">{httpResources.length} 个接口</Badge>
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="p-4 space-y-4"> {/* Increased padding */}
-						{Object.entries(httpApisByPrefix).map(([prefix, apisByUrl]) => (
-							<div key={prefix} className="space-y-3">
-								<h3 className="text-md font-semibold text-blue-600 mb-2 border-b border-blue-200 pb-1.5"> {/* Increased font size & padding */}
-									{prefix}
-								</h3>
-								{Object.entries(apisByUrl).map(([url, apiInstances]) => {
-									const representativeApi = apiInstances[0]; // Assuming details are consistent for the same URL
-									return (
-										<div key={url} className="p-3 bg-white border border-blue-200 rounded-md shadow-sm space-y-2">
-											<div>
-												<span className="font-mono text-sm text-gray-800 break-all" title={url}>{url}</span>
-												<div className="flex flex-wrap gap-1.5 mt-1.5">
-													{apiInstances.map((api, idx) => (
-														<span
-															key={idx}
-															className={`text-xs font-semibold py-0.5 px-1.5 rounded-sm ${getMethodBgClass(api.sourceHttpMethod)} ${getMethodColorClass(api.sourceHttpMethod)}`}
-														>
-															{api.sourceHttpMethod}
-														</span>
-													))}
+		<Tabs defaultValue="http" className="w-full">
+			<TabsList className="grid w-full grid-cols-2">
+				<TabsTrigger value="http">
+					HTTP APIs <Badge variant="outline" className="ml-2">{httpResources.length}</Badge>
+				</TabsTrigger>
+				<TabsTrigger value="rpc">
+					RPC APIs <Badge variant="outline" className="ml-2">{rpcResources.length}</Badge>
+				</TabsTrigger>
+			</TabsList>
+			<TabsContent value="http" className="mt-4">
+				{httpResources.length > 0 ? (
+					<Card className="overflow-hidden bg-blue-50/50">
+						<CardContent className="p-4 space-y-4"> {/* Removed CardHeader, title now in TabTrigger */}
+							{Object.entries(httpApisByPrefix).map(([prefix, apisByUrl]) => (
+								<div key={prefix} className="space-y-3">
+									<h3 className="text-md font-semibold text-blue-600 mb-2 border-b border-blue-200 pb-1.5">
+										{prefix}
+									</h3>
+									{Object.entries(apisByUrl).map(([url, apiInstances]) => {
+										const representativeApi = apiInstances[0];
+										return (
+											<div key={url} className="p-3 bg-white border border-blue-200 rounded-md shadow-sm space-y-2">
+												<div>
+													<span className="font-mono text-sm text-gray-800 break-all" title={url}>{url}</span>
+													<div className="flex flex-wrap gap-1.5 mt-1.5">
+														{apiInstances.map((api, idx) => (
+															<span
+																key={idx}
+																className={`text-xs font-semibold py-0.5 px-1.5 rounded-sm ${getMethodBgClass(api.sourceHttpMethod)} ${getMethodColorClass(api.sourceHttpMethod)}`}
+															>
+																{api.sourceHttpMethod}
+															</span>
+														))}
+													</div>
 												</div>
+												{(representativeApi.packageName || representativeApi.className || representativeApi.methodName) && (
+													<div className="text-sm space-y-1 pt-2 border-t border-blue-100 mt-2">
+														{representativeApi.packageName && (
+															<div className="flex items-baseline">
+																<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Package:</span>
+																<span className="font-mono text-gray-700 truncate" title={representativeApi.packageName}>
+																	{representativeApi.packageName}
+																</span>
+															</div>
+														)}
+														{representativeApi.className && (
+															<div className="flex items-baseline">
+																<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Class:</span>
+																<span className="font-mono text-blue-600 truncate" title={representativeApi.className}>
+																	{representativeApi.className}
+																</span>
+															</div>
+														)}
+														{representativeApi.methodName && (
+															<div className="flex items-baseline">
+																<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Handler:</span>
+																<span className="font-mono text-green-600 truncate" title={representativeApi.methodName}>
+																	{representativeApi.methodName}()
+																</span>
+															</div>
+														)}
+													</div>
+												)}
 											</div>
-											{(representativeApi.packageName || representativeApi.className || representativeApi.methodName) && (
-												<div className="text-sm space-y-1 pt-2 border-t border-blue-100 mt-2">
-													{representativeApi.packageName && (
-														<div className="flex items-baseline">
-															<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Package:</span>
-															<span className="font-mono text-gray-700 truncate" title={representativeApi.packageName}>
-																{representativeApi.packageName}
-															</span>
-														</div>
-													)}
-													{representativeApi.className && (
-														<div className="flex items-baseline">
-															<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Class:</span>
-															<span className="font-mono text-blue-600 truncate" title={representativeApi.className}>
-																{representativeApi.className}
-															</span>
-														</div>
-													)}
-													{representativeApi.methodName && (
-														<div className="flex items-baseline">
-															<span className="text-gray-500 font-medium w-20 text-xs flex-shrink-0">Handler:</span>
-															<span className="font-mono text-green-600 truncate" title={representativeApi.methodName}>
-																{representativeApi.methodName}()
-															</span>
-														</div>
-													)}
-												</div>
-											)}
+										);
+									})}
+								</div>
+							))}
+						</CardContent>
+					</Card>
+				) : (
+					<div className="text-center text-gray-500 py-8">No HTTP APIs found.</div>
+				)}
+			</TabsContent>
+			<TabsContent value="rpc" className="mt-4">
+				{rpcResources.length > 0 ? (
+					<Card className="overflow-hidden bg-green-50/50">
+						<CardContent className="p-4 space-y-3"> {/* Removed CardHeader, title now in TabTrigger */}
+							{rpcResources.map((api, index) => (
+								<div key={index} className="border border-green-200 rounded-md overflow-hidden bg-white shadow-sm">
+									<div className="flex items-center border-b border-green-200 bg-green-100/50 p-2.5">
+										<span className="font-mono text-sm text-green-800 flex-1 truncate" title={api.sourceUrl || `${api.packageName}.${api.className}/${api.methodName}`}>
+											{api.sourceUrl || `${api.packageName}.${api.className}/${api.methodName}`}
+										</span>
+										<Badge variant="outline" className="ml-2 text-xs bg-white text-green-700 border-green-300">
+											RPC
+										</Badge>
+									</div>
+									<div className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+										<div className="overflow-hidden">
+											<div className="text-gray-500 font-medium text-xs">Package</div>
+											<div className="font-mono text-gray-700 truncate" title={api.packageName}>{api.packageName || '-'}</div>
 										</div>
-									);
-								})}
-							</div>
-						))}
-					</CardContent>
-				</Card>
-			)}
-
-			{/* RPC APIs Section */}
-			{rpcResources.length > 0 && (
-				<Card className="overflow-hidden bg-green-50/50">
-					<CardHeader className="p-4"> {/* Increased padding */}
-						<CardTitle className="text-lg font-semibold text-green-700">
-							RPC APIs <Badge variant="outline" className="ml-2 bg-white">{rpcResources.length} 个接口</Badge>
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="p-4 space-y-3"> {/* Increased padding */}
-						{rpcResources.map((api, index) => (
-							<div key={index} className="border border-green-200 rounded-md overflow-hidden bg-white shadow-sm">
-								<div className="flex items-center border-b border-green-200 bg-green-100/50 p-2.5"> {/* Increased padding */}
-									<span className="font-mono text-sm text-green-800 flex-1 truncate" title={api.sourceUrl || `${api.packageName}.${api.className}/${api.methodName}`}>
-										{api.sourceUrl || `${api.packageName}.${api.className}/${api.methodName}`}
-									</span>
-									<Badge variant="outline" className="ml-2 text-xs bg-white text-green-700 border-green-300">
-										RPC
-									</Badge>
-								</div>
-								<div className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm"> {/* Increased padding, gap, and base text size */}
-									<div className="overflow-hidden">
-										<div className="text-gray-500 font-medium text-xs">Package</div>
-										<div className="font-mono text-gray-700 truncate" title={api.packageName}>{api.packageName || '-'}</div>
-									</div>
-									<div className="overflow-hidden">
-										<div className="text-gray-500 font-medium text-xs">Class</div>
-										<div className="font-mono text-blue-600 truncate" title={api.className}>{api.className || '-'}</div>
-									</div>
-									<div className="overflow-hidden">
-										<div className="text-gray-500 font-medium text-xs">Method</div>
-										<div className="font-mono text-green-600 truncate" title={api.methodName}>{api.methodName}()</div>
+										<div className="overflow-hidden">
+											<div className="text-gray-500 font-medium text-xs">Class</div>
+											<div className="font-mono text-blue-600 truncate" title={api.className}>{api.className || '-'}</div>
+										</div>
+										<div className="overflow-hidden">
+											<div className="text-gray-500 font-medium text-xs">Method</div>
+											<div className="font-mono text-green-600 truncate" title={api.methodName}>{api.methodName}()</div>
+										</div>
 									</div>
 								</div>
-							</div>
-						))}
-					</CardContent>
-				</Card>
-			)}
-		</div>
+							))}
+						</CardContent>
+					</Card>
+				) : (
+					<div className="text-center text-gray-500 py-8">No RPC APIs found.</div>
+				)}
+			</TabsContent>
+		</Tabs>
 	);
 }
