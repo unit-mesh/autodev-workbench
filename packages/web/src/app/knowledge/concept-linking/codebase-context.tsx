@@ -27,7 +27,7 @@ export function CodebaseContext() {
 	const fetchContextData = async () => {
 		setIsLoadingContext(true)
 		try {
-			const response = await fetch("/api/context/interface")
+			const response = await fetch("/api/context/code")
 			if (response.ok) {
 				const data = await response.json()
 				setContextData(data)
@@ -50,7 +50,7 @@ export function CodebaseContext() {
 				body: JSON.stringify({ id })
 			})
 			if (response.ok) {
-				const updated = await fetch(`/api/context/interface?id=${id}`)
+				const updated = await fetch(`/api/context/code?id=${id}`)
 				if (updated.ok) {
 					const [updatedItem] = await updated.json()
 					setContextData((prev) => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item))
