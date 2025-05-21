@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // 调用 Chat API 验证关键词并查找匹配
       const response = await fetch(new URL('/api/chat', request.url).toString(), {
         method: 'POST',
         headers: {
@@ -48,7 +47,7 @@ ${codeContext}
       }
 
       const data = await response.json();
-      
+
       // 从AI回复中提取匹配的关键词
       let matches: string[] = [];
       try {
@@ -74,8 +73,8 @@ ${codeContext}
       });
     } catch (error) {
       console.error("验证概念时出错:", error)
-      return NextResponse.json({ 
-        success: false, 
+      return NextResponse.json({
+        success: false,
         message: '验证过程出错',
         error: error instanceof Error ? error.message : '未知错误'
       })
