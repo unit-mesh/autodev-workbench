@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sql, transaction } from "../../_utils/db";
+import { sql, transaction, query } from "../../_utils/db";
 
 export async function POST(request: Request) {
   try {
@@ -12,11 +12,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. 获取要合并的概念
-    const concepts = await sql`
-      SELECT * FROM "ConceptDictionary"
-      WHERE id IN ${sql(conceptIds)}
-    `;
+    // 1. 获取要合并的概念 - 使用正确的query函数
+    const placeholders = conceptIds.map((_, i) => `$${i + 1}`).join(', ');
+    const queryText = `SELECT * FROM "ConceptDictionary" WHERE id IN (${placeholders})`;
+    const concepts = await query(queryText, conceptIds);
 
     if (concepts.length !== conceptIds.length) {
       return NextResponse.json(
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
       descChinese: mergedTerm?.descChinese || baseConcept.descChinese,
     };
 
-    // 4. 使用事务保证原子性 - 使用 transaction 函数替代 sql.begin
+    // 4. 使用事务保证原子性
     const result = await transaction(async (client) => {
       // 4.1 创建新的合并后概念
       const newConceptResult = await client.query(
@@ -58,8 +57,8 @@ export async function POST(request: Request) {
 
       // 4.2 删除原来的概念
       await client.query(
-        `DELETE FROM "ConceptDictionary" WHERE id = ANY($1)`,
-        [conceptIds]
+        `DELETE FROM "ConceptDictionary" WHERE id IN (${placeholders})`,
+        conceptIds
       );
 
       return newConceptResult.rows;
