@@ -44,7 +44,7 @@ export function CodebaseContext() {
 	const handleAIGenerateOne = async (id: string) => {
 		setGeneratingIds((prev) => [...prev, id])
 		try {
-			const response = await fetch("/api/context/generate", {
+			const response = await fetch("/api/context/code/actions/semantic", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ id })
