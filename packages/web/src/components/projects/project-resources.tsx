@@ -333,7 +333,19 @@ export function ProjectResources({
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-base font-mono">
-                              {api.sourceHttpMethod} {api.sourceUrl}
+                              {/* HTTP Method 颜色区分 */}
+                              <span className={`
+            font-bold
+            ${api.sourceHttpMethod === 'GET' ? 'text-green-600' :
+                                api.sourceHttpMethod === 'POST' ? 'text-yellow-600' :
+                                  api.sourceHttpMethod === 'PUT' ? 'text-blue-600' :
+                                    api.sourceHttpMethod === 'DELETE' ? 'text-red-600' :
+                                      'text-gray-600'}
+          `}>
+            {api.sourceHttpMethod}
+          </span>
+                              {' '}
+                              <span className="text-gray-800">{api.sourceUrl}</span>
                             </CardTitle>
                             <CardDescription className="mt-2 space-y-1">
                               <div className="flex items-baseline gap-2 text-sm">
@@ -346,7 +358,7 @@ export function ProjectResources({
                               </div>
                               <div className="flex items-baseline gap-2 text-sm">
                                 <span className="text-gray-500 font-medium">Method:</span>
-                                <span className="font-mono text-green-600">{api.methodName}</span>
+                                <span className="font-mono text-green-600">{api.methodName}()</span>
                               </div>
                             </CardDescription>
                           </div>
