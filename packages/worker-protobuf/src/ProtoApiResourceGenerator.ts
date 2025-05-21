@@ -10,7 +10,6 @@ export class ProtoApiResourceGenerator {
 		const apiResources: ApiResource[] = [];
 
 		for (const dataStruct of dataStructs) {
-			// 只处理服务类型(Interface)的数据结构
 			if (dataStruct.Type === 'Interface') {
 				for (const func of dataStruct.Functions) {
 					apiResources.push(this.convertFunctionToApiResource(dataStruct, func));
@@ -48,24 +47,21 @@ export class ProtoApiResourceGenerator {
 	 * @returns HTTP 方法字符串
 	 */
 	private determineHttpMethod(func: CodeFunction): string {
-		// 如果有流式响应或请求，使用 WebSocket
 		if (func.IsAsync) {
 			return 'WS';
 		}
 
-		// 根据函数名猜测方法类型
 		const lowerName = func.Name.toLowerCase();
 		if (lowerName.startsWith('get') || lowerName.startsWith('query') || lowerName.startsWith('list')) {
-			return 'GET';
+			return 'RPC/GET';
 		} else if (lowerName.startsWith('create') || lowerName.startsWith('add')) {
-			return 'POST';
+			return 'RPC/POST';
 		} else if (lowerName.startsWith('update') || lowerName.startsWith('modify')) {
-			return 'PUT';
+			return 'RPC/PUT';
 		} else if (lowerName.startsWith('delete') || lowerName.startsWith('remove')) {
-			return 'DELETE';
+			return 'RPC/DELETE';
 		}
 
-		// 默认使用 POST
-		return 'POST';
+		return 'RPC/POST';
 	}
 }
