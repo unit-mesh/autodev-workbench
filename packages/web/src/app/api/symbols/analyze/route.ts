@@ -18,7 +18,7 @@ async function analyzeSymbol(symbolName: string, symbolPath: string, symbolDetai
   const answer = await reply([
     {
       role: "user",
-      content: `分析以下代码符号信息，提取出编程中的概念/术语，并生成概念词典条目。
+      content: `分析以下关键代码标识信息，提取出编程中的概念/术语，并生成概念词典条目。
 
 符号名称: ${symbolName}
 文件路径: ${symbolPath}
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "符号分析完成，概念已添加到词典",
+      message: "关键代码标识完成，概念已添加到词典",
       concepts: conceptEntries,
     });
   } catch (error) {

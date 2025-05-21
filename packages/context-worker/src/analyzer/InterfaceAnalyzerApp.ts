@@ -144,7 +144,7 @@ export class InterfaceAnalyzerApp {
 
 			const data = await response.json();
 			if (data.success) {
-				console.log('符号分析结果上传成功!');
+				console.log('关键代码标识结果上传成功!');
 				console.log(`ID: ${data.id}`);
 			} else {
 				console.error('上传失败:', data);
@@ -155,8 +155,8 @@ export class InterfaceAnalyzerApp {
 	}
 
 	/**
-	 * 将符号分析结果简化为只包含必要信息的格式
-	 * @param result 原始符号分析结果
+	 * 将关键代码标识结果简化为只包含必要信息的格式
+	 * @param result 原始关键代码标识结果
 	 * @param dirPath
 	 * @returns 简化后的结果
 	 */

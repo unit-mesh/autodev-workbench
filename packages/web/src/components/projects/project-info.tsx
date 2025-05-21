@@ -150,7 +150,7 @@ export function ProjectInfo({ project, symbols }: { project: Project, symbols: a
             <div className="flex items-center bg-gray-50 p-2 rounded">
               <Code className="h-4 w-4 mr-2 text-purple-500"/>
               <div>
-                <p className="text-xs text-gray-500">符号分析</p>
+                <p className="text-xs text-gray-500">关键代码标识</p>
                 <p className="text-sm font-medium">{symbols?.length || 0}</p>
               </div>
             </div>

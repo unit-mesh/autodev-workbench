@@ -152,19 +152,19 @@ export function SymbolAnalysisTab({
     if (successes === symbolsToAnalyze.length) {
       toast({
         title: "概念生成完成",
-        description: `所有 ${successes} 个选中符号分析成功。`,
+        description: `所有 ${successes} 个选中关键代码标识成功。`,
         variant: "default"
       });
     } else if (successes > 0) {
       toast({
         title: "概念生成部分完成",
-        description: `${successes} 个符号分析成功，${symbolsToAnalyze.length - successes} 个失败。`,
+        description: `${successes} 个关键代码标识成功，${symbolsToAnalyze.length - successes} 个失败。`,
         variant: "default"
       });
     } else {
       toast({
         title: "概念生成失败",
-        description: `所有 ${symbolsToAnalyze.length} 个符号分析均失败。`,
+        description: `所有 ${symbolsToAnalyze.length} 个关键代码标识均失败。`,
         variant: "destructive"
       });
     }
@@ -319,7 +319,7 @@ export function SymbolAnalysisTab({
         <div
           className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
           <Code className="h-12 w-12 text-gray-300"/>
-          <p className="text-center text-gray-500">暂无符号分析数据</p>
+          <p className="text-center text-gray-500">暂无关键代码标识数据</p>
         </div>
       )}
     </div>

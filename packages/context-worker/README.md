@@ -185,7 +185,7 @@ function fetchUserData(userId) {
 后续上下文内容...
 ```
 
-### 符号分析输出示例
+### 关键代码标识输出示例
 
     文件: /path/to/UserService.ts
     共发现 8 个符号

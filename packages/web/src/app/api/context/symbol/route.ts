@@ -48,11 +48,11 @@ export async function GET(request: Request) {
     const result = await query;
     return NextResponse.json(result);
   } catch (error) {
-    console.error('获取符号分析结果失败:', error);
+    console.error('获取关键代码标识结果失败:', error);
     return NextResponse.json(
       {
         success: false,
-        message: '获取符号分析结果失败',
+        message: '获取关键代码标识结果失败',
         error: error instanceof Error ? error.message : '未知错误'
       },
       { status: 500 }
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     if (!data || !Array.isArray(data)) {
       return NextResponse.json(
-        { error: '无效的数据格式。需要一个文件符号分析结果数组' },
+        { error: '无效的数据格式。需要一个文件关键代码标识结果数组' },
         { status: 400 }
       );
     }
@@ -122,23 +122,23 @@ export async function POST(request: Request) {
 
     if (results.length === 0) {
       return NextResponse.json(
-        { error: '没有成功创建任何符号分析记录' },
+        { error: '没有成功创建任何关键代码标识记录' },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: '符号分析结果存储成功',
+      message: '关键代码标识结果存储成功',
       id: results[0],
       count: results.length
     });
   } catch (error) {
-    console.error('处理符号分析结果失败:', error);
+    console.error('处理关键代码标识结果失败:', error);
     return NextResponse.json(
       {
         success: false,
-        message: '处理符号分析结果失败',
+        message: '处理关键代码标识结果失败',
         error: error instanceof Error ? error.message : '未知错误'
       },
       { status: 500 }

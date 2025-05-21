@@ -75,7 +75,7 @@ export class CodeAnalysisReporter {
 			}
 		}
 
-		// 添加对符号分析结果的处理
+		// 添加对关键代码标识结果的处理
 		if (result.symbolAnalysis && result.symbolAnalysis.symbols.length > 0) {
 			const symbolsDir = path.join(targetDir, 'symbols');
 			if (!fs.existsSync(symbolsDir)) {
@@ -265,7 +265,7 @@ export class CodeAnalysisReporter {
 	}
 
 	/**
-	 * 生成符号分析内容
+	 * 生成关键代码标识内容
 	 */
 	private async generateSymbolsContent(filePath: string, symbols: any[]): Promise<string> {
 		let content = '';

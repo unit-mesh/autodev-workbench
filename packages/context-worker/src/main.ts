@@ -37,7 +37,7 @@ async function run(options?: Partial<AppConfig>): Promise<void> {
 	}
 
 	if (config.analysisTypes.symbol) {
-		console.log('正在运行符号分析...');
+		console.log('正在运行关键代码标识...');
 		await app.handleSymbolContext();
 	}
 

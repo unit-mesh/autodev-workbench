@@ -129,7 +129,7 @@ export class UserInputHandler {
 						checked: currentConfig.analysisTypes.api
 					},
 					{
-						name: '符号分析',
+						name: '关键代码标识',
 						value: 'symbol',
 						checked: currentConfig.analysisTypes.symbol
 					}
