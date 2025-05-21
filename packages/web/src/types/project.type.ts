@@ -51,3 +51,18 @@ export interface Project {
 		image: string | null
 	} | null
 }
+
+export type SymbolAnalysis = {
+	id: string
+	name: string
+	kind: string
+	path: string | null
+	detail: {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		[key: string]: any
+	} | null
+	createdAt: string
+	updatedAt: string
+	projectId: string | null
+	project: Project
+}
