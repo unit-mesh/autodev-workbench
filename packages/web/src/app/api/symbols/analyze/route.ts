@@ -93,8 +93,15 @@ export async function POST(request: Request) {
       symbolData.detail
     );
 
-    conceptEntries.forEach(item => {
-      pool.sql`
+    // 存储生成的概念ID
+    const conceptIds: string[] = [];
+
+    // 创建概念并收集ID
+    for (const item of conceptEntries) {
+      const conceptId = generateId();
+      conceptIds.push(conceptId);
+      
+      await pool.sql`
         INSERT INTO "ConceptDictionary" (
           "id",                                         
           "termChinese",
@@ -105,7 +112,7 @@ export async function POST(request: Request) {
           "createdAt",
           "updatedAt"
         ) VALUES (
-          ${generateId()},
+          ${conceptId},
           ${item.termChinese},
           ${item.termEnglish},
           ${item.descChinese},
@@ -115,12 +122,21 @@ export async function POST(request: Request) {
           NOW()
         )
       `;
-    })
+    }
+
+    // 更新符号，记录已识别的概念ID
+    await pool.sql`
+      UPDATE "SymbolAnalysis"
+      SET "identifiedConcepts" = ${conceptIds},
+          "updatedAt" = NOW()
+      WHERE "id" = ${symbolId}
+    `;
 
     return NextResponse.json({
       success: true,
       message: "关键代码标识完成，概念已添加到词典",
       concepts: conceptEntries,
+      conceptIds: conceptIds
     });
   } catch (error) {
     console.error('分析符号时出错:', error);

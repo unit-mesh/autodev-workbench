@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Code, Search, Loader2, CheckCircle, Circle } from "lucide-react"
+import { Code, Search, Loader2, CheckCircle, Circle, Book } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Dispatch, SetStateAction, useState, useMemo } from "react"
 import { toast } from "@/hooks/use-toast"
@@ -257,10 +257,15 @@ export function SymbolAnalysisTab({
           {symbols.map((symbol) => {
             const isLongContext = typeof symbol.detail?.totalSymbols === 'number' && symbol.detail.totalSymbols >= LONG_CONTEXT_THRESHOLD;
             const isSelected = selectedSymbolIds.includes(symbol.id);
+            const hasIdentifiedConcepts = symbol.identifiedConcepts && symbol.identifiedConcepts.length > 0;
+            
             return (
               <Card
                 key={symbol.id}
-                className={`overflow-hidden py-2 gap-0 ${isLongContext ? 'bg-blue-50 border-blue-200' : ''} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+                className={`overflow-hidden py-2 gap-0 
+                  ${isLongContext ? 'bg-blue-50 border-blue-200' : ''} 
+                  ${hasIdentifiedConcepts ? 'border-l-4 border-l-green-500' : ''}
+                  ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
               >
                 <CardHeader className="p-2">
                   <div className="flex justify-between items-start">
@@ -276,11 +281,17 @@ export function SymbolAnalysisTab({
                         )}
                       </button>
                       <div>
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base flex items-center">
                           {symbol.name}
                           {isLongContext && (
                             <span className="ml-2 text-xs font-semibold text-blue-700 bg-blue-200 px-1.5 py-0.5 rounded-full">
                               长上下文
+                            </span>
+                          )}
+                          {hasIdentifiedConcepts && (
+                            <span className="ml-2 text-xs font-semibold text-green-700 bg-green-200 px-1.5 py-0.5 rounded-full flex items-center">
+                              <Book className="h-3 w-3 mr-1" />
+                              已识别概念 {symbol.identifiedConcepts.length}
                             </span>
                           )}
                         </CardTitle>
@@ -294,14 +305,22 @@ export function SymbolAnalysisTab({
                       variant="outline"
                       onClick={() => handleAnalyzeSymbol(symbol.id)}
                       disabled={analyzingSymbolIds.includes(symbol.id) || isGeneratingConcepts}
-                      className={isLongContext ? "border-blue-300 hover:bg-blue-100" : ""}
+                      className={hasIdentifiedConcepts 
+                        ? "border-green-300 hover:bg-green-100" 
+                        : isLongContext 
+                          ? "border-blue-300 hover:bg-blue-100" 
+                          : ""}
                     >
                       {analyzingSymbolIds.includes(symbol.id) ? (
                         <>
                           <Loader2 className="h-3 w-3 animate-spin mr-1" />
                           分析中...
                         </>
-                      ) : "AI分析"}
+                      ) : hasIdentifiedConcepts ? (
+                        "更新概念"
+                      ) : (
+                        "AI分析"
+                      )}
                     </Button>
                   </div>
                 </CardHeader>

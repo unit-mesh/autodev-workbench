@@ -57,6 +57,7 @@ export type SymbolAnalysis = {
 	name: string
 	kind: string
 	path: string | null
+	identifiedConcepts: string[]
 	detail: {
 		totalSymbols?: number; // Added for clarity
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
