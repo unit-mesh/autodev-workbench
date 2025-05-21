@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Code, Search, Loader2, CheckCircle, Circle, Book } from "lucide-react"
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Dispatch, SetStateAction, useState, useMemo } from "react"
 import { toast } from "@/hooks/use-toast"
 import { SymbolAnalysis } from "@/types/project.type";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 
 export interface SymbolAnalysisTabProps {
   symbols: SymbolAnalysis[];
@@ -35,6 +35,17 @@ const filterSymbolsByCategory = (
     }
   });
 };
+
+function SymbolDetails({ symbol }: { symbol: SymbolAnalysis }) {
+  return (
+    <div className="space-y-2 p-2">
+      <div className="flex justify-between">
+        <span className="font-medium">符号详情</span>
+        <span className="text-xs text-gray-500">{JSON.stringify(symbol.detail?.summary)}</span>
+      </div>
+    </div>
+  );
+}
 
 export function SymbolAnalysisTab({
   symbols,
@@ -179,6 +190,7 @@ export function SymbolAnalysisTab({
 
   return (
     <div className="space-y-4">
+      {/* 搜索与批量操作区 */}
       <div className="flex items-center space-x-2">
         <Input
           placeholder="搜索符号..."
@@ -191,8 +203,7 @@ export function SymbolAnalysisTab({
           搜索
         </Button>
       </div>
-
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-2">
         <Button
           size="sm"
           onClick={handleSelectLongContextSymbols}
@@ -237,110 +248,138 @@ export function SymbolAnalysisTab({
           AI 生成/更新概念词典 ({selectedSymbolIds.length})
         </Button>
       </div>
+      {/* 表格展示符号信息 */}
+      <div className="overflow-x-auto">
+        {symbolLoading ? (
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr>
+                <th className="p-2">选择</th>
+                <th className="p-2">符号名</th>
+                <th className="p-2">文件路径</th>
+                <th className="p-2">总符号数</th>
+                <th className="p-2">已识别概念</th>
+                <th className="p-2">类型</th>
+                <th className="p-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 2, 3].map((n) => (
+                <tr key={n}>
+                  <td className="p-2"><Skeleton className="h-5 w-5" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-24" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-40" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-10" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-10" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-12" /></td>
+                  <td className="p-2"><Skeleton className="h-5 w-16" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : symbols.length > 0 ? (
+          <>
+            <table className="min-w-full bg-white border rounded">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-2 text-left">选择</th>
+                  <th className="p-2 text-left">符号名</th>
+                  <th className="p-2 text-left">文件路径</th>
+                  <th className="p-2 text-left">总符号数</th>
+                  <th className="p-2 text-left">已识别概念</th>
+                  <th className="p-2 text-left">类型</th>
+                  <th className="p-2 text-left">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {symbols.map((symbol) => {
+                  const isLongContext = typeof symbol.detail?.totalSymbols === 'number' && symbol.detail.totalSymbols >= LONG_CONTEXT_THRESHOLD;
+                  const isSelected = selectedSymbolIds.includes(symbol.id);
+                  const hasIdentifiedConcepts = symbol.identifiedConcepts && symbol.identifiedConcepts.length > 0;
+                  const isAnalyzing = analyzingSymbolIds.includes(symbol.id);
 
-      {symbolLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((n) => (
-            <Card key={n} className="overflow-hidden">
-              <CardHeader className="p-4">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : symbols.length > 0 ? (
-        <div className="space-y-2">
-          {symbols.map((symbol) => {
-            const isLongContext = typeof symbol.detail?.totalSymbols === 'number' && symbol.detail.totalSymbols >= LONG_CONTEXT_THRESHOLD;
-            const isSelected = selectedSymbolIds.includes(symbol.id);
-            const hasIdentifiedConcepts = symbol.identifiedConcepts && symbol.identifiedConcepts.length > 0;
-            
-            return (
-              <Card
-                key={symbol.id}
-                className={`overflow-hidden py-2 gap-0 
-                  ${isLongContext ? 'bg-blue-50 border-blue-200' : ''} 
-                  ${hasIdentifiedConcepts ? 'border-l-4 border-l-green-500' : ''}
-                  ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
-              >
-                <CardHeader className="p-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleToggleSymbolSelection(symbol.id)}
-                        className="flex-shrink-0 focus:outline-none"
-                      >
-                        {isSelected ? (
-                          <CheckCircle className="h-5 w-5 text-blue-600" />
-                        ) : (
-                          <Circle className="h-5 w-5 text-gray-300" />
-                        )}
-                      </button>
-                      <div>
-                        <CardTitle className="text-base flex items-center">
-                          {symbol.name}
-                          {isLongContext && (
-                            <span className="ml-2 text-xs font-semibold text-blue-700 bg-blue-200 px-1.5 py-0.5 rounded-full">
-                              长上下文
-                            </span>
-                          )}
-                          {hasIdentifiedConcepts && (
-                            <span className="ml-2 text-xs font-semibold text-green-700 bg-green-200 px-1.5 py-0.5 rounded-full flex items-center">
-                              <Book className="h-3 w-3 mr-1" />
-                              已识别概念 {symbol.identifiedConcepts.length}
-                            </span>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="text-xs font-mono mt-1">
-                          {symbol.path}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAnalyzeSymbol(symbol.id)}
-                      disabled={analyzingSymbolIds.includes(symbol.id) || isGeneratingConcepts}
-                      className={hasIdentifiedConcepts 
-                        ? "border-green-300 hover:bg-green-100" 
-                        : isLongContext 
-                          ? "border-blue-300 hover:bg-blue-100" 
-                          : ""}
+                  return (
+                    <tr
+                      key={symbol.id}
+                      className={
+                        (isSelected ? "bg-blue-50 " : "") +
+                        (hasIdentifiedConcepts ? "border-l-4 border-l-green-500 " : "") +
+                        "hover:bg-gray-50"
+                      }
                     >
-                      {analyzingSymbolIds.includes(symbol.id) ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                          分析中...
-                        </>
-                      ) : hasIdentifiedConcepts ? (
-                        "更新概念"
-                      ) : (
-                        "AI分析"
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="px-2">
-                  {symbol.detail && <span className="text-xs">${JSON.stringify(symbol.detail)}</span>}
-                  <div className="text-xs text-gray-400 mt-2">
-                    更新于: {new Date(symbol.updatedAt).toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <div
-          className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
-          <Code className="h-12 w-12 text-gray-300"/>
-          <p className="text-center text-gray-500">暂无关键代码标识数据</p>
-        </div>
-      )}
+                      <td className="p-2 align-middle">
+                        <button
+                          onClick={() => handleToggleSymbolSelection(symbol.id)}
+                          className="focus:outline-none"
+                          aria-label={isSelected ? "取消选择" : "选择"}
+                        >
+                          {isSelected ? (
+                            <CheckCircle className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-gray-300" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="p-2 text-xs text-gray-600 font-mono align-middle">
+                        {symbol.path}
+                      </td>
+                      <td className="p-2 text-center align-middle">
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <span className="cursor-help border-b border-dotted border-gray-400">
+                              {typeof symbol.detail?.totalSymbols === "number" ? symbol.detail.totalSymbols : "-"}
+                            </span>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80" align="start">
+                            <SymbolDetails symbol={symbol} />
+                          </HoverCardContent>
+                        </HoverCard>
+                      </td>
+                      <td className="p-2 text-center align-middle">
+                        {hasIdentifiedConcepts ? (
+                          <span className="inline-flex items-center text-green-700 bg-green-100 px-2 py-0.5 rounded text-xs">
+                            <Book className="h-3 w-3 mr-1" />
+                            {symbol.identifiedConcepts.length}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="p-2 text-center align-middle">
+                        {isLongContext ? (
+                          <span className="text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-xs font-semibold">长上下文</span>
+                        ) : (
+                          <span className="text-gray-500 text-xs">普通</span>
+                        )}
+                      </td>
+                      <td className="p-2 text-center align-middle">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isAnalyzing}
+                          onClick={() => handleAnalyzeSymbol(symbol.id)}
+                        >
+                          {isAnalyzing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Code className="h-4 w-4 mr-1" />}
+                          分析
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* 当只有一个符号时，在表格下方显示详情 */}
+            {symbols.length === 1 && (
+              <div className="mt-4 border rounded bg-gray-50">
+                <SymbolDetails symbol={symbols[0]} />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-gray-400 text-center py-8">暂无符号数据</div>
+        )}
+      </div>
     </div>
   );
 }
