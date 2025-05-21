@@ -25,6 +25,11 @@ export function ProjectDetail({ id }: { id: string }) {
 	const [symbolSearch, setSymbolSearch] = useState("");
 	const [symbolLoading, setSymbolLoading] = useState(false);
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const [apiResources, setApiResources] = useState<any[]>([])
+	const [isLoadingApiResources, setIsLoadingApiResources] = useState(false)
+	const [apiResourcesError, setApiResourcesError] = useState<string | null>(null)
+
 	const fetchSymbols = async (query = "") => {
 		setSymbolLoading(true);
 		try {
@@ -71,6 +76,27 @@ export function ProjectDetail({ id }: { id: string }) {
 
 		fetchProject()
 	}, [id])
+
+	useEffect(() => {
+		async function fetchApiResources() {
+			setIsLoadingApiResources(true)
+			setApiResourcesError(null)
+			try {
+				const response = await fetch('/api/context/api')
+				if (!response.ok) {
+					throw new Error('获取API资源失败')
+				}
+				const data = await response.json()
+				setApiResources(data)
+			} catch (error) {
+				console.error('获取API资源出错:', error)
+				setApiResourcesError(error instanceof Error ? error.message : '未知错误')
+			} finally {
+				setIsLoadingApiResources(false)
+			}
+		}
+		fetchApiResources()
+	}, [])
 
 	const handleEditSuccess = (updatedProject: Project) => {
 		setProject(updatedProject)
@@ -144,7 +170,7 @@ export function ProjectDetail({ id }: { id: string }) {
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-				<ProjectInfo project={project} symbols={symbols} />
+				<ProjectInfo project={project} symbols={symbols}/>
 
 				<ProjectResources
 					project={project}
@@ -155,6 +181,9 @@ export function ProjectDetail({ id }: { id: string }) {
 					fetchSymbols={fetchSymbols}
 					refreshProject={refreshProjectData}
 					onOpenGuidelineModal={() => setIsGuidelineModalOpen(true)}
+					apiResources={apiResources}
+					isLoadingApiResources={isLoadingApiResources}
+					apiResourcesError={apiResourcesError}
 				/>
 			</div>
 

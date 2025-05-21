@@ -20,6 +20,10 @@ interface ProjectResourcesProps {
   fetchSymbols: (query?: string) => Promise<void>
   refreshProject: () => void
   onOpenGuidelineModal: () => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  apiResources: any[]
+  isLoadingApiResources: boolean
+  apiResourcesError: string | null
 }
 
 export function ProjectResources({
@@ -30,7 +34,10 @@ export function ProjectResources({
   setSymbolSearch,
   fetchSymbols,
   refreshProject,
-  onOpenGuidelineModal
+  onOpenGuidelineModal,
+  apiResources,
+  isLoadingApiResources,
+  apiResourcesError,
 }: ProjectResourcesProps) {
   const [analyzingSymbolIds, setAnalyzingSymbolIds] = useState<string[]>([]);
 
@@ -90,11 +97,12 @@ export function ProjectResources({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="guidelines" onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="guidelines">规范文档</TabsTrigger>
             <TabsTrigger value="code">代码分析</TabsTrigger>
             <TabsTrigger value="dictionary">概念词典</TabsTrigger>
             <TabsTrigger value="symbols">符号分析</TabsTrigger>
+            <TabsTrigger value="api">API资源</TabsTrigger>
           </TabsList>
 
           <TabsContent value="guidelines" className="mt-4">
@@ -295,6 +303,54 @@ export function ProjectResources({
                   className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
                   <Code className="h-12 w-12 text-gray-300"/>
                   <p className="text-center text-gray-500">暂无符号分析数据</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="api" className="mt-4">
+            <div className="space-y-4">
+              {isLoadingApiResources ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((n) => (
+                    <Card key={n} className="overflow-hidden">
+                      <CardHeader className="p-4">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-4 w-64 mt-2" />
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              ) : apiResourcesError ? (
+                <div className="text-sm text-red-500 p-4 border border-red-200 rounded-lg">
+                  {apiResourcesError}
+                </div>
+              ) : apiResources.length > 0 ? (
+                <div className="space-y-2">
+                  {apiResources.map((api, index) => (
+                    <Card key={index} className="overflow-hidden">
+                      <CardHeader className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-base font-mono">
+                              {api.sourceHttpMethod} {api.sourceUrl}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {api.packageName}.{api.className}.{api.methodName}
+                            </CardDescription>
+                          </div>
+                          <Badge variant="outline">
+                            {api.type || 'REST'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
+                  <Code className="h-12 w-12 text-gray-300"/>
+                  <p className="text-center text-gray-500">暂无API资源</p>
                 </div>
               )}
             </div>
