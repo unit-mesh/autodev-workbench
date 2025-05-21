@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { ModelSelector } from "@/components/biz-ui/model-selector"
-import { Search, MessageSquare } from "lucide-react"
+import { MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAIAssistant } from "@/context/AIAssistantContext"
 import { UserAuthButton } from "@/components/auth/user-auth-button"
@@ -50,13 +50,13 @@ export function TopNavigation() {
 					</div>
 					<div className="flex items-center space-x-2">
 						<ModelSelector/>
-						<Button
-							type="button"
-							className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-						>
-							<Search className="h-4 w-4 mr-1"/>
-							<span>搜索</span>
-						</Button>
+						{/*<Button*/}
+						{/*	type="button"*/}
+						{/*	className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"*/}
+						{/*>*/}
+						{/*	<Search className="h-4 w-4 mr-1"/>*/}
+						{/*	<span>搜索</span>*/}
+						{/*</Button>*/}
 						<Button
 							variant={isOpen ? "secondary" : "ghost"}
 							size="icon"
