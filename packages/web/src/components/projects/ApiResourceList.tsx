@@ -111,7 +111,7 @@ export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceL
 		httpApisByPrefix[prefix][api.sourceUrl].push(api);
 	});
 
-	const httpPrefixKeys = Object.keys(httpApisByPrefix);
+	const httpPrefixKeys = Object.keys(httpApisByPrefix).sort(); // Sort prefix keys
 	const showRpcTab = rpcResources.length > 0;
 	const rpcTabValue = "__rpc__";
 
@@ -144,11 +144,6 @@ export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceL
 
 	const defaultTab = getDefaultTabValue();
 
-	// If there are no specific HTTP prefixes and no RPC APIs, but httpResources might exist (e.g. all under '其他HTTP接口')
-	// and that single prefix is the only content, tabs might be overkill.
-	// However, the request is to base tabs on httpApisByPrefix.
-	// If allTabKeys is empty here, it means no HTTP prefixes and no RPCs, handled by the earlier check.
-
 	return (
 		<Tabs defaultValue={defaultTab} className="w-full">
 			<TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${allTabKeys.length}, minmax(0, 1fr))` }}>
@@ -166,12 +161,15 @@ export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceL
 
 			{httpPrefixKeys.map(prefixKey => {
 				const apisByUrl = httpApisByPrefix[prefixKey];
+				const sortedUrls = Object.keys(apisByUrl).sort(); // Sort URLs within the prefix group
+
 				return (
 					<TabsContent key={prefixKey} value={prefixKey} className="mt-4">
 						<Card className="overflow-hidden bg-blue-50/50">
 							<CardContent className="p-4 space-y-4">
 								{/* Removed the explicit prefix header h3 as it's now in the tab title */}
-								{Object.entries(apisByUrl).map(([url, apiInstances]) => {
+									{sortedUrls.map(url => { // Iterate over sorted URLs
+									const apiInstances = apisByUrl[url];
 									const representativeApi = apiInstances[0];
 									return (
 										<div key={url} className="p-3 bg-white border border-blue-200 rounded-md shadow-sm space-y-2">
@@ -230,7 +228,14 @@ export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceL
 					{rpcResources.length > 0 ? ( // This check is somewhat redundant due to showRpcTab but good for safety
 						<Card className="overflow-hidden bg-green-50/50">
 							<CardContent className="p-4 space-y-3">
-								{rpcResources.map((api, index) => (
+								{rpcResources
+									.slice() // Create a copy before sorting to avoid mutating the original prop
+									.sort((a, b) => {
+										const nameA = a.sourceUrl || `${a.packageName}.${a.className}/${a.methodName}`;
+										const nameB = b.sourceUrl || `${b.packageName}.${b.className}/${b.methodName}`;
+										return nameA.localeCompare(nameB);
+									})
+									.map((api, index) => (
 									<div key={index} className="border border-green-200 rounded-md overflow-hidden bg-white shadow-sm">
 										<div className="flex items-center border-b border-green-200 bg-green-100/50 p-2.5">
 											<span className="font-mono text-sm text-green-800 flex-1 truncate" title={api.sourceUrl || `${api.packageName}.${api.className}/${api.methodName}`}>
