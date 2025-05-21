@@ -328,15 +328,26 @@ export function ProjectResources({
               ) : apiResources.length > 0 ? (
                 <div className="space-y-2">
                   {apiResources.map((api, index) => (
-                    <Card key={index} className="overflow-hidden">
+                    <Card key={index} className="overflow-hidden py-2 gap-0">
                       <CardHeader className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-base font-mono">
                               {api.sourceHttpMethod} {api.sourceUrl}
                             </CardTitle>
-                            <CardDescription className="mt-1">
-                              {api.packageName}.{api.className}.{api.methodName}
+                            <CardDescription className="mt-2 space-y-1">
+                              <div className="flex items-baseline gap-2 text-sm">
+                                <span className="text-gray-500 font-medium">Package:</span>
+                                <span className="font-mono text-gray-700">{api.packageName}</span>
+                              </div>
+                              <div className="flex items-baseline gap-2 text-sm">
+                                <span className="text-gray-500 font-medium">Class:</span>
+                                <span className="font-mono text-blue-600">{api.className}</span>
+                              </div>
+                              <div className="flex items-baseline gap-2 text-sm">
+                                <span className="text-gray-500 font-medium">Method:</span>
+                                <span className="font-mono text-green-600">{api.methodName}</span>
+                              </div>
                             </CardDescription>
                           </div>
                           <Badge variant="outline">
