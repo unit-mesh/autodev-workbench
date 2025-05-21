@@ -25,6 +25,7 @@ export async function GET() {
                "packageName",
                "className",
                "methodName"
+               "supplyType"
         FROM "ApiResource"
         ORDER BY "id";
 		`;
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
 					"packageName", 
 					"className", 
 					"methodName",
+					"supplyType",
 					"projectId"
 				)
 				VALUES (
@@ -88,6 +90,7 @@ export async function POST(request: Request) {
 					${item.packageName}, 
 					${item.className}, 
 					${item.methodName},
+					${item.supplyType},
 					${projectId}
 				)
 				RETURNING id;

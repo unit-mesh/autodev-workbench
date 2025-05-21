@@ -232,23 +232,25 @@ export class InterfaceAnalyzerApp {
 		return simplifiedResult;
 	}
 
-	async handleInterfaceContext() {
+	async handleInterfaceContext(isOutputInterface: boolean = true) {
 		await this.codeAnalyzer.initializeFiles();
 		const config = this.config;
 		this.codeAnalyzer.updateConfig(config);
 
 		const result: CodeAnalysisResult = await this.codeAnalyzer.analyzeDirectory();
 
-		const outputFilePath = path.join(process.cwd(), 'interface_analysis_result.json');
-		fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
+		if (isOutputInterface) {
+			const outputFilePath = path.join(process.cwd(), 'interface_analysis_result.json');
+			fs.writeFileSync(outputFilePath, JSON.stringify(result, null, 2));
 
-		if (config.upload) {
-			console.log(`Upload results to ${config.baseUrl}/projects/${config.projectId}`);
-			await this.uploadCodeResult(result);
+			if (config.upload) {
+				console.log(`Upload results to ${config.baseUrl}/projects/${config.projectId}`);
+				await this.uploadCodeResult(result);
+			}
+
+			console.log(`Save results to ${outputFilePath}`);
+			await this.codeAnalyzer.generateLearningMaterials(result);
 		}
-
-		console.log(`Save results to ${outputFilePath}`);
-		await this.codeAnalyzer.generateLearningMaterials(result);
 	}
 
 	async handleHttpApiContext() {

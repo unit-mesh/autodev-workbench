@@ -187,6 +187,7 @@ model ApiResource {
   packageName      String
   className        String
   methodName       String
+  supplyType       String   @default("HttpApi")
   createdAt        DateTime @default(now())
 
   projectId String?

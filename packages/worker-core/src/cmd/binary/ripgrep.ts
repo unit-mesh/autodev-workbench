@@ -148,8 +148,12 @@ export function truncateLine(line: string, maxLength: number = MAX_LINE_LENGTH):
 export async function getBinPath(vscodeAppRoot: string): Promise<string | undefined> {
 	const checkPath = async (pkgFolder: string) => {
 		const fullPath = path.join(vscodeAppRoot, pkgFolder, binName)
-		console.log('try to find ripgrep at', fullPath)
-		return (await fileExistsAtPath(fullPath)) ? fullPath : undefined
+		const result = (await fileExistsAtPath(fullPath)) ? fullPath : undefined;
+		if (result) {
+			console.log('found ripgrep at', result)
+		}
+
+		return result
 	}
 
 	if (await fileExistsAtPath(rgPath)) {
