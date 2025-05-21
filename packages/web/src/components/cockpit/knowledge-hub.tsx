@@ -216,7 +216,6 @@ export default function KnowledgeHub({
   };
 
   const getItemTypeIcon = (category: string) => {
-    // check category is string if not return with type
     if (typeof category !== "string") {
       return <FileText className="h-3 w-3 mr-1 text-blue-600" />;
     }
@@ -243,28 +242,6 @@ export default function KnowledgeHub({
     );
   };
 
-  // 添加检查词汇表条目是否与关键词匹配的函数
-  const isTermMatchingAnyKeyword = (term: ConceptDictionary) => {
-    if (extractedKeywords.length === 0) return false;
-
-    return extractedKeywords.some(keyword =>
-      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
-      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
-    );
-  };
-
-  // 获取词汇表条目匹配的关键词
-  const getMatchingKeywordsForTerm = (term: ConceptDictionary) => {
-    return extractedKeywords.filter(keyword =>
-      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
-      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
-    );
-  };
-
   const implicitKnowledge = apiResources.map(resource => {
     return {
       id: resource.id,
@@ -279,7 +256,6 @@ export default function KnowledgeHub({
     return matchedKeywords.includes(keyword);
   };
 
-  // 添加AI验证匹配判断逻辑
   const isKeywordAiVerified = (keyword: string) => {
     return aiVerifiedMatches.includes(keyword) && validationResults?.success;
   };
