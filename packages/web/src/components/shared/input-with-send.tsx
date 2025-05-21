@@ -37,12 +37,12 @@ export default function InputWithSend({
   const [isAnalyzingKeywords, setIsAnalyzingKeywords] = useState(false);
   const [extractedKeywords, setExtractedKeywords] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // 处理Textarea的输入变化
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // 直接调用父组件的onChange处理函数
     onChange(e);
-    
+
     // 更新data-empty属性以控制placeholder可见性
     if (textareaRef.current) {
       textareaRef.current.setAttribute('data-empty', e.target.value === '' ? 'true' : 'false');
@@ -64,76 +64,36 @@ export default function InputWithSend({
 
     setIsAnalyzingKeywords(true);
     try {
-      const keywordPrompt = `
-Please analyze the following text and extract the key domain terms and concepts. 
-Return only a JSON array of strings with the extracted keywords.
-For example: ["term1", "term2", "term3"]
-
-Text to analyze:
-${value}
-`;
-
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/concepts/actions/extract-keywords", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [
-            ...(systemPrompt ? [{ role: "system" as const, content: systemPrompt }] : []),
-            { role: "user" as const, content: keywordPrompt }
-          ],
+          text: value,
+          systemPrompt: systemPrompt,
         }),
       });
 
       if (!response.ok) {
         console.error("Failed to analyze keywords");
-        onSend(); // Call onSend even if keyword analysis fails
+        onSend();
         return;
       }
 
       const data = await response.json();
-      try {
-        let keywords: string[] = [];
-        const responseText = data.text;
-
-        const cleanedText = responseText.replace(/```[\s\S]*?```/g, (match: string) => {
-          return match.replace(/```[\w]*\n|\n```/g, '');
-        });
-
-        if (cleanedText.includes("[") && cleanedText.includes("]")) {
-          const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
-          if (jsonMatch) {
-            try {
-              keywords = JSON.parse(jsonMatch[0]);
-            } catch (e) {
-              console.error("Error parsing JSON array:", e);
-            }
-          }
+      if (data.success && data.keywords) {
+        setExtractedKeywords(data.keywords);
+        // When keywords are extracted, call the callback function
+        if (onKeywordsExtracted && data.keywords.length > 0) {
+          onKeywordsExtracted(data.keywords);
         }
-
-        if (keywords.length === 0) {
-          keywords = cleanedText
-            .split(/[,\n]/)
-            .map((k: string) => k.trim())
-            .filter((k: string) => k && !k.startsWith('"') && !k.startsWith('[') && !k.startsWith(']'));
-        }
-
-        setExtractedKeywords(keywords);
-        // 当提取到关键词时，调用回调函数
-        if (onKeywordsExtracted && keywords.length > 0) {
-          onKeywordsExtracted(keywords);
-        }
-      } catch (error) {
-        console.error("Error parsing keywords:", error);
-      } finally {
-        onSend();
       }
     } catch (error) {
       console.error("Error analyzing keywords:", error);
-      onSend(); // Call onSend if there's any error
     } finally {
       setIsAnalyzingKeywords(false);
+      onSend();
     }
   };
 
@@ -198,4 +158,3 @@ ${value}
     </div>
   )
 }
-
