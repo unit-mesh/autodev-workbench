@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 			const messages: CoreMessage[] = [
 				{
 					role: 'system',
-					content: '你是一个专业的领域驱动设计概念验证助手，你需要帮助验证提取的关键词是否准确、相关，并识别与项目词汇表的匹配项。'
+					content: '你是一个专业的领域驱动设计概念验证助手，你需要帮助验证提取的关键词是否准确、相关，并识别与项目词汇表的匹配项。注意控制关键词的数量，避免过多的冗余。'
 				},
 				{
 					role: 'user',

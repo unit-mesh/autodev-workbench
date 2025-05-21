@@ -40,120 +40,108 @@ export default function ProjectConceptDictionary({
   aiVerifiedMatches,
   validationResults
 }: ProjectGlossaryProps) {
-  const isTermMatchingAnyKeyword = (term: ConceptDictionary) => {
-    if (extractedKeywords.length === 0) return false;
+  const isTermMatching = (term: ConceptDictionary) => {
+    if (extractedKeywords.length === 0) return { isMatch: false, matches: [] };
 
-    return extractedKeywords.some(keyword =>
+    const matches = extractedKeywords.filter(keyword =>
       term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
       term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
       keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
       keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
     );
-  };
 
-  const getMatchingKeywordsForTerm = (term: ConceptDictionary) => {
-    return extractedKeywords.filter(keyword =>
-      term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
-      term.termEnglish.toLowerCase().includes(keyword.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termChinese.toLowerCase()) ||
-      keyword.toLowerCase().includes(term.termEnglish.toLowerCase())
-    );
-  };
-
-  const isKeywordAiVerified = (keyword: string) => {
-    return aiVerifiedMatches.includes(keyword) && validationResults?.success;
+    return {
+      isMatch: matches.length > 0,
+      matches,
+      isAiVerified: matches.some(keyword =>
+        aiVerifiedMatches.includes(keyword) && validationResults?.success
+      )
+    };
   };
 
   return (
-    <div className="border-t border-gray-200 p-3">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium text-gray-700">项目词汇表</h3>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+    <div className="border-t border-gray-200 p-2">
+      <div className="flex justify-between items-center mb-1">
+        <h3 className="text-xs font-medium text-gray-700">项目词汇表</h3>
+        <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
           <Plus className="h-3 w-3"/>
         </Button>
       </div>
-      <ScrollArea className="h-48">
+      <ScrollArea className="h-40">
         {isLoadingGlossary ? (
-          <div className="flex justify-center items-center h-20">
-            <Loader2 className="h-4 w-4 animate-spin text-gray-400"/>
+          <div className="flex justify-center items-center h-12">
+            <Loader2 className="h-3 w-3 animate-spin text-gray-400"/>
           </div>
         ) : glossaryError ? (
-          <div className="text-xs text-red-500 p-2">
-            获取词汇表出错: {glossaryError}
+          <div className="text-xs text-red-500 p-1">
+            错误: {glossaryError}
           </div>
         ) : glossaryTerms.length === 0 ? (
-          <div className="text-xs text-gray-500 p-2">
+          <div className="text-xs text-gray-500 p-1">
             暂无词汇表数据
           </div>
         ) : (
-          <div className="space-y-1">
-            {glossaryTerms.map((item) => {
-              const isMatched = isTermMatchingAnyKeyword(item);
-              const matchingKeywords = isMatched ? getMatchingKeywordsForTerm(item) : [];
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-gray-500 border-b border-gray-100">
+                <th className="font-medium text-left py-0.5 pl-1 w-[45%]">中文</th>
+                <th className="font-medium text-left py-0.5 w-[45%]">英文</th>
+                <th className="w-[10%]"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {glossaryTerms.map((item) => {
+                const { isMatch, matches, isAiVerified } = isTermMatching(item);
 
-              const isAiVerified = matchingKeywords.some(keyword => isKeywordAiVerified(keyword));
-
-              return (
-                <TooltipProvider key={item.id}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={`text-xs p-1.5 rounded-md ${
-                          isAiVerified
-                            ? "bg-purple-50 border border-purple-100"
-                            : isMatched
-                              ? "bg-green-50 border border-green-100"
-                              : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <span className={`font-medium ${
-                            isAiVerified
-                              ? "text-purple-800"
-                              : isMatched
-                                ? "text-green-800"
-                                : "text-gray-800"
-                          }`}>
-                            {item.termChinese}
-                          </span>
-                          <span className="text-gray-400">({item.termEnglish})</span>
-                          {isAiVerified ? (
-                            <AlertCircle className="h-3 w-3 text-purple-600"/>
-                          ) : isMatched ? (
-                            <Check className="h-3 w-3 text-green-600"/>
-                          ) : null}
-                          <span className="text-gray-500"> - {item.descChinese}</span>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    {(isMatched || isAiVerified) && (
+                return (
+                  <TooltipProvider key={item.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <tr className="cursor-pointer hover:bg-gray-50">
+                          <td className="py-0.5 pl-1 truncate font-medium">{item.termChinese}</td>
+                          <td className="py-0.5 truncate text-gray-500">{item.termEnglish}</td>
+                          <td className="text-center">
+                            {isAiVerified ? (
+                              <AlertCircle className="h-2.5 w-2.5 inline-block text-purple-600"/>
+                            ) : isMatch ? (
+                              <Check className="h-2.5 w-2.5 inline-block text-green-600"/>
+                            ) : null}
+                          </td>
+                        </tr>
+                      </TooltipTrigger>
                       <TooltipContent>
-                        <div className="text-xs max-w-60">
-                          <p className={`font-medium ${isAiVerified ? "text-purple-800" : ""}`}>
-                            {isAiVerified ? "AI验证匹配的关键词:" : "匹配关键词:"}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {matchingKeywords.map((keyword, i) => (
-                              <Badge
-                                key={i}
-                                variant="outline"
-                                className={isKeywordAiVerified(keyword)
-                                  ? "bg-purple-50 text-purple-800 border-purple-300"
-                                  : "bg-green-50 text-green-800 border-green-300"
-                                }
-                              >
-                                {keyword}
-                              </Badge>
-                            ))}
-                          </div>
+                        <div className="text-xs max-w-52">
+                          <p className="font-medium">{item.descChinese}</p>
+                          {isMatch && (
+                            <>
+                              <p className={`text-xs mt-1 ${isAiVerified ? "text-purple-700" : "text-green-700"}`}>
+                                {isAiVerified ? "AI验证匹配:" : "匹配:"}
+                              </p>
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {matches.map((keyword, i) => (
+                                  <Badge
+                                    key={i}
+                                    variant="outline"
+                                    className={`text-[10px] py-0 px-1 ${
+                                      aiVerifiedMatches.includes(keyword) && validationResults?.success
+                                        ? "bg-purple-50 text-purple-700 border-purple-200"
+                                        : "bg-green-50 text-green-700 border-green-200"
+                                    }`}
+                                  >
+                                    {keyword}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })}
-          </div>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </ScrollArea>
     </div>
