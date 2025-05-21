@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ConceptDictionary {
   id: string
@@ -41,12 +42,14 @@ interface ConceptDictionaryTabProps {
 
 export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryTabProps) {
   const [analyzing, setAnalyzing] = useState(false)
+  const [merging, setMerging] = useState(false)
   const [showAnalysisDialog, setShowAnalysisDialog] = useState(false)
   const [analysisResults, setAnalysisResults] = useState<{
     duplicates: DuplicateGroup[];
     mergeSuggestions: MergeSuggestion[];
     analysis: string;
   } | null>(null)
+  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({})
 
   const handleAnalyzeConcepts = async () => {
     if (conceptDictionaries.length <= 1) {
@@ -79,6 +82,8 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
           analysis: data.analysis || ""
         })
         setShowAnalysisDialog(true)
+        // Clear any previously selected items
+        setSelectedItems({})
       } else {
         toast({
           title: "分析失败",
@@ -94,6 +99,85 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
       })
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const toggleItemSelection = (id: string) => {
+    setSelectedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
+
+  const handleMergeConcepts = async (groupType: 'duplicates' | 'mergeSuggestions', groupIndex: number) => {
+    if (!analysisResults) return
+
+    const group = analysisResults[groupType][groupIndex]
+    const selectedIds = group.group
+      .filter(item => selectedItems[item.id])
+      .map(item => item.id)
+
+    if (selectedIds.length < 2) {
+      toast({
+        title: "合并失败",
+        description: "请至少选择两个概念进行合并",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setMerging(true)
+    try {
+      const mergeData = {
+        conceptIds: selectedIds,
+        // If from mergeSuggestions, use suggested merged term, otherwise use empty
+        mergedTerm: groupType === 'mergeSuggestions'
+          ? (group as MergeSuggestion).mergedTerm
+          : undefined
+      }
+
+      const response = await fetch('/api/analyze-concepts/merge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mergeData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        toast({
+          title: "合并成功",
+          description: "已成功合并所选概念",
+          variant: "default"
+        })
+
+        // Clear selection for merged items
+        const newSelectedItems = {...selectedItems}
+        selectedIds.forEach(id => {
+          delete newSelectedItems[id]
+        })
+        setSelectedItems(newSelectedItems)
+
+        // Optionally, refresh the concept list or close the dialog
+        // For now, let's just close the dialog
+        setShowAnalysisDialog(false)
+      } else {
+        toast({
+          title: "合并失败",
+          description: data.message || "无法合并所选概念",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "合并失败",
+        description: "处理合并请求时出错",
+        variant: "destructive"
+      })
+    } finally {
+      setMerging(false)
     }
   }
 
@@ -154,9 +238,9 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
         </div>
       )}
 
-      {/* 分析结果对话框 */}
+      {/* 分析结果对话框 - 增大尺寸 */}
       <Dialog open={showAnalysisDialog} onOpenChange={setShowAnalysisDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>概念词典分析结果</DialogTitle>
             <DialogDescription>
@@ -184,13 +268,28 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                       <div key={idx} className="p-3 border rounded-md">
                         <div className="flex flex-wrap gap-2 mb-2">
                           {duplicate.group.map(item => (
-                            <span key={item.id} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
-                              {item.term}
-                            </span>
+                            <div key={item.id} className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+                              <Checkbox
+                                id={`dup-${idx}-${item.id}`}
+                                checked={!!selectedItems[item.id]}
+                                onCheckedChange={() => toggleItemSelection(item.id)}
+                              />
+                              <label htmlFor={`dup-${idx}-${item.id}`} className="cursor-pointer">{item.term}</label>
+                            </div>
                           ))}
                         </div>
                         <p className="text-sm mb-1"><span className="font-medium">原因：</span>{duplicate.reason}</p>
-                        <p className="text-sm"><span className="font-medium">建议：</span>{duplicate.recommendation}</p>
+                        <p className="text-sm mb-3"><span className="font-medium">建议：</span>{duplicate.recommendation}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleMergeConcepts('duplicates', idx)}
+                          disabled={merging || duplicate.group.filter(item => selectedItems[item.id]).length < 2}
+                          className="flex items-center text-xs"
+                        >
+                          {merging ? <Spinner className="mr-1 h-3 w-3" /> : <GitMerge className="mr-1 h-3 w-3" />}
+                          合并所选概念
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -209,18 +308,33 @@ export function ConceptDictionaryTab({ conceptDictionaries }: ConceptDictionaryT
                       <div key={idx} className="p-3 border rounded-md">
                         <div className="flex flex-wrap gap-2 mb-2">
                           {suggestion.group.map(item => (
-                            <span key={item.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                              {item.term}
-                            </span>
+                            <div key={item.id} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                              <Checkbox
+                                id={`sug-${idx}-${item.id}`}
+                                checked={!!selectedItems[item.id]}
+                                onCheckedChange={() => toggleItemSelection(item.id)}
+                              />
+                              <label htmlFor={`sug-${idx}-${item.id}`} className="cursor-pointer">{item.term}</label>
+                            </div>
                           ))}
                         </div>
                         <p className="text-sm mb-2"><span className="font-medium">原因：</span>{suggestion.reason}</p>
-                        <div className="bg-gray-50 p-2 rounded-md mb-1 text-sm">
+                        <div className="bg-gray-50 p-2 rounded-md mb-3 text-sm">
                           <p><span className="font-medium">建议合并为：</span></p>
                           <p>中文术语：{suggestion.mergedTerm.termChinese}</p>
                           <p>英文术语：{suggestion.mergedTerm.termEnglish}</p>
                           <p>描述：{suggestion.mergedTerm.descChinese}</p>
                         </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleMergeConcepts('mergeSuggestions', idx)}
+                          disabled={merging || suggestion.group.filter(item => selectedItems[item.id]).length < 2}
+                          className="flex items-center text-xs"
+                        >
+                          {merging ? <Spinner className="mr-1 h-3 w-3" /> : <GitMerge className="mr-1 h-3 w-3" />}
+                          合并所选概念
+                        </Button>
                       </div>
                     ))}
                   </div>
