@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// 使用大语言模型验证概念并与词汇表匹配
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
