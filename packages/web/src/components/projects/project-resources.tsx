@@ -136,13 +136,6 @@ export function ProjectResources({
           <TabsContent value="dictionary" className="mt-4">
             {project.conceptDictionaries.length > 0 ? (
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-medium text-gray-700">概念词典列表</h3>
-                  <Button size="sm" variant="outline">
-                    <BookOpen className="h-4 w-4 mr-2"/>
-                    添加词条
-                  </Button>
-                </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
