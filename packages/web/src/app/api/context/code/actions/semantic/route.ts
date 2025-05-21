@@ -1,6 +1,6 @@
 /// AI Generate
 import { NextResponse } from 'next/server';
-import { pool } from '../../../../_utils/db';
+import { pool } from '@/app/api/_utils/db';
 import { reply } from "@/app/api/_utils/reply";
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
