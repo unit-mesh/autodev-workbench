@@ -54,10 +54,10 @@ export function ProjectResources({
         <Tabs defaultValue="guidelines" onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="guidelines">规范文档</TabsTrigger>
-            <TabsTrigger value="code">代码分析</TabsTrigger>
             <TabsTrigger value="dictionary">概念词典</TabsTrigger>
-            <TabsTrigger value="symbols">符号分析</TabsTrigger>
+            <TabsTrigger value="code">代码上下文</TabsTrigger>
             <TabsTrigger value="api">API资源</TabsTrigger>
+            <TabsTrigger value="symbols">代码符号</TabsTrigger>
           </TabsList>
 
           <TabsContent value="guidelines" className="mt-4">
