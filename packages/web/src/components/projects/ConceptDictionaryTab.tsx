@@ -89,7 +89,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
   const fetchDictionary = useCallback(async () => {
     try {
       setIsFetching(true);
-      const response = await fetch('/api/concepts/dict');
+      const response = await fetch('/api/concepts');
       if (!response.ok) {
         throw new Error('Failed to fetch dictionary data');
       }
@@ -328,7 +328,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
 
     setIsDeleting(true)
     try {
-      const response = await fetch(`/api/concepts/dict?id=${deletingConceptId}`, {
+      const response = await fetch(`/api/concepts?id=${deletingConceptId}`, {
         method: 'DELETE',
       })
 
@@ -395,7 +395,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
 
     setIsBatchDeleting(true)
     try {
-      const response = await fetch('/api/concepts/dict', {
+      const response = await fetch('/api/concepts', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

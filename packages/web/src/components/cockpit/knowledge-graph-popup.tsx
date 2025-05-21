@@ -53,7 +53,7 @@ export default function KnowledgeGraphPopup({ onClose }: KnowledgeGraphPopupProp
     const fetchDictionary = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/concepts/dict')
+        const response = await fetch('/api/concepts')
         if (!response.ok) {
           throw new Error('获取数据失败')
         }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool } from '../../../_utils/db';
+import { pool } from '../../_utils/db';
 
 // 获取特定项目的词汇表
 export async function GET(

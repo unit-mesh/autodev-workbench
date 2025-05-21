@@ -81,11 +81,11 @@ export default function KnowledgeHub({
       setIsLoadingGlossary(true)
       setGlossaryError(null)
       try {
-        let url = '/api/concepts/dict';
+        let url = '/api/concepts';
 
         // 如果提供了项目ID，则获取特定项目的词汇表
         if (projectId) {
-          url = `/api/concepts/dict/${projectId}`;
+          url = `/api/concepts/${projectId}`;
         }
 
         const response = await fetch(url);
