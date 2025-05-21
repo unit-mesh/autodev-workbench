@@ -41,7 +41,7 @@ export function ConceptLinking({ useAI }: { useAI: boolean }) {
   const [isValidating, setIsValidating] = useState(false)
   const fetchExtractedConcepts = async (code: string) => {
     try {
-      const response = await fetch("/api/extract-concepts", {
+      const response = await fetch("/api/concepts/actions/extractze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { transaction, } from "../../../_utils/db";
+import { transaction, } from "../../../../_utils/db";
 
 // Define types for the request structure
 type MergeGroup = {
