@@ -119,7 +119,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
 
     setAnalyzing(true)
     try {
-      const response = await fetch('/api/analyze-concepts', {
+      const response = await fetch('/api/concepts/actions/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
 
     setMerging(true)
     try {
-      const response = await fetch('/api/analyze-concepts/merge', {
+      const response = await fetch('/api/concepts/actions/analyze/merge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -273,7 +273,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
         }]
       }
 
-      const response = await fetch('/api/analyze-concepts/merge', {
+      const response = await fetch('/api/concepts/actions/analyze/merge', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
