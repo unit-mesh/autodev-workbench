@@ -165,7 +165,7 @@ export class InterfaceAnalyzerApp {
 		symbols: SymbolInfo[];
 		summary: {
 			[className: string]: {
-				_classComment: string;
+				_classComment?: string;
 				[methodName: string]: string;
 			}
 		}
@@ -176,7 +176,7 @@ export class InterfaceAnalyzerApp {
 			symbols: SymbolInfo[];
 			summary: {
 				[className: string]: {
-					_classComment: string;
+					_classComment?: string;
 					[methodName: string]: string;
 				}
 			}
@@ -189,15 +189,19 @@ export class InterfaceAnalyzerApp {
 
 			const summary: {
 				[className: string]: {
-					_classComment: string;
+					_classComment?: string;
 					[methodName: string]: string;
 				}
 			} = {};
 
 			for (const classSymbol of classSymbols) {
-				summary[classSymbol.name] = {
-					_classComment: classSymbol.comment || ''
-				};
+				if (classSymbol.comment && classSymbol.comment.trim() !== '') {
+					summary[classSymbol.name] = {
+						_classComment: classSymbol.comment
+					};
+				} else {
+					summary[classSymbol.name] = {};
+				}
 			}
 
 			for (const symbol of fileSymbol.symbols) {
