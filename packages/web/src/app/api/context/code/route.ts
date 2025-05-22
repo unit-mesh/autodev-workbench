@@ -1,9 +1,60 @@
 import { NextResponse } from 'next/server';
 import { pool } from '../../_utils/db';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Fetch the most recent code analysis results with all fields
+    const { searchParams } = new URL(request.url);
+    const keywords = searchParams.get('keywords');
+
+    // If keywords are provided, filter the results
+    if (keywords && keywords.trim() !== '') {
+      const keywordArray = keywords.split(',').map(k => k.trim());
+
+      // Create dynamic queries using SQL template literals
+      let conditions = [];
+      for (const keyword of keywordArray) {
+        const pattern = `%${keyword}%`;
+        const result = await pool.sql`
+          SELECT 
+            id,
+            path,
+            content,
+            title,
+            description,
+            source,
+            language,
+            "createdAt",
+            "updatedAt"
+          FROM "CodeAnalysis"
+          WHERE 
+            path ILIKE ${pattern} OR
+            content ILIKE ${pattern} OR
+            title ILIKE ${pattern} OR
+            description ILIKE ${pattern}
+        `;
+        conditions.push(result.rows);
+      }
+
+      // Combine results and remove duplicates
+      const allResults = [].concat(...conditions);
+      const uniqueIds = new Set();
+      const uniqueResults = allResults.filter(item => {
+        if (!uniqueIds.has(item.id)) {
+          uniqueIds.add(item.id);
+          return true;
+        }
+        return false;
+      });
+
+      // Sort by createdAt and limit to 50
+      const sortedResults = uniqueResults.sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ).slice(0, 50);
+
+      return NextResponse.json(sortedResults);
+    }
+
+    // Default query without keywords
     const result = await pool.sql`
       SELECT 
         id,

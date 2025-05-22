@@ -52,6 +52,7 @@ const getMethodBgClass = (method: string): string => {
 
 export default function AssetRecommendation(props: AssetRecommendationProps) {
   const {
+    keywords,
     selectedAPIs,
     selectedCodeSnippets,
     selectedStandards,
@@ -77,13 +78,16 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   const [isLoadingGuidelines, setIsLoadingGuidelines] = useState(false)
   const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
 
+  // Format keywords for API requests
+  const keywordsParam = keywords && keywords.length > 0 ? `keywords=${keywords.join(',')}` : '';
+
   // Fetch API resources
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
       setApiError(null)
       try {
-        const response = await fetch('/api/context/api')
+        const response = await fetch(`/api/context/api${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch APIs: ${response.status}`)
         setApis(await response.json())
       } catch (error) {
@@ -93,7 +97,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       }
     }
     fetchApis()
-  }, [])
+  }, [keywordsParam])
 
   // Fetch Guidelines
   useEffect(() => {
@@ -101,7 +105,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       setIsLoadingGuidelines(true)
       setGuidelinesError(null)
       try {
-        const response = await fetch("/api/guideline")
+        const response = await fetch(`/api/guideline${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch guidelines: ${response.status}`)
         setGuidelines(await response.json())
       } catch (error) {
@@ -111,7 +115,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       }
     }
     fetchGuidelines()
-  }, [])
+  }, [keywordsParam])
 
   // Fetch Code Snippets
   useEffect(() => {
@@ -119,7 +123,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       setIsLoadingSnippets(true)
       setSnippetsError(null)
       try {
-        const response = await fetch("/api/context/code")
+        const response = await fetch(`/api/context/code${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch code snippets: ${response.status}`)
         setCodeSnippets(await response.json())
       } catch (error) {
@@ -129,9 +133,9 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       }
     }
     fetchCodeSnippets()
-  }, [])
+  }, [keywordsParam])
 
-  // Filter assets based on keywords if needed
+  // No longer need to filter assets since the backend now handles it
   const filteredApis = apis
   const filteredCodeSnippets = codeSnippets
   const filteredStandards = guidelines
@@ -278,7 +282,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
             <div className="space-y-3">
               {filteredCodeSnippets.map((snippet: CodeAnalysis) => (
                 <Card key={snippet.id} className={`overflow-hidden ${selectedCodeSnippets.includes(snippet.id) ? 'border-green-500 bg-green-50/30' : ''}`}>
-                  <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
+                  <CardHeader className="px-4 py-2 pb-0 bg-muted/50 flex flex-row items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-green-500' : 'text-gray-300'}`} />
                       <CardTitle className="text-sm font-medium">{snippet.title}</CardTitle>

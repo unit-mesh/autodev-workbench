@@ -3,8 +3,43 @@ import { NextResponse } from 'next/server';
 import { sql } from '../_utils/db';
 
 // 获取所有规范
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const keywords = searchParams.get('keywords');
+
+    // Base query
+    let query = `
+      SELECT * FROM "Guideline"
+    `;
+
+    // Add WHERE clause if keywords are provided
+    if (keywords && keywords.trim() !== '') {
+      const keywordArray = keywords.split(',').map(k => k.trim());
+      const conditions: string[] = [];
+      const params: string[] = [];
+      let paramIndex = 1;
+
+      keywordArray.forEach(keyword => {
+        const pattern = `%${keyword}%`;
+        conditions.push(`
+          "title" ILIKE $${paramIndex} OR
+          "description" ILIKE $${paramIndex} OR
+          "content" ILIKE $${paramIndex}
+        `);
+        params.push(pattern);
+        paramIndex++;
+      });
+
+      query += ` WHERE (${conditions.join(' OR ')})`;
+      query += ` ORDER BY "updatedAt" DESC`;
+
+      // Replace sql.query with the correct sql template literal
+      const result = await sql`${query}${params.map(p => sql`${p}`)}`;
+      return NextResponse.json(result);
+    }
+
+    // Default query without keywords
     const rows = await sql`
       SELECT * FROM "Guideline" 
       ORDER BY "updatedAt" DESC
