@@ -428,7 +428,31 @@ export default function KnowledgeHub({
 					</ScrollArea>
 				</div>
 
-				{/* Panel 3：提取的关键词 */}
+				{/* Panel 3：项目词汇表 */}
+				<div className="border-t border-gray-200 p-2">
+					<div className="flex justify-between items-center mb-2">
+						<h3 className="text-sm font-semibold text-gray-700">项目词汇表</h3>
+						<Button
+							variant="outline"
+							size="sm"
+							className="h-6 text-[10px]"
+							onClick={() => setShowKnowledgeGraphPopup(true)}
+						>
+							<Network className="h-3 w-3 mr-1"/>
+							知识图谱
+						</Button>
+					</div>
+					<ProjectConceptDictionary
+						glossaryTerms={glossaryTerms}
+						isLoadingGlossary={isLoadingGlossary}
+						glossaryError={glossaryError}
+						extractedKeywords={extractedKeywords}
+						aiVerifiedMatches={aiVerifiedMatches}
+						validationResults={validationResults}
+					/>
+				</div>
+
+				{/* Panel 4：提取的关键词 */}
 				<div className="border-t border-gray-200 p-3">
 					<div className="flex justify-between items-center mb-2">
 						<h3 className="text-sm font-semibold text-gray-700">提取的关键词</h3>
@@ -522,9 +546,6 @@ export default function KnowledgeHub({
 								</>
 							)}
 						</Button>
-						<Button variant="outline" size="sm" className="text-xs">
-							添加到词汇表
-						</Button>
 					</div>
 
 					{validationResults && (
@@ -540,32 +561,6 @@ export default function KnowledgeHub({
 							)}
 						</div>
 					)}
-				</div>
-
-				{/* Panel 4：项目词汇表 */}
-				<ProjectConceptDictionary
-					glossaryTerms={glossaryTerms}
-					isLoadingGlossary={isLoadingGlossary}
-					glossaryError={glossaryError}
-					extractedKeywords={extractedKeywords}
-					aiVerifiedMatches={aiVerifiedMatches}
-					validationResults={validationResults}
-				/>
-			</div>
-
-			{/* end line: small panel */}
-			<div className="h-12 order-t border-gray-200 border-t p-3">
-				<div className="flex justify-between items-center">
-					<h3 className="text-sm font-medium text-gray-700">知识图谱浏览器</h3>
-					<Button
-						variant="outline"
-						size="sm"
-						className="h-6 text-[10px]"
-						onClick={() => setShowKnowledgeGraphPopup(true)}
-					>
-						<Network className="h-3 w-3 mr-1"/>
-						查看
-					</Button>
 				</div>
 			</div>
 
