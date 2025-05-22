@@ -32,31 +32,18 @@ export async function POST(request: NextRequest) {
 async function enrichRequirement(text: string, systemPrompt?: string) {
   try {
     const enrichPrompt = `
-As a requirements specialist, please enrich the following requirement with more context and details.
+Please briefly expand on this requirement while maintaining its original intent:
 
-GUIDELINES:
-- Maintain the original intent but add missing details and context
-- Consider various user scenarios and edge cases
-- Add technical considerations that would be helpful for implementation
-- Include non-functional requirements like performance, security, scalability
-- Structure the response in clear paragraphs with logical flow
-- Add specific examples of user interactions where appropriate
-- Keep the language clear, specific, and actionable
-- Preserve domain-specific terminology from the original text
-
-Original requirement:
 ${text}
 
-Please provide an enriched version that maintains the original intent but adds context and clarity.
-`;
+Add only essential missing details or context that would help with implementation.`;
 
     const messages = [
       ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
       { role: 'user' as const, content: enrichPrompt }
     ];
 
-    const responseText = await reply(messages);
-    return responseText;
+    return await reply(messages);
   } catch (error) {
     console.error("Error enriching requirement:", error);
     throw error;
