@@ -1,51 +1,33 @@
 /// AI Generated content
 import { NextResponse } from 'next/server';
-import { sql } from '../_utils/db';
+import { pool } from '../_utils/db';
 
-// 获取所有规范
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const keywords = searchParams.get('keywords');
 
-    // Base query
-    let query = `
-      SELECT * FROM "Guideline"
-    `;
-
-    // Add WHERE clause if keywords are provided
     if (keywords && keywords.trim() !== '') {
       const keywordArray = keywords.split(',').map(k => k.trim());
-      const conditions: string[] = [];
-      const params: string[] = [];
-      let paramIndex = 1;
+      const patterns = keywordArray.map(keyword => `%${keyword}%`);
 
-      keywordArray.forEach(keyword => {
-        const pattern = `%${keyword}%`;
-        conditions.push(`
-          "title" ILIKE $${paramIndex} OR
-          "description" ILIKE $${paramIndex} OR
-          "content" ILIKE $${paramIndex}
-        `);
-        params.push(pattern);
-        paramIndex++;
-      });
+      const result = await pool.sql`
+        SELECT * FROM "Guideline"
+        WHERE "title" ILIKE ${patterns[0]}
+        OR "description" ILIKE ${patterns[0]}
+        OR "content" ILIKE ${patterns[0]}
+        ORDER BY "updatedAt" DESC
+      `;
 
-      query += ` WHERE (${conditions.join(' OR ')})`;
-      query += ` ORDER BY "updatedAt" DESC`;
-
-      // Replace sql.query with the correct sql template literal
-      const result = await sql`${query}${params.map(p => sql`${p}`)}`;
-      return NextResponse.json(result);
+      return NextResponse.json(result.rows);
     }
 
-    // Default query without keywords
-    const rows = await sql`
+    const result = await pool.sql`
       SELECT * FROM "Guideline" 
       ORDER BY "updatedAt" DESC
     `;
 
-    return NextResponse.json(rows);
+    return NextResponse.json(result.rows);
   } catch (error) {
     console.error('获取规范失败:', error);
     return NextResponse.json(
@@ -72,7 +54,7 @@ export async function POST(request: Request) {
     const categoryJson = JSON.stringify(body.category);
     const now = new Date();
 
-    const result = await sql`
+    const result = await pool.sql`
       INSERT INTO "Guideline" (
         "title", 
         "description", 
@@ -104,7 +86,7 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    return NextResponse.json(result[0]);
+    return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('创建规范失败:', error);
     return NextResponse.json(

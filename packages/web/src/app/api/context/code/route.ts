@@ -6,11 +6,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const keywords = searchParams.get('keywords');
 
-    // If keywords are provided, filter the results
     if (keywords && keywords.trim() !== '') {
       const keywordArray = keywords.split(',').map(k => k.trim());
-
-      // Create dynamic queries using SQL template literals
       let conditions = [];
       for (const keyword of keywordArray) {
         const pattern = `%${keyword}%`;
@@ -35,7 +32,6 @@ export async function GET(request: Request) {
         conditions.push(result.rows);
       }
 
-      // Combine results and remove duplicates
       const allResults = [].concat(...conditions);
       const uniqueIds = new Set();
       const uniqueResults = allResults.filter(item => {
@@ -46,7 +42,6 @@ export async function GET(request: Request) {
         return false;
       });
 
-      // Sort by createdAt and limit to 50
       const sortedResults = uniqueResults.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ).slice(0, 50);
@@ -54,7 +49,6 @@ export async function GET(request: Request) {
       return NextResponse.json(sortedResults);
     }
 
-    // Default query without keywords
     const result = await pool.sql`
       SELECT 
         id,
