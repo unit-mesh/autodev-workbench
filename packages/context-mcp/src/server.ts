@@ -100,7 +100,7 @@ export class MCPServerImpl {
 
   loadPreset(preset: Preset) {
     this.preset = preset;
-    installCapabilities(this.mcpInst, this.impl);
+    installCapabilities(this.mcpInst, this.impl, preset);
   }
 
   async serveHttp(options: HttpServeOptions) : Promise<http.Server> {
