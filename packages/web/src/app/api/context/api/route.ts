@@ -2,17 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@vercel/postgres";
 import { generateId } from "@/app/api/_utils/db";
 
-export type ApiResource = {
-	id?: string;
-	systemId?: string;
-	sourceUrl: string;
-	sourceHttpMethod: string;
-	packageName: string;
-	className: string;
-	methodName: string;
-	supplyType: string;
-}
-
 export async function GET() {
 	try {
 		const client = createClient();

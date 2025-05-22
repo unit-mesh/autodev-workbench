@@ -68,3 +68,15 @@ export type SymbolAnalysis = {
 	projectId: string | null
 	project: Project
 }
+
+
+export type ApiResource = {
+	id?: string;
+	systemId?: string;
+	sourceUrl: string;
+	sourceHttpMethod: string;
+	packageName: string;
+	className: string;
+	methodName: string;
+	supplyType: string;
+}

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { ApiResource } from "@/types/project.type"
 
 // 定义消息类型
 type MessageType =
@@ -50,17 +51,6 @@ interface API {
   response?: string
   code?: string
   selected?: boolean
-}
-
-// API Resource 结构 (来自数据库)
-interface ApiResource {
-  id: string
-  sourceUrl: string
-  sourceHttpMethod: string
-  packageName: string
-  className: string
-  methodName: string
-  supplyType: string
 }
 
 // 规范结构
@@ -115,12 +105,10 @@ export default function Chat() {
   const [editValue, setEditValue] = useState("")
   const [hasDraft, setHasDraft] = useState(false)
   const [apis, setApis] = useState<API[]>([])
-  const [isLoadingApis, setIsLoadingApis] = useState(false)
-  const [apiError, setApiError] = useState<string | null>(null)
-
+  const [, setIsLoadingApis] = useState(false)
+  const [, setApiError] = useState<string | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  // 从数据库获取API数据
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
@@ -134,8 +122,6 @@ export default function Chat() {
         }
 
         const data: ApiResource[] = await response.json()
-
-        // 转换API数据格式
         const formattedApis = data.map(apiResource => transformApiResource(apiResource))
         setApis(formattedApis)
       } catch (error) {
