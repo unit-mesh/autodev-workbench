@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Copy, FileText } from "lucide-react"
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 
@@ -20,7 +19,6 @@ interface AssetRecommendationProps {
 
 export default function AssetRecommendation(props: AssetRecommendationProps) {
   const {
-    keywords,
     selectedAPIs,
     selectedCodeSnippets,
     selectedStandards,
@@ -33,7 +31,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   const [apis, setApis] = useState<ApiResource[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
 
   // 获取 API 资源
   useEffect(() => {
