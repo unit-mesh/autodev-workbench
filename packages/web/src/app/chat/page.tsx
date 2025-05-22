@@ -1,20 +1,16 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { Send, ChevronLeft, Check, Loader2, Edit, Save, CheckCircle2 } from "lucide-react"
+import { Send, ChevronLeft, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
+import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
 
-// 定义消息类型
 type MessageType =
   | "user"
   | "system"
@@ -24,7 +20,6 @@ type MessageType =
   | "requirement-card"
   | "confirmation"
 
-// 定义消息结构
 interface Message {
   id: string
   type: MessageType
@@ -32,18 +27,6 @@ interface Message {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
   loading?: boolean
-}
-
-interface RequirementCard {
-  name: string
-  module: string
-  description: string
-  apis: ApiResource[]
-  codeSnippets: CodeAnalysis[]
-  guidelines: Guideline[]
-  assignee: string
-  deadline: string
-  status: "draft" | "pending" | "approved"
 }
 
 export default function Chat() {
@@ -236,7 +219,6 @@ export default function Chat() {
   // 处理保存为草稿
   const handleSaveAsDraft = () => {
     if (requirementCard) {
-      // 实际应用中这里会调用API保存到后端
       setHasDraft(true);
 
       const draftMessage: Message = {
@@ -249,7 +231,6 @@ export default function Chat() {
     }
   }
 
-  // 处理编辑需求卡片
   const handleEditRequirement = (field: keyof RequirementCard) => {
     if (!requirementCard) return;
 
@@ -265,7 +246,6 @@ export default function Chat() {
     setEditDialogOpen(true);
   }
 
-  // 保存编辑
   const handleSaveEdit = () => {
     if (!editField || !requirementCard) return;
 
@@ -278,9 +258,7 @@ export default function Chat() {
     setEditValue("");
   }
 
-  // 处理生成任务
   const handleGenerateTask = () => {
-    // 添加确认消息
     const confirmationMessage: Message = {
       id: Date.now().toString(),
       type: "confirmation",
@@ -375,145 +353,12 @@ export default function Chat() {
         return (
           <div className="space-y-3">
             <p>{message.content}</p>
-            <Card className="border-2 border-muted">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg">需求卡片</CardTitle>
-                  <Badge variant={message.data.card.status === "draft" ? "outline" : "default"}>
-                    {message.data.card.status === "draft" ? "草稿" : "待确认"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pb-2 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-sm font-medium">功能名称</Label>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditRequirement('name')}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      {message.data.card.name || <span className="text-muted-foreground">待补充</span>}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-sm font-medium">所属模块</Label>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditRequirement('module')}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      {message.data.card.module || <span className="text-muted-foreground">待补充</span>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-medium">功能说明</Label>
-                    <Button variant="ghost" size="icon" onClick={() => handleEditRequirement('description')}>
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <div className="p-2 bg-muted/40 rounded text-sm">
-                    {message.data.card.description || <span className="text-muted-foreground">待补充</span>}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">关联API</Label>
-                  {message.data.card.apis.length > 0 ? (
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.apis.map((api: ApiResource) => (
-                          <li key={api.id}>{api.sourceUrl}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-muted/40 rounded text-sm text-muted-foreground">无关联API</div>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">关联代码片段</Label>
-                  {message.data.card.codeSnippets.length > 0 ? (
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.codeSnippets.map((snippet: CodeAnalysis) => (
-                          <li key={snippet.id}>{snippet.title}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-muted/40 rounded text-sm text-muted-foreground">无关联代码片段</div>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium">遵循规范</Label>
-                  {message.data.card.standards.length > 0 ? (
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.standards.map((guideline: Guideline) => (
-                          <li key={guideline.id}>
-                            {guideline.title} {guideline.version}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-muted/40 rounded text-sm text-muted-foreground">无关联规范</div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-sm font-medium">负责人</Label>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditRequirement('assignee')}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      {message.data.card.assignee || <span className="text-muted-foreground">待分配</span>}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-sm font-medium">计划排期</Label>
-                      <Button variant="ghost" size="icon" onClick={() => handleEditRequirement('deadline')}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="p-2 bg-muted/40 rounded text-sm">
-                      {message.data.card.deadline || <span className="text-muted-foreground">待排期</span>}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="pt-2">
-                <div className="flex justify-between w-full">
-                  <Button variant="outline" onClick={handleSaveAsDraft}>
-                    <Save className="h-4 w-4 mr-2" />
-                    保存为草稿
-                  </Button>
-                  <div className="space-x-2">
-                    <Button variant="outline" onClick={() => handleEditRequirement('name')}>
-                      修改信息
-                    </Button>
-                    <Button onClick={handleGenerateTask}>
-                      <Check className="h-4 w-4 mr-2" />
-                      生成任务
-                    </Button>
-                  </div>
-                </div>
-              </CardFooter>
-            </Card>
+            <RequirementCardComponent
+              card={message.data.card}
+              onEdit={handleEditRequirement}
+              onSaveAsDraft={handleSaveAsDraft}
+              onGenerateTask={handleGenerateTask}
+            />
           </div>
         );
 
@@ -613,7 +458,6 @@ export default function Chat() {
         </Button>
       </form>
 
-      {/* 编辑对话框 */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
