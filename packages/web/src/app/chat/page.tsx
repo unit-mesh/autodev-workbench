@@ -29,6 +29,72 @@ interface Message {
   loading?: boolean
 }
 
+// Define prompts for different stages
+const PROMPTS = {
+  INTENT_RECOGNITION: `你是一个需求分析助手。请分析用户的需求描述，提取以下信息：
+1. 主要意图（用户想要做什么）
+2. 关键词（与需求相关的重要术语）
+3. 置信度（你对理解正确的把握程度，0.0-1.0）
+
+以JSON格式返回结果：
+{
+  "intent": "主要意图",
+  "keywords": ["关键词1", "关键词2"],
+  "confidence": 0.95,
+  "summary": "对用户需求的简短总结"
+}`,
+
+  CLARIFYING_QUESTIONS: `基于用户的需求描述和以下背景信息，生成4-5个澄清问题，以便更好地定义需求：
+背景信息：{intentInfo}
+
+以JSON格式返回结果：
+{
+  "prompts": [
+    "问题1？",
+    "问题2？",
+    "问题3？",
+    "问题4？"
+  ]
+}`,
+
+  ASSET_RECOMMENDATION: `基于用户的需求和回答，推荐可能有用的资源。
+需求：{initialRequirement}
+澄清问题的回答：{clarification}
+
+以JSON格式返回三类资源：
+{
+  "apis": [
+    {"id": "api1", "name": "ExcelExportAPI", "description": "Excel导出接口", "example": "示例代码片段"}
+  ],
+  "codeSnippets": [
+    {"id": "code1", "name": "导出功能示例", "language": "TypeScript", "code": "示例代码", "description": "实现Excel导出的代码片段"}
+  ],
+  "standards": [
+    {"id": "std1", "name": "数据导出规范", "description": "公司关于数据导出功能的开发规范"}
+  ]
+}`,
+
+  REQUIREMENT_CARD: `根据用户需求和选择的资源，生成一个完整的需求卡片。
+需求：{initialRequirement}
+澄清问题的回答：{clarification}
+选择的API：{selectedApis}
+选择的代码片段：{selectedCodeSnippets}
+选择的标准：{selectedStandards}
+
+以JSON格式返回需求卡片：
+{
+  "name": "功能名称",
+  "module": "所属模块",
+  "description": "功能详细描述",
+  "apis": [{selectedApis}],
+  "codeSnippets": [{selectedCodeSnippets}],
+  "guidelines": [{selectedStandards}],
+  "assignee": "",
+  "deadline": "",
+  "status": "draft"
+}`
+}
+
 export default function Chat() {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([
@@ -49,13 +115,69 @@ export default function Chat() {
   const [hasDraft, setHasDraft] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
+  // Track the conversation context
+  const [conversationContext, setConversationContext] = useState({
+    initialRequirement: "",
+    intentInfo: {},
+    clarification: "",
+    conversationId: "",
+  })
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Call API with appropriate prompt
+  const callChatAPI = async (userPrompt: string, systemPrompt: string) => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          conversationId: conversationContext.conversationId || undefined
+        })
+      });
+
+      const data = await response.json();
+
+      // Update conversation ID if we get one back
+      if (data.conversationId && !conversationContext.conversationId) {
+        setConversationContext(prev => ({
+          ...prev,
+          conversationId: data.conversationId
+        }));
+      }
+
+      return data.text;
+    } catch (error) {
+      console.error("Error calling chat API:", error);
+      return "抱歉，处理您的请求时出现错误。";
+    }
+  }
+
+  // Parse JSON from LLM response, handle potential errors
+  const parseJsonResponse = (text: string) => {
+    try {
+      // Try to extract JSON if it's wrapped in code blocks or has extra text
+      const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
+                        text.match(/(\{[\s\S]*?\})/);
+
+      const jsonStr = jsonMatch ? jsonMatch[1] : text;
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error("Error parsing JSON response:", error);
+      console.log("Raw text:", text);
+      return null;
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isProcessing) return
 
@@ -76,40 +198,76 @@ export default function Chat() {
     setInput("")
     setIsProcessing(true)
 
-    setTimeout(() => {
-      setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id))
+    // Save initial requirement for context
+    setConversationContext(prev => ({
+      ...prev,
+      initialRequirement: input
+    }))
 
+    // Step 1: Intent recognition
+    try {
+      const intentResponse = await callChatAPI(input, PROMPTS.INTENT_RECOGNITION);
+      const intentData = parseJsonResponse(intentResponse);
+
+      if (!intentData) {
+        throw new Error("无法解析意图识别结果");
+      }
+
+      setConversationContext(prev => ({
+        ...prev,
+        intentInfo: intentData
+      }));
+
+      // Remove processing message
+      setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id));
+
+      // Add intent recognition message
       const intentMessage: Message = {
         id: Date.now().toString(),
         type: "intent-recognition",
-        content: "我理解您需要添加导出Excel的功能。",
-        data: {
-          intent: "数据导出",
-          keywords: ["导出", "Excel"],
-          confidence: 0.92
-        }
+        content: intentData.summary || `我理解您需要${intentData.intent}。`,
+        data: intentData
+      }
+
+      setMessages(prev => [...prev, intentMessage]);
+
+      // Step 2: Generate clarifying questions
+      const promptSystemMessage = PROMPTS.CLARIFYING_QUESTIONS.replace(
+        "{intentInfo}",
+        JSON.stringify(intentData)
+      );
+
+      const questionsResponse = await callChatAPI(input, promptSystemMessage);
+      const questionsData = parseJsonResponse(questionsResponse);
+
+      if (!questionsData || !questionsData.prompts) {
+        throw new Error("无法生成澄清问题");
       }
 
       const promptMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         type: "bullet-prompts",
         content: "为了更好地定义这个需求，请告诉我：",
-        data: {
-          prompts: [
-            "您需要从哪个页面或模块导出数据？",
-            "导出的数据包含哪些字段或内容？",
-            "是否需要支持筛选条件？",
-            "对导出文件格式有什么特殊要求？"
-          ]
-        }
+        data: questionsData
       }
 
-      setMessages((prev) => [...prev, intentMessage, promptMessage])
-      setIsProcessing(false)
-    }, 1500)
+      setMessages(prev => [...prev, promptMessage]);
+    } catch (error) {
+      console.error("Error during intent recognition:", error);
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== processingMessage.id),
+        {
+          id: Date.now().toString(),
+          type: "system",
+          content: "抱歉，处理您的需求时出现了问题。请再试一次。"
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
-  const handleAnswerPrompt = (userInput: string) => {
+  const handleAnswerPrompt = async (userInput: string) => {
     // 添加用户回答
     const userAnswer: Message = {
       id: Date.now().toString(),
@@ -127,18 +285,50 @@ export default function Chat() {
     setMessages((prev) => [...prev, userAnswer, processingMessage])
     setIsProcessing(true)
 
-    setTimeout(() => {
-      setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id))
+    // Save clarification for context
+    setConversationContext(prev => ({
+      ...prev,
+      clarification: userInput
+    }));
+
+    try {
+      // Generate asset recommendations based on initial requirement and clarification
+      const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
+        .replace("{initialRequirement}", conversationContext.initialRequirement)
+        .replace("{clarification}", userInput);
+
+      const assetResponse = await callChatAPI(userInput, assetPrompt);
+      const assetData = parseJsonResponse(assetResponse);
+
+      if (!assetData) {
+        throw new Error("无法生成资源推荐");
+      }
+
+      // Remove processing message
+      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+
+      // Add asset recommendation message
       const assetMessage: Message = {
         id: Date.now().toString(),
         type: "asset-recommendation",
         content: "根据您的需求，我找到了以下可能有用的资源：",
-        data: {}
+        data: assetData
       }
 
-      setMessages((prev) => [...prev, assetMessage])
-      setIsProcessing(false)
-    }, 1500)
+      setMessages(prev => [...prev, assetMessage]);
+    } catch (error) {
+      console.error("Error during asset recommendation:", error);
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== processingMessage.id),
+        {
+          id: Date.now().toString(),
+          type: "system",
+          content: "抱歉，生成资源推荐时出现了问题。请再试一次。"
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   const handleSelectAPI = (apiId: string) => {
@@ -166,36 +356,88 @@ export default function Chat() {
   }
 
   // 确认资产选择
-  const handleConfirmAssetSelection = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selectedApiObjects: any[] = []; // apis.filter(api => selectedAPIs.includes(api.id));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selectedCodeObjects: any[] = []; // codeSnippets.filter(code => selectedCodeSnippets.includes(code.id));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selectedStandardObjects: any[] = []; // standards.filter(std => selectedStandards.includes(std.id));
-
-    const newRequirementCard: RequirementCard = {
-      name: "导出Excel功能",
-      module: "数据管理",
-      description: "添加导出Excel功能，支持数据筛选和自定义列",
-      apis: selectedApiObjects,
-      codeSnippets: selectedCodeObjects,
-      guidelines: selectedStandardObjects,
-      assignee: "",
-      deadline: "",
-      status: "draft"
-    };
-
-    setRequirementCard(newRequirementCard);
-
-    const cardPreviewMessage: Message = {
+  const handleConfirmAssetSelection = async () => {
+    const processingMessage: Message = {
       id: Date.now().toString(),
-      type: "requirement-card",
-      content: "已为您生成需求卡片预览：",
-      data: { card: newRequirementCard }
+      type: "system",
+      content: "正在生成需求卡片...",
+      loading: true,
     }
 
-    setMessages(prev => [...prev, cardPreviewMessage]);
+    setMessages(prev => [...prev, processingMessage]);
+    setIsProcessing(true);
+
+    try {
+      // Get the full asset data from messages
+      const assetMessage = messages.find(m => m.type === "asset-recommendation");
+      const assetData = assetMessage?.data || {};
+
+      // Filter selected assets
+      const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
+        selectedAPIs.includes(api.id)
+      );
+      const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
+        selectedCodeSnippets.includes(code.id)
+      );
+      const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
+        selectedStandards.includes(std.id)
+      );
+
+      // Generate requirement card
+      const cardPrompt = PROMPTS.REQUIREMENT_CARD
+        .replace("{initialRequirement}", conversationContext.initialRequirement)
+        .replace("{clarification}", conversationContext.clarification)
+        .replace("{selectedApis}", JSON.stringify(selectedApiObjects))
+        .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeObjects))
+        .replace("{selectedStandards}", JSON.stringify(selectedStandardObjects));
+
+      const cardResponse = await callChatAPI(
+        `生成需求卡片: ${conversationContext.initialRequirement}`,
+        cardPrompt
+      );
+
+      const cardData = parseJsonResponse(cardResponse);
+
+      if (!cardData) {
+        throw new Error("无法生成需求卡片");
+      }
+
+      // Ensure the selected assets are included
+      const newRequirementCard: RequirementCard = {
+        ...cardData,
+        apis: selectedApiObjects,
+        codeSnippets: selectedCodeObjects,
+        guidelines: selectedStandardObjects,
+        status: "draft"
+      };
+
+      setRequirementCard(newRequirementCard);
+
+      // Remove processing message
+      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+
+      // Add requirement card message
+      const cardPreviewMessage: Message = {
+        id: Date.now().toString(),
+        type: "requirement-card",
+        content: "已为您生成需求卡片预览：",
+        data: { card: newRequirementCard }
+      }
+
+      setMessages(prev => [...prev, cardPreviewMessage]);
+    } catch (error) {
+      console.error("Error generating requirement card:", error);
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== processingMessage.id),
+        {
+          id: Date.now().toString(),
+          type: "system",
+          content: "抱歉，生成需求卡片时出现了问题。请再试一次。"
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   const handleSaveAsDraft = () => {
@@ -261,7 +503,6 @@ export default function Chat() {
 
     setMessages(prev => [...prev, confirmationMessage]);
 
-    // 清空状态，准备新的对话
     setTimeout(() => {
       setSelectedAPIs([]);
       setSelectedCodeSnippets([]);
@@ -271,7 +512,6 @@ export default function Chat() {
     }, 2000);
   }
 
-  // 渲染消息
   const renderMessage = (message: Message) => {
     switch (message.type) {
       case "user":
