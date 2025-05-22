@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -248,7 +248,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     return (
       <div className="space-y-4">
         {codeSnippets.map((snippet: CodeAnalysis) => (
-          <Card key={snippet.id} className={`overflow-hidden shadow-sm ${selectedCodeSnippets.includes(snippet.id) ? 'ring-2 ring-primary/40' : ''}`}>
+          <Card key={snippet.id} className={`overflow-hidden gap-0 py-0 shadow-sm ${selectedCodeSnippets.includes(snippet.id) ? 'ring-2 ring-primary/40' : ''}`}>
             <div className="flex justify-between items-center px-4 py-2.5 border-b bg-muted/30">
               <div className="flex items-center space-x-2">
                 <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-primary' : 'text-gray-300'}`} />
