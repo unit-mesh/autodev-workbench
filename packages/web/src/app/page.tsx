@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useSession } from 'next-auth/react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from "next/link";
-import { CopyCliCommand } from '@/components/CopyCliCommand'
+import { CopyCliCommand } from '@/components/home/CopyCliCommand'
 import { Project } from "@/types/project.type";
 
 export default function Home() {
