@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
+import { ConceptDictionary } from "@/types/project.type"
 
 type MessageType =
   | "user"
@@ -33,8 +34,11 @@ interface Message {
 const PROMPTS = {
   INTENT_RECOGNITION: `你是一个需求分析助手。请分析用户的需求描述，提取以下信息：
 1. 主要意图（用户想要做什么）
-2. 关键词（与需求相关的重要术语）
+2. 关键词（与需求相关的重要术语）。如果用户问的是业务问题，请忽略技术词汇
 3. 置信度（你对理解正确的把握程度，0.0-1.0）
+
+参考以下业务术语词典进行分析：
+{concepts}
 
 以JSON格式返回结果：
 {
@@ -116,9 +120,10 @@ export default function Chat() {
   const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
   const [editValue, setEditValue] = useState("")
   const [hasDraft, setHasDraft] = useState(false)
+  const [concepts, setConcepts] = useState<ConceptDictionary[]>([])
+  const [isLoadingConcepts, setIsLoadingConcepts] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  // Track the conversation context
   const [conversationContext, setConversationContext] = useState({
     initialRequirement: "",
     intentInfo: {},
@@ -127,10 +132,39 @@ export default function Chat() {
   })
 
   useEffect(() => {
+    const fetchConcepts = async () => {
+      setIsLoadingConcepts(true)
+      try {
+        const response = await fetch("/api/concepts")
+        if (response.ok) {
+          const data = await response.json()
+          setConcepts(data)
+        } else {
+          console.error("Failed to fetch concepts:", response.statusText)
+        }
+      } catch (error) {
+        console.error("Error fetching concepts:", error)
+      } finally {
+        setIsLoadingConcepts(false)
+      }
+    }
+
+    fetchConcepts()
+  }, [])
+
+  useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
+
+  // Generate intent recognition prompt with concepts
+  const getIntentRecognitionPrompt = () => {
+    return PROMPTS.INTENT_RECOGNITION.replace(
+      "{concepts}",
+      JSON.stringify(concepts)
+    )
+  }
 
   const callChatAPI = async (userPrompt: string, systemPrompt: string) => {
     console.log("Calling chat API with prompt:", userPrompt, systemPrompt)
@@ -207,7 +241,8 @@ export default function Chat() {
 
     // Step 1: Intent recognition
     try {
-      const intentResponse = await callChatAPI(input, PROMPTS.INTENT_RECOGNITION);
+      const intentPrompt = getIntentRecognitionPrompt()
+      const intentResponse = await callChatAPI(input, intentPrompt);
       const intentData = parseJsonResponse(intentResponse);
 
       if (!intentData) {
@@ -688,11 +723,23 @@ export default function Chat() {
           <ChevronLeft className="h-5 w-5 mr-2" />
           <h1 className="text-xl font-bold">需求生成助手</h1>
         </div>
-        {hasDraft && (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            草稿已保存
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {isLoadingConcepts && (
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+              <Loader2 className="h-3 w-3 animate-spin mr-1" /> 加载术语库中...
+            </Badge>
+          )}
+          {concepts.length > 0 && !isLoadingConcepts && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              已载入 {concepts.length} 条业务术语
+            </Badge>
+          )}
+          {hasDraft && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              草稿已保存
+            </Badge>
+          )}
+        </div>
       </header>
 
       <div className="flex-1 overflow-auto p-4 space-y-4" ref={chatContainerRef}>
