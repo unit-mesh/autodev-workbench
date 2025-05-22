@@ -359,8 +359,12 @@ export default function Chat() {
       const cardPrompt = PROMPTS.REQUIREMENT_CARD
         .replace("{initialRequirement}", conversationContext.initialRequirement)
         .replace("{clarification}", conversationContext.clarification)
-        .replace("{selectedApis}", JSON.stringify(selectedAPIObjects))
-        .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeSnippetObjects))
+        .replace("{selectedApis}", selectedAPIObjects.map((api: ApiResource) => {
+          return `name: ${api.packageName}.${api.className}.${api.methodName}\nurl: ${api.sourceHttpMethod} ${api.sourceUrl}}`;
+        }).join(","))
+        .replace("{selectedCodeSnippets}", selectedCodeSnippetObjects.map((code: CodeAnalysis) => {
+          return `name: ${code.title}\ndescription: ${code.description}\ncode: ${code.content}`;
+        }).join("\n"))
         .replace("{selectedStandards}", JSON.stringify(selectedStandardObjects));
 
       const cardResponse = await callChatAPI(
@@ -374,7 +378,6 @@ export default function Chat() {
         throw new Error("无法生成需求卡片");
       }
 
-      // 使用已保存的对象创建需求卡片
       const newRequirementCard: RequirementCard = {
         ...cardData,
         apis: selectedAPIObjects,
