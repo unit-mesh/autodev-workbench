@@ -3,17 +3,16 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Copy, ChevronLeft, Check, Loader2, Edit, Save, FileText, CheckCircle2 } from "lucide-react"
+import { Send, ChevronLeft, Check, Loader2, Edit, Save, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ApiResource } from "@/types/project.type"
+import AssetRecommendation from "@/components/asset-recommendation"
 
 // 定义消息类型
 type MessageType =
@@ -83,179 +82,14 @@ export default function Chat() {
   const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
   const [editValue, setEditValue] = useState("")
   const [hasDraft, setHasDraft] = useState(false)
-  const [apis, setApis] = useState<ApiResource[]>([])
-  const [, setIsLoadingApis] = useState(false)
-  const [, setApiError] = useState<string | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const fetchApis = async () => {
-      setIsLoadingApis(true)
-      setApiError(null)
-
-      try {
-        const response = await fetch('/api/context/api')
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch APIs: ${response.status}`)
-        }
-
-        const data: ApiResource[] = await response.json()
-        setApis(data)
-      } catch (error) {
-        console.error("Error fetching APIs:", error)
-        setApiError(error instanceof Error ? error.message : "Unknown error occurred")
-        // 如果API获取失败，设置一些默认数据以便UI可以正常工作
-        setApis([
-          {
-            id: "default-api",
-            className: "ExportService",
-            methodName: "exportToExcel",
-            packageName: "默认包",
-            supplyType: "默认",
-            sourceHttpMethod: "POST",
-            sourceUrl: "/api/export"
-          } as ApiResource
-        ])
-      } finally {
-        setIsLoadingApis(false)
-      }
-    }
-
-    fetchApis()
-  }, [])
-
-  // 自动滚动到底部
-  useEffect(() => {
+    // 自动滚动到底部
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
-
-  // 模拟代码片段数据
-  const codeSnippets: CodeSnippet[] = [
-    {
-      id: "code1",
-      name: "ExcelJS 导出实现",
-      description: "使用ExcelJS库实现Excel导出，支持样式和多Sheet",
-      language: "javascript",
-      code: `// 后端Excel导出实现 (Node.js)
-const ExcelJS = require('exceljs');
-
-async function generateExcel(data, options = {}) {
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet(options.sheetName || 'Sheet1');
-  
-  // 设置表头
-  const columns = options.columns || Object.keys(data[0]).reduce((acc, key) => {
-    acc[key] = key;
-    return acc;
-  }, {});
-  
-  const headerRow = Object.values(columns);
-  sheet.addRow(headerRow);
-  
-  // 添加数据行
-  data.forEach(item => {
-    const rowValues = Object.keys(columns).map(key => item[key]);
-    sheet.addRow(rowValues);
-  });
-  
-  // 设置样式
-  sheet.getRow(1).font = { bold: true };
-  
-  // 生成文件并返回
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
-}
-
-module.exports = { generateExcel };`
-    },
-    {
-      id: "code2",
-      name: "React导出按钮组件",
-      description: "可复用的React导出按钮组件，支持加载状态和错误处理",
-      language: "jsx",
-      code: `import React, { useState } from 'react';
-import { Button, Tooltip, message } from 'antd';
-import { DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
-
-const ExportButton = ({ getData, filename = 'export.xlsx', buttonText = '导出数据' }) => {
-  const [loading, setLoading] = useState(false);
-  
-  const handleExport = async () => {
-    setLoading(true);
-    try {
-      const data = await getData();
-      const response = await fetch('/api/export/excel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, filename })
-      });
-      
-      if (!response.ok) throw new Error('Export failed');
-      
-      const result = await response.json();
-      
-      // 触发下载
-      const link = document.createElement('a');
-      link.href = result.fileUrl;
-      link.download = result.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      message.success('导出成功');
-    } catch (error) {
-      console.error('导出错误:', error);
-      message.error('导出失败，请稍后重试');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  return (
-    <Tooltip title="导出当前数据为Excel文件">
-      <Button 
-        type="primary" 
-        icon={loading ? <LoadingOutlined /> : <DownloadOutlined />}
-        loading={loading}
-        onClick={handleExport}
-      >
-        {buttonText}
-      </Button>
-    </Tooltip>
-  );
-};
-
-export default ExportButton;`
-    }
-  ];
-
-  // 模拟规范数据
-  const standards: Standard[] = [
-    {
-      id: "std1",
-      name: "数据导出安全规范",
-      version: "v2.0",
-      description: "规定了数据导出的安全要求，包括敏感字段脱敏、访问控制、导出大小限制等。",
-      url: "https://standards.example.com/data-export-security",
-    },
-    {
-      id: "std2",
-      name: "文件下载接口规范",
-      version: "v1.5",
-      description: "定义了文件下载API的设计标准，包括鉴权、限流、日志记录等规范。",
-      url: "https://standards.example.com/file-download-api",
-    },
-    {
-      id: "std3",
-      name: "前端UI交互规范",
-      version: "v3.2",
-      description: "规定了导出功能的UI设计和交互流程，包括按钮位置、加载状态展示、成功/失败反馈等。",
-      url: "https://standards.example.com/ui-guidelines",
-    },
-  ]
 
   // 处理用户输入提交
   const handleSubmit = (e: React.FormEvent) => {
@@ -345,9 +179,9 @@ export default ExportButton;`
         type: "asset-recommendation",
         content: "根据您的需求，我找到了以下可能有用的资源：",
         data: {
-          apis: apis,
-          codeSnippets: codeSnippets,
-          standards: standards
+          // apis: apis,
+          // codeSnippets: codeSnippets,
+          // standards: standards
         }
       }
 
@@ -385,10 +219,12 @@ export default ExportButton;`
 
   // 确认资产选择
   const handleConfirmAssetSelection = () => {
-    // 生成需求卡片预览
-    const selectedApiObjects = apis.filter(api => selectedAPIs.includes(api.id));
-    const selectedCodeObjects = codeSnippets.filter(code => selectedCodeSnippets.includes(code.id));
-    const selectedStandardObjects = standards.filter(std => selectedStandards.includes(std.id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectedApiObjects: any[] = []; // apis.filter(api => selectedAPIs.includes(api.id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectedCodeObjects: any[] = []; // codeSnippets.filter(code => selectedCodeSnippets.includes(code.id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectedStandardObjects: any[] = []; // standards.filter(std => selectedStandards.includes(std.id));
 
     const newRequirementCard: RequirementCard = {
       name: "导出Excel功能",
@@ -537,115 +373,20 @@ export default ExportButton;`
         );
 
       case "asset-recommendation":
+        const keywords =
+          message.data?.keywords ||
+          (messages.find(m => m.type === "intent-recognition")?.data?.keywords ?? []);
         return (
-          <div className="space-y-4">
-            <p>{message.content}</p>
-
-            <Tabs defaultValue="apis" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="apis">API ({message.data.apis.length})</TabsTrigger>
-                <TabsTrigger value="code">代码片段 ({message.data.codeSnippets.length})</TabsTrigger>
-                <TabsTrigger value="standards">规范 ({message.data.standards.length})</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="apis" className="mt-2 space-y-2">
-                {message.data.apis.map((api: ApiResource) => (
-                  <Card key={api.id} className="overflow-hidden">
-                    <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className={`h-4 w-4 ${selectedAPIs.includes(api.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                        <CardTitle className="text-sm font-medium">{api.sourceHttpMethod} {api.sourceUrl}</CardTitle>
-                      </div>
-                      <Checkbox
-                        checked={selectedAPIs.includes(api.id)}
-                        onCheckedChange={() => handleSelectAPI(api.id)}
-                      />
-                    </CardHeader>
-                    <CardContent className="p-3 text-sm">
-                      <p>{api.className} {api.packageName}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="code" className="mt-2 space-y-2">
-                {message.data.codeSnippets.map((snippet: CodeSnippet) => (
-                  <Card key={snippet.id} className="overflow-hidden">
-                    <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                        <CardTitle className="text-sm font-medium">{snippet.name}</CardTitle>
-                      </div>
-                      <Checkbox
-                        checked={selectedCodeSnippets.includes(snippet.id)}
-                        onCheckedChange={() => handleSelectCodeSnippet(snippet.id)}
-                      />
-                    </CardHeader>
-                    <CardContent className="p-3 text-sm">
-                      <p>{snippet.description}</p>
-                      <div className="mt-2 text-xs bg-zinc-900 text-zinc-100 p-2 rounded font-mono overflow-hidden">
-                        <div className="flex justify-between items-center mb-1">
-                          <span>{snippet.language}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-5 w-5 text-zinc-400 hover:text-zinc-100"
-                            onClick={() => navigator.clipboard.writeText(snippet.code)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <div className="max-h-32 overflow-y-auto">
-                          <pre>{snippet.code.split('\n').slice(0, 5).join('\n') + (snippet.code.split('\n').length > 5 ? '\n...' : '')}</pre>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="standards" className="mt-2 space-y-2">
-                {message.data.standards.map((standard: Standard) => (
-                  <Card key={standard.id} className="overflow-hidden">
-                    <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <FileText className={`h-4 w-4 ${selectedStandards.includes(standard.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                        <CardTitle className="text-sm font-medium">
-                          {standard.name} <span className="text-xs font-normal">{standard.version}</span>
-                        </CardTitle>
-                      </div>
-                      <Checkbox
-                        checked={selectedStandards.includes(standard.id)}
-                        onCheckedChange={() => handleSelectStandard(standard.id)}
-                      />
-                    </CardHeader>
-                    <CardContent className="p-3 text-sm">
-                      <p>{standard.description}</p>
-                      {standard.url && (
-                        <a
-                          href={standard.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 text-xs text-blue-600 hover:underline flex items-center"
-                        >
-                          <FileText className="h-3 w-3 mr-1" /> 查看完整规范
-                        </a>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex space-x-2">
-              <Button onClick={handleConfirmAssetSelection}>
-                确认选择
-              </Button>
-              <Button variant="outline">
-                忽略推荐
-              </Button>
-            </div>
-          </div>
+          <AssetRecommendation
+            keywords={keywords}
+            selectedAPIs={selectedAPIs}
+            selectedCodeSnippets={selectedCodeSnippets}
+            selectedStandards={selectedStandards}
+            onSelectAPI={handleSelectAPI}
+            onSelectCodeSnippet={handleSelectCodeSnippet}
+            onSelectStandard={handleSelectStandard}
+            onConfirm={handleConfirmAssetSelection}
+          />
         );
 
       case "requirement-card":
