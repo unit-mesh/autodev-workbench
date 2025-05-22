@@ -53,7 +53,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
   const [guidelines, setGuidelines] = useState<Guideline[]>([])
   useEffect(() => {
-    fetch("/api/guidelines")
+    fetch("/api/guideline")
       .then(res => res.json())
       .then(data => setGuidelines(data))
       .catch(() => setGuidelines([]))
