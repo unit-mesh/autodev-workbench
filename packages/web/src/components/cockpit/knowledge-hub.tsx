@@ -16,34 +16,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-interface ConceptDictionary {
-	id: string
-	termChinese: string
-	termEnglish: string
-	descChinese: string
-	descEnglish: string
-	projectId: string | null
-	createdAt: string
-	updatedAt: string
-}
-
-interface Guideline {
-	id: string
-	title: string
-	description: string
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	category: any
-	content: string
-	language: string
-	version: string
-	lastUpdated: string
-	popularity: number
-	status: string
-	createdBy: string
-	createdAt: string
-	updatedAt: string
-}
+import { ConceptDictionary, Guideline } from "@/types/project.type";
 
 interface KnowledgeHubProps {
 	activeSource: string | null
