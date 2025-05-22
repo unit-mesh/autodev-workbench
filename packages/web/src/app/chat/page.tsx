@@ -753,8 +753,6 @@ export default function Chat() {
 				className={`flex flex-col ${showSidebar ? "w-2/3" : "w-full"} bg-white transition-all duration-300 ease-in-out`}>
 				<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
 					<div className="flex items-center">
-						<ChevronLeft className="h-5 w-5 mr-2 text-gray-500 hover:text-gray-700 cursor-pointer"
-						             onClick={() => router.push('/')}/>
 						<h1 className="text-xl font-bold text-gray-800">需求生成助手</h1>
 					</div>
 					<div className="flex items-center gap-2">
