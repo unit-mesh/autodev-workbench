@@ -77,21 +77,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   return (
     <div className="space-y-4">
       <p>根据您的需求，我找到了以下可能有用的资源：</p>
-      <div className="flex gap-2">
-        <input
-          className="border px-2 py-1 rounded text-sm"
-          placeholder="搜索资源"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        {keywords && keywords.length > 0 && (
-          <div className="flex gap-1">
-            {keywords.map((kw, i) => (
-              <Badge key={i} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{kw}</Badge>
-            ))}
-          </div>
-        )}
-      </div>
       <Tabs defaultValue="apis" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="apis">API ({filteredApis.length})</TabsTrigger>
