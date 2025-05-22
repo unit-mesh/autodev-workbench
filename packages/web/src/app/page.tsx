@@ -173,12 +173,29 @@ export default function Home() {
                     浏览项目 <ArrowRight className="ml-2 h-4 w-4"/>
                   </Link>
                 </Button>
-                <Button variant="outline" onClick={() => document.getElementById('cli-command')?.focus()}>
-                  使用 CLI
-                </Button>
               </div>
               <div className="mt-4">
                 <CopyCliCommand projectId={project.id} />
+              </div>
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">
+                  配置 MCP 来使用 AutoDev Workbench 的上下文能力：
+                </p>
+                <pre className="overflow-x-auto text-sm bg-muted mt-4 p-4 rounded-md">
+                  <code className="language-json">
+{`{
+  "mcpServers": {
+    "autodev": {
+      "command": "npx",
+      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev"]
+      "env": {
+        "PROJECT_ID": "${project.id}"
+      }
+    }
+  }
+}`}
+                  </code>
+                </pre>
               </div>
             </>
           ) : (

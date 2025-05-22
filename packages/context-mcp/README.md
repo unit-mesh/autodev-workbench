@@ -23,7 +23,7 @@ Model Context Protocol implementation for AutoDev.
       "command": "node",
       "args": ["/Users/phodal/ai/autodev-work/packages/context-mcp/dist/index.js", "--preset=AutoDev"],
       "env": {
-        "PROJECT_ID": "cmaqby8oo0002l704skfwgpjy"
+        "PROJECT_ID": "xxx"
       }
     }
   }
