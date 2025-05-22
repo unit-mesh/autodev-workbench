@@ -52,7 +52,6 @@ const getMethodBgClass = (method: string): string => {
 
 export default function AssetRecommendation(props: AssetRecommendationProps) {
   const {
-    keywords,
     selectedAPIs,
     selectedCodeSnippets,
     selectedStandards,
@@ -102,7 +101,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       setIsLoadingGuidelines(true)
       setGuidelinesError(null)
       try {
-        const response = await fetch("/api/guidelines")
+        const response = await fetch("/api/guideline")
         if (!response.ok) throw new Error(`Failed to fetch guidelines: ${response.status}`)
         setGuidelines(await response.json())
       } catch (error) {
@@ -165,7 +164,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         </TabsList>
 
         {/* API Resources Tab */}
-        <TabsContent value="apis" className="mt-2">
+        <TabsContent value="apis" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
           {isLoadingApis ? (
             <div className="space-y-2">
               {[1, 2, 3].map((n) => (
@@ -250,7 +249,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         </TabsContent>
 
         {/* Code Snippets Tab */}
-        <TabsContent value="code" className="mt-2">
+        <TabsContent value="code" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
           {isLoadingSnippets ? (
             <div className="space-y-2">
               {[1, 2].map((n) => (
@@ -316,7 +315,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         </TabsContent>
 
         {/* Guidelines/Standards Tab */}
-        <TabsContent value="standards" className="mt-2">
+        <TabsContent value="standards" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
           {isLoadingGuidelines ? (
             <div className="space-y-2">
               {[1, 2].map((n) => (
