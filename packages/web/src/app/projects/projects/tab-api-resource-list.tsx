@@ -61,7 +61,7 @@ const getUrlPrefix = (url: string): string => {
 	return firstSegment || '';
 };
 
-export function ApiResourceList({ apiResources, isLoading, error }: ApiResourceListProps) {
+export function TabApiResourceList({ apiResources, isLoading, error }: ApiResourceListProps) {
 	if (isLoading) {
 		return (
 			<div className="space-y-2">

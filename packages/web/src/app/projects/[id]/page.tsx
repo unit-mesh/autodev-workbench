@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { ProjectDetail } from "@/components/projects/project-detail"
+import { ProjectDetail } from "@/app/projects/projects/project-detail"
 import { use } from "react";
 
 export const metadata: Metadata = {

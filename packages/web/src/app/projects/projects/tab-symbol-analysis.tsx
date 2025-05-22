@@ -47,7 +47,7 @@ function SymbolDetails({ symbol }: { symbol: SymbolAnalysis }) {
   );
 }
 
-export function SymbolAnalysisTab({
+export function TabSymbolAnalysis({
   symbols,
   symbolSearch,
   symbolLoading,

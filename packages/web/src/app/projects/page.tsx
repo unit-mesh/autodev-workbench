@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { ProjectsList } from "@/components/projects/projects-list"
+import { ProjectsList } from "@/app/projects/projects/projects-list"
 
 export const metadata: Metadata = {
   title: "我的项目 | AutoDev",

@@ -55,7 +55,7 @@ interface AIConceptDictionaryResultsDialogProps {
   refreshDictionary: () => Promise<void>; // New prop for refreshing dictionary data
 }
 
-export function AIConceptDictionaryResultsDialog({
+export function AiConceptDictionaryResultsDialog({
   open,
   onOpenChange,
   analysisResults,

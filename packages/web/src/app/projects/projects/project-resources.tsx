@@ -6,9 +6,9 @@ import { BookOpen, Code } from "lucide-react"
 import { Project } from "@/types/project.type"
 import { CodeAnalysisItem, CodeAnalysisList } from "@/components/code-analysis/code-analysis-list"
 import { Dispatch, SetStateAction } from "react"
-import { ApiResourceList } from "./ApiResourceList"
-import { SymbolAnalysisTab } from "./SymbolAnalysisTab"
-import { ConceptDictionaryTab } from "./ConceptDictionaryTab"
+import { TabApiResourceList } from "./tab-api-resource-list"
+import { TabSymbolAnalysis } from "./tab-symbol-analysis"
+import { TabConceptDictionary } from "./tab-concept-dictionary"
 
 interface ProjectResourcesProps {
   project: Project
@@ -135,11 +135,11 @@ export function ProjectResources({
           </TabsContent>
 
           <TabsContent value="dictionary" className="mt-4">
-            <ConceptDictionaryTab conceptDictionaries={project.conceptDictionaries} />
+            <TabConceptDictionary conceptDictionaries={project.conceptDictionaries} />
           </TabsContent>
 
           <TabsContent value="symbols" className="mt-4">
-            <SymbolAnalysisTab
+            <TabSymbolAnalysis
               symbols={symbols}
               symbolSearch={symbolSearch}
               symbolLoading={symbolLoading}
@@ -152,7 +152,7 @@ export function ProjectResources({
 
           <TabsContent value="api" className="mt-4">
             <div className="space-y-4">
-              <ApiResourceList
+              <TabApiResourceList
                 apiResources={apiResources}
                 isLoading={isLoadingApiResources}
                 error={apiResourcesError}

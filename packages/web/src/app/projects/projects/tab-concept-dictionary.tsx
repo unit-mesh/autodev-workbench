@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { AIConceptDictionaryResultsDialog } from "./AIConceptDictionaryResultsDialog";
+import { AiConceptDictionaryResultsDialog } from "./ai-concept-dictionary-results-dialog";
 
 interface ConceptDictionary {
   id: string
@@ -59,7 +59,7 @@ interface ConceptDictionaryTabProps {
   conceptDictionaries: ConceptDictionary[]
 }
 
-export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries }: ConceptDictionaryTabProps) {
+export function TabConceptDictionary({ conceptDictionaries: initialDictionaries }: ConceptDictionaryTabProps) {
   const [conceptDictionaries, setConceptDictionaries] = useState(initialDictionaries);
   const [analyzing, setAnalyzing] = useState(false)
   const [merging, setMerging] = useState(false)
@@ -605,7 +605,7 @@ export function ConceptDictionaryTab({ conceptDictionaries: initialDictionaries 
       </AlertDialog>
 
       {/* Use the new separated component for AI optimization results */}
-      <AIConceptDictionaryResultsDialog
+      <AiConceptDictionaryResultsDialog
         open={showAIOptimizationDialog}
         onOpenChange={handleCloseAIOptimizationDialog}
         analysisResults={analysisResults}
