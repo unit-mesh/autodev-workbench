@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
-import { ConceptDictionary } from "@/types/project.type"
+import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
 
 type MessageType =
   | "user"
@@ -287,7 +287,7 @@ export default function Chat() {
       const promptMessage: Message = {
         id: Date.now().toString(),
         type: "bullet-prompts",
-        content: "为了更好地定义这个需求，请告��我：",
+        content: "为了更好地定义这个需求，请告诉我：",
         data: questionsData
       }
 
@@ -322,10 +322,7 @@ export default function Chat() {
         throw new Error("无法生成资源推荐");
       }
 
-      // Remove processing message
       setMessages(prev => prev.filter(msg => msg.id !== processingMessageId));
-
-      // Add asset recommendation message
       const assetMessage: Message = {
         id: Date.now().toString(),
         type: "asset-recommendation",
@@ -350,23 +347,17 @@ export default function Chat() {
     }
   };
 
-  // Helper function to generate requirement card
   const generateRequirementCard = async (processingMessageId: string) => {
     try {
-      // Get the full asset data from messages
       const assetMessage = messages.find(m => m.type === "asset-recommendation");
       const assetData = assetMessage?.data || {};
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
+      const selectedApiObjects = (assetData.apis || []).filter((api: ApiResource) =>
         selectedAPIs.includes(api.id)
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
+      const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: CodeAnalysis) =>
         selectedCodeSnippets.includes(code.id)
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
+      const selectedStandardObjects = (assetData.standards || []).filter((std: Guideline) =>
         selectedStandards.includes(std.id)
       );
 
@@ -398,11 +389,8 @@ export default function Chat() {
       };
 
       setRequirementCard(newRequirementCard);
-
-      // Remove processing message
       setMessages(prev => prev.filter(msg => msg.id !== processingMessageId));
 
-      // Add requirement card message
       const cardPreviewMessage: Message = {
         id: Date.now().toString(),
         type: "requirement-card",
@@ -428,7 +416,6 @@ export default function Chat() {
   };
 
   const handleAnswerPrompt = async (userInput: string) => {
-    // 添加用户回答
     const userAnswer: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -444,8 +431,6 @@ export default function Chat() {
 
     setMessages((prev) => [...prev, userAnswer, processingMessage])
     setIsProcessing(true)
-
-    // Save clarification for context
     setConversationContext(prev => ({
       ...prev,
       clarification: userInput
@@ -572,7 +557,6 @@ export default function Chat() {
     }, 2000);
   }
 
-  // Updated to use the helper functions
   const handleRetry = async (errorType: string) => {
     const processingMessage: Message = {
       id: Date.now().toString(),
@@ -599,7 +583,6 @@ export default function Chat() {
     switch (message.type) {
       case "user":
         return <p>{message.content}</p>;
-
       case "system":
         if (message.loading) {
           return (
@@ -609,7 +592,6 @@ export default function Chat() {
             </div>
           );
         } else if (message.data?.errorType) {
-          // Error message with retry button
           return (
             <div className="space-y-2">
               <p>{message.content}</p>
