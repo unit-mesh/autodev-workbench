@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { EventSourceParserStream } from 'eventsource-parser/stream'
-import RequirementsWorkspace from "@/app/cockpit/cockpit/requirements-workspace"
-import KnowledgeHub from "@/app/cockpit/cockpit/knowledge-hub"
-import AIAssistantPanel from "@/app/cockpit/cockpit/ai-assistant-panel"
+import RequirementsWorkspace from "@/app/cockpit/components/requirements-workspace"
+import KnowledgeHub from "@/app/cockpit/components/knowledge-hub"
+import AIAssistantPanel from "@/app/cockpit/components/ai-assistant-panel"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 export default function Home() {
