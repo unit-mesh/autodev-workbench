@@ -78,7 +78,25 @@ export default function KnowledgeHub({
 	const [, setApiResourcesError] = useState<string | null>(null)
 	const [selectedImplicitIds, setSelectedImplicitIds] = useState<string[]>([]);
 
-	const toggleImplicitSelection = (id: string) => {
+	const toggleGuidelineSelection = (guidelineId: string, event?: React.MouseEvent) => {
+		// 如果是从卡片点击事件触发，阻止冒泡以防止触发onSourceSelect
+		if (event) {
+			event.stopPropagation();
+		}
+
+		setSelectedGuidelines(prev =>
+			prev.includes(guidelineId)
+				? prev.filter(id => id !== guidelineId)
+				: [...prev, guidelineId]
+		);
+	};
+
+	const toggleImplicitSelection = (id: string, event?: React.MouseEvent) => {
+		// 如果是从卡片点击事件触发，阻止冒泡
+		if (event) {
+			event.stopPropagation();
+		}
+
 		setSelectedImplicitIds(prev =>
 			prev.includes(id)
 				? prev.filter(i => i !== id)
@@ -235,14 +253,6 @@ export default function KnowledgeHub({
 		return <FileText className="h-3 w-3 mr-1 text-blue-600"/>;
 	};
 
-	const toggleGuidelineSelection = (guidelineId: string) => {
-		setSelectedGuidelines(prev =>
-			prev.includes(guidelineId)
-				? prev.filter(id => id !== guidelineId)
-				: [...prev, guidelineId]
-		);
-	};
-
 	const getMatchingTermForKeyword = (keyword: string) => {
 		return glossaryTerms.find(term =>
 			term.termChinese.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -332,7 +342,9 @@ export default function KnowledgeHub({
 										className={cn(
 											"cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0",
 											activeSource === guideline.id && "border-blue-500 bg-blue-50",
+											selectedGuidelines.includes(guideline.id) && "border-green-500"
 										)}
+										onClick={(e) => toggleGuidelineSelection(guideline.id, e)}
 									>
 										<CardHeader className="px-4 py-2 pb-0">
 											<div className="flex justify-between items-start">
@@ -345,7 +357,10 @@ export default function KnowledgeHub({
 													/>
 													<CardTitle
 														className="text-sm font-medium flex items-center"
-														onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
+														onClick={(e) => {
+															e.stopPropagation();
+															onSourceSelect(guideline.id === activeSource ? null : guideline.id);
+														}}
 													>
 														{getItemTypeIcon(guideline.category)}
 														{guideline.title}
@@ -358,7 +373,10 @@ export default function KnowledgeHub({
 										</CardHeader>
 										<CardContent
 											className="p-2"
-											onClick={() => onSourceSelect(guideline.id === activeSource ? null : guideline.id)}
+											onClick={(e) => {
+												e.stopPropagation();
+												onSourceSelect(guideline.id === activeSource ? null : guideline.id);
+											}}
 										>
 											<p className="text-xs text-gray-600">{guideline.description}</p>
 											<p className="text-[10px] text-gray-400 mt-1">更新于: {guideline.lastUpdated}</p>
@@ -397,8 +415,9 @@ export default function KnowledgeHub({
 										key={item.id}
 										className={cn(
 											"cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0",
-											selectedImplicitIds.includes(item.id) && "border-blue-500 bg-blue-50"
+											selectedImplicitIds.includes(item.id) && "border-green-500 bg-green-50"
 										)}
+										onClick={(e) => toggleImplicitSelection(item.id, e)}
 									>
 										<CardHeader className="px-4 py-2 pb-0">
 											<div className="flex justify-between items-start">
