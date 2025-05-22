@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
-import AssetRecommendation from "@/components/asset-recommendation"
+import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 
 // 定义消息类型
 type MessageType =

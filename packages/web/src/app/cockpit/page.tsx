@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { EventSourceParserStream } from 'eventsource-parser/stream'
-import RequirementsWorkspace from "@/components/cockpit/requirements-workspace"
-import KnowledgeHub from "@/components/cockpit/knowledge-hub"
-import AIAssistantPanel from "@/components/cockpit/ai-assistant-panel"
+import RequirementsWorkspace from "@/app/cockpit/cockpit/requirements-workspace"
+import KnowledgeHub from "@/app/cockpit/cockpit/knowledge-hub"
+import AIAssistantPanel from "@/app/cockpit/cockpit/ai-assistant-panel"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 export default function Home() {
@@ -251,8 +251,8 @@ export default function Home() {
 			<PanelGroup direction="horizontal">
 				{/* Left Panel: Knowledge Hub */}
 				<Panel id="knowledge-hub" defaultSize={20} minSize={15}>
-					<KnowledgeHub 
-						activeSource={activeKnowledgeSource} 
+					<KnowledgeHub
+						activeSource={activeKnowledgeSource}
 						onSourceSelect={setActiveKnowledgeSource}
 						extractedKeywords={extractedKeywords} // 将关键词传递给 KnowledgeHub
 					/>

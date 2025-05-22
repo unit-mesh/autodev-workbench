@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, Book, Network, Loader2, Check, Info, Tag, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import KnowledgeGraphPopup from "./knowledge-graph-popup"
-import ProjectConceptDictionary from "./ProjectConceptDictionary"
+import ProjectConceptDictionary from "./project-concept-dictionary"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
 	Tooltip,
