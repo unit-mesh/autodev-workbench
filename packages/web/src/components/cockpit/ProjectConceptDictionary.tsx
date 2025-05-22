@@ -1,9 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Loader2, Check, AlertCircle } from "lucide-react"
+import { Loader2, Check, AlertCircle } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
