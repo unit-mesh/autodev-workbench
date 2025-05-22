@@ -324,13 +324,18 @@ export default function Chat() {
 		}
 	}
 
-	const generateAssetRecommendation = async (processingMessageId: string) => {
+	const generateAssetRecommendation = async (processingMessageId: string, userInput?: string) => {
 		try {
+			const clarification = userInput ? userInput : conversationContext.clarification || "";
+			if (!clarification) {
+				throw new Error("缺少用户输入");
+			}
+
 			const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
 				.replace("{initialRequirement}", conversationContext.initialRequirement)
-				.replace("{clarification}", conversationContext.clarification);
+				.replace("{clarification}", clarification);
 
-			const assetResponse = await callChatAPI(conversationContext.clarification, assetPrompt);
+			const assetResponse = await callChatAPI(clarification, assetPrompt);
 			const assetData = parseJsonResponse(assetResponse);
 
 			if (!assetData) {
@@ -443,7 +448,7 @@ export default function Chat() {
 		}));
 
 		try {
-			await generateAssetRecommendation(processingMessage.id);
+			await generateAssetRecommendation(processingMessage.id, userInput);
 		} finally {
 			setIsProcessing(false);
 		}
