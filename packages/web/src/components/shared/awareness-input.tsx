@@ -19,7 +19,7 @@ interface InputWithSendProps {
   onKeywordsExtracted?: (keywords: string[]) => void // 新增回调函数属性
 }
 
-export default function InputWithSend({
+export default function AwarenessInput({
   value,
   onChange,
   onSend,
@@ -38,18 +38,13 @@ export default function InputWithSend({
   const [extractedKeywords, setExtractedKeywords] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 处理Textarea的输入变化
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // 直接调用父组件的onChange处理函数
     onChange(e);
-
-    // 更新data-empty属性以控制placeholder可见性
     if (textareaRef.current) {
       textareaRef.current.setAttribute('data-empty', e.target.value === '' ? 'true' : 'false');
     }
   };
 
-  // 组件挂载或value变化时更新data-empty属性
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.setAttribute('data-empty', value === '' ? 'true' : 'false');
@@ -84,7 +79,6 @@ export default function InputWithSend({
       const data = await response.json();
       if (data.success && data.keywords) {
         setExtractedKeywords(data.keywords);
-        // When keywords are extracted, call the callback function
         if (onKeywordsExtracted && data.keywords.length > 0) {
           onKeywordsExtracted(data.keywords);
         }

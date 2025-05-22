@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MessageSquare, FileText, Code, Search } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import AwarenessInput from "@/components/shared/input-with-send"
+import AwarenessInput from "@/components/shared/awareness-input"
 import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
 // Default example requirement with rich context
