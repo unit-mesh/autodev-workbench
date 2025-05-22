@@ -52,6 +52,17 @@ interface API {
   selected?: boolean
 }
 
+// API Resource 结构 (来自数据库)
+interface ApiResource {
+  id: string
+  sourceUrl: string
+  sourceHttpMethod: string
+  packageName: string
+  className: string
+  methodName: string
+  supplyType: string
+}
+
 // 规范结构
 interface Standard {
   id: string
@@ -103,8 +114,60 @@ export default function Chat() {
   const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
   const [editValue, setEditValue] = useState("")
   const [hasDraft, setHasDraft] = useState(false)
+  const [apis, setApis] = useState<API[]>([])
+  const [isLoadingApis, setIsLoadingApis] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  // 从数据库获取API数据
+  useEffect(() => {
+    const fetchApis = async () => {
+      setIsLoadingApis(true)
+      setApiError(null)
+
+      try {
+        const response = await fetch('/api/context/api')
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch APIs: ${response.status}`)
+        }
+
+        const data: ApiResource[] = await response.json()
+
+        // 转换API数据格式
+        const formattedApis = data.map(apiResource => transformApiResource(apiResource))
+        setApis(formattedApis)
+      } catch (error) {
+        console.error("Error fetching APIs:", error)
+        setApiError(error instanceof Error ? error.message : "Unknown error occurred")
+        // 如果API获取失败，设置一些默认数据以便UI可以正常工作
+        setApis([
+          {
+            id: "default-api",
+            name: "ExportService.exportToExcel",
+            description: "导出数据到Excel文件 (默认数据)",
+            method: "POST",
+            url: "/api/export"
+          }
+        ])
+      } finally {
+        setIsLoadingApis(false)
+      }
+    }
+
+    fetchApis()
+  }, [])
+
+  const transformApiResource = (apiResource: ApiResource): API => {
+    return {
+      id: apiResource.id,
+      name: `${apiResource.className}.${apiResource.methodName}`,
+      description: `${apiResource.packageName} 包中的API，供应类型: ${apiResource.supplyType}`,
+      method: apiResource.sourceHttpMethod,
+      url: apiResource.sourceUrl,
+    }
+  }
 
   // 自动滚动到底部
   useEffect(() => {
@@ -112,80 +175,6 @@ export default function Chat() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
-
-  // 模拟API数据
-  const apis: API[] = [
-    {
-      id: "api1",
-      name: "ExportService.exportToExcel(data, options)",
-      description: "将数据导出为Excel文件，支持自定义列和样式",
-      method: "POST",
-      url: "/api/export/excel",
-      params: [
-        { name: "data", type: "array", required: true, description: "要导出的数据数组" },
-        { name: "options", type: "object", required: false, description: "导出选项（列名映射、样式等）" }
-      ],
-      response: `{
-  "success": true,
-  "data": {
-    "fileUrl": "https://example.com/exports/file123.xlsx",
-    "fileName": "export_20231025.xlsx",
-    "expiresAt": "2023-10-26T00:00:00Z"
-  }
-}`,
-      code: `// 前端导出Excel实现
-import { exportToExcel } from '@utils/exportService';
-
-async function handleExport() {
-  try {
-    const response = await exportToExcel(tableData, {
-      columns: {
-        id: '编号',
-        name: '名称',
-        price: '价格',
-        createTime: '创建时间'
-      },
-      fileName: '数据导出',
-      sheetName: '数据表'
-    });
-    
-    if (response.success) {
-      // 创建下载链接
-      const link = document.createElement('a');
-      link.href = response.data.fileUrl;
-      link.download = response.data.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  } catch (error) {
-    console.error('导出失败', error);
-    message.error('导出失败，请重试');
-  }
-}`,
-    },
-    {
-      id: "api2",
-      name: "TableAPI.getTableData(filters, pagination)",
-      description: "获取表格数据，支持过滤和分页",
-      method: "GET",
-      url: "/api/table/data?page={page}&size={size}",
-      params: [
-        { name: "filters", type: "object", required: false, description: "过滤条件" },
-        { name: "pagination", type: "object", required: false, description: "分页信息" },
-      ],
-    },
-    {
-      id: "api3",
-      name: "FileService.downloadFile(fileUrl)",
-      description: "下载文件的通用服务",
-      method: "GET",
-      url: "/api/file/download?url={encodedUrl}",
-      params: [
-        { name: "fileUrl", type: "string", required: true, description: "文件URL" },
-      ],
-    },
-  ]
 
   // 模拟代码片段数据
   const codeSnippets: CodeSnippet[] = [
