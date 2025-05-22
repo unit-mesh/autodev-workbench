@@ -118,6 +118,12 @@ export default function Chat() {
   const [selectedAPIs, setSelectedAPIs] = useState<string[]>([])
   const [selectedCodeSnippets, setSelectedCodeSnippets] = useState<string[]>([])
   const [selectedStandards, setSelectedStandards] = useState<string[]>([])
+
+  // 添加存储完整对象的状态
+  const [selectedAPIObjects, setSelectedAPIObjects] = useState<ApiResource[]>([])
+  const [selectedCodeSnippetObjects, setSelectedCodeSnippetObjects] = useState<CodeAnalysis[]>([])
+  const [selectedStandardObjects, setSelectedStandardObjects] = useState<Guideline[]>([])
+
   const [isProcessing, setIsProcessing] = useState(false)
   const [requirementCard, setRequirementCard] = useState<RequirementCard | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -349,23 +355,12 @@ export default function Chat() {
 
   const generateRequirementCard = async (processingMessageId: string) => {
     try {
-      const assetMessage = messages.find(m => m.type === "asset-recommendation");
-      const assetData = assetMessage?.data || {};
-      const selectedApiObjects = (assetData.apis || []).filter((api: ApiResource) =>
-        selectedAPIs.includes(api.id)
-      );
-      const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: CodeAnalysis) =>
-        selectedCodeSnippets.includes(code.id)
-      );
-      const selectedStandardObjects = (assetData.standards || []).filter((std: Guideline) =>
-        selectedStandards.includes(std.id)
-      );
-
+      // 直接使用已保存的对象，无需再次从资源中筛选
       const cardPrompt = PROMPTS.REQUIREMENT_CARD
         .replace("{initialRequirement}", conversationContext.initialRequirement)
         .replace("{clarification}", conversationContext.clarification)
-        .replace("{selectedApis}", JSON.stringify(selectedApiObjects))
-        .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeObjects))
+        .replace("{selectedApis}", JSON.stringify(selectedAPIObjects))
+        .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeSnippetObjects))
         .replace("{selectedStandards}", JSON.stringify(selectedStandardObjects));
 
       const cardResponse = await callChatAPI(
@@ -379,11 +374,11 @@ export default function Chat() {
         throw new Error("无法生成需求卡片");
       }
 
-      // Ensure the selected assets are included
+      // 使用已保存的对象创建需求卡片
       const newRequirementCard: RequirementCard = {
         ...cardData,
-        apis: selectedApiObjects,
-        codeSnippets: selectedCodeObjects,
+        apis: selectedAPIObjects,
+        codeSnippets: selectedCodeSnippetObjects,
         guidelines: selectedStandardObjects,
         status: "draft"
       };
@@ -662,6 +657,9 @@ export default function Chat() {
             onSelectCodeSnippet={handleSelectCodeSnippet}
             onSelectStandard={handleSelectStandard}
             onConfirm={handleConfirmAssetSelection}
+            onSelectAPIObjects={setSelectedAPIObjects}
+            onSelectCodeSnippetObjects={setSelectedCodeSnippetObjects}
+            onSelectStandardObjects={setSelectedStandardObjects}
           />
         );
 

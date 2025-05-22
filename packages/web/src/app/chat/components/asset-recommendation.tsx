@@ -18,6 +18,10 @@ interface AssetRecommendationProps {
   onSelectStandard: (standardId: string) => void
   onConfirm: () => void
   onSkip?: () => void
+  // 新增以下回调函数，用于传递完整的对象列表
+  onSelectAPIObjects?: (apis: ApiResource[]) => void
+  onSelectCodeSnippetObjects?: (codeSnippets: CodeAnalysis[]) => void
+  onSelectStandardObjects?: (guidelines: Guideline[]) => void
 }
 
 const getMethodColorClass = (method: string): string => {
@@ -60,7 +64,10 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     onSelectCodeSnippet,
     onSelectStandard,
     onConfirm,
-    onSkip
+    onSkip,
+    onSelectAPIObjects,
+    onSelectCodeSnippetObjects,
+    onSelectStandardObjects
   } = props
 
   const [apis, setApis] = useState<ApiResource[]>([])
@@ -129,6 +136,52 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     }
     fetchCodeSnippets()
   }, [keywordsParam])
+
+  // 修改 useEffect 钩子，在 API 数据加载完成后检查和传递已选对象
+  useEffect(() => {
+    if (!isLoadingApis && apis.length > 0 && selectedAPIs.length > 0 && onSelectAPIObjects) {
+      const selectedApiObjects = apis.filter(api => selectedAPIs.includes(api.id));
+      onSelectAPIObjects(selectedApiObjects);
+    }
+  }, [apis, isLoadingApis, selectedAPIs, onSelectAPIObjects]);
+
+  // 为代码片段添加类似的 useEffect
+  useEffect(() => {
+    if (!isLoadingSnippets && codeSnippets.length > 0 && selectedCodeSnippets.length > 0 && onSelectCodeSnippetObjects) {
+      const selectedCodeObjects = codeSnippets.filter(snippet => selectedCodeSnippets.includes(snippet.id));
+      onSelectCodeSnippetObjects(selectedCodeObjects);
+    }
+  }, [codeSnippets, isLoadingSnippets, selectedCodeSnippets, onSelectCodeSnippetObjects]);
+
+  // 为规范指南添加类似的 useEffect
+  useEffect(() => {
+    if (!isLoadingGuidelines && guidelines.length > 0 && selectedStandards.length > 0 && onSelectStandardObjects) {
+      const selectedGuidelineObjects = guidelines.filter(guideline => selectedStandards.includes(guideline.id));
+      onSelectStandardObjects(selectedGuidelineObjects);
+    }
+  }, [guidelines, isLoadingGuidelines, selectedStandards, onSelectStandardObjects]);
+
+  // 修改 onConfirm 处理逻辑，在确认前确保传递完整对象
+  const handleConfirm = () => {
+    // 在确认前传递所有已选对象
+    if (onSelectAPIObjects) {
+      const selectedApiObjects = apis.filter(api => selectedAPIs.includes(api.id));
+      onSelectAPIObjects(selectedApiObjects);
+    }
+    
+    if (onSelectCodeSnippetObjects) {
+      const selectedCodeObjects = codeSnippets.filter(snippet => selectedCodeSnippets.includes(snippet.id));
+      onSelectCodeSnippetObjects(selectedCodeObjects);
+    }
+    
+    if (onSelectStandardObjects) {
+      const selectedGuidelineObjects = guidelines.filter(guideline => selectedStandards.includes(guideline.id));
+      onSelectStandardObjects(selectedGuidelineObjects);
+    }
+
+    // 调用原始的确认回调
+    onConfirm();
+  };
 
   const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length
 
@@ -374,7 +427,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
       <div className="flex space-x-2 pt-2">
         <Button
-          onClick={onConfirm}
+          onClick={handleConfirm}
           disabled={selectedCount === 0}
           className="relative"
         >
