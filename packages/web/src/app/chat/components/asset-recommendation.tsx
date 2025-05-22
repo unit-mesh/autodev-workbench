@@ -64,7 +64,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     onSelectCodeSnippet,
     onSelectStandard,
     onConfirm,
-    onSkip,
     onSelectAPIObjects,
     onSelectCodeSnippetObjects,
     onSelectStandardObjects
@@ -84,6 +83,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
   const keywordsParam = keywords && keywords.length > 0 ? `keywords=${keywords.join(',')}` : '';
 
+  // Fetch APIs and auto-select them
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
@@ -91,7 +91,15 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       try {
         const response = await fetch(`/api/context/api${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch APIs: ${response.status}`)
-        setApis(await response.json())
+        const fetchedApis = await response.json()
+        setApis(fetchedApis)
+
+        // Auto-select all APIs
+        fetchedApis.forEach((api: ApiResource) => {
+          if (!selectedAPIs.includes(api.id)) {
+            onSelectAPI(api.id)
+          }
+        })
       } catch (error) {
         setApiError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -101,7 +109,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchApis()
   }, [keywordsParam])
 
-  // Fetch Guidelines
+  // Fetch Guidelines and auto-select them
   useEffect(() => {
     const fetchGuidelines = async () => {
       setIsLoadingGuidelines(true)
@@ -109,7 +117,15 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       try {
         const response = await fetch(`/api/guideline${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch guidelines: ${response.status}`)
-        setGuidelines(await response.json())
+        const fetchedGuidelines = await response.json()
+        setGuidelines(fetchedGuidelines)
+
+        // Auto-select all guidelines
+        fetchedGuidelines.forEach((guideline: Guideline) => {
+          if (!selectedStandards.includes(guideline.id)) {
+            onSelectStandard(guideline.id)
+          }
+        })
       } catch (error) {
         setGuidelinesError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -119,7 +135,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchGuidelines()
   }, [keywordsParam])
 
-  // Fetch Code Snippets
+  // Fetch Code Snippets and auto-select them
   useEffect(() => {
     const fetchCodeSnippets = async () => {
       setIsLoadingSnippets(true)
@@ -127,7 +143,15 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       try {
         const response = await fetch(`/api/context/code${keywordsParam ? `?${keywordsParam}` : ''}`)
         if (!response.ok) throw new Error(`Failed to fetch code snippets: ${response.status}`)
-        setCodeSnippets(await response.json())
+        const fetchedSnippets = await response.json()
+        setCodeSnippets(fetchedSnippets)
+
+        // Auto-select all code snippets
+        fetchedSnippets.forEach((snippet: CodeAnalysis) => {
+          if (!selectedCodeSnippets.includes(snippet.id)) {
+            onSelectCodeSnippet(snippet.id)
+          }
+        })
       } catch (error) {
         setSnippetsError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -168,22 +192,111 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       const selectedApiObjects = apis.filter(api => selectedAPIs.includes(api.id));
       onSelectAPIObjects(selectedApiObjects);
     }
-    
+
     if (onSelectCodeSnippetObjects) {
       const selectedCodeObjects = codeSnippets.filter(snippet => selectedCodeSnippets.includes(snippet.id));
       onSelectCodeSnippetObjects(selectedCodeObjects);
     }
-    
+
     if (onSelectStandardObjects) {
       const selectedGuidelineObjects = guidelines.filter(guideline => selectedStandards.includes(guideline.id));
       onSelectStandardObjects(selectedGuidelineObjects);
     }
 
-    // 调用原始的确认回调
     onConfirm();
   };
 
   const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length
+
+  const renderCodeSnippets = () => {
+    if (isLoadingSnippets) {
+      return (
+        <div className="space-y-2">
+          {[1, 2].map((n) => (
+            <Card key={n} className="overflow-hidden">
+              <CardHeader className="p-3">
+                <Skeleton className="h-5 w-40"/>
+                <Skeleton className="h-4 w-64 mt-2"/>
+              </CardHeader>
+              <CardContent className="p-3">
+                <Skeleton className="h-24 w-full"/>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    if (snippetsError) {
+      return (
+        <div className="text-sm text-red-500 p-4 border border-red-200 rounded-lg flex items-center">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          {snippetsError}
+        </div>
+      );
+    }
+
+    if (codeSnippets.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
+          <Code className="h-12 w-12 text-gray-300"/>
+          <p className="text-center text-gray-500">暂无代码片段</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {codeSnippets.map((snippet: CodeAnalysis) => (
+          <Card key={snippet.id} className={`overflow-hidden shadow-sm ${selectedCodeSnippets.includes(snippet.id) ? 'ring-2 ring-primary/40' : ''}`}>
+            <div className="flex justify-between items-center px-4 py-2.5 border-b bg-muted/30">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-primary' : 'text-gray-300'}`} />
+                <h3 className="text-sm font-medium">{snippet.title}</h3>
+              </div>
+              <Checkbox
+                checked={selectedCodeSnippets.includes(snippet.id)}
+                onCheckedChange={() => onSelectCodeSnippet(snippet.id)}
+                className="data-[state=checked]:bg-primary"
+              />
+            </div>
+
+            <div className="p-4">
+              {snippet.description && (
+                <p className="text-sm text-muted-foreground mb-3">{snippet.description}</p>
+              )}
+
+              <div className="rounded-md overflow-hidden border">
+                <div className="flex justify-between items-center px-3 py-2 bg-zinc-800 text-zinc-100">
+                  <div className="flex items-center gap-2">
+                    <Code className="h-4 w-4 text-zinc-400" />
+                    <span className="text-xs font-medium px-1.5 py-0.5 bg-zinc-700 rounded">
+                      {snippet.language}
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                    onClick={() => navigator.clipboard.writeText(snippet.content)}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                    复制
+                  </Button>
+                </div>
+
+                <div className="bg-zinc-950 text-zinc-100">
+                  <div className="overflow-x-auto overflow-y-auto max-h-[200px] p-3 text-xs font-mono">
+                    <pre className="leading-relaxed whitespace-pre">{snippet.content}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -304,68 +417,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
         {/* Code Snippets Tab */}
         <TabsContent value="code" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
-          {isLoadingSnippets ? (
-            <div className="space-y-2">
-              {[1, 2].map((n) => (
-                <Card key={n} className="overflow-hidden">
-                  <CardHeader className="p-3">
-                    <Skeleton className="h-5 w-40"/>
-                    <Skeleton className="h-4 w-64 mt-2"/>
-                  </CardHeader>
-                  <CardContent className="p-3">
-                    <Skeleton className="h-24 w-full"/>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : snippetsError ? (
-            <div className="text-sm text-red-500 p-4 border border-red-200 rounded-lg flex items-center">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              {snippetsError}
-            </div>
-          ) : codeSnippets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
-              <Code className="h-12 w-12 text-gray-300"/>
-              <p className="text-center text-gray-500">暂无代码片段</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {codeSnippets.map((snippet: CodeAnalysis) => (
-                <Card key={snippet.id} className={`overflow-hidden ${selectedCodeSnippets.includes(snippet.id) ? 'border-green-500 bg-green-50/30' : ''}`}>
-                  <CardHeader className="px-4 py-2 pb-0 bg-muted/50 flex flex-row items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                      <CardTitle className="text-sm font-medium">{snippet.title}</CardTitle>
-                    </div>
-                    <Checkbox
-                      checked={selectedCodeSnippets.includes(snippet.id)}
-                      onCheckedChange={() => onSelectCodeSnippet(snippet.id)}
-                      className="data-[state=checked]:bg-green-600"
-                    />
-                  </CardHeader>
-                  <CardContent className="p-3 text-sm">
-                    <p>{snippet.description}</p>
-                    <div className="mt-2 text-xs bg-zinc-900 text-zinc-100 p-2 rounded font-mono overflow-hidden">
-                      <div className="flex justify-between items-center mb-1">
-                        <span>{snippet.language}</span>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-5 w-5 text-zinc-400 hover:text-zinc-100"
-                          onClick={() => navigator.clipboard.writeText(snippet.content)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <div className="max-h-32 overflow-y-auto">
-                        <pre>{snippet.content.split('\n').slice(0, 5).join('\n') + (snippet.content.split('\n').length > 5 ? '\n...' : '')}</pre>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {renderCodeSnippets()}
         </TabsContent>
 
         {/* Guidelines/Standards Tab */}
@@ -437,12 +489,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               {selectedCount}
             </span>
           )}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onSkip}
-        >
-          忽略推荐
         </Button>
       </div>
     </div>
