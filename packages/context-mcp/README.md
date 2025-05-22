@@ -243,14 +243,6 @@ pnpm build
 pnpm test
 ```
 
-## Platform Support
-
-Most POSIX tools are implemented with Windows compatibility in mind, using appropriate system commands and APIs. Some tools may have platform-specific behavior:
-
-- `free` and `df` use Windows Management Instrumentation (WMI) for system information
-- File paths use Windows-style backslashes
-- Some tools may have different default behaviors compared to Unix systems
-
 ## License
 
 MIT
