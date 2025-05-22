@@ -8,7 +8,7 @@ Model Context Protocol implementation for AutoDev.
   "mcpServers": {
     "autodev-context-mcp": {
       "command": "npx",
-      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp"]
+      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev"]
     }
   }
 }

@@ -6,6 +6,10 @@ import { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/ser
 import { StdioServerTransport as McpStdioTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport as McpHttpTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
+import  { type Preset, Presets } from "./_typing.js";
+export type { Preset };
+export { Presets };
+
 import http from "node:http";
 
 import {
@@ -26,6 +30,8 @@ export type HttpServeOptions = {
   port: number;
   hostname?: string;
 };
+
+
 
 /**
  * MCP Server Implementation
@@ -48,6 +54,8 @@ export class MCPServerImpl {
 
   private isDestroyed = true;
 
+  private preset: Preset | null = null;
+
   constructor(impl: McpImplementation, options?: McpServerOptions) {
     this.impl = impl;
     this.mcpInst = new McpServer(
@@ -57,7 +65,6 @@ export class MCPServerImpl {
       },
       options
     );
-    installCapabilities(this.mcpInst, impl);
   }
 
   private ensureExpressApp() /* asserts this.expressApp is Application */{
@@ -85,7 +92,19 @@ export class MCPServerImpl {
     }
   }
 
+  private ensurePreset() /* asserts this.preset is Preset */{
+    if (!this.preset) {
+      throw new Error("Preset is not set");
+    }
+  }
+
+  loadPreset(preset: Preset) {
+    this.preset = preset;
+    installCapabilities(this.mcpInst, this.impl);
+  }
+
   async serveHttp(options: HttpServeOptions) : Promise<http.Server> {
+    this.ensurePreset();
     this.ensureDestroyed();
     this.ensureExpressApp();
     if (!this.expressApp) throw new Error("Failed to create Express app"); // Type guard
@@ -183,6 +202,7 @@ export class MCPServerImpl {
   }
 
   async serveStdio() {
+    this.ensurePreset();
     this.ensureDestroyed();
     this.ensureMcpStdioTransport();
     if (!this.mcpStdioTransport) throw new Error("Failed to create MCP STDIO transport"); // Type guard
@@ -200,6 +220,7 @@ export class MCPServerImpl {
     }
 
     this.isDestroyed = true;
+    this.preset = null;
 
     this.mcpInst.close();
 

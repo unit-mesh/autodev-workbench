@@ -2,7 +2,7 @@ import { ToolLike } from "../_typing.js";
 
 import { z } from "zod";
 
-export const resolveProject: ToolLike = (installer) => {
+export const installResolveProjectTool: ToolLike = (installer) => {
   installer(
     "resolve-project",
     "Resolve a project from a given path",
