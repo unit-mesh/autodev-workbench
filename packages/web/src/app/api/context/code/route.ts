@@ -8,7 +8,8 @@ export async function GET(request: Request) {
 
     if (keywords && keywords.trim() !== '') {
       const keywordArray = keywords.split(',').map(k => k.trim());
-      let conditions = [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const conditions: any[] = [];
       for (const keyword of keywordArray) {
         const pattern = `%${keyword}%`;
         const result = await pool.sql`
@@ -32,7 +33,8 @@ export async function GET(request: Request) {
         conditions.push(result.rows);
       }
 
-      const allResults = [].concat(...conditions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allResults: any[] = [].concat(...conditions);
       const uniqueIds = new Set();
       const uniqueResults = allResults.filter(item => {
         if (!uniqueIds.has(item.id)) {
