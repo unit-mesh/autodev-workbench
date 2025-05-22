@@ -1,6 +1,6 @@
 import { ToolLike } from "../_typing.js";
 
-export const getProjectContext: ToolLike = (installer) => {
+export const installGetProjectContextTool: ToolLike = (installer) => {
   installer(
     "get-project-context",
     "Get the context of a project",
