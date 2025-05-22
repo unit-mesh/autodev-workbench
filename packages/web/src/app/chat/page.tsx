@@ -265,37 +265,15 @@ export default function Chat() {
     }
   }
 
-  const handleAnswerPrompt = async (userInput: string) => {
-    // 添加用户回答
-    const userAnswer: Message = {
-      id: Date.now().toString(),
-      type: "user",
-      content: userInput,
-    }
-
-    const processingMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: "system",
-      content: "正在处理您的回答...",
-      loading: true,
-    }
-
-    setMessages((prev) => [...prev, userAnswer, processingMessage])
-    setIsProcessing(true)
-
-    // Save clarification for context
-    setConversationContext(prev => ({
-      ...prev,
-      clarification: userInput
-    }));
-
+  // Helper function to generate asset recommendations
+  const generateAssetRecommendation = async (processingMessageId: string) => {
     try {
       // Generate asset recommendations based on initial requirement and clarification
       const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
         .replace("{initialRequirement}", conversationContext.initialRequirement)
-        .replace("{clarification}", userInput);
+        .replace("{clarification}", conversationContext.clarification);
 
-      const assetResponse = await callChatAPI(userInput, assetPrompt);
+      const assetResponse = await callChatAPI(conversationContext.clarification, assetPrompt);
       const assetData = parseJsonResponse(assetResponse);
 
       if (!assetData) {
@@ -303,7 +281,7 @@ export default function Chat() {
       }
 
       // Remove processing message
-      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+      setMessages(prev => prev.filter(msg => msg.id !== processingMessageId));
 
       // Add asset recommendation message
       const assetMessage: Message = {
@@ -314,10 +292,11 @@ export default function Chat() {
       }
 
       setMessages(prev => [...prev, assetMessage]);
+      return true;
     } catch (error) {
       console.error("Error during asset recommendation:", error);
       setMessages(prev => [
-        ...prev.filter(msg => msg.id !== processingMessage.id),
+        ...prev.filter(msg => msg.id !== processingMessageId),
         {
           id: Date.now().toString(),
           type: "system",
@@ -325,46 +304,12 @@ export default function Chat() {
           data: { errorType: "asset" }
         }
       ]);
-    } finally {
-      setIsProcessing(false);
+      return false;
     }
-  }
+  };
 
-  const handleSelectAPI = (apiId: string) => {
-    if (selectedAPIs.includes(apiId)) {
-      setSelectedAPIs(prev => prev.filter(id => id !== apiId));
-    } else {
-      setSelectedAPIs(prev => [...prev, apiId]);
-    }
-  }
-
-  const handleSelectCodeSnippet = (snippetId: string) => {
-    if (selectedCodeSnippets.includes(snippetId)) {
-      setSelectedCodeSnippets(prev => prev.filter(id => id !== snippetId));
-    } else {
-      setSelectedCodeSnippets(prev => [...prev, snippetId]);
-    }
-  }
-
-  const handleSelectStandard = (standardId: string) => {
-    if (selectedStandards.includes(standardId)) {
-      setSelectedStandards(prev => prev.filter(id => id !== standardId));
-    } else {
-      setSelectedStandards(prev => [...prev, standardId]);
-    }
-  }
-
-  const handleConfirmAssetSelection = async () => {
-    const processingMessage: Message = {
-      id: Date.now().toString(),
-      type: "system",
-      content: "正在生成需求卡片...",
-      loading: true,
-    }
-
-    setMessages(prev => [...prev, processingMessage]);
-    setIsProcessing(true);
-
+  // Helper function to generate requirement card
+  const generateRequirementCard = async (processingMessageId: string) => {
     try {
       // Get the full asset data from messages
       const assetMessage = messages.find(m => m.type === "asset-recommendation");
@@ -413,7 +358,7 @@ export default function Chat() {
       setRequirementCard(newRequirementCard);
 
       // Remove processing message
-      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+      setMessages(prev => prev.filter(msg => msg.id !== processingMessageId));
 
       // Add requirement card message
       const cardPreviewMessage: Message = {
@@ -424,10 +369,11 @@ export default function Chat() {
       }
 
       setMessages(prev => [...prev, cardPreviewMessage]);
+      return true;
     } catch (error) {
       console.error("Error generating requirement card:", error);
       setMessages(prev => [
-        ...prev.filter(msg => msg.id !== processingMessage.id),
+        ...prev.filter(msg => msg.id !== processingMessageId),
         {
           id: Date.now().toString(),
           type: "system",
@@ -435,6 +381,78 @@ export default function Chat() {
           data: { errorType: "card" }
         }
       ]);
+      return false;
+    }
+  };
+
+  const handleAnswerPrompt = async (userInput: string) => {
+    // 添加用户回答
+    const userAnswer: Message = {
+      id: Date.now().toString(),
+      type: "user",
+      content: userInput,
+    }
+
+    const processingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      type: "system",
+      content: "正在处理您的回答...",
+      loading: true,
+    }
+
+    setMessages((prev) => [...prev, userAnswer, processingMessage])
+    setIsProcessing(true)
+
+    // Save clarification for context
+    setConversationContext(prev => ({
+      ...prev,
+      clarification: userInput
+    }));
+
+    try {
+      await generateAssetRecommendation(processingMessage.id);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  const handleSelectAPI = (apiId: string) => {
+    if (selectedAPIs.includes(apiId)) {
+      setSelectedAPIs(prev => prev.filter(id => id !== apiId));
+    } else {
+      setSelectedAPIs(prev => [...prev, apiId]);
+    }
+  }
+
+  const handleSelectCodeSnippet = (snippetId: string) => {
+    if (selectedCodeSnippets.includes(snippetId)) {
+      setSelectedCodeSnippets(prev => prev.filter(id => id !== snippetId));
+    } else {
+      setSelectedCodeSnippets(prev => [...prev, snippetId]);
+    }
+  }
+
+  const handleSelectStandard = (standardId: string) => {
+    if (selectedStandards.includes(standardId)) {
+      setSelectedStandards(prev => prev.filter(id => id !== standardId));
+    } else {
+      setSelectedStandards(prev => [...prev, standardId]);
+    }
+  }
+
+  const handleConfirmAssetSelection = async () => {
+    const processingMessage: Message = {
+      id: Date.now().toString(),
+      type: "system",
+      content: "正在生成需求卡片...",
+      loading: true,
+    }
+
+    setMessages(prev => [...prev, processingMessage]);
+    setIsProcessing(true);
+
+    try {
+      await generateRequirementCard(processingMessage.id);
     } finally {
       setIsProcessing(false);
     }
@@ -512,11 +530,12 @@ export default function Chat() {
     }, 2000);
   }
 
+  // Updated to use the helper functions
   const handleRetry = async (errorType: string) => {
     const processingMessage: Message = {
       id: Date.now().toString(),
       type: "system",
-      content: `正在重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}...`,
+      content: `���在重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}...`,
       loading: true,
     }
 
@@ -525,103 +544,10 @@ export default function Chat() {
 
     try {
       if (errorType === "asset") {
-        // Retry asset recommendation
-        const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
-          .replace("{initialRequirement}", conversationContext.initialRequirement)
-          .replace("{clarification}", conversationContext.clarification);
-
-        const assetResponse = await callChatAPI(conversationContext.clarification, assetPrompt);
-        const assetData = parseJsonResponse(assetResponse);
-
-        if (!assetData) {
-          throw new Error("无法生成资源推荐");
-        }
-
-        // Remove processing message
-        setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
-
-        // Add asset recommendation message
-        const assetMessage: Message = {
-          id: Date.now().toString(),
-          type: "asset-recommendation",
-          content: "根据您的需求，我找到了以下可能有用���资源：",
-          data: assetData
-        }
-
-        setMessages(prev => [...prev, assetMessage]);
+        await generateAssetRecommendation(processingMessage.id);
       } else if (errorType === "card") {
-        // Retry requirement card generation
-        // Get the full asset data from messages
-        const assetMessage = messages.find(m => m.type === "asset-recommendation");
-        const assetData = assetMessage?.data || {};
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
-          selectedAPIs.includes(api.id)
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
-          selectedCodeSnippets.includes(code.id)
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
-          selectedStandards.includes(std.id)
-        );
-
-        // Generate requirement card
-        const cardPrompt = PROMPTS.REQUIREMENT_CARD
-          .replace("{initialRequirement}", conversationContext.initialRequirement)
-          .replace("{clarification}", conversationContext.clarification)
-          .replace("{selectedApis}", JSON.stringify(selectedApiObjects))
-          .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeObjects))
-          .replace("{selectedStandards}", JSON.stringify(selectedStandardObjects));
-
-        const cardResponse = await callChatAPI(
-          `生成需求卡片: ${conversationContext.initialRequirement}`,
-          cardPrompt
-        );
-
-        const cardData = parseJsonResponse(cardResponse);
-
-        if (!cardData) {
-          throw new Error("无法生成需求卡片");
-        }
-
-        // Ensure the selected assets are included
-        const newRequirementCard: RequirementCard = {
-          ...cardData,
-          apis: selectedApiObjects,
-          codeSnippets: selectedCodeObjects,
-          guidelines: selectedStandardObjects,
-          status: "draft"
-        };
-
-        setRequirementCard(newRequirementCard);
-
-        // Remove processing message
-        setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
-
-        // Add requirement card message
-        const cardPreviewMessage: Message = {
-          id: Date.now().toString(),
-          type: "requirement-card",
-          content: "已为您生成需求卡片预览：",
-          data: { card: newRequirementCard }
-        }
-
-        setMessages(prev => [...prev, cardPreviewMessage]);
+        await generateRequirementCard(processingMessage.id);
       }
-    } catch (error) {
-      console.error(`Error during retry:`, error);
-      setMessages(prev => [
-        ...prev.filter(msg => msg.id !== processingMessage.id),
-        {
-          id: Date.now().toString(),
-          type: "system",
-          content: `抱歉，重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}时出现了问题。`,
-          data: { errorType }
-        }
-      ]);
     } finally {
       setIsProcessing(false);
     }
