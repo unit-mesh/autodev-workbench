@@ -256,7 +256,6 @@ export default function Chat() {
 		setInput("")
 		setIsProcessing(true)
 
-		// Save initial requirement for context
 		setConversationContext(prev => ({
 			...prev,
 			initialRequirement: input
@@ -277,7 +276,6 @@ export default function Chat() {
 				intentInfo: intentData
 			}));
 
-			// Remove processing message
 			setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id));
 
 			// Add intent recognition message
@@ -326,10 +324,8 @@ export default function Chat() {
 		}
 	}
 
-	// Helper function to generate asset recommendations
 	const generateAssetRecommendation = async (processingMessageId: string) => {
 		try {
-			// Generate asset recommendations based on initial requirement and clarification
 			const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
 				.replace("{initialRequirement}", conversationContext.initialRequirement)
 				.replace("{clarification}", conversationContext.clarification);
@@ -368,7 +364,6 @@ export default function Chat() {
 
 	const generateRequirementCard = async (processingMessageId: string) => {
 		try {
-			// 直接使用已保存的对象，无需再次从资源中筛选
 			const cardPrompt = PROMPTS.REQUIREMENT_CARD
 				.replace("{initialRequirement}", conversationContext.initialRequirement)
 				.replace("{clarification}", conversationContext.clarification)

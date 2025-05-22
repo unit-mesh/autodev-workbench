@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, CheckCircle2, Code, Copy, FileText } from "lucide-react"
+import { AlertCircle, CheckCircle2, Code, Copy, FileText, CheckSquare, Square } from "lucide-react"
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -83,7 +83,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
   const keywordsParam = keywords && keywords.length > 0 ? `keywords=${keywords.join(',')}` : '';
 
-  // Fetch APIs and auto-select them
+  // Fetch APIs without auto-selecting them
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
@@ -94,12 +94,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         const fetchedApis = await response.json()
         setApis(fetchedApis)
 
-        // Auto-select all APIs
-        fetchedApis.forEach((api: ApiResource) => {
-          if (!selectedAPIs.includes(api.id)) {
-            onSelectAPI(api.id)
-          }
-        })
+        // Remove the auto-selection logic
       } catch (error) {
         setApiError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -109,7 +104,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchApis()
   }, [keywordsParam])
 
-  // Fetch Guidelines and auto-select them
+  // Fetch Guidelines without auto-selecting them
   useEffect(() => {
     const fetchGuidelines = async () => {
       setIsLoadingGuidelines(true)
@@ -120,12 +115,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         const fetchedGuidelines = await response.json()
         setGuidelines(fetchedGuidelines)
 
-        // Auto-select all guidelines
-        fetchedGuidelines.forEach((guideline: Guideline) => {
-          if (!selectedStandards.includes(guideline.id)) {
-            onSelectStandard(guideline.id)
-          }
-        })
+        // Remove the auto-selection logic
       } catch (error) {
         setGuidelinesError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -135,7 +125,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchGuidelines()
   }, [keywordsParam])
 
-  // Fetch Code Snippets and auto-select them
+  // Fetch Code Snippets without auto-selecting them
   useEffect(() => {
     const fetchCodeSnippets = async () => {
       setIsLoadingSnippets(true)
@@ -146,12 +136,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         const fetchedSnippets = await response.json()
         setCodeSnippets(fetchedSnippets)
 
-        // Auto-select all code snippets
-        fetchedSnippets.forEach((snippet: CodeAnalysis) => {
-          if (!selectedCodeSnippets.includes(snippet.id)) {
-            onSelectCodeSnippet(snippet.id)
-          }
-        })
+        // Remove the auto-selection logic
       } catch (error) {
         setSnippetsError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -207,6 +192,72 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   };
 
   const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length
+
+  const handleSelectAllAPIs = () => {
+    if (apis.length === 0) return;
+    const allApiIds = apis.map(api => api.id);
+    allApiIds.forEach(id => {
+      if (!selectedAPIs.includes(id)) {
+        onSelectAPI(id);
+      }
+    });
+  };
+
+  const handleDeselectAllAPIs = () => {
+    if (apis.length === 0) return;
+    const allApiIds = apis.map(api => api.id);
+    allApiIds.forEach(id => {
+      if (selectedAPIs.includes(id)) {
+        onSelectAPI(id);
+      }
+    });
+  };
+
+  const handleSelectAllCodeSnippets = () => {
+    if (codeSnippets.length === 0) return;
+    const allSnippetIds = codeSnippets.map(snippet => snippet.id);
+    allSnippetIds.forEach(id => {
+      if (!selectedCodeSnippets.includes(id)) {
+        onSelectCodeSnippet(id);
+      }
+    });
+  };
+
+  const handleDeselectAllCodeSnippets = () => {
+    if (codeSnippets.length === 0) return;
+    const allSnippetIds = codeSnippets.map(snippet => snippet.id);
+    allSnippetIds.forEach(id => {
+      if (selectedCodeSnippets.includes(id)) {
+        onSelectCodeSnippet(id);
+      }
+    });
+  };
+
+  const handleSelectAllGuidelines = () => {
+    if (guidelines.length === 0) return;
+    const allGuidelineIds = guidelines.map(guideline => guideline.id);
+    allGuidelineIds.forEach(id => {
+      if (!selectedStandards.includes(id)) {
+        onSelectStandard(id);
+      }
+    });
+  };
+
+  const handleDeselectAllGuidelines = () => {
+    if (guidelines.length === 0) return;
+    const allGuidelineIds = guidelines.map(guideline => guideline.id);
+    allGuidelineIds.forEach(id => {
+      if (selectedStandards.includes(id)) {
+        onSelectStandard(id);
+      }
+    });
+  };
+
+  const handleDeselectAll = () => {
+    handleDeselectAllAPIs();
+    handleDeselectAllCodeSnippets();
+    handleDeselectAllGuidelines();
+  };
 
   const renderCodeSnippets = () => {
     if (isLoadingSnippets) {
@@ -287,7 +338,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
                 <div className="bg-zinc-950 text-zinc-100">
                   <div className="overflow-x-auto overflow-y-auto max-h-[200px] p-3 text-xs font-mono">
-                    <pre className="leading-relaxed whitespace-pre">{snippet.content}</pre>
+                    <pre className="leading-relaxed whitespace-pre max-w-[600px] overflow-x-auto">{snippet.content}</pre>
                   </div>
                 </div>
               </div>
@@ -298,8 +349,37 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CategoryControls = ({ count, onSelectAll, onDeselectAll } : any) => (
+    <div className="flex justify-between items-center py-2 px-1 mb-2">
+      <Badge variant="outline" className="bg-primary/10">
+        {count} 项
+      </Badge>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs flex items-center"
+          onClick={onSelectAll}
+        >
+          <CheckSquare className="h-3.5 w-3.5 mr-1.5" />
+          全选
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-xs flex items-center"
+          onClick={onDeselectAll}
+        >
+          <Square className="h-3.5 w-3.5 mr-1.5" />
+          取消选择
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-[100%] mx-auto">
       <div className="flex justify-between items-center">
         <p className="text-sm">
           <span className="font-semibold">关键词：</span>
@@ -332,6 +412,13 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
         {/* API Resources Tab */}
         <TabsContent value="apis" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
+          {!isLoadingApis && !apiError && apis.length > 0 && (
+            <CategoryControls
+              count={apis.length}
+              onSelectAll={handleSelectAllAPIs}
+              onDeselectAll={handleDeselectAllAPIs}
+            />
+          )}
           {isLoadingApis ? (
             <div className="space-y-2">
               {[1, 2, 3].map((n) => (
@@ -417,11 +504,26 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
         {/* Code Snippets Tab */}
         <TabsContent value="code" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
+          {!isLoadingSnippets && !snippetsError && codeSnippets.length > 0 && (
+            <CategoryControls
+              count={codeSnippets.length}
+              onSelectAll={handleSelectAllCodeSnippets}
+              onDeselectAll={handleDeselectAllCodeSnippets}
+            />
+          )}
+
           {renderCodeSnippets()}
         </TabsContent>
 
         {/* Guidelines/Standards Tab */}
         <TabsContent value="standards" className="mt-2 max-h-[50vh] overflow-y-auto pr-1">
+          {!isLoadingGuidelines && !guidelinesError && guidelines.length > 0 && (
+            <CategoryControls
+              count={guidelines.length}
+              onSelectAll={handleSelectAllGuidelines}
+              onDeselectAll={handleDeselectAllGuidelines}
+            />
+          )}
           {isLoadingGuidelines ? (
             <div className="space-y-2">
               {[1, 2].map((n) => (
@@ -489,6 +591,14 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               {selectedCount}
             </span>
           )}
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={handleDeselectAll}
+          disabled={selectedCount === 0}
+        >
+          取消全选
         </Button>
       </div>
     </div>
