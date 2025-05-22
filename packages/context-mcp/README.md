@@ -14,6 +14,22 @@ Model Context Protocol implementation for AutoDev.
 }
 ```
 
+### Local Using
+
+```json
+{
+  "mcpServers": {
+    "autodev-context-mcp": {
+      "command": "node",
+      "args": ["./packages/context-mcp/dist/index.js", "--preset=AutoDev"],
+      "env": {
+        "projectId": "cmaqby8oo0002l704skfwgpjy"
+      }
+    }
+  }
+}
+```
+
 ## Installation
 
 ```bash
