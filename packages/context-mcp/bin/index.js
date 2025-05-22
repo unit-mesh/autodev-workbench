@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const { MCPServer } = require("../dist/index.js");
+// eslint-disable-next-line
+const { MCPServer, Presets } = require("../dist");
 
+// eslint-disable-next-line
 const PKG = require("../package.json");
-
-const { Presets } = require("../dist/_typing.js");
 
 // parse --preset flag
 const presetArg = process.argv.find((arg) => arg.startsWith("--preset="));
@@ -35,7 +35,7 @@ const server = new MCPServer({
 });
 
 console.error("Loading preset:", preset.name);
-server.loadPreset(preset);
+server.loadPreset(preset.name);
 
 console.error("Server created, starting stdio...");
 
