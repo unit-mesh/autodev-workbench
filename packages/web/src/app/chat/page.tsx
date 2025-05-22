@@ -30,7 +30,6 @@ interface Message {
   loading?: boolean
 }
 
-// Define prompts for different stages
 const PROMPTS = {
   INTENT_RECOGNITION: `你是一个需求分析助手。请分析用户的需求描述，提取以下信息：
 1. 主要意图（用户想要做什么）
@@ -149,7 +148,6 @@ export default function Chat() {
 
       const data = await response.json();
 
-      // Update conversation ID if we get one back
       if (data.conversationId && !conversationContext.conversationId) {
         setConversationContext(prev => ({
           ...prev,
@@ -167,8 +165,8 @@ export default function Chat() {
   // Parse JSON from LLM response, handle potential errors
   const parseJsonResponse = (text: string) => {
     try {
-      const jsonMatch = MarkdownCodeBlock.from(text)[0].code
-      const jsonStr = jsonMatch ? jsonMatch[1] : text;
+      const blocks = MarkdownCodeBlock.from(text);
+      const jsonStr = blocks.length > 0 ? blocks[0].code : text;
       return JSON.parse(jsonStr);
     } catch (error) {
       console.error("Error parsing JSON response:", error);

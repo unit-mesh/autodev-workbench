@@ -51,7 +51,7 @@ async function analyzeSymbol(symbolName: string, symbolPath: string, symbolDetai
       return JSON.parse(answer) as ConceptDictionaryEntry[];
     }
 
-    const text = MarkdownCodeBlock.from(answer)[0].code;
+    const text = MarkdownCodeBlock.from(answer)[0]?.code || answer;
     const parse = JSON.parse(text);
     return parse as ConceptDictionaryEntry[];
   } catch (error) {
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     for (const item of conceptEntries) {
       const conceptId = generateId();
       conceptIds.push(conceptId);
-      
+
       await pool.sql`
         INSERT INTO "ConceptDictionary" (
           "id",                                         
