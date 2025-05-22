@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, Copy, FileText, Code, AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle2, Code, Copy, FileText } from "lucide-react"
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -63,25 +63,20 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     onSkip
   } = props
 
-  // API Resources
   const [apis, setApis] = useState<ApiResource[]>([])
   const [isLoadingApis, setIsLoadingApis] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
-  // Code Snippets
   const [codeSnippets, setCodeSnippets] = useState<CodeAnalysis[]>([])
   const [isLoadingSnippets, setIsLoadingSnippets] = useState(false)
   const [snippetsError, setSnippetsError] = useState<string | null>(null)
 
-  // Guidelines/Standards
   const [guidelines, setGuidelines] = useState<Guideline[]>([])
   const [isLoadingGuidelines, setIsLoadingGuidelines] = useState(false)
   const [guidelinesError, setGuidelinesError] = useState<string | null>(null)
 
-  // Format keywords for API requests
   const keywordsParam = keywords && keywords.length > 0 ? `keywords=${keywords.join(',')}` : '';
 
-  // Fetch API resources
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
@@ -135,12 +130,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchCodeSnippets()
   }, [keywordsParam])
 
-  // No longer need to filter assets since the backend now handles it
-  const filteredApis = apis
-  const filteredCodeSnippets = codeSnippets
-  const filteredStandards = guidelines
-
-  // Total counts
   const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length
 
   return (
@@ -165,13 +154,13 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       <Tabs defaultValue="apis" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="apis">
-            API 资源 <Badge variant="outline" className="ml-2">{filteredApis.length}</Badge>
+            API 资源 <Badge variant="outline" className="ml-2">{apis.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="code">
-            代码片段 <Badge variant="outline" className="ml-2">{filteredCodeSnippets.length}</Badge>
+            代码片段 <Badge variant="outline" className="ml-2">{codeSnippets.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="standards">
-            规范指南 <Badge variant="outline" className="ml-2">{filteredStandards.length}</Badge>
+            规范指南 <Badge variant="outline" className="ml-2">{guidelines.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -193,7 +182,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               <AlertCircle className="h-4 w-4 mr-2" />
               {apiError}
             </div>
-          ) : filteredApis.length === 0 ? (
+          ) : apis.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
               <Code className="h-12 w-12 text-gray-300"/>
               <p className="text-center text-gray-500">暂无API资源</p>
@@ -201,7 +190,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
           ) : (
             <Card className="overflow-hidden bg-blue-50/50">
               <CardContent className="p-4 space-y-3">
-                {filteredApis.map((api: ApiResource) => (
+                {apis.map((api: ApiResource) => (
                   <div key={api.id} className="p-3 bg-white border border-blue-200 rounded-md shadow-sm space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
@@ -281,14 +270,14 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               <AlertCircle className="h-4 w-4 mr-2" />
               {snippetsError}
             </div>
-          ) : filteredCodeSnippets.length === 0 ? (
+          ) : codeSnippets.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
               <Code className="h-12 w-12 text-gray-300"/>
               <p className="text-center text-gray-500">暂无代码片段</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredCodeSnippets.map((snippet: CodeAnalysis) => (
+              {codeSnippets.map((snippet: CodeAnalysis) => (
                 <Card key={snippet.id} className={`overflow-hidden ${selectedCodeSnippets.includes(snippet.id) ? 'border-green-500 bg-green-50/30' : ''}`}>
                   <CardHeader className="px-4 py-2 pb-0 bg-muted/50 flex flex-row items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -344,7 +333,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               <AlertCircle className="h-4 w-4 mr-2" />
               {guidelinesError}
             </div>
-          ) : filteredStandards.length === 0 ? (
+          ) : guidelines.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4 bg-gray-50">
               <FileText className="h-12 w-12 text-gray-300"/>
               <p className="text-center text-gray-500">暂无规范指南</p>
@@ -352,7 +341,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
           ) : (
             <Card className="overflow-hidden bg-green-50/50">
               <CardContent className="p-4 space-y-3">
-                {filteredStandards.map((standard: Guideline) => (
+                {guidelines.map((standard: Guideline) => (
                   <div key={standard.id} className={`p-3 border rounded-md shadow-sm space-y-2 ${
                     selectedStandards.includes(standard.id) 
                       ? 'bg-green-50 border-green-300' 
