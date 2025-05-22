@@ -146,6 +146,14 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
+        <p className="text-sm">
+          <span className="font-semibold">关键词：</span>
+          {keywords.map((keyword, index) => (
+            <span key={index} className="text-sm text-gray-500">
+              {keyword}{index < keywords.length - 1 ? ', ' : ''}
+            </span>
+          ))}
+        </p>
         <p className="text-sm text-muted-foreground">根据您的需求，系统找到了以下可能有用的资源：</p>
         {selectedCount > 0 && (
           <Badge variant="outline" className="bg-primary/10">

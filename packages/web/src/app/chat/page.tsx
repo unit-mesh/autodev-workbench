@@ -132,7 +132,6 @@ export default function Chat() {
     }
   }, [messages])
 
-  // Call API with appropriate prompt
   const callChatAPI = async (userPrompt: string, systemPrompt: string) => {
     try {
       const response = await fetch("/api/chat", {
@@ -359,7 +358,6 @@ export default function Chat() {
     }
   }
 
-  // 确认资产选择
   const handleConfirmAssetSelection = async () => {
     const processingMessage: Message = {
       id: Date.now().toString(),
@@ -376,18 +374,19 @@ export default function Chat() {
       const assetMessage = messages.find(m => m.type === "asset-recommendation");
       const assetData = assetMessage?.data || {};
 
-      // Filter selected assets
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
         selectedAPIs.includes(api.id)
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
         selectedCodeSnippets.includes(code.id)
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
         selectedStandards.includes(std.id)
       );
 
-      // Generate requirement card
       const cardPrompt = PROMPTS.REQUIREMENT_CARD
         .replace("{initialRequirement}", conversationContext.initialRequirement)
         .replace("{clarification}", conversationContext.clarification)
@@ -560,13 +559,15 @@ export default function Chat() {
         const assetMessage = messages.find(m => m.type === "asset-recommendation");
         const assetData = assetMessage?.data || {};
 
-        // Filter selected assets
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
           selectedAPIs.includes(api.id)
         );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
           selectedCodeSnippets.includes(code.id)
         );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
           selectedStandards.includes(std.id)
         );
