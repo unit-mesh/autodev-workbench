@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
+import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 
 type MessageType =
   | "user"
@@ -166,10 +167,7 @@ export default function Chat() {
   // Parse JSON from LLM response, handle potential errors
   const parseJsonResponse = (text: string) => {
     try {
-      // Try to extract JSON if it's wrapped in code blocks or has extra text
-      const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ||
-                        text.match(/(\{[\s\S]*?\})/);
-
+      const jsonMatch = MarkdownCodeBlock.from(text)[0].code
       const jsonStr = jsonMatch ? jsonMatch[1] : text;
       return JSON.parse(jsonStr);
     } catch (error) {
