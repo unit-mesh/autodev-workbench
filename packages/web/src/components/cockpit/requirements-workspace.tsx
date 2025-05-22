@@ -6,10 +6,10 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
-import { MessageSquare, FileText } from "lucide-react"
+import { MessageSquare, FileText, Code, Search } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import InputWithSend from "@/components/shared/input-with-send"
+import AwarenessInput from "@/components/shared/input-with-send"
 import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
 // Default example requirement with rich context
@@ -44,7 +44,7 @@ export default function RequirementsWorkspace({
 	                                              isDocumentUpdating = false,
 	                                              isQualityChecking = false,
                                               }: RequirementsWorkspaceProps) {
-	const [activeTab, setActiveTab] = useState<"conversation" | "document">("conversation")
+	const [activeTab, setActiveTab] = useState<"conversation" | "document" | "vibeCoding" | "diagnosis">("conversation")
 	const [editingId, setEditingId] = useState<string | null>(null)
 	const [editContent, setEditContent] = useState("")
 	const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -144,6 +144,20 @@ export default function RequirementsWorkspace({
 							<FileText className="h-4 w-4 mr-2"/>
 							<span className="text-sm font-medium">需求文档</span>
 						</div>
+						<div
+							className={`flex items-center px-3 py-1.5 rounded cursor-pointer ${activeTab === "vibeCoding" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+							onClick={() => setActiveTab("vibeCoding")}
+						>
+							<Code className="h-4 w-4 mr-2"/>
+							<span className="text-sm font-medium">Vibe Coding</span>
+						</div>
+						<div
+							className={`flex items-center px-3 py-1.5 rounded cursor-pointer ${activeTab === "diagnosis" ? "bg-white shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+							onClick={() => setActiveTab("diagnosis")}
+						>
+							<Search className="h-4 w-4 mr-2"/>
+							<span className="text-sm font-medium">问题诊断</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -156,7 +170,7 @@ export default function RequirementsWorkspace({
 								{conversation.length === 0 && (
 									<div className="flex justify-center items-center h-40 text-gray-500">
 										<div className="text-center">
-											<p className="mb-2">请在下方输入您的需求描述开始对话</p>
+											<p className="mb-2">请在下方输入您的需求开始对话</p>
 											<p className="text-xs">提示：使用清晰、具体的语言描述您的需求</p>
 										</div>
 									</div>
@@ -175,12 +189,9 @@ export default function RequirementsWorkspace({
 										</div>
 										{message.role === "assistant" && index === conversation.length - 1 && (
 											<div className="flex gap-2 justify-end mt-3">
-												<Button
-													variant="outline"
-													size="sm"
+												<Button variant="outline" size="sm" className="flex items-center"
 													onClick={onUpdateDocument}
 													disabled={isDocumentUpdating}
-													className="flex items-center"
 												>
 													{isDocumentUpdating ? (
 														<>
@@ -195,12 +206,9 @@ export default function RequirementsWorkspace({
 														</>
 													)}
 												</Button>
-												<Button
-													variant="outline"
-													size="sm"
+												<Button variant="outline" size="sm" className="flex items-center"
 													onClick={onCheckQuality}
 													disabled={isQualityChecking || (documentContent && documentContent.length === 0)}
-													className="flex items-center"
 												>
 													{isQualityChecking ? (
 														<>
@@ -234,7 +242,7 @@ export default function RequirementsWorkspace({
 						<div className={conversation.length === 0 ? "mb-2 text-sm font-medium text-gray-700" : "hidden"}>
 							请描述您的核心需求或意图
 						</div>
-						<InputWithSend
+						<AwarenessInput
 							value={currentRequirement}
 							onChange={handleInputChange}
 							onSend={handleSend}
@@ -329,6 +337,60 @@ export default function RequirementsWorkspace({
 									</Card>
 								))
 							)}
+						</ScrollArea>
+					</div>
+				</div>
+
+				{/* Vibe Coding Tab */}
+				<div className={`absolute inset-0 ${activeTab === "vibeCoding" ? "block" : "hidden"}`}>
+					<div className="h-full">
+						<ScrollArea className="h-full p-4">
+							<div className="flex justify-center items-center h-40 text-gray-500">
+								<div className="text-center">
+									<p className="mb-2">Vibe Coding 功能</p>
+									<p className="text-xs">根据需求自动生成代码风格和架构建议</p>
+								</div>
+							</div>
+							<Card className="mb-4 py-0">
+								<CardContent className="p-4">
+									<div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
+										<div className="text-sm font-medium text-gray-700 flex items-center">
+											<Code className="h-4 w-4 mr-1.5" />
+											代码风格与架构推荐
+										</div>
+									</div>
+									<div className="prose prose-sm max-w-none bg-white rounded-md p-3 border border-gray-100 shadow-sm">
+										<p>基于当前需求分析，系统将为你生成 AI 编程的提示词。</p>
+									</div>
+								</CardContent>
+							</Card>
+						</ScrollArea>
+					</div>
+				</div>
+
+				{/* Problem Diagnosis Tab */}
+				<div className={`absolute inset-0 ${activeTab === "diagnosis" ? "block" : "hidden"}`}>
+					<div className="h-full">
+						<ScrollArea className="h-full p-4">
+							<div className="flex justify-center items-center h-40 text-gray-500">
+								<div className="text-center">
+									<p className="mb-2">问题诊断功能</p>
+									<p className="text-xs">识别需求中的潜在问题和风险</p>
+								</div>
+							</div>
+							<Card className="mb-4 py-0">
+								<CardContent className="p-4">
+									<div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
+										<div className="text-sm font-medium text-gray-700 flex items-center">
+											<Search className="h-4 w-4 mr-1.5" />
+											需求问题诊断报告
+										</div>
+									</div>
+									<div className="prose prose-sm max-w-none bg-white rounded-md p-3 border border-gray-100 shadow-sm">
+										<p>系统将分析当前需求，识别潜在的问题、不一致或模糊点，并提供改进建议。</p>
+									</div>
+								</CardContent>
+							</Card>
 						</ScrollArea>
 					</div>
 				</div>
