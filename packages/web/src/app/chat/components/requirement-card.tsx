@@ -215,7 +215,7 @@ ${guidelinesList}
       <CardFooter className="pt-2">
         <div className="flex justify-between w-full">
           <div className="space-x-2">
-            <Button variant="outline" onClick={onSaveAsDraft}>
+            <Button variant="outline" onClick={onSaveAsDraft} disabled>
               <Save className="h-4 w-4 mr-2" />
               保存为草稿
             </Button>
@@ -225,14 +225,11 @@ ${guidelinesList}
             </Button>
             <Button variant="outline" onClick={copyAsAiPrompt}>
               <Copy className="h-4 w-4 mr-2" />
-              复制为AI Prompt
+              复制为 AI 编码 Prompt
             </Button>
           </div>
           <div className="space-x-2">
-            <Button variant="outline" onClick={() => onEdit('name')}>
-              修改信息
-            </Button>
-            <Button onClick={onGenerateTask}>
+            <Button onClick={onGenerateTask} disabled>
               <Check className="h-4 w-4 mr-2" />
               生成任务
             </Button>

@@ -133,6 +133,7 @@ export default function Chat() {
   }, [messages])
 
   const callChatAPI = async (userPrompt: string, systemPrompt: string) => {
+    console.log("Calling chat API with prompt:", userPrompt, systemPrompt)
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
