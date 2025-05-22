@@ -63,9 +63,6 @@ export default function ProjectConceptDictionary({
     <div className="border-t border-gray-200 p-2">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-semibold text-gray-700">项目词汇表</h3>
-        <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-          <Plus className="h-3 w-3"/>
-        </Button>
       </div>
       <ScrollArea className="h-40">
         {isLoadingGlossary ? (

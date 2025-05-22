@@ -248,7 +248,7 @@ export default function KnowledgeHub({
 			id: resource.id,
 			title: "API资源",
 			source: `${resource.packageName}.${resource.className}.${resource.methodName}`,
-			insight: `检测到API端点: ${resource.sourceHttpMethod} ${resource.sourceUrl}`,
+			insight: `${resource.sourceHttpMethod} ${resource.sourceUrl}`,
 			rawData: resource
 		}
 	})
@@ -384,24 +384,24 @@ export default function KnowledgeHub({
 					<ScrollArea className="h-64">
 						<div className="p-2 space-y-2">
 							{implicitKnowledge.map((item) => (
-								<Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0">
-									<CardHeader className="p-3 pb-0">
-										<CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-										<Badge variant="secondary" className="text-[10px] h-4 w-fit">
-											来源: {item.source}
-										</Badge>
-									</CardHeader>
-									<CardContent className="p-3 pt-2">
-										<p className="text-xs text-gray-600">{item.insight}</p>
-										<div className="flex justify-end mt-1 gap-1">
-											<Button variant="ghost" size="sm" className="h-6 text-[10px]">
-												确认
-											</Button>
-											<Button variant="ghost" size="sm" className="h-6 text-[10px]">
-												标记相关
-											</Button>
+								<Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-1 px-2 gap-0">
+									{/* 合并 Header 和 Content，来源用 Tag */}
+									<div className="flex items-center justify-between gap-2 py-1">
+										<div className="flex flex-col flex-1 min-w-0">
+											<div className="flex items-center gap-2">
+												<span className="text-sm font-medium truncate">{item.title}</span>
+												<Badge variant="secondary" className="text-[10px] h-4 px-1 flex items-center gap-1">
+													<Tag className="h-3 w-3 mr-0.5" />
+													<span className="truncate max-w-[120px]">{item.source}</span>
+												</Badge>
+											</div>
+											<p className="text-xs text-gray-600 mt-0.5 truncate">{item.insight}</p>
 										</div>
-									</CardContent>
+											{/* 单个 Checkbox 代表选中该 item */}
+										<div className="flex items-center ml-2">
+											<Checkbox id={`implicit-${item.id}`} />
+										</div>
+									</div>
 								</Card>
 							))}
 						</div>
