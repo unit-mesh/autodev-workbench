@@ -199,7 +199,7 @@ export default function Chat() {
 
   const parseJsonResponse = (text: string) => {
     try {
-      const blocks = MarkdownCodeBlock.from(text);
+      const blocks = MarkdownCodeBlock.from(text).filter( it => it.language === "json");
       let jsonStr = blocks.length > 0 ? blocks[0].code : text;
       if (jsonStr == undefined) {
         jsonStr = text
