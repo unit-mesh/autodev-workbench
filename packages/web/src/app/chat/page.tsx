@@ -50,25 +50,21 @@ export default function Chat() {
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // 自动滚动到底部
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
 
-  // 处理用户输入提交
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isProcessing) return
 
-    // 添加用户消息
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: input,
     }
 
-    // 添加系统处理消息
     const processingMessage: Message = {
       id: (Date.now() + 1).toString(),
       type: "system",
@@ -80,12 +76,9 @@ export default function Chat() {
     setInput("")
     setIsProcessing(true)
 
-    // 模拟处理延迟
     setTimeout(() => {
-      // 移除加载消息
       setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id))
 
-      // 意图识别消息
       const intentMessage: Message = {
         id: Date.now().toString(),
         type: "intent-recognition",
@@ -97,7 +90,6 @@ export default function Chat() {
         }
       }
 
-      // 添加引导问题
       const promptMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bullet-prompts",
@@ -117,7 +109,6 @@ export default function Chat() {
     }, 1500)
   }
 
-  // 处理问题回答
   const handleAnswerPrompt = (userInput: string) => {
     // 添加用户回答
     const userAnswer: Message = {
@@ -136,18 +127,13 @@ export default function Chat() {
     setMessages((prev) => [...prev, userAnswer, processingMessage])
     setIsProcessing(true)
 
-    // 模拟处理延迟
     setTimeout(() => {
       setMessages((prev) => prev.filter((msg) => msg.id !== processingMessage.id))
       const assetMessage: Message = {
         id: Date.now().toString(),
         type: "asset-recommendation",
         content: "根据您的需求，我找到了以下可能有用的资源：",
-        data: {
-          // apis: apis,
-          // codeSnippets: codeSnippets,
-          // standards: standards
-        }
+        data: {}
       }
 
       setMessages((prev) => [...prev, assetMessage])
@@ -155,7 +141,6 @@ export default function Chat() {
     }, 1500)
   }
 
-  // 处理API选择
   const handleSelectAPI = (apiId: string) => {
     if (selectedAPIs.includes(apiId)) {
       setSelectedAPIs(prev => prev.filter(id => id !== apiId));
@@ -164,7 +149,6 @@ export default function Chat() {
     }
   }
 
-  // 处理代码片段选择
   const handleSelectCodeSnippet = (snippetId: string) => {
     if (selectedCodeSnippets.includes(snippetId)) {
       setSelectedCodeSnippets(prev => prev.filter(id => id !== snippetId));
@@ -173,7 +157,6 @@ export default function Chat() {
     }
   }
 
-  // 处理规范选择
   const handleSelectStandard = (standardId: string) => {
     if (selectedStandards.includes(standardId)) {
       setSelectedStandards(prev => prev.filter(id => id !== standardId));
@@ -205,7 +188,6 @@ export default function Chat() {
 
     setRequirementCard(newRequirementCard);
 
-    // 添加卡片预览消息
     const cardPreviewMessage: Message = {
       id: Date.now().toString(),
       type: "requirement-card",
@@ -216,7 +198,6 @@ export default function Chat() {
     setMessages(prev => [...prev, cardPreviewMessage]);
   }
 
-  // 处理保存为草稿
   const handleSaveAsDraft = () => {
     if (requirementCard) {
       setHasDraft(true);
@@ -235,11 +216,23 @@ export default function Chat() {
     if (!requirementCard) return;
 
     let initialValue = "";
-    if (field === "name") initialValue = requirementCard.name;
-    else if (field === "module") initialValue = requirementCard.module;
-    else if (field === "description") initialValue = requirementCard.description;
-    else if (field === "assignee") initialValue = requirementCard.assignee;
-    else if (field === "deadline") initialValue = requirementCard.deadline;
+    switch (field) {
+      case "name":
+        initialValue = requirementCard.name;
+        break;
+      case "module":
+        initialValue = requirementCard.module;
+        break;
+      case "description":
+        initialValue = requirementCard.description;
+        break;
+      case "assignee":
+        initialValue = requirementCard.assignee;
+        break;
+      case "deadline":
+        initialValue = requirementCard.deadline;
+        break;
+    }
 
     setEditField(field);
     setEditValue(initialValue);
