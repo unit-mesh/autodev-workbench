@@ -72,10 +72,6 @@ describe('regexSearchFiles', () => {
   it('应该能搜索文件内容并返回格式化的结果', async () => {
     const results = await regexSearchFiles(tempDir, tempDir, 'TODO');
 
-    // 输出结果用于调试
-    console.log('搜索 "TODO" 的结果:');
-    console.log(results);
-
     // 验证结果包含特定文件和内容
     expect(results).toContain('src/app.js');
     expect(results).toContain('实现错误处理');
@@ -88,10 +84,6 @@ describe('regexSearchFiles', () => {
     // 搜索不存在的内容
     const noResults = await regexSearchFiles(tempDir, tempDir, 'NONEXISTENT_STRING_12345');
 
-    console.log('\n搜索不存在字符串的结果:');
-    console.log(noResults);
-
-    // 验证没有匹配结果时的输出
     expect(noResults).toContain('Found 0 results.');
   });
 
@@ -107,8 +99,6 @@ This line has a ? question mark.
 
     // 使用包含特殊字符的正则表达式搜索
     const specialResults = await regexSearchFiles(tempDir, tempDir, '\\(.*\\)');
-    console.log('\n搜索特殊正则字符的结果:');
-    console.log(specialResults);
 
     // 验证特殊字符搜索结果
     expect(specialResults).toContain('special.txt');

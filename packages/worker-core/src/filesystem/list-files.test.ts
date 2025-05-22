@@ -67,9 +67,5 @@ describe('listFiles', () => {
 
     expect(limitedFiles.length).toBe(limit);
     expect(limitReached).toBe(true);
-
-    console.log('测试目录:', tempDir);
-    console.log('非递归文件列表:', nonRecursiveFiles);
-    console.log('递归文件列表:', recursiveFiles.slice(0, 5), '... 等');
   });
 });

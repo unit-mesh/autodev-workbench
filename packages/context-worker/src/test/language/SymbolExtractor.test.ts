@@ -83,8 +83,6 @@ int main() {
       const mainFunction = symbols.find(s => s.kind === SymbolKind.Function && s.name === 'main');
       expect(mainFunction).toBeDefined();
       expect(mainFunction?.qualifiedName).toBe('main');
-
-      console.log(symbols)
     });
   });
 
