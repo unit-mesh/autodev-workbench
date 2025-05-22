@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, ChevronLeft, Loader2, CheckCircle2, RefreshCw, LogIn } from "lucide-react"
+import { Send, ChevronLeft, Loader2, CheckCircle2, RefreshCw, LogIn, BookmarkPlus, X, AlignJustify, SaveAll } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -10,10 +10,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 
 type MessageType =
   | "user"
@@ -133,6 +138,7 @@ export default function Chat() {
   const [concepts, setConcepts] = useState<ConceptDictionary[]>([])
   const [isLoadingConcepts, setIsLoadingConcepts] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [showSidebar, setShowSidebar] = useState(true)
 
   const [conversationContext, setConversationContext] = useState({
     initialRequirement: "",
@@ -730,94 +736,335 @@ export default function Chat() {
     )
   }
 
+  // Find the intent recognition data from messages
+  const intentData = messages.find(m => m.type === "intent-recognition")?.data || null;
+
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto">
-      <header className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center">
-          <ChevronLeft className="h-5 w-5 mr-2" />
-          <h1 className="text-xl font-bold">需求生成助手</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {session?.user && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {session.user.name || session.user.email}
-            </Badge>
-          )}
-          {isLoadingConcepts && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              <Loader2 className="h-3 w-3 animate-spin mr-1" /> 加载术语库中...
-            </Badge>
-          )}
-          {concepts.length > 0 && !isLoadingConcepts && (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              已载入 {concepts.length} 条业务术语
-            </Badge>
-          )}
-          {hasDraft && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              草稿已保存
-            </Badge>
-          )}
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-auto p-4 space-y-4" ref={chatContainerRef}>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-lg p-3 ${
-                message.type === "user" ? "bg-primary text-primary-foreground" : 
-                message.type === "requirement-card" || message.type === "asset-recommendation" ? "w-full bg-card" : 
-                "bg-muted"
-              }`}
-            >
-              {renderMessage(message)}
-            </div>
+    <div className="flex h-screen bg-gray-50">
+      {/* Main chat area */}
+      <div className={`flex flex-col ${showSidebar ? "w-2/3" : "w-full"} bg-white transition-all duration-300 ease-in-out`}>
+        <header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
+          <div className="flex items-center">
+            <ChevronLeft className="h-5 w-5 mr-2 text-gray-500 hover:text-gray-700 cursor-pointer" onClick={() => router.push('/')} />
+            <h1 className="text-xl font-bold text-gray-800">需求生成助手</h1>
           </div>
-        ))}
-      </div>
+          <div className="flex items-center gap-2">
+            {session?.user && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                {session.user.name || session.user.email}
+              </Badge>
+            )}
+            {isLoadingConcepts && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                <Loader2 className="h-3 w-3 animate-spin mr-1" /> 加载术语库中...
+              </Badge>
+            )}
+            {concepts.length > 0 && !isLoadingConcepts && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                已载入 {concepts.length} 条业务术语
+              </Badge>
+            )}
+            {hasDraft && (
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                <BookmarkPlus className="h-3 w-3 mr-1" /> 草稿已保存
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSidebar(!showSidebar)}
+              title={showSidebar ? "隐藏信息面板" : "显示信息面板"}
+            >
+              <AlignJustify className="h-5 w-5" />
+            </Button>
+          </div>
+        </header>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t flex space-x-2">
-        <Input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            isProcessing ? "正在处理..." :
-            messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
-            "请描述您的需求..."
-          }
-          className="flex-1"
-          disabled={isProcessing}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
+        <ScrollArea className="flex-1 p-4 space-y-4" ref={chatContainerRef}>
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex mb-4 ${message.type === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
+            >
+              <div
+                className={cn(
+                  "relative max-w-[85%] rounded-lg p-4 shadow-sm",
+                  message.type === "user" ?
+                    "bg-primary text-primary-foreground rounded-tr-none" :
+                  message.type === "requirement-card" || message.type === "asset-recommendation" ?
+                    "w-full bg-card border" :
+                  message.type === "intent-recognition" ?
+                    "bg-blue-50 border border-blue-100 text-gray-800 rounded-tl-none" :
+                  message.type === "bullet-prompts" ?
+                    "bg-amber-50 border border-amber-100 text-gray-800 rounded-tl-none" :
+                  message.type === "confirmation" ?
+                    "bg-green-50 border border-green-100 text-gray-800 rounded-tl-none" :
+                    "bg-gray-100 text-gray-800 rounded-tl-none"
+                )}
+              >
+                {renderMessage(message)}
+              </div>
+            </div>
+          ))}
+        </ScrollArea>
+
+        <form onSubmit={handleSubmit} className="p-4 border-t flex space-x-2 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+          <Input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              isProcessing ? "正在处理..." :
+              messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
+              "请描述您的需求..."
+            }
+            className="flex-1 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={isProcessing}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
+                e.preventDefault();
+                if (messages.some(m => m.type === "bullet-prompts")) {
+                  handleAnswerPrompt(input);
+                } else {
+                  handleSubmit(e as unknown as React.FormEvent);
+                }
+              }
+            }}
+          />
+          <Button
+            type="submit"
+            disabled={!input.trim() || isProcessing}
+            onClick={(e) => {
               e.preventDefault();
               if (messages.some(m => m.type === "bullet-prompts")) {
                 handleAnswerPrompt(input);
               } else {
                 handleSubmit(e as unknown as React.FormEvent);
               }
-            }
-          }}
-        />
-        <Button
-          type="submit"
-          disabled={!input.trim() || isProcessing}
-          onClick={(e) => {
-            e.preventDefault();
-            if (messages.some(m => m.type === "bullet-prompts")) {
-              handleAnswerPrompt(input);
-            } else {
-              handleSubmit(e as unknown as React.FormEvent);
-            }
-          }}
-        >
-          {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </Button>
-      </form>
+            }}
+            className="transition-all duration-200"
+          >
+            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </form>
+      </div>
+
+      {/* Right sidebar for selected information */}
+      {showSidebar && (
+        <div className="w-1/3 border-l bg-gray-50 flex flex-col h-full transition-all duration-300 ease-in-out">
+          <div className="p-4 border-b bg-white flex justify-between items-center">
+            <h2 className="font-semibold text-gray-800">需求信息面板</h2>
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 p-4">
+            <Tabs defaultValue="requirement">
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="requirement">需求信息</TabsTrigger>
+                <TabsTrigger value="assets">已选资源</TabsTrigger>
+                <TabsTrigger value="card">需求卡片</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="requirement" className="space-y-4">
+                {conversationContext.initialRequirement ? (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">原始需求</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600">{conversationContext.initialRequirement}</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">原始需求</CardTitle>
+                      <CardDescription>尚未输入需求</CardDescription>
+                    </CardHeader>
+                  </Card>
+                )}
+
+                {intentData && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">需求分析</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-gray-500">意图:</span>
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none">
+                          {intentData.intent}
+                        </Badge>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-medium text-gray-500 block mb-1">关键词:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {intentData.keywords.map((keyword: string, idx: number) => (
+                            <Badge key={idx} variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-none">
+                              {keyword}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-1">
+                        <span className="text-xs font-medium text-gray-500 block mb-1">总结:</span>
+                        <p className="text-sm text-gray-600">{intentData.summary}</p>
+                      </div>
+
+                      <div className="flex items-center pt-1">
+                        <span className="text-xs font-medium text-gray-500 mr-1">置信度:</span>
+                        <div className="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 rounded-full"
+                            style={{ width: `${intentData.confidence * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs ml-2">{Math.round(intentData.confidence * 100)}%</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {conversationContext.clarification && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">需求澄清</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600">{conversationContext.clarification}</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="assets" className="space-y-4">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-gray-700">已选API ({selectedAPIObjects.length})</h3>
+                  {selectedAPIObjects.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedAPIObjects.map((api, index) => (
+                        <div key={index} className="p-2 bg-white rounded border text-sm">
+                          <div className="font-medium">{api.packageName}.{api.className}.{api.methodName}</div>
+                          <div className="text-xs text-gray-500 mt-1">{api.sourceHttpMethod} {api.sourceUrl}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">尚未选择API</p>
+                  )}
+
+                  <Separator className="my-3" />
+
+                  <h3 className="text-sm font-medium text-gray-700">已选代码片段 ({selectedCodeSnippetObjects.length})</h3>
+                  {selectedCodeSnippetObjects.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedCodeSnippetObjects.map((snippet, index) => (
+                        <div key={index} className="p-2 bg-white rounded border text-sm">
+                          <div className="font-medium">{snippet.title}</div>
+                          <div className="text-xs text-gray-500 mt-1">{snippet.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">尚未选择代码片段</p>
+                  )}
+
+                  <Separator className="my-3" />
+
+                  <h3 className="text-sm font-medium text-gray-700">已选规范 ({selectedStandardObjects.length})</h3>
+                  {selectedStandardObjects.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedStandardObjects.map((standard, index) => (
+                        <div key={index} className="p-2 bg-white rounded border text-sm">
+                          <div className="font-medium">{standard.title}</div>
+                          <div className="text-xs text-gray-500 mt-1">{standard.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">尚未选择规范</p>
+                  )}
+
+                  {(selectedAPIObjects.length > 0 || selectedCodeSnippetObjects.length > 0 || selectedStandardObjects.length > 0) && (
+                    <div className="pt-2">
+                      <Button
+                        className="w-full"
+                        onClick={handleConfirmAssetSelection}
+                        disabled={isProcessing}
+                      >
+                        <SaveAll className="h-4 w-4 mr-2" />
+                        生成需求卡片
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="card">
+                {requirementCard ? (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">需求卡片预览</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">功能名称:</span>
+                        <p className="text-sm font-medium">{requirementCard.name}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">所属模块:</span>
+                        <p className="text-sm">{requirementCard.module}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">功能描述:</span>
+                        <p className="text-sm text-gray-600 mt-1">{requirementCard.description}</p>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={handleSaveAsDraft}
+                        >
+                          <BookmarkPlus className="h-4 w-4 mr-1" />
+                          保存草稿
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={handleGenerateTask}
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          确认生成
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">需求卡片</CardTitle>
+                      <CardDescription>尚未生成需求卡片</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-500">
+                        请选择所需资源并点击"生成需求卡片"按钮来创建需求卡片
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+          </ScrollArea>
+        </div>
+      )}
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
