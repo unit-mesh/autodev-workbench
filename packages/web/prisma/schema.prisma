@@ -194,16 +194,15 @@ model ApiResource {
   project   Project? @relation(fields: [projectId], references: [id])
 }
 
-// @comment(关键代码标识)
 model SymbolAnalysis {
-  id                String   @id @default(cuid())
-  name              String
-  kind              String
-  path              String?
-  detail            Json?
+  id                 String   @id @default(cuid())
+  name               String
+  kind               String
+  path               String?
+  detail             Json?
   identifiedConcepts String[] @default([]) // 记录已识别的概念ID
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id])

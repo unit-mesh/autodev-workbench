@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ApiResource, Guideline } from "@/types/project.type"
+import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 import AssetRecommendation from "@/components/asset-recommendation"
 
 // 定义消息类型
@@ -34,21 +34,12 @@ interface Message {
   loading?: boolean
 }
 
-interface CodeSnippet {
-  id: string
-  name: string
-  description: string
-  language: string
-  code: string
-  selected?: boolean
-}
-
 interface RequirementCard {
   name: string
   module: string
   description: string
   apis: ApiResource[]
-  codeSnippets: CodeSnippet[]
+  codeSnippets: CodeAnalysis[]
   guidelines: Guideline[]
   assignee: string
   deadline: string
@@ -452,8 +443,8 @@ export default function Chat() {
                   {message.data.card.codeSnippets.length > 0 ? (
                     <div className="p-2 bg-muted/40 rounded text-sm">
                       <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.codeSnippets.map((snippet: CodeSnippet) => (
-                          <li key={snippet.id}>{snippet.name}</li>
+                        {message.data.card.codeSnippets.map((snippet: CodeAnalysis) => (
+                          <li key={snippet.id}>{snippet.title}</li>
                         ))}
                       </ul>
                     </div>

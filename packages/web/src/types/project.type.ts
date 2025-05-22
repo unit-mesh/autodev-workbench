@@ -69,7 +69,6 @@ export type SymbolAnalysis = {
 	project: Project
 }
 
-
 export type ApiResource = {
 	id: string;
 	systemId?: string;
@@ -107,4 +106,18 @@ export interface Guideline {
 	createdBy: string
 	createdAt: string
 	updatedAt: string
+}
+
+export type CodeAnalysis = {
+	id: string
+	title: string | null
+	description: string | null
+	language: string | null
+	path: string
+	content: string
+	source: string | null
+	createdAt: string
+	updatedAt: string
+	projectId: string | null
+	project: Project | null
 }

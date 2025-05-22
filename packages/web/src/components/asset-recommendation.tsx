@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { FileText, CheckCircle2, Copy } from "lucide-react"
-import { ApiResource, Guideline } from "@/types/project.type"
-
-interface CodeSnippet {
-  id: string
-  name: string
-  description: string
-  language: string
-  code: string
-  selected?: boolean
-}
+import { CheckCircle2, Copy, FileText } from "lucide-react"
+import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 
 interface AssetRecommendationProps {
   keywords: string[]
@@ -26,37 +17,6 @@ interface AssetRecommendationProps {
   onSelectStandard: (standardId: string) => void
   onConfirm: () => void
 }
-
-const mockCodeSnippets: CodeSnippet[] = [
-  // ...与原 codeSnippets 相同...
-  {
-    id: "code1",
-    name: "ExcelJS 导出实现",
-    description: "使用ExcelJS库实现Excel导出，支持样式和多Sheet",
-    language: "javascript",
-    code: `// 后端Excel导出实现 (Node.js)
-const ExcelJS = require('exceljs');
-async function generateExcel(data, options = {}) {
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet(options.sheetName || 'Sheet1');
-  // ...existing code...
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
-}
-module.exports = { generateExcel };`
-  },
-  {
-    id: "code2",
-    name: "React导出按钮组件",
-    description: "可复用的React导出按钮组件，支持加载状态和错误处理",
-    language: "jsx",
-    code: `import React, { useState } from 'react';
-import { Button, Tooltip, message } from 'antd';
-import { DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
-// ...existing code...
-export default ExportButton;`
-  }
-]
 
 export default function AssetRecommendation(props: AssetRecommendationProps) {
   const {
@@ -83,39 +43,16 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       try {
         const response = await fetch('/api/context/api')
         if (!response.ok) throw new Error(`Failed to fetch APIs: ${response.status}`)
-        const data: ApiResource[] = await response.json()
-        setApis(data)
+        setApis(await response.json())
       } catch (error) {
         setApiError(error instanceof Error ? error.message : "Unknown error occurred")
-        setApis([
-          {
-            id: "default-api",
-            className: "ExportService",
-            methodName: "exportToExcel",
-            packageName: "默认包",
-            supplyType: "默认",
-            sourceHttpMethod: "POST",
-            sourceUrl: "/api/export"
-          } as ApiResource
-        ])
+        setApis([])
       } finally {
         setIsLoading(false)
       }
     }
     fetchApis()
   }, [])
-
-  const filterByKeywords = <T extends { name?: string; description?: string; sourceUrl?: string }>(items: T[]) => {
-    if (!keywords?.length && !search) return items
-    const allKeywords = [...(keywords || []), ...(search ? [search] : [])]
-    return items.filter(item =>
-      allKeywords.some(kw =>
-        (item.name && item.name.includes(kw)) ||
-        (item.description && item.description.includes(kw)) ||
-        (item.sourceUrl && item.sourceUrl.includes(kw))
-      )
-    )
-  }
 
   const [guidelines, setGuidelines] = useState<Guideline[]>([])
   useEffect(() => {
@@ -125,9 +62,17 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       .catch(() => setGuidelines([]))
   }, [])
 
+  const [codeSnippets, setCodeSnippets] = useState<CodeAnalysis[]>([])
+  useEffect(() => {
+    fetch("/api/context/code")
+      .then(res => res.json())
+      .then(data => setCodeSnippets(data))
+      .catch(() => setCodeSnippets([]))
+  }, [])
+
   const filteredApis = apis
-  const filteredCodeSnippets = filterByKeywords(mockCodeSnippets)
-  const filteredStandards = filterByKeywords(guidelines)
+  const filteredCodeSnippets = codeSnippets
+  const filteredStandards = guidelines
 
   return (
     <div className="space-y-4">
@@ -175,12 +120,12 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
           }
         </TabsContent>
         <TabsContent value="code" className="mt-2 space-y-2">
-          {filteredCodeSnippets.map((snippet: CodeSnippet) => (
+          {filteredCodeSnippets.map((snippet: CodeAnalysis) => (
             <Card key={snippet.id} className="overflow-hidden">
               <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <CheckCircle2 className={`h-4 w-4 ${selectedCodeSnippets.includes(snippet.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                  <CardTitle className="text-sm font-medium">{snippet.name}</CardTitle>
+                  <CardTitle className="text-sm font-medium">{snippet.title}</CardTitle>
                 </div>
                 <Checkbox
                   checked={selectedCodeSnippets.includes(snippet.id)}
@@ -196,13 +141,13 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
                       size="icon"
                       variant="ghost"
                       className="h-5 w-5 text-zinc-400 hover:text-zinc-100"
-                      onClick={() => navigator.clipboard.writeText(snippet.code)}
+                      onClick={() => navigator.clipboard.writeText(snippet.content)}
                     >
                       <Copy className="h-3 w-3" />
                     </Button>
                   </div>
                   <div className="max-h-32 overflow-y-auto">
-                    <pre>{snippet.code.split('\n').slice(0, 5).join('\n') + (snippet.code.split('\n').length > 5 ? '\n...' : '')}</pre>
+                    <pre>{snippet.content.split('\n').slice(0, 5).join('\n') + (snippet.content.split('\n').length > 5 ? '\n...' : '')}</pre>
                   </div>
                 </div>
               </CardContent>
