@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, ChevronLeft, Loader2, CheckCircle2 } from "lucide-react"
+import { Send, ChevronLeft, Loader2, CheckCircle2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -47,6 +47,8 @@ const PROMPTS = {
   CLARIFYING_QUESTIONS: `基于用户的需求描述和以下背景信息，生成4-5个澄清问题，以便更好地定义需求：
 背景信息：{intentInfo}
 
+同时，生成一个可能的回答示例，作为用户可能如何回答这些问题的参考。
+
 以JSON格式返回结果：
 {
   "prompts": [
@@ -54,7 +56,8 @@ const PROMPTS = {
     "问题2？",
     "问题3？",
     "问题4？"
-  ]
+  ],
+  "exampleAnswer": "这里是对以上问题的一个可能回答示例，应包含具体、明确的信息"
 }`,
 
   ASSET_RECOMMENDATION: `基于用户的需求和回答，推荐可能有用的资源。
@@ -323,7 +326,8 @@ export default function Chat() {
         {
           id: Date.now().toString(),
           type: "system",
-          content: "抱歉，生成资源推荐时出现了问题。请再试一次。"
+          content: "抱歉，生成资源推荐时出现了问题。请再试一次。",
+          data: { errorType: "asset" }
         }
       ]);
     } finally {
@@ -432,7 +436,8 @@ export default function Chat() {
         {
           id: Date.now().toString(),
           type: "system",
-          content: "抱歉，生成需求卡片时出现了问题。请再试一次。"
+          content: "抱歉，生成需求卡片时出现了问题。请再试一次。",
+          data: { errorType: "card" }
         }
       ]);
     } finally {
@@ -512,20 +517,151 @@ export default function Chat() {
     }, 2000);
   }
 
+  const handleRetry = async (errorType: string) => {
+    const processingMessage: Message = {
+      id: Date.now().toString(),
+      type: "system",
+      content: `正在重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}...`,
+      loading: true,
+    }
+
+    setMessages(prev => [...prev, processingMessage]);
+    setIsProcessing(true);
+
+    try {
+      if (errorType === "asset") {
+        // Retry asset recommendation
+        const assetPrompt = PROMPTS.ASSET_RECOMMENDATION
+          .replace("{initialRequirement}", conversationContext.initialRequirement)
+          .replace("{clarification}", conversationContext.clarification);
+
+        const assetResponse = await callChatAPI(conversationContext.clarification, assetPrompt);
+        const assetData = parseJsonResponse(assetResponse);
+
+        if (!assetData) {
+          throw new Error("无法生成资源推荐");
+        }
+
+        // Remove processing message
+        setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+
+        // Add asset recommendation message
+        const assetMessage: Message = {
+          id: Date.now().toString(),
+          type: "asset-recommendation",
+          content: "根据您的需求，我找到了以下可能有用���资源：",
+          data: assetData
+        }
+
+        setMessages(prev => [...prev, assetMessage]);
+      } else if (errorType === "card") {
+        // Retry requirement card generation
+        // Get the full asset data from messages
+        const assetMessage = messages.find(m => m.type === "asset-recommendation");
+        const assetData = assetMessage?.data || {};
+
+        // Filter selected assets
+        const selectedApiObjects = (assetData.apis || []).filter((api: any) =>
+          selectedAPIs.includes(api.id)
+        );
+        const selectedCodeObjects = (assetData.codeSnippets || []).filter((code: any) =>
+          selectedCodeSnippets.includes(code.id)
+        );
+        const selectedStandardObjects = (assetData.standards || []).filter((std: any) =>
+          selectedStandards.includes(std.id)
+        );
+
+        // Generate requirement card
+        const cardPrompt = PROMPTS.REQUIREMENT_CARD
+          .replace("{initialRequirement}", conversationContext.initialRequirement)
+          .replace("{clarification}", conversationContext.clarification)
+          .replace("{selectedApis}", JSON.stringify(selectedApiObjects))
+          .replace("{selectedCodeSnippets}", JSON.stringify(selectedCodeObjects))
+          .replace("{selectedStandards}", JSON.stringify(selectedStandardObjects));
+
+        const cardResponse = await callChatAPI(
+          `生成需求卡片: ${conversationContext.initialRequirement}`,
+          cardPrompt
+        );
+
+        const cardData = parseJsonResponse(cardResponse);
+
+        if (!cardData) {
+          throw new Error("无法生成需求卡片");
+        }
+
+        // Ensure the selected assets are included
+        const newRequirementCard: RequirementCard = {
+          ...cardData,
+          apis: selectedApiObjects,
+          codeSnippets: selectedCodeObjects,
+          guidelines: selectedStandardObjects,
+          status: "draft"
+        };
+
+        setRequirementCard(newRequirementCard);
+
+        // Remove processing message
+        setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id));
+
+        // Add requirement card message
+        const cardPreviewMessage: Message = {
+          id: Date.now().toString(),
+          type: "requirement-card",
+          content: "已为您生成需求卡片预览：",
+          data: { card: newRequirementCard }
+        }
+
+        setMessages(prev => [...prev, cardPreviewMessage]);
+      }
+    } catch (error) {
+      console.error(`Error during retry:`, error);
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== processingMessage.id),
+        {
+          id: Date.now().toString(),
+          type: "system",
+          content: `抱歉，重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}时出现了问题。`,
+          data: { errorType }
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const renderMessage = (message: Message) => {
     switch (message.type) {
       case "user":
         return <p>{message.content}</p>;
 
       case "system":
-        return message.loading ? (
-          <div className="flex items-center space-x-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>{message.content}</span>
-          </div>
-        ) : (
-          <p>{message.content}</p>
-        );
+        if (message.loading) {
+          return (
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{message.content}</span>
+            </div>
+          );
+        } else if (message.data?.errorType) {
+          // Error message with retry button
+          return (
+            <div className="space-y-2">
+              <p>{message.content}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center space-x-1"
+                onClick={() => handleRetry(message.data.errorType)}
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>重试</span>
+              </Button>
+            </div>
+          );
+        } else {
+          return <p>{message.content}</p>;
+        }
 
       case "intent-recognition":
         return (
@@ -557,7 +693,7 @@ export default function Chat() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setInput("我需要在用户管理页面导出用户列表，包含用户ID、姓名、邮箱和注册时间")}
+                onClick={() => setInput(message.data.exampleAnswer || "我需要在用户管理页面导出用户列表，包含用户ID、姓名、邮箱和注册时间")}
               >
                 填充示例回答
               </Button>

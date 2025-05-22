@@ -4,17 +4,17 @@ import { reply } from "@/app/api/_utils/reply";
 export async function POST(request: NextRequest) {
   try {
     const { step, data } = await request.json();
-    
+
     if (!step) {
       return NextResponse.json(
         { error: "Missing step parameter" },
         { status: 400 }
       );
     }
-    
+
     let prompt = "";
     let content = "";
-    
+
     switch (step) {
       case "intent-recognition":
         prompt = `你是一个需求分析助手。请分析用户的需求描述，提取以下信息：
@@ -31,10 +31,12 @@ export async function POST(request: NextRequest) {
 }`;
         content = data.requirement || "";
         break;
-        
+
       case "clarifying-questions":
         prompt = `基于用户的需求描述和以下背景信息，生成4-5个澄清问题，以便更好地定义需求：
 背景信息：${JSON.stringify(data.intentInfo)}
+
+同时，生成一个可能的回答示例，作为用户可能如何回答这些问题的参考。
 
 以JSON格式返回结果：
 {
@@ -43,11 +45,12 @@ export async function POST(request: NextRequest) {
     "问题2？",
     "问题3？",
     "问题4？"
-  ]
+  ],
+  "exampleAnswer": "这里是对以上问题的一个可能回答示例，应包含具体、明确的信息"
 }`;
         content = data.requirement || "";
         break;
-        
+
       case "asset-recommendation":
         prompt = `基于用户的需求和回答，推荐可能有用的资源。
 需求：${data.initialRequirement}
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
 }`;
         content = `需求: ${data.initialRequirement}\n回答: ${data.clarification}`;
         break;
-        
+
       case "requirement-card":
         prompt = `根据用户需求和选择的资源，生成一个完整的需求卡片。
 需求：${data.initialRequirement}
@@ -87,19 +90,19 @@ export async function POST(request: NextRequest) {
 }`;
         content = `生成需求卡片: ${data.initialRequirement}`;
         break;
-        
+
       default:
         return NextResponse.json(
           { error: "Invalid step parameter" },
           { status: 400 }
         );
     }
-    
+
     const result = await reply([
       { role: "system", content: prompt },
       { role: "user", content }
     ]);
-    
+
     return NextResponse.json({ text: result });
   } catch (error) {
     console.error("Error in requirement API:", error);
