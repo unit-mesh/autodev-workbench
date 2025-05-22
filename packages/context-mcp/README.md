@@ -19,11 +19,11 @@ Model Context Protocol implementation for AutoDev.
 ```json
 {
   "mcpServers": {
-    "autodev-context-mcp": {
+    "autodev": {
       "command": "node",
-      "args": ["./packages/context-mcp/dist/index.js", "--preset=AutoDev"],
+      "args": ["/Users/phodal/ai/autodev-work/packages/context-mcp/dist/index.js", "--preset=AutoDev"],
       "env": {
-        "projectId": "cmaqby8oo0002l704skfwgpjy"
+        "PROJECT_ID": "cmaqby8oo0002l704skfwgpjy"
       }
     }
   }
