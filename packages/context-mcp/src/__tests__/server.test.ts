@@ -17,6 +17,7 @@ describe('MCPServerImpl', () => {
 
   beforeEach(() => {
     server = new MCPServerImpl(mockImpl);
+    server.loadPreset("AutoDev");
   });
 
   afterEach(async () => {
