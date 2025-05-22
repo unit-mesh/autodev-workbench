@@ -71,7 +71,7 @@ export type SymbolAnalysis = {
 
 
 export type ApiResource = {
-	id?: string;
+	id: string;
 	systemId?: string;
 	sourceUrl: string;
 	sourceHttpMethod: string;

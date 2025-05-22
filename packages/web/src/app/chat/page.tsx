@@ -35,25 +35,6 @@ interface Message {
   loading?: boolean
 }
 
-// API 结构
-interface API {
-  id: string
-  name: string
-  description: string
-  method?: string
-  url?: string
-  params?: {
-    name: string
-    type: string
-    required: boolean
-    description: string
-  }[]
-  response?: string
-  code?: string
-  selected?: boolean
-}
-
-// 规范结构
 interface Standard {
   id: string
   name: string
@@ -63,7 +44,6 @@ interface Standard {
   selected?: boolean
 }
 
-// 代码片段结构
 interface CodeSnippet {
   id: string
   name: string
@@ -73,12 +53,11 @@ interface CodeSnippet {
   selected?: boolean
 }
 
-// 需求卡片结构
 interface RequirementCard {
   name: string
   module: string
   description: string
-  apis: API[]
+  apis: ApiResource[]
   codeSnippets: CodeSnippet[]
   standards: Standard[]
   assignee: string
@@ -104,7 +83,7 @@ export default function Chat() {
   const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
   const [editValue, setEditValue] = useState("")
   const [hasDraft, setHasDraft] = useState(false)
-  const [apis, setApis] = useState<API[]>([])
+  const [apis, setApis] = useState<ApiResource[]>([])
   const [, setIsLoadingApis] = useState(false)
   const [, setApiError] = useState<string | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -122,8 +101,7 @@ export default function Chat() {
         }
 
         const data: ApiResource[] = await response.json()
-        const formattedApis = data.map(apiResource => transformApiResource(apiResource))
-        setApis(formattedApis)
+        setApis(data)
       } catch (error) {
         console.error("Error fetching APIs:", error)
         setApiError(error instanceof Error ? error.message : "Unknown error occurred")
@@ -131,11 +109,13 @@ export default function Chat() {
         setApis([
           {
             id: "default-api",
-            name: "ExportService.exportToExcel",
-            description: "导出数据到Excel文件 (默认数据)",
-            method: "POST",
-            url: "/api/export"
-          }
+            className: "ExportService",
+            methodName: "exportToExcel",
+            packageName: "默认包",
+            supplyType: "默认",
+            sourceHttpMethod: "POST",
+            sourceUrl: "/api/export"
+          } as ApiResource
         ])
       } finally {
         setIsLoadingApis(false)
@@ -144,16 +124,6 @@ export default function Chat() {
 
     fetchApis()
   }, [])
-
-  const transformApiResource = (apiResource: ApiResource): API => {
-    return {
-      id: apiResource.id,
-      name: `${apiResource.className}.${apiResource.methodName}`,
-      description: `${apiResource.packageName} 包中的API，供应类型: ${apiResource.supplyType}`,
-      method: apiResource.sourceHttpMethod,
-      url: apiResource.sourceUrl,
-    }
-  }
 
   // 自动滚动到底部
   useEffect(() => {
@@ -579,12 +549,12 @@ export default ExportButton;`
               </TabsList>
 
               <TabsContent value="apis" className="mt-2 space-y-2">
-                {message.data.apis.map((api: API) => (
+                {message.data.apis.map((api: ApiResource) => (
                   <Card key={api.id} className="overflow-hidden">
                     <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <CheckCircle2 className={`h-4 w-4 ${selectedAPIs.includes(api.id) ? 'text-green-500' : 'text-gray-300'}`} />
-                        <CardTitle className="text-sm font-medium">{api.name}</CardTitle>
+                        <CardTitle className="text-sm font-medium">{api.sourceHttpMethod} {api.sourceUrl}</CardTitle>
                       </div>
                       <Checkbox
                         checked={selectedAPIs.includes(api.id)}
@@ -592,10 +562,7 @@ export default ExportButton;`
                       />
                     </CardHeader>
                     <CardContent className="p-3 text-sm">
-                      <p>{api.description}</p>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        <span className="font-medium">{api.method}</span> {api.url}
-                      </div>
+                      <p>{api.className} {api.packageName}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -738,8 +705,8 @@ export default ExportButton;`
                   {message.data.card.apis.length > 0 ? (
                     <div className="p-2 bg-muted/40 rounded text-sm">
                       <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.apis.map((api: API) => (
-                          <li key={api.id}>{api.name}</li>
+                        {message.data.card.apis.map((api: ApiResource) => (
+                          <li key={api.id}>{api.sourceUrl}</li>
                         ))}
                       </ul>
                     </div>
