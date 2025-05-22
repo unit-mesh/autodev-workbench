@@ -277,10 +277,10 @@ export default function KnowledgeHub({
 				<p className="text-xs text-gray-500">管理和浏览项目相关知识</p>
 			</div>
 
-			<div className="flex-1 flex flex-col">
-
-				{/* Panel 1：显性知识 - 规范、文档 */}
-				<div className="border-b border-gray-200">
+			{/* 主内容区域 - 使用flex-1自动分配剩余高度 */}
+			<div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+				{/* Panel 1：显性知识 */}
+				<div className="border-b border-gray-200 flex-shrink-0">
 					<div className="px-4 py-2 flex justify-between items-center border-b">
 						<div className="flex items-center gap-1">
 							<h3 className="text-sm font-semibold text-gray-700">显性知识（规范、文档等）</h3>
@@ -311,7 +311,7 @@ export default function KnowledgeHub({
 						</div>
 					</div>
 
-					<ScrollArea className="h-48">
+					<ScrollArea className="h-[25vh]">
 						<div className="p-2 space-y-2">
 							{isLoadingGuidelines ? (
 								<div className="flex justify-center items-center h-20">
@@ -370,8 +370,8 @@ export default function KnowledgeHub({
 					</ScrollArea>
 				</div>
 
-				{/* Panel 2：隐性知识 - 代码中隐藏的知识 */}
-				<div>
+				{/* Panel 2：隐性知识 */}
+				<div className="flex-1 min-h-0 flex flex-col">
 					<div className="px-4 py-2 border-b">
 						<div className="flex items-center gap-1">
 							<h3 className="text-sm font-semibold text-gray-700">隐性知识（代码知识）</h3>
@@ -390,7 +390,7 @@ export default function KnowledgeHub({
 						</div>
 					</div>
 
-					<ScrollArea className="h-64">
+					<ScrollArea className="flex-1 min-h-0">
 						<div className="p-2 space-y-2">
 							{implicitKnowledge.map((item) => (
 									<Card
@@ -429,7 +429,7 @@ export default function KnowledgeHub({
 				</div>
 
 				{/* Panel 3：项目词汇表 */}
-				<div className="border-t border-gray-200 p-2">
+				<div className="border-t border-gray-200 p-2 flex-shrink-0">
 					<div className="flex justify-between items-center mb-2">
 						<h3 className="text-sm font-semibold text-gray-700">项目词汇表</h3>
 						<Button
@@ -452,8 +452,8 @@ export default function KnowledgeHub({
 					/>
 				</div>
 
-				{/* Panel 4：提取的关键词 */}
-				<div className="border-t border-gray-200 p-3">
+				{/* Panel 4：提取的关键词 - 固定较小高度，放在底部 */}
+				<div className="border-t border-gray-200 p-3 flex-shrink-0 overflow-auto" style={{ maxHeight: "120px" }}>
 					<div className="flex justify-between items-center mb-2">
 						<h3 className="text-sm font-semibold text-gray-700">提取的关键词</h3>
 						<TooltipProvider>
