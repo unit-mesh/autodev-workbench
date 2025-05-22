@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ApiResource } from "@/types/project.type"
+import { ApiResource, Guideline } from "@/types/project.type"
 import AssetRecommendation from "@/components/asset-recommendation"
 
 // 定义消息类型
@@ -34,15 +34,6 @@ interface Message {
   loading?: boolean
 }
 
-interface Standard {
-  id: string
-  name: string
-  version: string
-  description: string
-  url?: string
-  selected?: boolean
-}
-
 interface CodeSnippet {
   id: string
   name: string
@@ -58,7 +49,7 @@ interface RequirementCard {
   description: string
   apis: ApiResource[]
   codeSnippets: CodeSnippet[]
-  standards: Standard[]
+  guidelines: Guideline[]
   assignee: string
   deadline: string
   status: "draft" | "pending" | "approved"
@@ -232,7 +223,7 @@ export default function Chat() {
       description: "添加导出Excel功能，支持数据筛选和自定义列",
       apis: selectedApiObjects,
       codeSnippets: selectedCodeObjects,
-      standards: selectedStandardObjects,
+      guidelines: selectedStandardObjects,
       assignee: "",
       deadline: "",
       status: "draft"
@@ -476,9 +467,9 @@ export default function Chat() {
                   {message.data.card.standards.length > 0 ? (
                     <div className="p-2 bg-muted/40 rounded text-sm">
                       <ul className="list-disc pl-5 space-y-1">
-                        {message.data.card.standards.map((standard: Standard) => (
-                          <li key={standard.id}>
-                            {standard.name} {standard.version}
+                        {message.data.card.standards.map((guideline: Guideline) => (
+                          <li key={guideline.id}>
+                            {guideline.title} {guideline.version}
                           </li>
                         ))}
                       </ul>

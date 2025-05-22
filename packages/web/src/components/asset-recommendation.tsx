@@ -5,16 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FileText, CheckCircle2, Copy } from "lucide-react"
-import { ApiResource } from "@/types/project.type"
-
-interface Standard {
-  id: string
-  name: string
-  version: string
-  description: string
-  url?: string
-  selected?: boolean
-}
+import { ApiResource, Guideline } from "@/types/project.type"
 
 interface CodeSnippet {
   id: string
@@ -67,31 +58,6 @@ export default ExportButton;`
   }
 ]
 
-const mockStandards: Standard[] = [
-  // ...与原 standards 相同...
-  {
-    id: "std1",
-    name: "数据导出安全规范",
-    version: "v2.0",
-    description: "规定了数据导出的安全要求，包括敏感字段脱敏、访问控制、导出大小限制等。",
-    url: "https://standards.example.com/data-export-security",
-  },
-  {
-    id: "std2",
-    name: "文件下载接口规范",
-    version: "v1.5",
-    description: "定义了文件下载API的设计标准，包括鉴权、限流、日志记录等规范。",
-    url: "https://standards.example.com/file-download-api",
-  },
-  {
-    id: "std3",
-    name: "前端UI交互规范",
-    version: "v3.2",
-    description: "规定了导出功能的UI设计和交互流程，包括按钮位置、加载状态展示、成功/失败反馈等。",
-    url: "https://standards.example.com/ui-guidelines",
-  },
-]
-
 export default function AssetRecommendation(props: AssetRecommendationProps) {
   const {
     keywords,
@@ -139,7 +105,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchApis()
   }, [])
 
-  // 搜索过滤
   const filterByKeywords = <T extends { name?: string; description?: string; sourceUrl?: string }>(items: T[]) => {
     if (!keywords?.length && !search) return items
     const allKeywords = [...(keywords || []), ...(search ? [search] : [])]
@@ -152,9 +117,17 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     )
   }
 
-  const filteredApis = filterByKeywords(apis)
+  const [guidelines, setGuidelines] = useState<Guideline[]>([])
+  useEffect(() => {
+    fetch("/api/guidelines")
+      .then(res => res.json())
+      .then(data => setGuidelines(data))
+      .catch(() => setGuidelines([]))
+  }, [])
+
+  const filteredApis = apis
   const filteredCodeSnippets = filterByKeywords(mockCodeSnippets)
-  const filteredStandards = filterByKeywords(mockStandards)
+  const filteredStandards = filterByKeywords(guidelines)
 
   return (
     <div className="space-y-4">
@@ -237,13 +210,13 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
           ))}
         </TabsContent>
         <TabsContent value="standards" className="mt-2 space-y-2">
-          {filteredStandards.map((standard: Standard) => (
+          {filteredStandards.map((standard: Guideline) => (
             <Card key={standard.id} className="overflow-hidden">
               <CardHeader className="py-2 px-3 bg-muted/50 flex flex-row items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <FileText className={`h-4 w-4 ${selectedStandards.includes(standard.id) ? 'text-green-500' : 'text-gray-300'}`} />
                   <CardTitle className="text-sm font-medium">
-                    {standard.name} <span className="text-xs font-normal">{standard.version}</span>
+                    {standard.title} <span className="text-xs font-normal">{standard.version}</span>
                   </CardTitle>
                 </div>
                 <Checkbox
@@ -253,16 +226,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               </CardHeader>
               <CardContent className="p-3 text-sm">
                 <p>{standard.description}</p>
-                {standard.url && (
-                  <a
-                    href={standard.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 text-xs text-blue-600 hover:underline flex items-center"
-                  >
-                    <FileText className="h-3 w-3 mr-1" /> 查看完整规范
-                  </a>
-                )}
               </CardContent>
             </Card>
           ))}
