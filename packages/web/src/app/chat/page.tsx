@@ -2,12 +2,14 @@
 
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { Send, ChevronLeft, Loader2, CheckCircle2, RefreshCw } from "lucide-react"
+import { Send, ChevronLeft, Loader2, CheckCircle2, RefreshCw, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
@@ -103,6 +105,8 @@ const PROMPTS = {
 }
 
 export default function Chat() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -283,7 +287,7 @@ export default function Chat() {
       const promptMessage: Message = {
         id: Date.now().toString(),
         type: "bullet-prompts",
-        content: "为了更好地定义这个需求，请告诉我：",
+        content: "为了更好地定义这个需求，请告��我：",
         data: questionsData
       }
 
@@ -716,6 +720,33 @@ export default function Chat() {
     }
   }
 
+  if (status === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+        <p>正在加载...</p>
+      </div>
+    )
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-center max-w-md p-6 border rounded-lg shadow-sm">
+          <h1 className="text-2xl font-bold mb-4">需要登录</h1>
+          <p className="mb-6">您需要登录才能使用需求生成助手功能。</p>
+          <Button
+            onClick={() => router.push('/api/auth/signin')}
+            className="flex items-center gap-2"
+          >
+            <LogIn className="h-4 w-4" />
+            登录 / 注册
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-screen max-w-4xl mx-auto">
       <header className="p-4 border-b flex items-center justify-between">
@@ -724,6 +755,11 @@ export default function Chat() {
           <h1 className="text-xl font-bold">需求生成助手</h1>
         </div>
         <div className="flex items-center gap-2">
+          {session?.user && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              {session.user.name || session.user.email}
+            </Badge>
+          )}
           {isLoadingConcepts && (
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
               <Loader2 className="h-3 w-3 animate-spin mr-1" /> 加载术语库中...
