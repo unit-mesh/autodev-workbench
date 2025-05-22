@@ -162,11 +162,13 @@ export default function Chat() {
     }
   }
 
-  // Parse JSON from LLM response, handle potential errors
   const parseJsonResponse = (text: string) => {
     try {
       const blocks = MarkdownCodeBlock.from(text);
-      const jsonStr = blocks.length > 0 ? blocks[0].code : text;
+      let jsonStr = blocks.length > 0 ? blocks[0].code : text;
+      if (jsonStr == undefined) {
+        jsonStr = text
+      }
       return JSON.parse(jsonStr);
     } catch (error) {
       console.error("Error parsing JSON response:", error);
@@ -535,7 +537,7 @@ export default function Chat() {
     const processingMessage: Message = {
       id: Date.now().toString(),
       type: "system",
-      content: `���在重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}...`,
+      content: `正在重新${errorType === "asset" ? "生成资源推荐" : "生成需求卡片"}...`,
       loading: true,
     }
 
