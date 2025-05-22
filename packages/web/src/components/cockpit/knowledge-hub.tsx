@@ -76,6 +76,15 @@ export default function KnowledgeHub({
 	const [apiResources, setApiResources] = useState<any[]>([])
 	const [, setIsLoadingApiResources] = useState(false)
 	const [, setApiResourcesError] = useState<string | null>(null)
+	const [selectedImplicitIds, setSelectedImplicitIds] = useState<string[]>([]);
+
+	const toggleImplicitSelection = (id: string) => {
+		setSelectedImplicitIds(prev =>
+			prev.includes(id)
+				? prev.filter(i => i !== id)
+				: [...prev, id]
+		);
+	};
 
 	useEffect(() => {
 		async function fetchGlossaryTerms() {
@@ -384,26 +393,37 @@ export default function KnowledgeHub({
 					<ScrollArea className="h-64">
 						<div className="p-2 space-y-2">
 							{implicitKnowledge.map((item) => (
-								<Card key={item.id} className="cursor-pointer hover:border-blue-200 transition-colors py-1 px-2 gap-0">
-									{/* 合并 Header 和 Content，来源用 Tag */}
-									<div className="flex items-center justify-between gap-2 py-1">
-										<div className="flex flex-col flex-1 min-w-0">
-											<div className="flex items-center gap-2">
-												<span className="text-sm font-medium truncate">{item.title}</span>
+									<Card
+										key={item.id}
+										className={cn(
+											"cursor-pointer hover:border-blue-200 transition-colors py-0 gap-0",
+											selectedImplicitIds.includes(item.id) && "border-blue-500 bg-blue-50"
+										)}
+									>
+										<CardHeader className="px-4 py-2 pb-0">
+											<div className="flex justify-between items-start">
+												<div className="flex items-center gap-2">
+													<Checkbox
+														id={`implicit-${item.id}`}
+														checked={selectedImplicitIds.includes(item.id)}
+														onCheckedChange={() => toggleImplicitSelection(item.id)}
+														onClick={e => e.stopPropagation()}
+													/>
+													<CardTitle className="text-sm font-medium flex items-center">
+														<Tag className="h-3 w-3 mr-1" />
+														{item.title}
+													</CardTitle>
+												</div>
 												<Badge variant="secondary" className="text-[10px] h-4 px-1 flex items-center gap-1">
-													<Tag className="h-3 w-3 mr-0.5" />
 													<span className="truncate max-w-[120px]">{item.source}</span>
 												</Badge>
 											</div>
-											<p className="text-xs text-gray-600 mt-0.5 truncate">{item.insight}</p>
-										</div>
-											{/* 单个 Checkbox 代表选中该 item */}
-										<div className="flex items-center ml-2">
-											<Checkbox id={`implicit-${item.id}`} />
-										</div>
-									</div>
-								</Card>
-							))}
+										</CardHeader>
+										<CardContent className="p-2 pt-1">
+											<p className="text-xs text-gray-600 truncate">{item.insight}</p>
+										</CardContent>
+									</Card>
+								))}
 						</div>
 					</ScrollArea>
 				</div>
