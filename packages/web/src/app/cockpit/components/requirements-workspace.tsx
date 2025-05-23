@@ -223,7 +223,7 @@ export default function RequirementsWorkspace({
 						<RequirementCardComponent
 							card={message.data.card}
 							onEdit={handleEditRequirement}
-							onSaveAsDraft={handleSaveAsDraft}
+							onGenerateAiPrompt={handleSaveAsDraft}
 							onGenerateTask={handleGenerateTask}
 						/>
 					</div>

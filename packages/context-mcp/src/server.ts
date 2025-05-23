@@ -1,6 +1,5 @@
 import {
   McpServer,
-  ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport as McpStdioTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -108,7 +107,7 @@ export class MCPServerImpl {
     this.ensureDestroyed();
     this.ensureExpressApp();
     if (!this.expressApp) throw new Error("Failed to create Express app"); // Type guard
-    
+
     this.expressApp.post("/mcp", async (req, res) => {
       this.ensureMcpHttpTransportSessions();
       if (!this.mcpHttpTransportSessions) throw new Error("Failed to create MCP HTTP transport sessions"); // Type guard

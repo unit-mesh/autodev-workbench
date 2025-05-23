@@ -14,6 +14,58 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+class EventSourceParserStream extends TransformStream<string, {id?: string, event?: string, data: string}> {
+  constructor() {
+    let buffer = '';
+    let currentId: string | undefined;
+    let currentEvent: string | undefined;
+
+    super({
+      transform(chunk, controller) {
+        buffer += chunk;
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() || '';
+
+        let field = '';
+        let value = '';
+
+        for (const line of lines) {
+          if (!line) {
+            if (field === 'data') {
+              controller.enqueue({ id: currentId, event: currentEvent, data: value });
+              value = '';
+              currentEvent = undefined;
+            }
+            continue;
+          }
+
+          if (line.startsWith(':')) continue;
+
+          const colonIndex = line.indexOf(':');
+          if (colonIndex === -1) {
+            field = line;
+            value = '';
+          } else {
+            field = line.slice(0, colonIndex);
+            value = line.slice(colonIndex + 1).trimStart();
+          }
+
+          switch (field) {
+            case 'event':
+              currentEvent = value;
+              break;
+            case 'id':
+              currentId = value;
+              break;
+            case 'data':
+              break;
+          }
+        }
+      }
+    });
+  }
+}
+
 interface RequirementCardComponentProps {
   card: RequirementCard;
   onEdit: (field: EditableRequirementCardField) => void;
@@ -98,7 +150,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
               content: prompt
             }
           ],
-          stream: false
+          stream: true
         }),
       });
 
@@ -106,10 +158,27 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
         throw new Error(`API call failed with status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data.text;
+      let streamedResponse = '';
+
+      const eventStream = response.body!
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new EventSourceParserStream());
+
+      for await (const { data } of eventStream) {
+        if (data === "[DONE]") break;
+
+        try {
+          streamedResponse += JSON.parse(data).text;
+          setAiResponse(streamedResponse);
+        } catch (error) {
+          console.error("Error parsing stream data:", error);
+        }
+      }
+
+      return streamedResponse;
     } catch (error) {
       console.error("Error calling AI API:", error);
+      setAiResponse("抱歉，生成响应时出错。请稍后再试。");
       return "抱歉，生成响应时出错。请稍后再试。";
     } finally {
       setIsLoading(false);
@@ -122,9 +191,8 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
     setDialogOpen(true);
     setAiResponse("");
 
-    // Call the AI API to generate the structured system prompt
-    const response = await callAiApi(prompt);
-    setAiResponse(response);
+    // Stream response
+    await callAiApi(prompt);
 
     // Still call the original onGenerateAiPrompt if needed
     onGenerateAiPrompt();
@@ -282,7 +350,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-             生成知识系统提示词
+             生成 AI IDE 提示词
           </Button>
           <Button
             variant="default"
