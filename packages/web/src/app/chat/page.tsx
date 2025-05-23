@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import {
-	Send,
 	Loader2,
 	CheckCircle2,
 	RefreshCw,
@@ -12,16 +11,13 @@ import {
 	AlignJustify,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent from "./components/requirement-card"
-import { RequirementCard, EditableRequirementCardField } from "./types/requirement.types"
+import { EditableRequirementCardField } from "./types/requirement.types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
@@ -88,14 +84,11 @@ export default function ChatPage() {
 	const handleSaveAsDraft = () => {
 		if (requirementCard) {
 			setHasDraft(true);
-
-			// Create draft message will be handled in parent component if needed
 		}
 	}
 
 	const handleEditRequirement = (field: EditableRequirementCardField) => {
 		if (!requirementCard) return;
-
 		let initialValue = "";
 		switch (field) {
 			case "name":

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock"
 import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
-import { RequirementCard } from "@/app/chat/components/requirement-card"
+import { RequirementCard } from "@/app/chat/types/requirement.types"
 
 type MessageType =
 	| "user"
@@ -94,6 +94,7 @@ const PROMPTS = {
 
 interface ConversationContext {
 	initialRequirement: string
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	intentInfo: Record<string, any>
 	clarification: string
 	conversationId: string
