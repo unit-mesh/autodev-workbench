@@ -176,7 +176,9 @@ export const useConversationLogic = (): UseConversationLogicReturn => {
 	const getIntentRecognitionPrompt = useCallback(() => {
 		return PROMPTS.INTENT_RECOGNITION.replace(
 			"{concepts}",
-			JSON.stringify(concepts)
+			concepts.map (concept => {
+				return `- ID: ${concept.id}, 中文: ${concept.termChinese}, 英文: ${concept.termEnglish}, 描述: ${concept.descChinese}`
+			}).join("\n")
 		)
 	}, [concepts])
 
