@@ -18,16 +18,27 @@ if (process.env.PROJECT_ID) {
 export const installGetProjectContextTool: ToolLike = (installer) => {
 	installer(
 		"get-project-context",
-		"Get additional context of current project, which will help you to understand the project better. Include the " +
-		"related documentation, standards, code context and api design and other information.",
+		"Get additional context of current use task and project, which will help you to understand the project better. " +
+		"Include the related documentation, standards, code context and api design and other information. Everything you need" +
+		" to know about the project if you need more context and also ask for the project context.",
 		{
-			keywords: z.array(z.string()).describe("Keywords to search for"),
+			keywords: z.string().describe("Keywords to search in the project"),
 		},
 		async (params) => {
 			const { keywords } = params;
-			const url = `${AUTODEV_HOST}/api/mcp/aggregate/context?keywords=${keywords.join(
-				","
-			)}&projectId=${PROJECT_ID}`;
+			let processedKeywords = keywords;
+			if (keywords.trim().startsWith('[') && keywords.trim().endsWith(']')) {
+				try {
+					const keywordsArray = JSON.parse(keywords);
+					if (Array.isArray(keywordsArray)) {
+						processedKeywords = keywordsArray.join(',');
+					}
+				} catch (e) {
+					console.warn("Failed to parse keywords as JSON array, using as-is");
+				}
+			}
+
+			const url = `${AUTODEV_HOST}/api/mcp/aggregate/context?keywords=${encodeURIComponent(processedKeywords)}&projectId=${PROJECT_ID}`;
 
 			const response = await fetch(url, {
 				method: "GET",
