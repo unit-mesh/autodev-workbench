@@ -17,21 +17,17 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
 import RequirementCardComponent from "./components/requirement-card"
-import { EditableRequirementCardField } from "./types/requirement.types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
-import { useConversationLogic } from "@/hooks/useConversationLogic"
+import { Message, useConversationLogic } from "@/hooks/useConversationLogic"
 import EditRequirementDialog from "./components/edit-requirement-dialog"
+import { useRequirementCardActions } from "./hooks/useRequirementCardActions"
 
 export default function ChatPage() {
 	const { data: session, status } = useSession()
 	const router = useRouter()
 	const [input, setInput] = useState("")
-	const [editDialogOpen, setEditDialogOpen] = useState(false)
-	const [editField, setEditField] = useState<EditableRequirementCardField | null>(null)
-	const [currentEditValue, setCurrentEditValue] = useState("")
-	const [hasDraft, setHasDraft] = useState(false)
 	const chatContainerRef = useRef<HTMLDivElement>(null)
 	const [showSidebar, setShowSidebar] = useState(true)
 
@@ -62,6 +58,22 @@ export default function ChatPage() {
 		resetConversation,
 	} = useConversationLogic()
 
+	const {
+		editDialogOpen,
+		setEditDialogOpen,
+		editField,
+		currentEditValue,
+		hasDraft,
+		handleEditRequirement,
+		handleSaveEdit,
+		handleSaveAsDraft,
+		handleGenerateTask,
+	} = useRequirementCardActions({
+		requirementCard,
+		setRequirementCard,
+		resetConversation,
+	})
+
 	useEffect(() => {
 		if (chatContainerRef.current) {
 			chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
@@ -81,66 +93,12 @@ export default function ChatPage() {
 		setInput("")
 	}
 
-	const handleSaveAsDraft = () => {
-		if (requirementCard) {
-			setHasDraft(true);
-		}
-	}
-
-	const handleEditRequirement = (field: EditableRequirementCardField) => {
-		if (!requirementCard) return;
-		let initialValue = "";
-		switch (field) {
-			case "name":
-				initialValue = requirementCard.name;
-				break;
-			case "module":
-				initialValue = requirementCard.module;
-				break;
-			case "description":
-				initialValue = requirementCard.description;
-				break;
-			case "assignee":
-				initialValue = requirementCard.assignee;
-				break;
-			case "deadline":
-				initialValue = requirementCard.deadline;
-				break;
-		}
-
-		setEditField(field);
-		setCurrentEditValue(initialValue);
-		setEditDialogOpen(true);
-	}
-
-	const handleSaveEdit = (newValue: string) => {
-		if (!editField || !requirementCard) return;
-
-		const updatedCard = { ...requirementCard };
-		// The type assertion here is safe because editField is now EditableRequirementCardField,
-		// all of which are keys of RequirementCard that hold string values.
-		(updatedCard[editField] as string) = newValue;
-		setRequirementCard(updatedCard);
-
-		setEditDialogOpen(false);
-		setEditField(null);
-		setCurrentEditValue("");
-	}
-
-	const handleGenerateTask = () => {
-		// Handle task generation
-		setTimeout(() => {
-			resetConversation();
-			setHasDraft(false);
-		}, 2000);
-	}
-
 	const handleKeywordsExtracted = (keywords: string[]) => {
 		console.log("提取到的关键词:", keywords)
 		// 可以在这里处理提取到的关键词，比如保存到状态中
 	}
 
-	const renderMessage = (message: any) => {
+	const renderMessage = (message: Message) => {
 		switch (message.type) {
 			case "user":
 				return <p>{message.content}</p>;

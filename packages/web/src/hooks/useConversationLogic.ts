@@ -3,7 +3,7 @@ import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock"
 import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
 import { RequirementCard } from "@/app/chat/types/requirement.types"
 
-type MessageType =
+export type MessageType =
 	| "user"
 	| "system"
 	| "intent-recognition"
@@ -12,7 +12,7 @@ type MessageType =
 	| "requirement-card"
 	| "confirmation"
 
-interface Message {
+export interface Message {
 	id: string
 	type: MessageType
 	content: string
