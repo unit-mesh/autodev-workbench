@@ -37,8 +37,11 @@ export default function RequirementCardComponent({
   });
 
   const generatePrompt = () => {
-    const prompt = `请根据用户的需求卡片信息，生成一个详细的实现方案。请遵循以下格式：:
+    const prompt = `请将以下需求卡片的信息重新组织成一个高质量的系统提示词（System Prompt），使其适合给AI Coding Agent使用。
+你的目标是创建一个清晰、结构化的系统提示词，使AI Coding Agent能更好地理解需求并生成实现代码。
+不要直接实现功能，而是将知识重新组织成更清晰的格式。
 
+需求卡片原始信息:
 需求名称: ${card.name}
 模块: ${card.module}
 需求描述: ${card.description}
@@ -68,8 +71,15 @@ ${card.guidelines.map(guideline => `- 标题: ${guideline.title}
 ${card.assignee ? `负责人: ${card.assignee}` : ''}
 ${card.deadline ? `截止日期: ${card.deadline}` : ''}
 
-请帮我实现这个功能，提供必要的代码和实现思路。详细分析每个步骤，并提供清晰的代码示例。`;
+请基于以上信息，创建一个高质量的系统提示词，包含以下部分：
+1. 任务背景和上下文
+2. 关键技术概念和约束条件的清晰解释
+3. 需要实现的功能的结构化描述
+4. 相关API的使用指南
+5. 代码风格和最佳实践要求
+6. 成功完成的明确标准
 
+返回一个可以直接用作system prompt的文本，使其能够指导AI Coding 工具，如 Cursor、Copilot 进行高质量的代码实现。`;
     return prompt;
   };
 
@@ -112,7 +122,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
     setDialogOpen(true);
     setAiResponse("");
 
-    // Call the AI API
+    // Call the AI API to generate the structured system prompt
     const response = await callAiApi(prompt);
     setAiResponse(response);
 
@@ -272,7 +282,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            生成 AI 提示词
+             生成知识系统提示词
           </Button>
           <Button
             variant="default"
@@ -289,14 +299,14 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] max-h-[90vh] overflow-hidden flex flex-col p-6">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl">AI 提示词与回复</DialogTitle>
+            <DialogTitle className="text-xl">知识系统提示词</DialogTitle>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow overflow-hidden">
             {/* Left Column - Prompt */}
             <div className="flex flex-col h-full">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-base font-medium">提示词</h3>
+                <h3 className="text-base font-medium">系统提示词请求</h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -316,11 +326,11 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                   )}
                 </Button>
               </div>
-              <div className="relative flex-grow">
+              <div className="relative flex-grow overflow-hidden">
                 <Textarea
                   value={generatedPrompt}
                   readOnly
-                  className="absolute inset-0 w-full h-full resize-none font-mono text-sm p-4 border-2 rounded-md"
+                  className="absolute inset-0 w-full h-full min-h-[400px] resize-none font-mono text-sm p-4 border-2 rounded-md overflow-auto"
                 />
               </div>
             </div>
@@ -328,7 +338,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
             {/* Right Column - AI Response */}
             <div className="flex flex-col h-full">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-base font-medium">AI 回复</h3>
+                <h3 className="text-base font-medium">生成的系统提示词</h3>
                 <Button
                   variant="outline"
                   size="sm"
@@ -349,7 +359,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                   )}
                 </Button>
               </div>
-              <div className="relative flex-grow">
+              <div className="relative flex-grow overflow-hidden">
                 {isLoading ? (
                   <div className="absolute inset-0 flex items-center justify-center border-2 rounded-md bg-gray-50">
                     <div className="flex flex-col items-center gap-3">
@@ -361,7 +371,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                   <Textarea
                     value={aiResponse}
                     readOnly
-                    className="absolute inset-0 w-full h-full resize-none font-mono text-sm p-4 border-2 rounded-md"
+                    className="absolute inset-0 w-full h-full min-h-[400px] resize-none font-mono text-sm p-4 border-2 rounded-md overflow-auto"
                   />
                 )}
               </div>
@@ -372,8 +382,8 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
           <div className="md:hidden w-full mt-4">
             <Tabs defaultValue="prompt" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="prompt">提示词</TabsTrigger>
-                <TabsTrigger value="response">AI 回复</TabsTrigger>
+                <TabsTrigger value="prompt">提示词请求</TabsTrigger>
+                <TabsTrigger value="response">系统提示词</TabsTrigger>
               </TabsList>
               <TabsContent value="prompt" className="mt-3">
                 <div className="flex justify-end mb-2">
