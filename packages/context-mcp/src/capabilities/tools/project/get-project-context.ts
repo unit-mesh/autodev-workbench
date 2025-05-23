@@ -53,11 +53,12 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 				},
 			});
 
+			const value = await response.json();
 			return {
 				content: [
 					{
 						type: "text",
-						text: JSON.stringify(response),
+						text: JSON.stringify(value),
 					},
 				],
 			};
