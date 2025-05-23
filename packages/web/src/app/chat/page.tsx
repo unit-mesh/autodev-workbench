@@ -297,12 +297,10 @@ export default function ChatPage() {
 		)
 	}
 
-	// Find the intent recognition data from messages
 	const intentData = messages.find(m => m.type === "intent-recognition")?.data || null;
 
 	return (
 		<div className="flex h-screen bg-gray-50">
-			{/* Main chat area */}
 			<div
 				className={`flex flex-col ${showSidebar ? "w-2/3" : "w-full"} bg-white transition-all duration-300 ease-in-out`}>
 				<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
