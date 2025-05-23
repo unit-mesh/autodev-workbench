@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type";
-import { RequirementCard } from "@/app/chat/types/requirement.types";
+import { RequirementCard } from "@/app/ai-tools/requirements/types/requirement.types";
 import { ConversationContext } from "@/hooks/useConversationLogic";
 
 export interface RequirementInfoPanelProps {
