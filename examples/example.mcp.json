@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "autodev": {
+      "command": "npx",
+      "args": ["--package=@autodev/context-mcp@latest", "autodev-context-mcp", "--preset=AutoDev"],
+      "env": {
+        "PROJECT_ID": "cmaqby8oo0002l704skfwgpjy"
+      }
+    }
+  }
+}
