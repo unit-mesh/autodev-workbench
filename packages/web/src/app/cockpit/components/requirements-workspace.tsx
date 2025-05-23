@@ -31,16 +31,10 @@ export default function RequirementsWorkspace({
 	const {
 		messages,
 		isProcessing,
-		// conversationContext, // Not used in this simplified view
-		selectedAPIObjects,
-		selectedCodeSnippetObjects,
-		selectedStandardObjects,
 		selectedAPIs,
 		selectedCodeSnippets,
 		selectedStandards,
 		requirementCard,
-		// concepts, // Not used in this simplified view
-		// isLoadingConcepts, // Not used in this simplified view
 		handleSubmit,
 		handleAnswerPrompt,
 		handleSelectAPI,
@@ -60,7 +54,6 @@ export default function RequirementsWorkspace({
 		setEditDialogOpen,
 		editField,
 		currentEditValue,
-		// hasDraft, // Not used in this simplified view
 		handleEditRequirement,
 		handleSaveEdit,
 		handleSaveAsDraft,
@@ -228,8 +221,9 @@ export default function RequirementsWorkspace({
 				</div>
 			</div>
 
-			<div className="flex-1 flex flex-col overflow-hidden"> {/* Ensure flex-col and overflow-hidden for layout */}
-				<ScrollArea className="flex-1 p-4 space-y-4" ref={chatContainerRef}> {/* Ensure flex-1 for ScrollArea */}
+			{/* Chat messages area */}
+			<div className="flex-1 overflow-hidden">
+				<ScrollArea className="h-full p-4 space-y-4" ref={chatContainerRef}>
 					{messages.map((message) => (
 						<div
 							key={message.id}
@@ -256,44 +250,46 @@ export default function RequirementsWorkspace({
 						</div>
 					))}
 				</ScrollArea>
+			</div>
 
-				<div className="p-4 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-					<AwarenessInput
-						value={input}
-						onChange={(e) => setInput(e.target.value)}
-						onSend={() => {
+			{/* Input area - moved to be a direct child of the main flex-col container */}
+			<div className="p-4 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+				<AwarenessInput
+					value={input}
+					onChange={(e) => setInput(e.target.value)}
+					onSend={() => {
+						if (messages.some(m => m.type === "bullet-prompts")) {
+							handleAnswerSubmit(input)
+						} else {
+							// Create a dummy event for handleFormSubmit
+							const dummyEvent = { preventDefault: () => {} } as React.FormEvent
+							handleFormSubmit(dummyEvent)
+						}
+					}}
+					keywordsAnalyze={true} // Retain this functionality
+					placeholder={
+						isProcessing ? "正在处理..." :
+							messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
+								"请描述您的需求..."
+					}
+					isLoading={isProcessing}
+					minHeight="60px"
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
+							e.preventDefault()
 							if (messages.some(m => m.type === "bullet-prompts")) {
 								handleAnswerSubmit(input)
 							} else {
-								// Create a dummy event for handleFormSubmit
-								const dummyEvent = { preventDefault: () => {} } as React.FormEvent
+								// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+								// @ts-expect-error
+								const dummyEvent = { preventDefault: () => {}, ...e } as unknown as React.FormEvent
 								handleFormSubmit(dummyEvent)
 							}
-						}}
-						keywordsAnalyze={true} // Retain this functionality
-						placeholder={
-							isProcessing ? "正在处理..." :
-								messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
-									"请描述您的需求..."
 						}
-						isLoading={isProcessing}
-						minHeight="60px"
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
-								e.preventDefault()
-								if (messages.some(m => m.type === "bullet-prompts")) {
-									handleAnswerSubmit(input)
-								} else {
-									// Create a dummy event for handleFormSubmit
-									const dummyEvent = { preventDefault: () => {}, ...e } as unknown as React.FormEvent
-									handleFormSubmit(dummyEvent)
-								}
-							}
-						}}
-						onKeywordsExtracted={onKeywordsExtracted} // Pass the prop
-						systemPrompt="你是一个需求分析助手，请从用户输入中提取关键词，重点关注业务术语和功能需求。"
-					/>
-				</div>
+					}}
+					onKeywordsExtracted={onKeywordsExtracted} // Pass the prop
+					systemPrompt="你是一个需求分析助手，请从用户输入中提取关键词，重点关注业务术语和功能需求。"
+				/>
 			</div>
 
 			<EditRequirementDialog
