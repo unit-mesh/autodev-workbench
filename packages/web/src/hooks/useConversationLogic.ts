@@ -92,7 +92,7 @@ const PROMPTS = {
 }`
 }
 
-interface ConversationContext {
+export interface ConversationContext {
 	initialRequirement: string
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	intentInfo: Record<string, any>

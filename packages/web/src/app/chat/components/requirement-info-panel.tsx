@@ -8,17 +8,12 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type";
 import { RequirementCard } from "@/app/chat/types/requirement.types";
+import { ConversationContext } from "@/hooks/useConversationLogic";
 
-interface RequirementInfoPanelProps {
+export interface RequirementInfoPanelProps {
 	isOpen: boolean;
 	onClose: () => void;
-	conversationContext: {
-		initialRequirement: string;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		intentInfo: any; // Consider defining a more specific type
-		clarification: string;
-		conversationId: string;
-	};
+	conversationContext: ConversationContext;
 	intentData: {
 		intent: string;
 		keywords: string[];
