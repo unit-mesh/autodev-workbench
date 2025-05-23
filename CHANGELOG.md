@@ -1,3 +1,13 @@
+## 0.3.2 (2025-05-23)
+
+### 🚀 Features
+
+- **project-context:** enhance keywords input handling ([8381fc3](https://github.com/unit-mesh/autodev-worker/commit/8381fc3))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.3.1 (2025-05-23)
 
 ### 🚀 Features
