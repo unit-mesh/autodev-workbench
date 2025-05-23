@@ -25,6 +25,7 @@ import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock";
 import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
+import AwarenessInput from "@/components/shared/awareness-input"
 
 type MessageType =
 	| "user"
@@ -589,6 +590,15 @@ export default function ChatPage() {
 		}
 	};
 
+	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setInput(e.target.value)
+	}
+
+	const handleKeywordsExtracted = (keywords: string[]) => {
+		console.log("提取到的关键词:", keywords)
+		// 可以在这里处理提取到的关键词，比如保存到状态中
+	}
+
 	const renderMessage = (message: Message) => {
 		switch (message.type) {
 			case "user":
@@ -816,19 +826,25 @@ export default function ChatPage() {
 					</ScrollArea>
 				</div>
 
-				<form onSubmit={handleSubmit}
-				      className="p-4 border-t flex space-x-2 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-					<Input
-						type="text"
+				<div className="p-4 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+					<AwarenessInput
 						value={input}
-						onChange={(e) => setInput(e.target.value)}
+						onChange={handleInputChange}
+						onSend={() => {
+							if (messages.some(m => m.type === "bullet-prompts")) {
+								handleAnswerPrompt(input);
+							} else {
+								handleSubmit(new Event('submit') as unknown as React.FormEvent);
+							}
+						}}
+						keywordsAnalyze={true}
 						placeholder={
 							isProcessing ? "正在处理..." :
 								messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
 									"请描述您的需求..."
 						}
-						className="flex-1 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-						disabled={isProcessing}
+						isLoading={isProcessing}
+						minHeight="60px"
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
 								e.preventDefault();
@@ -839,23 +855,10 @@ export default function ChatPage() {
 								}
 							}
 						}}
+						onKeywordsExtracted={handleKeywordsExtracted}
+						systemPrompt="你是一个需求分析助手，请从用户输入中提取关键词，重点关注业务术语和功能需求。"
 					/>
-					<Button
-						type="submit"
-						disabled={!input.trim() || isProcessing}
-						onClick={(e) => {
-							e.preventDefault();
-							if (messages.some(m => m.type === "bullet-prompts")) {
-								handleAnswerPrompt(input);
-							} else {
-								handleSubmit(e as unknown as React.FormEvent);
-							}
-						}}
-						className="transition-all duration-200"
-					>
-						{isProcessing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>}
-					</Button>
-				</form>
+				</div>
 			</div>
 
 			<RequirementInfoPanel

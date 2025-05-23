@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils"
 import AwarenessInput from "@/components/shared/awareness-input"
 import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender";
 
-// Default example requirement with rich context
 const DEFAULT_REQUIREMENT = "我需要一个会议室预订系统，支持用户通过手机查看可用会议室，预订会议时段，设置会议提醒，并能邀请其他参会者。系统需要防止会议室冲突，并提供简单的管理界面。";
 
 interface RequirementsWorkspaceProps {
