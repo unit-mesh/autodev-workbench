@@ -37,7 +37,7 @@ export default function RequirementCardComponent({
   });
 
   const generatePrompt = () => {
-    const prompt = `我需要实现以下功能需求:
+    const prompt = `请根据用户的需求卡片信息，生成一个详细的实现方案。请遵循以下格式：:
 
 需求名称: ${card.name}
 模块: ${card.module}
@@ -287,80 +287,84 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>AI 提示词与回复</DialogTitle>
+        <DialogContent className="max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] max-h-[90vh] overflow-hidden flex flex-col p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl">AI 提示词与回复</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 flex-grow overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow overflow-hidden">
             {/* Left Column - Prompt */}
             <div className="flex flex-col h-full">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-sm font-medium">提示词</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-base font-medium">提示词</h3>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-8 px-2 flex items-center gap-1"
+                  className="h-8 px-3 flex items-center gap-1.5"
                   onClick={() => copyToClipboard('prompt')}
                 >
                   {copyState.prompt ? (
                     <>
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-4 w-4" />
                       已复制
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3.5 w-3.5" />
+                      <Copy className="h-4 w-4" />
                       复制
                     </>
                   )}
                 </Button>
               </div>
-              <Textarea
-                value={generatedPrompt}
-                readOnly
-                className="flex-grow min-h-[450px] font-mono text-sm"
-              />
+              <div className="relative flex-grow">
+                <Textarea
+                  value={generatedPrompt}
+                  readOnly
+                  className="absolute inset-0 w-full h-full resize-none font-mono text-sm p-4 border-2 rounded-md"
+                />
+              </div>
             </div>
 
             {/* Right Column - AI Response */}
             <div className="flex flex-col h-full">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-sm font-medium">AI 回复</h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-base font-medium">AI 回复</h3>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-8 px-2 flex items-center gap-1"
+                  className="h-8 px-3 flex items-center gap-1.5"
                   onClick={() => copyToClipboard('response')}
                   disabled={isLoading || !aiResponse}
                 >
                   {copyState.response ? (
                     <>
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-4 w-4" />
                       已复制
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3.5 w-3.5" />
+                      <Copy className="h-4 w-4" />
                       复制
                     </>
                   )}
                 </Button>
               </div>
-              {isLoading ? (
-                <div className="flex-grow flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">AI 正在生成回复...</p>
+              <div className="relative flex-grow">
+                {isLoading ? (
+                  <div className="absolute inset-0 flex items-center justify-center border-2 rounded-md bg-gray-50">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">AI 正在生成回复...</p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <Textarea
-                  value={aiResponse}
-                  readOnly
-                  className="flex-grow min-h-[450px] font-mono text-sm"
-                />
-              )}
+                ) : (
+                  <Textarea
+                    value={aiResponse}
+                    readOnly
+                    className="absolute inset-0 w-full h-full resize-none font-mono text-sm p-4 border-2 rounded-md"
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -371,39 +375,59 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                 <TabsTrigger value="prompt">提示词</TabsTrigger>
                 <TabsTrigger value="response">AI 回复</TabsTrigger>
               </TabsList>
-              <TabsContent value="prompt" className="mt-2">
-                <div className="flex justify-end mb-1">
+              <TabsContent value="prompt" className="mt-3">
+                <div className="flex justify-end mb-2">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 px-2"
+                    className="h-8 px-3"
                     onClick={() => copyToClipboard('prompt')}
                   >
-                    {copyState.prompt ? "已复制" : "复制"}
+                    {copyState.prompt ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1.5" />
+                        已复制
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-1.5" />
+                        复制
+                      </>
+                    )}
                   </Button>
                 </div>
                 <Textarea
                   value={generatedPrompt}
                   readOnly
-                  className="h-[300px] font-mono text-sm"
+                  className="h-[350px] font-mono text-sm p-3 resize-none border-2 rounded-md"
                 />
               </TabsContent>
-              <TabsContent value="response" className="mt-2">
-                <div className="flex justify-end mb-1">
+              <TabsContent value="response" className="mt-3">
+                <div className="flex justify-end mb-2">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 px-2"
+                    className="h-8 px-3"
                     onClick={() => copyToClipboard('response')}
                     disabled={isLoading || !aiResponse}
                   >
-                    {copyState.response ? "已复制" : "复制"}
+                    {copyState.response ? (
+                      <>
+                        <Check className="h-4 w-4 mr-1.5" />
+                        已复制
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-1.5" />
+                        复制
+                      </>
+                    )}
                   </Button>
                 </div>
                 {isLoading ? (
-                  <div className="h-[300px] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <div className="h-[350px] flex items-center justify-center border-2 rounded-md bg-gray-50">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-7 w-7 animate-spin text-primary" />
                       <p className="text-sm text-muted-foreground">AI 正在生成回复...</p>
                     </div>
                   </div>
@@ -411,7 +435,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                   <Textarea
                     value={aiResponse}
                     readOnly
-                    className="h-[300px] font-mono text-sm"
+                    className="h-[350px] font-mono text-sm p-3 resize-none border-2 rounded-md"
                   />
                 )}
               </TabsContent>
