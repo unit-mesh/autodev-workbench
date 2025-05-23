@@ -124,14 +124,12 @@ ${card.assignee ? `负责人: ${card.assignee}` : ''}
 ${card.deadline ? `截止日期: ${card.deadline}` : ''}
 
 请基于以上信息，创建一个高质量的系统提示词，包含以下部分：
-1. 任务背景和上下文
-2. 关键技术概念和约束条件的清晰解释
-3. 需要实现的功能的结构化描述
-4. 相关API的使用指南
-5. 代码风格和最佳实践要求
-6. 成功完成的明确标准
 
-返回一个可以直接用作system prompt的文本，使其能够指导AI Coding 工具，如 Cursor、Copilot 进行高质量的代码实现。`;
+1. 任务背景和上下文
+2. 关键的代码概念、信息和 API 等
+3. 需要包含相关的代码路径，方便进行检索
+
+返回一个可以直接用作 system prompt 的文本，使其能够指导 AI Coding 工具，如 Cursor、Copilot 进行高质量的代码实现。`;
     return prompt;
   };
 
@@ -365,12 +363,12 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] max-h-[90vh] overflow-hidden flex flex-col p-6">
+        <DialogContent className="max-w-[90vw] md:max-w-[85vw] lg:max-w-[80vw] h-[90vh] flex flex-col p-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl">知识系统提示词</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow overflow-auto">
             {/* Left Column - Prompt */}
             <div className="flex flex-col h-full">
               <div className="flex justify-between items-center mb-3">
@@ -394,7 +392,7 @@ ${card.deadline ? `截止日期: ${card.deadline}` : ''}
                   )}
                 </Button>
               </div>
-              <div className="relative flex-grow overflow-hidden">
+              <div className="relative flex-grow">
                 <Textarea
                   value={generatedPrompt}
                   readOnly
