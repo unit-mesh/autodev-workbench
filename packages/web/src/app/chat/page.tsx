@@ -25,6 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
 import { useConversationLogic } from "@/hooks/useConversationLogic"
+import EditRequirementDialog from "./components/edit-requirement-dialog"
 
 export default function ChatPage() {
 	const { data: session, status } = useSession()
@@ -32,7 +33,7 @@ export default function ChatPage() {
 	const [input, setInput] = useState("")
 	const [editDialogOpen, setEditDialogOpen] = useState(false)
 	const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
-	const [editValue, setEditValue] = useState("")
+	const [currentEditValue, setCurrentEditValue] = useState("")
 	const [hasDraft, setHasDraft] = useState(false)
 	const chatContainerRef = useRef<HTMLDivElement>(null)
 	const [showSidebar, setShowSidebar] = useState(true)
@@ -114,20 +115,20 @@ export default function ChatPage() {
 		}
 
 		setEditField(field);
-		setEditValue(initialValue);
+		setCurrentEditValue(initialValue);
 		setEditDialogOpen(true);
 	}
 
-	const handleSaveEdit = () => {
+	const handleSaveEdit = (newValue: string) => {
 		if (!editField || !requirementCard) return;
 
 		const updatedCard = { ...requirementCard };
-		(updatedCard[editField] as string) = editValue;
+		(updatedCard[editField] as string) = newValue;
 		setRequirementCard(updatedCard);
 
 		setEditDialogOpen(false);
 		setEditField(null);
-		setEditValue("");
+		setCurrentEditValue("");
 	}
 
 	const handleGenerateTask = () => {
@@ -420,39 +421,13 @@ export default function ChatPage() {
 				onGenerateTask={handleGenerateTask}
 			/>
 
-			<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>
-							{editField === 'name' ? '编辑功能名称' :
-								editField === 'module' ? '编辑所属模块' :
-									editField === 'description' ? '编辑功能说明' :
-										editField === 'assignee' ? '指定负责人' :
-											'设置计划排期'}
-						</DialogTitle>
-					</DialogHeader>
-
-					{editField === 'description' ? (
-						<Textarea
-							value={editValue}
-							onChange={(e) => setEditValue(e.target.value)}
-							rows={5}
-							className="resize-none"
-						/>
-					) : (
-						<Input
-							type={editField === 'deadline' ? 'date' : 'text'}
-							value={editValue}
-							onChange={(e) => setEditValue(e.target.value)}
-						/>
-					)}
-
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setEditDialogOpen(false)}>取消</Button>
-						<Button onClick={handleSaveEdit}>保存</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+			<EditRequirementDialog
+				open={editDialogOpen}
+				onOpenChange={setEditDialogOpen}
+				field={editField}
+				initialValue={currentEditValue}
+				onSave={handleSaveEdit}
+			/>
 		</div>
 	)
 }
