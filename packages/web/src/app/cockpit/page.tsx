@@ -7,7 +7,7 @@ import KnowledgeHub from "@/app/cockpit/components/knowledge-hub"
 import AIAssistantPanel from "@/app/cockpit/components/ai-assistant-panel"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
-export default function Home() {
+export default function CockpitPage() {
 	const [currentRequirement, setCurrentRequirement] = useState("")
 	const [conversation, setConversation] = useState<Array<{ role: string; content: string }>>([])
 	const [documentContent, setDocumentContent] = useState<Array<{ id: string; type: string; content: string }>>([])

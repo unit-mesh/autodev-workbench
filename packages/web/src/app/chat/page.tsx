@@ -115,7 +115,7 @@ const PROMPTS = {
 }`
 }
 
-export default function Chat() {
+export default function ChatPage() {
 	const { data: session, status } = useSession()
 	const router = useRouter()
 	const [input, setInput] = useState("")

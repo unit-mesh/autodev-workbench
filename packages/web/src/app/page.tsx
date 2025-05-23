@@ -15,7 +15,7 @@ import Link from "next/link";
 import { CopyCliCommand } from '@/components/home/CopyCliCommand'
 import { Project } from "@/types/project.type";
 
-export default function Home() {
+export default function HomePage() {
   const { data: session, status } = useSession()
   const [project, setProject] = useState<Project | null>(null)
   const [showDialog, setShowDialog] = useState(false)
