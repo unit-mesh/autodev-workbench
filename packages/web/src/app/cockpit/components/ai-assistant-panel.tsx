@@ -43,21 +43,20 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 			<div className="p-3 border-b border-t border-gray-200">
 				<h3 className="text-sm font-medium text-gray-700 mb-2">核心操作</h3>
 				<div className="grid grid-cols-3 gap-2">
-					<Button variant="outline" className="w-full text-sm justify-start">
-						<FileDown className="h-3 w-3 mr-1"/>
-						生成需求文档
-					</Button>
-					<Button variant="outline" className="w-full text-sm justify-start">
+					<Button variant="outline" className="w-full text-sm justify-start" disabled>
 						<FileSearch className="h-3 w-3 mr-1"/>
 						质量分析
 					</Button>
-					<Button variant="outline" className="w-full text-sm justify-start">
+					<Button variant="outline" className="w-full text-sm justify-start" disabled>
 						<CheckCircle className="h-3 w-3 mr-1"/>
 						请求专家评审
 					</Button>
 				</div>
 				<div className="mt-2">
-					<Button className="w-full text-sm justify-start text-white">
+					<Button
+						className="w-full text-sm justify-start text-white"
+						onClick={() => window.open('vscode://phodal.autodev', '_blank')}
+					>
 						<FileSearch className="h-3 w-3 mr-1"/>
 						启动编码智能体编程
 					</Button>
@@ -66,7 +65,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 
 			{/* AI Questions & Suggestions */}
 			<div className="p-3 border-b border-gray-200">
-				<h3 className="text-sm font-medium text-gray-700 mb-2">AI 提问与建议</h3>
+				<h3 className="text-sm font-medium text-gray-700 mb-2">AI 提问与建议（TODO）的·</h3>
 				<ScrollArea className="h-48">
 					<div className="space-y-2">
 						{suggestions.map((suggestion) => (
