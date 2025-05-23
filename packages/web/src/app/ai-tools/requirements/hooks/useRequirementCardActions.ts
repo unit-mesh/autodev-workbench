@@ -13,63 +13,50 @@ export function useRequirementCardActions({
   resetConversation,
 }: UseRequirementCardActionsProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editField, setEditField] = useState<EditableRequirementCardField | null>(null);
+  const [editField, setEditField] = useState<EditableRequirementCardField>("name");
   const [currentEditValue, setCurrentEditValue] = useState("");
-  const [hasDraft, setHasDraft] = useState(false);
 
   const handleEditRequirement = (field: EditableRequirementCardField) => {
     if (!requirementCard) return;
-    let initialValue = "";
-    switch (field) {
-      case "name":
-        initialValue = requirementCard.name;
-        break;
-      case "module":
-        initialValue = requirementCard.module;
-        break;
-      case "description":
-        initialValue = requirementCard.description;
-        break;
-      case "assignee":
-        initialValue = requirementCard.assignee;
-        break;
-      case "deadline":
-        initialValue = requirementCard.deadline;
-        break;
-    }
 
     setEditField(field);
-    setCurrentEditValue(initialValue);
+    setCurrentEditValue(requirementCard[field] as string);
     setEditDialogOpen(true);
   };
 
-  const handleSaveEdit = (newValue: string) => {
-    if (!editField || !requirementCard) return;
+  const handleSaveEdit = (value: string) => {
+    if (!requirementCard) return;
 
-    const updatedCard = { ...requirementCard };
-    // The type assertion here is safe because editField is now EditableRequirementCardField,
-    // all of which are keys of RequirementCard that hold string values.
-    (updatedCard[editField] as string) = newValue;
+    const updatedCard = {
+      ...requirementCard,
+      [editField]: value,
+    };
+
     setRequirementCard(updatedCard);
-
     setEditDialogOpen(false);
-    setEditField(null);
-    setCurrentEditValue("");
   };
 
   const handleSaveAsDraft = () => {
-    if (requirementCard) {
-      setHasDraft(true);
-      // Potentially save to local storage or backend here
-    }
+    if (!requirementCard) return;
+
+    const draftCard = {
+      ...requirementCard,
+      status: "draft" as const,
+    };
+
+    setRequirementCard(draftCard);
   };
 
   const handleGenerateTask = () => {
-    // Handle task generation
-    // This might involve API calls in a real scenario
+    if (!requirementCard) return;
+    const approvedCard = {
+      ...requirementCard,
+      status: "approved" as const,
+    };
+
+    setRequirementCard(approvedCard);
     setTimeout(() => {
       resetConversation();
-      setHasDraft(false); // Reset draft status after generating task
     }, 2000);
   };
 
@@ -78,7 +65,6 @@ export function useRequirementCardActions({
     setEditDialogOpen,
     editField,
     currentEditValue,
-    hasDraft,
     handleEditRequirement,
     handleSaveEdit,
     handleSaveAsDraft,

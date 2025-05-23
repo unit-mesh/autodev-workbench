@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { EventSourceParserStream } from 'eventsource-parser/stream'
 import RequirementsWorkspace from "@/app/cockpit/components/requirements-workspace"
 import KnowledgeHub from "@/app/cockpit/components/knowledge-hub"
@@ -20,6 +20,7 @@ export default function CockpitPage() {
 	const [isQualityChecking, setIsQualityChecking] = useState(false)
 	const [conversationId, setConversationId] = useState<string | null>(null)
 	const [extractedKeywords, setExtractedKeywords] = useState<string[]>([])
+	const [lastProcessedMessage, setLastProcessedMessage] = useState<string>("");
 
 	const requirementSystemPrompt =
 		"你是一位专业的需求分析师，专门帮助用户分析和完善软件需求。" +
@@ -31,6 +32,9 @@ export default function CockpitPage() {
 		"如果用户的需求描述不够清晰，请主动询问细节。"
 
 	const handleSendMessage = async (message: string) => {
+		if (message === lastProcessedMessage) return;
+		setLastProcessedMessage(message);
+
 		const newConversation = [...conversation, { role: "user", content: message }]
 		setConversation(newConversation)
 		setIsLoading(true)
@@ -224,6 +228,12 @@ export default function CockpitPage() {
 		setExtractedKeywords(keywords);
 	};
 
+	useEffect(() => {
+		if (extractedKeywords.length > 0 && !activeKnowledgeSource) {
+			setActiveKnowledgeSource("company-policy");
+		}
+	}, [extractedKeywords, activeKnowledgeSource]);
+
 	return (
 		<div className="flex h-screen overflow-hidden">
 			<PanelGroup direction="horizontal">
@@ -232,7 +242,7 @@ export default function CockpitPage() {
 					<KnowledgeHub
 						activeSource={activeKnowledgeSource}
 						onSourceSelect={setActiveKnowledgeSource}
-						extractedKeywords={extractedKeywords} // 将关键词传递给 KnowledgeHub
+						extractedKeywords={extractedKeywords}
 					/>
 				</Panel>
 
@@ -282,5 +292,3 @@ export default function CockpitPage() {
 		</div>
 	)
 }
-
-

@@ -34,8 +34,17 @@ interface RequirementsWorkspaceProps {
 }
 
 export default function RequirementsWorkspace({
-	                                              onKeywordsExtracted,
-                                              }: RequirementsWorkspaceProps) {
+	currentRequirement,
+	setCurrentRequirement,
+	documentContent,
+	onSendMessage,
+	onUpdateDocument,
+	onCheckQuality,
+	onKeywordsExtracted,
+	isLoading: externalIsLoading,
+	isDocumentUpdating,
+	isQualityChecking,
+}: RequirementsWorkspaceProps) {
 	const [input, setInput] = useState("")
 	const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -76,6 +85,12 @@ export default function RequirementsWorkspace({
 	})
 
 	useEffect(() => {
+		if (requirementCard?.name && requirementCard.name !== currentRequirement) {
+			setCurrentRequirement(requirementCard.name);
+		}
+	}, [requirementCard, setCurrentRequirement, currentRequirement]);
+
+	useEffect(() => {
 		if (chatContainerRef.current) {
 			chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
 		}
@@ -85,14 +100,32 @@ export default function RequirementsWorkspace({
 		e.preventDefault()
 		if (!input.trim() || isProcessing) return
 
+		onSendMessage(input);
 		await handleSubmit(input)
 		setInput("")
 	}
 
 	const handleAnswerSubmit = async (userInput: string) => {
+		onSendMessage(userInput);
+
+		// Use internal logic
 		await handleAnswerPrompt(userInput)
 		setInput("")
 	}
+
+	const handleQualityCheck = () => {
+		if (onCheckQuality) {
+			onCheckQuality();
+		}
+	};
+
+	const handleUpdateDoc = () => {
+		if (onUpdateDocument) {
+			onUpdateDocument();
+		}
+	};
+
+	const isLoading = externalIsLoading || isProcessing;
 
 	const renderMessage = (message: Message) => {
 		switch (message.type) {
@@ -229,6 +262,28 @@ export default function RequirementsWorkspace({
 						<h1 className="text-xl font-semibold text-gray-800">自动开发驾驶舱</h1>
 						<p className="text-sm text-gray-500">与 AI 助手协作定义、完善和实现您的需求</p>
 					</div>
+					<div className="flex space-x-2">
+						{documentContent.length > 0 && (
+							<>
+								<Button
+									size="sm"
+									variant="outline"
+									onClick={handleUpdateDoc}
+									disabled={isDocumentUpdating}
+								>
+									{isDocumentUpdating ? '更新中...' : '更新文档'}
+								</Button>
+								<Button
+									size="sm"
+									variant="outline"
+									onClick={handleQualityCheck}
+									disabled={isQualityChecking}
+								>
+									{isQualityChecking ? '检查中...' : '质量检查'}
+								</Button>
+							</>
+						)}
+					</div>
 				</div>
 			</div>
 
@@ -279,11 +334,11 @@ export default function RequirementsWorkspace({
 					}}
 					keywordsAnalyze={true} // Retain this functionality
 					placeholder={
-						isProcessing ? "正在处理..." :
+						isLoading ? "正在处理..." :
 							messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
 								"请描述您的需求..."
 					}
-					isLoading={isProcessing}
+					isLoading={isLoading}
 					minHeight="60px"
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
