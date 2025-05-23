@@ -20,7 +20,8 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import AssetRecommendation from "@/app/chat/components/asset-recommendation"
-import RequirementCardComponent, { RequirementCard } from "./components/requirement-card"
+import RequirementCardComponent from "./components/requirement-card"
+import { RequirementCard, EditableRequirementCardField } from "./types/requirement.types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
@@ -32,7 +33,7 @@ export default function ChatPage() {
 	const router = useRouter()
 	const [input, setInput] = useState("")
 	const [editDialogOpen, setEditDialogOpen] = useState(false)
-	const [editField, setEditField] = useState<keyof RequirementCard | null>(null)
+	const [editField, setEditField] = useState<EditableRequirementCardField | null>(null)
 	const [currentEditValue, setCurrentEditValue] = useState("")
 	const [hasDraft, setHasDraft] = useState(false)
 	const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -92,7 +93,7 @@ export default function ChatPage() {
 		}
 	}
 
-	const handleEditRequirement = (field: keyof RequirementCard) => {
+	const handleEditRequirement = (field: EditableRequirementCardField) => {
 		if (!requirementCard) return;
 
 		let initialValue = "";
@@ -123,6 +124,8 @@ export default function ChatPage() {
 		if (!editField || !requirementCard) return;
 
 		const updatedCard = { ...requirementCard };
+		// The type assertion here is safe because editField is now EditableRequirementCardField,
+		// all of which are keys of RequirementCard that hold string values.
 		(updatedCard[editField] as string) = newValue;
 		setRequirementCard(updatedCard);
 

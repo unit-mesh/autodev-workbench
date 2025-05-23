@@ -5,22 +5,11 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type"
 import { toast } from "@/hooks/use-toast";
-
-export interface RequirementCard {
-  name: string
-  module: string
-  description: string
-  apis: ApiResource[]
-  codeSnippets: CodeAnalysis[]
-  guidelines: Guideline[]
-  assignee: string
-  deadline: string
-  status: "draft" | "pending" | "approved"
-}
+import { RequirementCard, EditableRequirementCardField } from "../types/requirement.types";
 
 export interface RequirementCardProps {
   card: RequirementCard
-  onEdit: (field: keyof RequirementCard) => void
+  onEdit: (field: EditableRequirementCardField) => void
   onSaveAsDraft: () => void
   onGenerateTask: () => void
 }

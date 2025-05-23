@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RequirementCard } from "./requirement-card";
+import { EditableRequirementCardField } from "../types/requirement.types";
 
 interface EditRequirementDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	field: keyof RequirementCard | null;
+	field: EditableRequirementCardField | null;
 	initialValue: string;
 	onSave: (value: string) => void;
 }
