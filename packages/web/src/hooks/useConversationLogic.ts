@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { MarkdownCodeBlock } from "@/app/api/_utils/MarkdownCodeBlock"
 import { ApiResource, CodeAnalysis, Guideline, ConceptDictionary } from "@/types/project.type"
-import { RequirementCard } from "@/app/chat/types/requirement.types"
+import { RequirementCard } from "@/app/ai-tools/requirements/types/requirement.types";
 
 export type MessageType =
 	| "user"

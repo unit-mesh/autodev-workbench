@@ -19,7 +19,18 @@ import EditRequirementDialog from "@/app/ai-tools/requirements/components/edit-r
 import { useRequirementCardActions } from "@/app/ai-tools/requirements/hooks/useRequirementCardActions"
 
 interface RequirementsWorkspaceProps {
-	onKeywordsExtracted?: (keywords: string[]) => void
+	currentRequirement: string
+	setCurrentRequirement: (value: string) => void
+	conversation: Array<{ role: string; content: string }>
+	documentContent: Array<{ id: string; type: string; content: string }>
+	onSendMessage: (message: string) => void
+	onDocumentEdit: (id: string, newContent: string) => void
+	onUpdateDocument?: () => void
+	onCheckQuality?: () => void
+	onKeywordsExtracted?: (keywords: string[]) => void // 添加新属性
+	isLoading?: boolean
+	isDocumentUpdating?: boolean
+	isQualityChecking?: boolean
 }
 
 export default function RequirementsWorkspace({
