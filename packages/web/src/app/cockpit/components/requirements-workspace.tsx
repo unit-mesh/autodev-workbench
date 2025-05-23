@@ -96,6 +96,16 @@ export default function RequirementsWorkspace({
 		}
 	}, [messages])
 
+	// Add this useEffect to handle keyword extraction
+	useEffect(() => {
+		const intentMessage = messages.find(m => m.type === "intent-recognition");
+		if (intentMessage && onKeywordsExtracted) {
+			if (intentMessage.data.keywords.length > 0) {
+				onKeywordsExtracted(intentMessage.data.keywords);
+			}
+		}
+	}, [messages, onKeywordsExtracted]);
+
 	const handleFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!input.trim() || isProcessing) return
@@ -107,8 +117,6 @@ export default function RequirementsWorkspace({
 
 	const handleAnswerSubmit = async (userInput: string) => {
 		onSendMessage(userInput);
-
-		// Use internal logic
 		await handleAnswerPrompt(userInput)
 		setInput("")
 	}
@@ -159,6 +167,10 @@ export default function RequirementsWorkspace({
 				}
 
 			case "intent-recognition":
+				// Remove the direct function call that was here
+				// if (onKeywordsExtracted) {
+				//     onKeywordsExtracted(message.data.keywords)
+				// }
 				return (
 					<div className="space-y-2">
 						<p>{message.content}</p>
@@ -332,7 +344,7 @@ export default function RequirementsWorkspace({
 							handleFormSubmit(dummyEvent)
 						}
 					}}
-					keywordsAnalyze={true} // Retain this functionality
+					keywordsAnalyze={false} // Retain this functionality
 					placeholder={
 						isLoading ? "正在处理..." :
 							messages.some(m => m.type === "bullet-prompts") ? "回答问题或输入新指令..." :
@@ -353,7 +365,6 @@ export default function RequirementsWorkspace({
 							}
 						}
 					}}
-					onKeywordsExtracted={onKeywordsExtracted} // Pass the prop
 					systemPrompt="你是一个需求分析助手，请从用户输入中提取关键词，重点关注业务术语和功能需求。"
 				/>
 			</div>

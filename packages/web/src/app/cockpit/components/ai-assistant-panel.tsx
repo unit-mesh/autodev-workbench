@@ -65,7 +65,7 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 
 			{/* AI Questions & Suggestions */}
 			<div className="p-3 border-b border-gray-200">
-				<h3 className="text-sm font-medium text-gray-700 mb-2">AI 提问与建议（TODO）的·</h3>
+				<h3 className="text-sm font-medium text-gray-700 mb-2">AI 提问与建议（TODO）</h3>
 				<ScrollArea className="h-48">
 					<div className="space-y-2">
 						{suggestions.map((suggestion) => (
