@@ -58,7 +58,16 @@ export default function AIAssistantPanel({ qualityAlerts, onAlertClick }: AIAssi
 						onClick={() => window.open('vscode://phodal.autodev', '_blank')}
 					>
 						<FileSearch className="h-3 w-3 mr-1"/>
-						启动编码智能体编程
+						启动编码智能体编程（VSCode AutoDev）
+					</Button>
+				</div>
+				<div className="mt-2">
+					<Button
+						className="w-full text-sm justify-start text-white bg-purple-600 hover:bg-purple-700"
+						onClick={() => window.open('http://localhost:63342/api/mcp/issue_or_story_evaluate?issue=how', '_blank')}
+					>
+						<FileSearch className="h-3 w-3 mr-1"/>
+						启动编码智能体编程（IDEA）
 					</Button>
 				</div>
 			</div>
