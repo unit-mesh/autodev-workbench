@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ToolLike } from "../_typing.js";
+import { logApiInteraction } from "../../../utils/request-logger.js";
 
 let AUTODEV_HOST = "https://www.autodev.work";
 if (process.env.AUTODEV_HOST) {
@@ -25,9 +26,12 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 			keywords: z.string().describe("Keywords to search in the project, should be in array or comma/space separated string"),
 		},
 		async (params) => {
-			const { keywords } = params;
+			let { keywords } = params;
+			if (keywords.trim().startsWith('"') && keywords.trim().endsWith('"')) {
+				keywords = keywords.trim().slice(1, -1);
+			}
+
 			let processedKeywords = keywords;
-			// Handle JSON array format
 			if (keywords.trim().startsWith('[') && keywords.trim().endsWith(']')) {
 				try {
 					const keywordsArray = JSON.parse(keywords);
@@ -46,22 +50,33 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 
 			const url = `${AUTODEV_HOST}/api/mcp/aggregate/context?keywords=${encodeURIComponent(processedKeywords)}&projectId=${PROJECT_ID}`;
 
-			const response = await fetch(url, {
-				method: "GET",
-				headers: {
-					"Content-Type": "application/json",
-				},
-			});
+			try {
+				const response = await fetch(url, { method: "GET" });
+				const value = await response.json();
 
-			const value = await response.json();
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(value),
-					},
-				],
-			};
+				logApiInteraction(
+					url,
+					{ keywords: processedKeywords, projectId: PROJECT_ID },
+					value
+				);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(value),
+							url: url,
+						},
+					],
+				};
+			} catch (error) {
+				console.error("Error fetching project context:", error);
+				logApiInteraction(url,
+					{ keywords: processedKeywords, projectId: PROJECT_ID },
+					{ error: error }
+				);
+				throw error;
+			}
 		}
 	);
 };
