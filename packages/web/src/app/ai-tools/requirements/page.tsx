@@ -63,7 +63,6 @@ export default function ChatPage() {
 		setEditDialogOpen,
 		editField,
 		currentEditValue,
-		hasDraft,
 		handleEditRequirement,
 		handleSaveEdit,
 		handleSaveAsDraft,
@@ -194,7 +193,7 @@ export default function ChatPage() {
 						<RequirementCardComponent
 							card={message.data.card}
 							onEdit={handleEditRequirement}
-							onSaveAsDraft={handleSaveAsDraft}
+							onGenerateAiPrompt={handleSaveAsDraft}
 							onGenerateTask={handleGenerateTask}
 						/>
 					</div>
@@ -275,11 +274,6 @@ export default function ChatPage() {
 						{concepts.length > 0 && !isLoadingConcepts && (
 							<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
 								已载入 {concepts.length} 条业务术语
-							</Badge>
-						)}
-						{hasDraft && (
-							<Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-								<BookmarkPlus className="h-3 w-3 mr-1"/> 草稿已保存
 							</Badge>
 						)}
 						<Button
