@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { RequirementCard } from "./requirement-card";
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type";
+import { RequirementCard } from "@/app/chat/types/requirement.types";
 
 interface RequirementInfoPanelProps {
 	isOpen: boolean;
