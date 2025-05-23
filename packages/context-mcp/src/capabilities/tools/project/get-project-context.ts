@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { ToolLike } from "../_typing.js";
-import { logApiInteraction } from "../../../utils/request-logger.js";
 
 let AUTODEV_HOST = "https://www.autodev.work";
 if (process.env.AUTODEV_HOST) {
@@ -42,41 +41,23 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 					console.warn("Failed to parse keywords as JSON array, using as-is");
 				}
 			}
-			// Handle space-separated string (convert to comma-separated)
 			else if (keywords.includes(' ') && !keywords.includes(',')) {
 				processedKeywords = keywords.split(/\s+/).filter(Boolean).join(',');
 			}
-			// For comma-separated strings, we can use them directly
 
 			const url = `${AUTODEV_HOST}/api/mcp/aggregate/context?keywords=${encodeURIComponent(processedKeywords)}&projectId=${PROJECT_ID}`;
 
-			try {
-				const response = await fetch(url, { method: "GET" });
-				const value = await response.json();
+			const response = await fetch(url, { method: "GET" });
+			const value = await response.json();
 
-				logApiInteraction(
-					url,
-					{ keywords: processedKeywords, projectId: PROJECT_ID },
-					value
-				);
-
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(value),
-							url: url,
-						},
-					],
-				};
-			} catch (error) {
-				console.error("Error fetching project context:", error);
-				logApiInteraction(url,
-					{ keywords: processedKeywords, projectId: PROJECT_ID },
-					{ error: error }
-				);
-				throw error;
-			}
+			return {
+				content: [
+					{
+						type: "text",
+						text: JSON.stringify(value)
+					},
+				],
+			};
 		}
 	);
 };

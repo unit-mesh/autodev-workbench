@@ -187,7 +187,7 @@ export default function HomePage() {
   "mcpServers": {
     "autodev": {
       "command": "npx",
-      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev"],
+      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev", "-y"],
       "env": {
         "PROJECT_ID": "${project.id}"
       }
