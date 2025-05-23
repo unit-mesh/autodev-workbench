@@ -146,31 +146,90 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchCodeSnippets()
   }, [keywordsParam])
 
-  // 修改 useEffect 钩子，在 API 数据加载完成后检查和传递已选对象
-  useEffect(() => {
-    if (!isLoadingApis && apis.length > 0 && selectedAPIs.length > 0 && onSelectAPIObjects) {
-      const selectedApiObjects = apis.filter(api => selectedAPIs.includes(api.id));
-      onSelectAPIObjects(selectedApiObjects);
-    }
-  }, [apis, isLoadingApis, selectedAPIs, onSelectAPIObjects]);
+  const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length;
 
-  // 为代码片段添加类似的 useEffect
   useEffect(() => {
-    if (!isLoadingSnippets && codeSnippets.length > 0 && selectedCodeSnippets.length > 0 && onSelectCodeSnippetObjects) {
-      const selectedCodeObjects = codeSnippets.filter(snippet => selectedCodeSnippets.includes(snippet.id));
-      onSelectCodeSnippetObjects(selectedCodeObjects);
+    if (!isLoadingApis && apis.length > 0 && selectedAPIs.length === 0) {
+      apis.forEach(api => onSelectAPI(api.id));
+      if (onSelectAPIObjects) {
+        onSelectAPIObjects(apis);
+      }
     }
-  }, [codeSnippets, isLoadingSnippets, selectedCodeSnippets, onSelectCodeSnippetObjects]);
+  }, [apis, isLoadingApis, selectedAPIs.length, onSelectAPI, onSelectAPIObjects])
 
-  // 为规范指南添加类似的 useEffect
   useEffect(() => {
-    if (!isLoadingGuidelines && guidelines.length > 0 && selectedStandards.length > 0 && onSelectStandardObjects) {
-      const selectedGuidelineObjects = guidelines.filter(guideline => selectedStandards.includes(guideline.id));
-      onSelectStandardObjects(selectedGuidelineObjects);
+    if (!isLoadingSnippets && codeSnippets.length > 0 && selectedCodeSnippets.length === 0) {
+      codeSnippets.forEach(snippet => onSelectCodeSnippet(snippet.id));
+      if (onSelectCodeSnippetObjects) {
+        onSelectCodeSnippetObjects(codeSnippets);
+      }
     }
-  }, [guidelines, isLoadingGuidelines, selectedStandards, onSelectStandardObjects]);
+  }, [codeSnippets, isLoadingSnippets, selectedCodeSnippets.length, onSelectCodeSnippet, onSelectCodeSnippetObjects])
 
-  // 修改 onConfirm 处理逻辑，在确认前确保传递完整对象
+  useEffect(() => {
+    if (!isLoadingGuidelines && guidelines.length > 0 && selectedStandards.length === 0) {
+      guidelines.forEach(guideline => onSelectStandard(guideline.id));
+      if (onSelectStandardObjects) {
+        onSelectStandardObjects(guidelines);
+      }
+    }
+  }, [guidelines, isLoadingGuidelines, selectedStandards.length, onSelectStandard, onSelectStandardObjects])
+
+  const handleSelectAllAPIs = () => {
+    apis.forEach(api => {
+      if (!selectedAPIs.includes(api.id)) {
+        onSelectAPI(api.id);
+      }
+    });
+    if (onSelectAPIObjects) {
+      onSelectAPIObjects(apis);
+    }
+  };
+
+  const handleDeselectAllAPIs = () => {
+    selectedAPIs.forEach(apiId => onSelectAPI(apiId));
+    if (onSelectAPIObjects) {
+      onSelectAPIObjects([]);
+    }
+  };
+
+  const handleSelectAllCodeSnippets = () => {
+    codeSnippets.forEach(snippet => {
+      if (!selectedCodeSnippets.includes(snippet.id)) {
+        onSelectCodeSnippet(snippet.id);
+      }
+    });
+    if (onSelectCodeSnippetObjects) {
+      onSelectCodeSnippetObjects(codeSnippets);
+    }
+  };
+
+  const handleDeselectAllCodeSnippets = () => {
+    selectedCodeSnippets.forEach(snippetId => onSelectCodeSnippet(snippetId));
+    if (onSelectCodeSnippetObjects) {
+      onSelectCodeSnippetObjects([]);
+    }
+  };
+
+  const handleSelectAllGuidelines = () => {
+    guidelines.forEach(guideline => {
+      if (!selectedStandards.includes(guideline.id)) {
+        onSelectStandard(guideline.id);
+      }
+    });
+    if (onSelectStandardObjects) {
+      onSelectStandardObjects(guidelines);
+    }
+  };
+
+  const handleDeselectAllGuidelines = () => {
+    selectedStandards.forEach(standardId => onSelectStandard(standardId));
+    if (onSelectStandardObjects) {
+      onSelectStandardObjects([]);
+    }
+  };
+
+  // 确认处理函数
   const handleConfirm = () => {
     // 在确认前传递所有已选对象
     if (onSelectAPIObjects) {
@@ -189,74 +248,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     }
 
     onConfirm();
-  };
-
-  const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length
-
-  const handleSelectAllAPIs = () => {
-    if (apis.length === 0) return;
-    const allApiIds = apis.map(api => api.id);
-    allApiIds.forEach(id => {
-      if (!selectedAPIs.includes(id)) {
-        onSelectAPI(id);
-      }
-    });
-  };
-
-  const handleDeselectAllAPIs = () => {
-    if (apis.length === 0) return;
-    const allApiIds = apis.map(api => api.id);
-    allApiIds.forEach(id => {
-      if (selectedAPIs.includes(id)) {
-        onSelectAPI(id);
-      }
-    });
-  };
-
-  const handleSelectAllCodeSnippets = () => {
-    if (codeSnippets.length === 0) return;
-    const allSnippetIds = codeSnippets.map(snippet => snippet.id);
-    allSnippetIds.forEach(id => {
-      if (!selectedCodeSnippets.includes(id)) {
-        onSelectCodeSnippet(id);
-      }
-    });
-  };
-
-  const handleDeselectAllCodeSnippets = () => {
-    if (codeSnippets.length === 0) return;
-    const allSnippetIds = codeSnippets.map(snippet => snippet.id);
-    allSnippetIds.forEach(id => {
-      if (selectedCodeSnippets.includes(id)) {
-        onSelectCodeSnippet(id);
-      }
-    });
-  };
-
-  const handleSelectAllGuidelines = () => {
-    if (guidelines.length === 0) return;
-    const allGuidelineIds = guidelines.map(guideline => guideline.id);
-    allGuidelineIds.forEach(id => {
-      if (!selectedStandards.includes(id)) {
-        onSelectStandard(id);
-      }
-    });
-  };
-
-  const handleDeselectAllGuidelines = () => {
-    if (guidelines.length === 0) return;
-    const allGuidelineIds = guidelines.map(guideline => guideline.id);
-    allGuidelineIds.forEach(id => {
-      if (selectedStandards.includes(id)) {
-        onSelectStandard(id);
-      }
-    });
-  };
-
-  const handleDeselectAll = () => {
-    handleDeselectAllAPIs();
-    handleDeselectAllCodeSnippets();
-    handleDeselectAllGuidelines();
   };
 
   const renderCodeSnippets = () => {
@@ -372,7 +363,7 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
           onClick={onDeselectAll}
         >
           <Square className="h-3.5 w-3.5 mr-1.5" />
-          取消选择
+          取消全选
         </Button>
       </div>
     </div>
@@ -580,6 +571,11 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
       </Tabs>
 
       <div className="flex space-x-2 pt-2">
+        {props.onSkip && (
+          <Button variant="outline" onClick={props.onSkip}>
+            跳过
+          </Button>
+        )}
         <Button
           onClick={handleConfirm}
           disabled={selectedCount === 0}
@@ -591,14 +587,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
               {selectedCount}
             </span>
           )}
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={handleDeselectAll}
-          disabled={selectedCount === 0}
-        >
-          取消全选
         </Button>
       </div>
     </div>
