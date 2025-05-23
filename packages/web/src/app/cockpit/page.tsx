@@ -19,10 +19,8 @@ export default function CockpitPage() {
 	const [isDocumentUpdating, setIsDocumentUpdating] = useState(false)
 	const [isQualityChecking, setIsQualityChecking] = useState(false)
 	const [conversationId, setConversationId] = useState<string | null>(null)
-	// 添加关键词状态
 	const [extractedKeywords, setExtractedKeywords] = useState<string[]>([])
 
-	// 为需求对话添加系统提示词
 	const requirementSystemPrompt =
 		"你是一位专业的需求分析师，专门帮助用户分析和完善软件需求。" +
 		"你的任务是通过提问帮助用户明确需求，并将讨论内容整理为结构化的需求文档。" +
@@ -94,9 +92,7 @@ export default function CockpitPage() {
 
 	const handleAIResponse = async (aiResponse: string, messageCount: number) => {
 		try {
-			// 第一次对话，创建初始文档
 			if (messageCount === 1) {
-				// 提取可能的需求点
 				const response = await fetch("/api/chat", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -122,23 +118,17 @@ export default function CockpitPage() {
 					setActiveKnowledgeSource("company-policy");
 				}
 			}
-			// 注意：后续对话不再自动更新文档和执行质量检查
 		} catch (error) {
 			console.error("处理 AI 响应时出错:", error);
 		}
 	}
 
-	// 执行需求质量检查
 	const performQualityCheck = async () => {
-		// 如果没有文档内容，则不执行检查
 		if (documentContent.length === 0) return;
 
 		setIsQualityChecking(true)
 		try {
-			// 准备需求文档内容
 			const documentForAnalysis = documentContent.map(item => item.content).join("\n\n")
-
-			// 调用专用的需求分析 API
 			const response = await fetch("/api/requirements/actions/analyze", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -151,7 +141,6 @@ export default function CockpitPage() {
 
 			const data = await response.json()
 
-			// 如果返回了质量问题，更新质量警报
 			if (data.qualityIssues && Array.isArray(data.qualityIssues)) {
 				setQualityAlerts(data.qualityIssues)
 			} else if (data.error) {
@@ -166,22 +155,17 @@ export default function CockpitPage() {
 
 	const handleDocumentEdit = (id: string, newContent: string) => {
 		setDocumentContent((prev) => prev.map((item) => (item.id === id ? { ...item, content: newContent } : item)))
-
-		// 注意：不再自动执行质量检查，改为用户手动触发
 	}
 
-	// 手动更新文档
 	const handleUpdateDocument = async () => {
 		if (conversation.length <= 1) return;
 
 		setIsDocumentUpdating(true);
 		try {
-			// 获取最新的AI回复
 			const lastAIResponse = conversation
 				.filter(msg => msg.role === "assistant")
 				.pop()?.content || "";
 
-			// 提取并处理更新后的需求
 			const response = await fetch("/api/chat", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -203,11 +187,7 @@ export default function CockpitPage() {
 
 			if (response.ok) {
 				const data = await response.json();
-
-				// 解析 AI 返回的需求文档内容
 				const updatedRequirements = data.text || "## 2. 功能需求\n\n### 2.1 基本功能\n系统应提供基础功能。";
-
-				// 更新文档内容（仅更新功能需求部分）
 				setDocumentContent((prev) => {
 					const updated = [...prev];
 					const frIndex = updated.findIndex((item) => item.id === "fr-1");
@@ -227,7 +207,6 @@ export default function CockpitPage() {
 		}
 	};
 
-	// 手动执行质量检查
 	const handleQualityCheck = async () => {
 		if (documentContent.length === 0) return;
 
@@ -241,7 +220,6 @@ export default function CockpitPage() {
 		}
 	};
 
-	// 添加处理关键词的函数
 	const handleKeywordsExtracted = (keywords: string[]) => {
 		setExtractedKeywords(keywords);
 	};
@@ -276,7 +254,7 @@ export default function CockpitPage() {
 						onDocumentEdit={handleDocumentEdit}
 						onUpdateDocument={handleUpdateDocument}
 						onCheckQuality={handleQualityCheck}
-						onKeywordsExtracted={handleKeywordsExtracted} // 添加关键词提取回调
+						onKeywordsExtracted={handleKeywordsExtracted}
 						isLoading={isLoading}
 						isDocumentUpdating={isDocumentUpdating}
 						isQualityChecking={isQualityChecking}
