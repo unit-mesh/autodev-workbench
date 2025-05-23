@@ -1,3 +1,23 @@
+## 0.3.1 (2025-05-23)
+
+### 🚀 Features
+
+- **ai-assistant:** remove unused FileDown icon ([f54776e](https://github.com/unit-mesh/autodev-worker/commit/f54776e))
+- **ai-assistant-panel:** update button labels for coding assistant with IDE options ([98f4140](https://github.com/unit-mesh/autodev-worker/commit/98f4140))
+- **ai-panel:** add vscode deep link and disable buttons ([1c6b3b6](https://github.com/unit-mesh/autodev-worker/commit/1c6b3b6))
+- **asset-recommendation:** enhance selection logic for APIs, code snippets, and guidelines ([1886a95](https://github.com/unit-mesh/autodev-worker/commit/1886a95))
+- **chat:** extract conversation logic to custom hook ([e271b26](https://github.com/unit-mesh/autodev-worker/commit/e271b26))
+- **chat:** extract requirement edit dialog to component ([8988bbb](https://github.com/unit-mesh/autodev-worker/commit/8988bbb))
+- **chat:** extract requirement card actions to custom hook ([e8790c2](https://github.com/unit-mesh/autodev-worker/commit/e8790c2))
+- **get-project-context:** enhance keyword processing and update description for better clarity ([6be3c83](https://github.com/unit-mesh/autodev-worker/commit/6be3c83))
+- **page:** rename onSaveAsDraft to onGenerateAiPrompt and remove draft badge ([a16cdee](https://github.com/unit-mesh/autodev-worker/commit/a16cdee))
+- **requirements:** handle keyword extraction in useEffect ([65712a6](https://github.com/unit-mesh/autodev-worker/commit/65712a6))
+- **ui:** improve dialog layout and scrolling ([11079c5](https://github.com/unit-mesh/autodev-worker/commit/11079c5))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.3.0 (2025-05-22)
 
 ### 🚀 Features
