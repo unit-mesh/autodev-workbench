@@ -7,7 +7,6 @@ import {
 	CheckCircle2,
 	RefreshCw,
 	LogIn,
-	BookmarkPlus,
 	AlignJustify,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
