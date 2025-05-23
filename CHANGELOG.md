@@ -1,3 +1,14 @@
+## 0.3.3 (2025-05-23)
+
+### 🚀 Features
+
+- **context:** parse response JSON before stringifying ([24a2540](https://github.com/unit-mesh/autodev-worker/commit/24a2540))
+- **logging:** add request logger for API interactions ([af81962](https://github.com/unit-mesh/autodev-worker/commit/af81962))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.3.2 (2025-05-23)
 
 ### 🚀 Features
