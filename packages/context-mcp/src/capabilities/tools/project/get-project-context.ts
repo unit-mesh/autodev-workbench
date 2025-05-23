@@ -22,11 +22,12 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 		"Include the related documentation, standards, code context and api design and other information. Everything you need" +
 		" to know about the project if you need more context and also ask for the project context.",
 		{
-			keywords: z.string().describe("Keywords to search in the project"),
+			keywords: z.string().describe("Keywords to search in the project, should be in array or comma/space separated string"),
 		},
 		async (params) => {
 			const { keywords } = params;
 			let processedKeywords = keywords;
+			// Handle JSON array format
 			if (keywords.trim().startsWith('[') && keywords.trim().endsWith(']')) {
 				try {
 					const keywordsArray = JSON.parse(keywords);
@@ -37,6 +38,11 @@ export const installGetProjectContextTool: ToolLike = (installer) => {
 					console.warn("Failed to parse keywords as JSON array, using as-is");
 				}
 			}
+			// Handle space-separated string (convert to comma-separated)
+			else if (keywords.includes(' ') && !keywords.includes(',')) {
+				processedKeywords = keywords.split(/\s+/).filter(Boolean).join(',');
+			}
+			// For comma-separated strings, we can use them directly
 
 			const url = `${AUTODEV_HOST}/api/mcp/aggregate/context?keywords=${encodeURIComponent(processedKeywords)}&projectId=${PROJECT_ID}`;
 
