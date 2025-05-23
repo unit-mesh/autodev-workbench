@@ -20,7 +20,6 @@ export default function RequirementCardComponent({
   onSaveAsDraft,
   onGenerateTask
 }: RequirementCardProps) {
-  // Helper function to copy text to clipboard
   const copyToClipboard = async (text: string, successMessage: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -37,13 +36,11 @@ export default function RequirementCardComponent({
     }
   };
 
-  // Format card as JSON
   const copyAsJson = () => {
     const jsonData = JSON.stringify(card, null, 2);
     copyToClipboard(jsonData, "已复制为JSON格式");
   };
 
-  // Format card as AI prompt
   const copyAsAiPrompt = () => {
     const apisList = card.apis.length > 0
       ? card.apis.map(api => `- ${api.sourceUrl}`).join('\n')
@@ -174,53 +171,23 @@ ${guidelinesList}
             <div className="p-2 bg-muted/40 rounded text-sm text-muted-foreground">无关联规范</div>
           )}
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <Label className="text-sm font-medium">负责人</Label>
-              <Button variant="ghost" size="icon" onClick={() => onEdit('assignee')}>
-                <Edit className="h-3 w-3" />
-              </Button>
-            </div>
-            <div className="p-2 bg-muted/40 rounded text-sm">
-              {card.assignee || <span className="text-muted-foreground">待分配</span>}
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <Label className="text-sm font-medium">计划排期</Label>
-              <Button variant="ghost" size="icon" onClick={() => onEdit('deadline')}>
-                <Edit className="h-3 w-3" />
-              </Button>
-            </div>
-            <div className="p-2 bg-muted/40 rounded text-sm">
-              {card.deadline || <span className="text-muted-foreground">待排期</span>}
-            </div>
-          </div>
-        </div>
       </CardContent>
       <CardFooter className="pt-2">
         <div className="flex justify-between w-full">
           <div className="space-x-2">
-            <Button variant="outline" onClick={onSaveAsDraft} disabled>
-              <Save className="h-4 w-4 mr-2" />
-              保存为草稿
-            </Button>
             <Button variant="outline" onClick={copyAsJson}>
               <Copy className="h-4 w-4 mr-2" />
               复制为JSON
             </Button>
             <Button variant="outline" onClick={copyAsAiPrompt}>
               <Copy className="h-4 w-4 mr-2" />
-              复制为 AI 编码 Prompt
+              生成 AI IDE 提示词
             </Button>
           </div>
           <div className="space-x-2">
             <Button onClick={onGenerateTask} disabled>
               <Check className="h-4 w-4 mr-2" />
-              生成任务
+              生成需要卡片
             </Button>
           </div>
         </div>

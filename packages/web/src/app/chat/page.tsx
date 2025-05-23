@@ -259,7 +259,7 @@ export default function ChatPage() {
 				className={`flex flex-col ${showSidebar ? "w-2/3" : "w-full"} bg-white transition-all duration-300 ease-in-out`}>
 				<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
 					<div className="flex items-center">
-						<h1 className="text-xl font-bold text-gray-800">需求生成助手</h1>
+						<h1 className="text-xl font-bold text-gray-800">需求转换助手</h1>
 					</div>
 					<div className="flex items-center gap-2">
 						{session?.user && (
