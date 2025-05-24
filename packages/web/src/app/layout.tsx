@@ -3,8 +3,8 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { TopNavigation } from "@/layout/navigation/TopNavigation";
 import { SideNavigation } from "@/layout/navigation/SideNavigation";
-import { AIAssistantWrapper } from "@/layout/AIAssistantWrapper";
-import { AIAssistantProvider } from "@/context/AIAssistantContext";
+import { AIAssistantWrapper } from "@/layout/assistant/AIAssistantWrapper";
+import { AIAssistantProvider } from "@/layout/assistant/AIAssistantContext";
 import { AuthProvider } from "@/layout/AuthProvider";
 
 const inter = {

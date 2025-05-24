@@ -19,7 +19,7 @@ import RequirementCardComponent from "./components/requirement-card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
-import { Message, useConversationLogic } from "@/hooks/useConversationLogic"
+import { Message, useConversation } from "@/hooks/use-conversation"
 import EditRequirementDialog from "./components/edit-requirement-dialog"
 import { useRequirementCardActions } from "./hooks/useRequirementCardActions"
 
@@ -55,7 +55,7 @@ export default function ChatPage() {
 		setSelectedStandardObjects,
 		setRequirementCard,
 		resetConversation,
-	} = useConversationLogic()
+	} = useConversation()
 
 	const {
 		editDialogOpen,

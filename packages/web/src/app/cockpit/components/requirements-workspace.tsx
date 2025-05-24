@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import AwarenessInput from "@/components/shared/awareness-input"
-import { Message, useConversationLogic } from "@/hooks/useConversationLogic"
+import { Message, useConversation } from "@/hooks/use-conversation"
 import {
 	Loader2,
 	CheckCircle2,
@@ -67,7 +67,7 @@ export default function RequirementsWorkspace({
 		setSelectedStandardObjects,
 		setRequirementCard,
 		resetConversation,
-	} = useConversationLogic()
+	} = useConversation()
 
 	const {
 		editDialogOpen,

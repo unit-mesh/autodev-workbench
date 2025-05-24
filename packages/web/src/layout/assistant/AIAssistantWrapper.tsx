@@ -1,8 +1,8 @@
 "use client"
 
-import { AIAssistant } from "@/components/document/ai-assistant"
+import { AIAssistant } from "@/layout/assistant/ai-assistant"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { useAIAssistant } from "@/context/AIAssistantContext"
+import { useAIAssistant } from "@/layout/assistant/AIAssistantContext"
 
 export function AIAssistantWrapper() {
   const { isOpen, closeAssistant } = useAIAssistant()

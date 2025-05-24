@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type";
 import { RequirementCard } from "@/app/ai-tools/requirements/types/requirement.types";
-import { ConversationContext } from "@/hooks/useConversationLogic";
+import { ConversationContext } from "@/hooks/use-conversation";
 
 export interface RequirementInfoPanelProps {
 	isOpen: boolean;

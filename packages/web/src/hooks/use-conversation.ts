@@ -127,7 +127,7 @@ interface UseConversationLogicReturn {
 	resetConversation: () => void
 }
 
-export const useConversationLogic = (): UseConversationLogicReturn => {
+export const useConversation = (): UseConversationLogicReturn => {
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: "welcome",
