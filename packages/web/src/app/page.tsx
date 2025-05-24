@@ -122,6 +122,18 @@ export default function HomePage() {
       .catch(() => toast.error('复制失败'))
   }
 
+  const getMcpServersConfig = (projectId: string) => `{
+  "mcpServers": {
+    "autodev": {
+      "command": "npx",
+      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev", "-y"],
+      "env": {
+        "PROJECT_ID": "${projectId}"
+      }
+    }
+  }
+}`;
+
   return (
     <div className="p-8 space-y-8">
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-lg shadow-lg">
@@ -185,40 +197,20 @@ export default function HomePage() {
               </div>
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground mb-2">
-                  配置 MCP 来使用 AutoDev Workbench 的上下文能力：
+                  使用 MCP 获取 AutoDev Workbench 的上下文能力：
                 </p>
                 <div className="relative">
                   <Button
                     variant="outline"
                     size="icon"
                     className="absolute right-2 top-2 h-8 w-8 bg-background opacity-90 hover:opacity-100"
-                    onClick={() => copyToClipboard(`{
-  "mcpServers": {
-    "autodev": {
-      "command": "npx",
-      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev", "-y"],
-      "env": {
-        "PROJECT_ID": "${project.id}"
-      }
-    }
-  }
-}`)}
+                    onClick={() => copyToClipboard(getMcpServersConfig(project.id))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                   <pre className="overflow-x-auto text-sm bg-muted mt-4 p-4 rounded-md">
                     <code className="language-json">
-{`{
-  "mcpServers": {
-    "autodev": {
-      "command": "npx",
-      "args": ["--package=@autodev/context-mcp", "autodev-context-mcp", "--preset=AutoDev", "-y"],
-      "env": {
-        "PROJECT_ID": "${project.id}"
-      }
-    }
-  }
-}`}
+                      {getMcpServersConfig(project.id)}
                     </code>
                   </pre>
                 </div>
