@@ -4,8 +4,6 @@ import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, FileText, Code } from "lucide-react"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { toast } from "@/hooks/use-toast"
 import {
 	Dialog,
@@ -14,9 +12,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
-import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender"
 import { CodeAnalysis } from "@/types/project.type";
-
+import { CodeBlockRenderer } from "@/app/projects/projects/code-analysis/code-block-renderer"
 
 interface CodeAnalysisListProps {
 	codeAnalyses: CodeAnalysis[]
@@ -124,31 +121,10 @@ export function CodeAnalysisList({ codeAnalyses, projectId, onRefresh }: CodeAna
 																	<DialogTitle>{displayTitle}</DialogTitle>
 																</DialogHeader>
 																<div className="overflow-y-auto max-h-[calc(80vh-100px)]">
-																	{codeBlocks ? (
-																		codeBlocks.map((block, blockIndex) => (
-																			<div key={blockIndex} className="mb-3 last:mb-0 overflow-x-auto">
-																				<SyntaxHighlighter
-																					language={block.language}
-																					style={vscDarkPlus}
-																					customStyle={{
-																						fontSize: "0.875rem",
-																						maxHeight: "400px",
-																						overflow: "auto",
-																					}}
-																				>
-																					{block.code}
-																				</SyntaxHighlighter>
-																			</div>
-																		))
-																	) : (
-																		<div className="overflow-y-auto max-h-[400px]">
-																			{item.content ? (
-																				<GenifyMarkdownRender content={item.content}/>
-																			) : (
-																				<div className="text-sm text-slate-500 italic">无可用内容</div>
-																			)}
-																		</div>
-																	)}
+																	<CodeBlockRenderer
+																		codeBlocks={codeBlocks}
+																		content={item.content}
+																	/>
 																</div>
 															</DialogContent>
 														</Dialog>
