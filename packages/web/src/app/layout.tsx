@@ -5,7 +5,7 @@ import { TopNavigation } from "@/layout/navigation/TopNavigation";
 import { SideNavigation } from "@/layout/navigation/SideNavigation";
 import { AIAssistantWrapper } from "@/layout/AIAssistantWrapper";
 import { AIAssistantProvider } from "@/context/AIAssistantContext";
-import { AuthProvider } from "@/context/AuthProvider";
+import { AuthProvider } from "@/layout/AuthProvider";
 
 const inter = {
 	className: 'font-sans',

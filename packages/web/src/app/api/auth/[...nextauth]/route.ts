@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth/auth";
 
 // NextAuth 会自动使用 /api/auth/callback/github 作为回调路径
 const handler = NextAuth(authOptions);
