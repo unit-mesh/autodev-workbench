@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, Code } from "lucide-react"
 import { Project } from "@/types/project.type"
-import { CodeAnalysisItem, CodeAnalysisList } from "@/components/code-analysis/code-analysis-list"
+import { CodeAnalysis, CodeAnalysisList } from "@/app/projects/projects/code-analysis/code-analysis-list"
 import { Dispatch, SetStateAction } from "react"
 import { TabApiResourceList } from "./tab-api-resource-list"
 import { TabSymbolAnalysis } from "./tab-symbol-analysis"
@@ -120,7 +120,7 @@ export function ProjectResources({
             {project.codeAnalyses.length > 0 ? (
               <div className="space-y-4">
                 <CodeAnalysisList
-                  codeAnalyses={project.codeAnalyses as CodeAnalysisItem[]}
+                  codeAnalyses={project.codeAnalyses as CodeAnalysis[]}
                   projectId={project.id}
                   onRefresh={refreshProject}
                 />

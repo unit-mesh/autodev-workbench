@@ -15,20 +15,11 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog"
 import GenifyMarkdownRender from "@/components/markdown/GenifyMarkdownRender"
+import { CodeAnalysis } from "@/types/project.type";
 
-export interface CodeAnalysisItem {
-	id: string
-	title?: string
-	path: string
-	language?: string
-	code?: string
-	content?: string
-	description?: string
-	createdAt: string
-}
 
 interface CodeAnalysisListProps {
-	codeAnalyses: CodeAnalysisItem[]
+	codeAnalyses: CodeAnalysis[]
 	projectId: string
 	onRefresh?: () => void
 }
@@ -36,7 +27,6 @@ interface CodeAnalysisListProps {
 export function CodeAnalysisList({ codeAnalyses, projectId, onRefresh }: CodeAnalysisListProps) {
 	const [generatingIds, setGeneratingIds] = useState<string[]>([])
 
-	// Function to generate analysis for a specific code item
 	const handleGenerateAnalysis = async (id: string) => {
 		setGeneratingIds((prev) => [...prev, id])
 		try {
@@ -121,7 +111,7 @@ export function CodeAnalysisList({ codeAnalyses, projectId, onRefresh }: CodeAna
 												</h3>
 
 												<div className="flex items-center space-x-2 flex-shrink-0">
-													{(codeBlocks || item.code || item.content) && (
+													{(codeBlocks || item.content) && (
 														<Dialog>
 															<DialogTrigger asChild>
 																<Button variant="ghost" className="text-blue-600 p-0 h-auto">
@@ -150,20 +140,6 @@ export function CodeAnalysisList({ codeAnalyses, projectId, onRefresh }: CodeAna
 																				</SyntaxHighlighter>
 																			</div>
 																		))
-																	) : item.code ? (
-																		<SyntaxHighlighter
-																			language={item.language || "text"}
-																			style={vscDarkPlus}
-																			customStyle={{
-																				margin: 0,
-																				borderRadius: "0.375rem",
-																				fontSize: "0.875rem",
-																				maxHeight: "400px",
-																				overflow: "auto",
-																			}}
-																		>
-																			{item.code}
-																		</SyntaxHighlighter>
 																	) : (
 																		<div className="overflow-y-auto max-h-[400px]">
 																			{item.content ? (
