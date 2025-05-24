@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { ModelSelector } from "@/components/biz-ui/model-selector"
 import { MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAIAssistant } from "@/layout/assistant/AIAssistantContext"
+import { useAIAssistant } from "@/layout/assistant/ai-assistant-context"
 import { UserAuthButton } from "@/components/auth/user-auth-button"
 
 const navigationItems = [

@@ -9,7 +9,7 @@ interface AIAssistantContextType {
   closeAssistant: () => void
 }
 
-const AIAssistantContext = createContext<AIAssistantContextType | undefined>(undefined)
+const AiAssistantContext = createContext<AIAssistantContextType | undefined>(undefined)
 
 export function AIAssistantProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -19,14 +19,14 @@ export function AIAssistantProvider({ children }: { children: React.ReactNode })
   const closeAssistant = () => setIsOpen(false)
 
   return (
-    <AIAssistantContext.Provider value={{ isOpen, toggleAssistant, openAssistant, closeAssistant }}>
+    <AiAssistantContext.Provider value={{ isOpen, toggleAssistant, openAssistant, closeAssistant }}>
       {children}
-    </AIAssistantContext.Provider>
+    </AiAssistantContext.Provider>
   )
 }
 
 export function useAIAssistant() {
-  const context = use(AIAssistantContext)
+  const context = use(AiAssistantContext)
   if (context === undefined) {
     throw new Error("useAIAssistant must be used within an AIAssistantProvider")
   }

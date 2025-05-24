@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { TopNavigation } from "@/layout/navigation/TopNavigation";
-import { SideNavigation } from "@/layout/navigation/SideNavigation";
-import { AIAssistantWrapper } from "@/layout/assistant/AIAssistantWrapper";
-import { AIAssistantProvider } from "@/layout/assistant/AIAssistantContext";
-import { AuthProvider } from "@/layout/AuthProvider";
+import { TopNavigation } from "@/layout/navigation/top-navigation";
+import { SideNavigation } from "@/layout/navigation/side-navigation";
+import { AiAssistantWrapper } from "@/layout/assistant/ai-assistant-wrapper";
+import { AIAssistantProvider } from "@/layout/assistant/ai-assistant-context";
+import { AuthProvider } from "@/layout/auth-provider";
 
 const inter = {
 	className: 'font-sans',
@@ -30,7 +30,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode })
 							{children}
 						</main>
 					</div>
-					<AIAssistantWrapper/>
+					<AiAssistantWrapper/>
 				</div>
 				<Toaster position="top-right"/>
 			</AIAssistantProvider>
