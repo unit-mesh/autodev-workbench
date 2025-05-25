@@ -40,8 +40,8 @@ const navigationItems = [
     items: [
       { name: '服务目录', href: '/platform/service-catalog' },
       { name: '组件 & APIs', href: '/platform/framework' },
-      { name: '技术文档', href: '/platform/techdocs' },
-      { name: '规范中心', href: '/platform/coding-standards' },
+      { name: '技术文档', href: '/platform/tech-docs' },
+      { name: '规范中心', href: '/platform/guideline' },
     ],
   },
   {
