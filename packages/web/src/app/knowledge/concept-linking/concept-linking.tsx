@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { CodeEditor } from "@/components/code/code-editor"
-import { ConceptList } from "@/components/concept/concept-list"
-import { KnowledgePanel } from "@/components/concept/knowledge-panel"
+import { ConceptList } from "@/app/knowledge/concept-linking/concept/concept-list"
+import { KnowledgePanel } from "@/app/knowledge/concept-linking/concept/knowledge-panel"
 import { englishExtractConcepts } from "@/lib/concept-extractor"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"

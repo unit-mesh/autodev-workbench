@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { ModelSelector } from "@/components/biz-ui/model-selector"
+import { ModelSelector } from "@/components/home/model-selector"
 import { MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAIAssistant } from "@/layout/assistant/ai-assistant-context"
