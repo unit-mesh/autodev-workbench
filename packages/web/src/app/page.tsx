@@ -38,7 +38,6 @@ export default function HomePage() {
           const response = await fetch(`/api/projects?userId=${session.user.id}&default=true`)
           if (response.ok) {
             const data = await response.json()
-            // Get the default project if it exists
             const defaultProject = Array.isArray(data) && data.length > 0
               ? data.find(p => p.isDefault) || data[0]
               : null
@@ -63,7 +62,6 @@ export default function HomePage() {
   }
 
   const handleCreate = async () => {
-    // 只验证项目名称
     if (!formData.name.trim()) return toast.error('请输入项目名称')
     if (!session) return toast.error('请先登录')
 
@@ -87,8 +85,6 @@ export default function HomePage() {
       setProject(data.project)
       setShowDialog(false)
       toast.success(`项目 "${formData.name}" 创建成功`)
-
-      // 重置表单
       setFormData({
         name: '',
         description: '',
@@ -104,7 +100,6 @@ export default function HomePage() {
     }
   }
 
-  // Function to check if project has any data
   const hasProjectData = (project: Project | null): boolean => {
     if (!project) return false;
 
