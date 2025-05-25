@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MainSidebar } from "@/components/document/main-sidebar"
-import { Dashboard } from "@/components/document/dashboard"
-import { DocumentViewer } from "@/components/document/document-viewer"
+import { MainSidebar } from "@/app/platform/tech-docs/document/main-sidebar"
+import { Dashboard } from "@/app/platform/tech-docs/document/dashboard"
+import { DocumentViewer } from "@/app/platform/tech-docs/document/document-viewer"
 import { useMediaQuery } from "@/hooks/use-media-query"
-import { SearchDialog } from "@/components/document/search-dialog"
+import { SearchDialog } from "@/app/platform/tech-docs/document/search-dialog"
 import { cn } from "@/lib/utils"
 
 export function DeveloperCockpit() {

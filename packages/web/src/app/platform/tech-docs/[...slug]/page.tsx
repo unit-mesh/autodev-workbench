@@ -16,9 +16,9 @@ import {
   Sun,
   Moon,
 } from "lucide-react"
-import DocSidebar from "@/components/document/doc-sidebar"
-import TableOfContents from "@/components/document/table-of-contents"
-import CodeBlock from "@/components/document/code-block"
+import DocSidebar from "@/app/platform/tech-docs/document/doc-sidebar"
+import TableOfContents from "@/app/platform/tech-docs/document/table-of-contents"
+import CodeBlock from "@/app/platform/tech-docs/document/code-block"
 
 export default function ApiDocPage() {
   // This would normally be fetched from a CMS or API
