@@ -7,22 +7,106 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Code, Loader2, CodeXml } from 'lucide-react'
+/// accordion.tsx
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+// alert.tsx
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+// alert-dialog.tsx
+import {
+	AlertDialog,
+	AlertDialogPortal,
+	AlertDialogOverlay,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogFooter,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from "@/components/ui/alert-dialog"
+// aspect-ratio.tsx
+import { AspectRatio } from "@/components/ui/aspect-ratio"
+// avatar.tsx
+// badge.tsx
+// breadcrumb.tsx
+// button.tsx
+// calendar.tsx
+// card.tsx
+// carousel.tsx
+// chart.tsx
+// checkbox.tsx
+// collapsible.tsx
+// command.tsx
+// context-menu.tsx
+// dialog.tsx
+// drawer.tsx
+// dropdown-menu.tsx
+// form.tsx
+// hover-card.tsx
+// input.tsx
+// input-otp.tsx
+// label.tsx
+// menubar.tsx
+// navigation-menu.tsx
+// pagination.tsx
+// popover.tsx
+// progress.tsx
+// radio-group.tsx
+// resizable.tsx
+// scroll-area.tsx
+// select.tsx
+// separator.tsx
+// sheet.tsx
+// sidebar.tsx
+// skeleton.tsx
+// slider.tsx
+// sonner.tsx
+// spinner.tsx
+// switch.tsx
+// table.tsx
+// tabs.tsx
+// textarea.tsx
+// toast.tsx
+// toaster.tsx
+// toggle.tsx
+// toggle-group.tsx
+// tooltip.tsx
 import { extractCodeBlocks } from "@/lib/code-highlight"
 import { LiveProvider, LiveEditor, LivePreview, LiveError } from "react-live";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Message = {
 	role: "user" | "assistant" | "system"
 	content: string
 }
 
+const scope = {
+	Accordion, AccordionItem, AccordionTrigger, AccordionContent,
+	Alert, AlertTitle, AlertDescription,
+	AlertDialog, AlertDialogPortal, AlertDialogOverlay, AlertDialogTrigger,
+	AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle,
+	AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+	AspectRatio,
+	Button,
+	Textarea,
+	ScrollArea,
+	Input,
+	Checkbox,
+	Label,
+}
 
-const SYSTEM_PROMPT = `You are an expert frontend developer specializing in React, Next.js, and modern web development.
+const SYSTEM_PROMPT = `You are an expert frontend developer specializing in Reac and modern web development.
 Your task is to generate high-quality, working frontend code based on user requests.
 
+- Tech Stack: React, Next.js, TypeScript, Tailwind CSS, Shadcn UI, Lucide icons
 - Always provide complete, working code examples that follow best practices.
 - Always return one code block so the user can copy it easily.
-- Always include necessary imports and setup code.
+- Don't include imports and setup code.
+- Use React.useState instead of useState for state management.
 - Call render() at the end of the code block to display the component.
 
 When generating code, wrap it in markdown code blocks with the appropriate language tag.
@@ -31,8 +115,7 @@ type Props = {
   label: string;
 }
 const Counter = (props: Props) => {
-  const [count, setCount] =
-    React.useState<number>(0)
+  const [count, setCount] = React.useState<number>(0)
   return (
     <div>
       <h3 style={{
@@ -52,6 +135,8 @@ const Counter = (props: Props) => {
     </div>
   )
 }
+
+// don't call exports
 render(<Counter label="Counter" />)
 \`\`\`
 `
@@ -60,7 +145,15 @@ export default function AIFrontendGenerator() {
 	const [messages, setMessages] = useState<Message[]>([])
 	const [input, setInput] = useState("")
 	const [isLoading, setIsLoading] = useState(false)
-	const [generatedCode, setGeneratedCode] = useState<string>("")
+	const [generatedCode, setGeneratedCode] = useState<string>(`
+class Example extends React.Component {
+  render() {
+    return <strong>Hello World!</strong>;
+  }
+}
+
+render(<Example />)
+	`)
 	const [conversationId, setConversationId] = useState<string | null>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -250,11 +343,11 @@ export default function AIFrontendGenerator() {
 							</div>
 
 							<div className="flex-1 overflow-auto p-4">
-								<LiveProvider code={generatedCode} noInline>
+								<LiveProvider code={generatedCode} noInline scope={scope}>
 									<div className="grid grid-cols-2 gap-4 h-full">
 										<div className="border rounded-md overflow-hidden shadow-sm">
 											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Editor</div>
-											<LiveEditor className="font-mono text-sm"/>
+											<LiveEditor className="font-mono text-sm h-full overflow-auto"/>
 										</div>
 										<div className="border rounded-md overflow-hidden shadow-sm">
 											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Preview</div>
