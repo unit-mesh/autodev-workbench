@@ -1,0 +1,45 @@
+{
+  "name": "@autodev/backend-generator",
+  "version": "0.1.0",
+  "description": "Backend project generator with support for parsing and generating project configurations",
+  "main": "./dist/index.js",
+  "bin": {
+    "backend-generator": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "backend",
+    "generator",
+    "microservice",
+    "spring",
+    "java",
+    "typescript"
+  ],
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.23.8",
+    "chalk": "^4.1.2",
+    "fs-extra": "^11.2.0",
+    "handlebars": "^4.7.8"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.17.45",
+    "@vitest/coverage-v8": "^1.0.4",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.10",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^1.0.4"
+  },
+  "author": "AutoDev Team",
+  "license": "MIT",
+  "packageManager": "pnpm@10.10.0"
+} 
