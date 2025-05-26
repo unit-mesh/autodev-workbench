@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Code, Loader2 } from 'lucide-react'
+import { Send, Code, Loader2, CodeXml } from 'lucide-react'
 import { extractCodeBlocks } from "@/lib/code-highlight"
 import { LiveProvider, LiveEditor, LivePreview, LiveError } from "react-live";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
@@ -134,103 +134,142 @@ export default function AIFrontendGenerator() {
 	}
 
 	return (
-		<div className="h-full from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-			<main className="p-4 py-8">
-				<div className="flex flex-col gap-6">
-					<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-						<div>
-							<h1
-								className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-								前端 UI 生成
-							</h1>
-						</div>
-					</div>
-
-					<PanelGroup direction="horizontal">
-						{/* Chat Section */}
-						<Panel id="chat-panel" defaultSize={40} minSize={30}>
-							<div className="flex flex-col border rounded-lg shadow-sm bg-background h-full mr-3">
-								<div className="p-4 border-b">
-									<h2 className="text-lg font-semibold">Chat with AI</h2>
-								</div>
-								<div className="flex-grow overflow-hidden p-4">
-									<ScrollArea className="h-[600px] pr-4">
-										{messages.length === 0 ? (
-											<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-												<Code size={48} className="mb-4"/>
-												<p>Start a conversation with the AI to generate frontend code.</p>
-												<p className="text-sm mt-2">Try: &#34;Create a sign-up form with email and password
-													fields&#34;</p>
-											</div>
-										) : (
-											<div className="space-y-4">
-												{messages.map((message, index) => (
-													<div key={index}
-														className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-														<div
-															className={`max-w-[80%] rounded-lg p-3 ${
-																message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-															}`}
-														>
-															{message.content}
-														</div>
-													</div>
-												))}
-												{isLoading && (
-													<div className="flex justify-start">
-														<div className="max-w-[80%] rounded-lg p-3 bg-muted">
-															<div className="flex items-center space-x-2">
-																<Loader2 size={16} className="animate-spin"/>
-																<span>Generating code...</span>
-															</div>
-														</div>
-													</div>
-												)}
-											</div>
-										)}
-									</ScrollArea>
-								</div>
-								<div className="p-4 border-t">
-									<form onSubmit={handleSubmit} className="w-full flex space-x-2">
-										<Textarea
-											placeholder="Describe the component you want to create..."
-											value={input}
-											onChange={(e) => setInput(e.target.value)}
-											className="flex-grow resize-none"
-											rows={2}
-											disabled={isLoading}
-										/>
-										<Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-											<Send size={18}/>
-										</Button>
-									</form>
-								</div>
-							</div>
-						</Panel>
-
-						<PanelResizeHandle
-							className="w-1 hover:w-2 bg-gray-200 hover:bg-blue-400 transition-all duration-150 relative group"
-						>
-							<div
-								className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-blue-600"></div>
-						</PanelResizeHandle>
-
-						<Panel id="preview-panel" defaultSize={60} minSize={40}>
-							<div className="flex flex-col border rounded-lg shadow-sm bg-background h-full ml-3">
-								<div className="p-4">
-									<LiveProvider code={generatedCode} noInline>
-										<div className="grid grid-cols-2 gap-4">
-											<LiveEditor className="font-mono"/>
-											<LivePreview/>
-											<LiveError className="text-red-800 bg-red-100 mt-2" />
-										</div>
-									</LiveProvider>
-								</div>
-							</div>
-						</Panel>
-					</PanelGroup>
+		<div className="flex flex-col h-screen bg-gray-50">
+			<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
+				<div className="flex items-center">
+					<h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+						前端 UI 生成
+					</h1>
 				</div>
-			</main>
+				<div className="flex items-center gap-2">
+					{isLoading && (
+						<div className="flex items-center space-x-2 text-sm text-muted-foreground">
+							<Loader2 className="h-3 w-3 animate-spin"/>
+							<span>生成代码中...</span>
+						</div>
+					)}
+				</div>
+			</header>
+
+			<div className="flex-1 overflow-hidden">
+				<PanelGroup direction="horizontal" className="h-full">
+					{/* Chat Section */}
+					<Panel id="chat-panel" defaultSize={35} minSize={25}>
+						<div className="flex flex-col h-full bg-white border-r">
+							<div className="p-3 border-b">
+								<div className="flex items-center space-x-2">
+									<Code className="h-5 w-5 text-indigo-500"/>
+									<h2 className="text-base font-medium">Chat with AI</h2>
+								</div>
+								<p className="text-xs text-muted-foreground mt-1">Describe the component you want to create</p>
+							</div>
+
+							<div className="flex-1 overflow-hidden">
+								<ScrollArea className="h-full p-3">
+									{messages.length === 0 ? (
+										<div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4">
+											<CodeXml size={48} className="mb-4 text-indigo-300"/>
+											<p className="text-sm">Start a conversation with the AI to generate frontend code.</p>
+											<p className="text-xs mt-2">Try: &#34;Create a sign-up form with email and password fields&#34;</p>
+										</div>
+									) : (
+										<div className="space-y-4">
+											{messages.map((message, index) => (
+												<div key={index}
+													className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+													<div
+														className={`max-w-[85%] rounded-lg p-3 ${
+															message.role === "user" 
+															? "bg-primary text-primary-foreground rounded-tr-none" 
+															: "bg-gray-100 text-gray-800 rounded-tl-none"
+														}`}
+													>
+														{message.content}
+													</div>
+												</div>
+											))}
+											{isLoading && (
+												<div className="flex justify-start">
+													<div className="max-w-[85%] rounded-lg p-3 bg-gray-100">
+														<div className="flex items-center space-x-2">
+															<Loader2 size={16} className="animate-spin"/>
+															<span>Generating code...</span>
+														</div>
+													</div>
+												</div>
+											)}
+										</div>
+									)}
+								</ScrollArea>
+							</div>
+
+							<div className="p-3 border-t bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+								<form onSubmit={handleSubmit} className="w-full flex space-x-2">
+									<Textarea
+										placeholder="Describe the component you want to create..."
+										value={input}
+										onChange={(e) => setInput(e.target.value)}
+										className="flex-grow resize-none min-h-[60px]"
+										disabled={isLoading}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
+												e.preventDefault();
+												handleSubmit(e);
+											}
+										}}
+									/>
+									<Button
+										type="submit"
+										size="icon"
+										className="self-end h-10 w-10"
+										disabled={isLoading || !input.trim()}
+									>
+										<Send size={18}/>
+									</Button>
+								</form>
+							</div>
+						</div>
+					</Panel>
+
+					<PanelResizeHandle
+						className="w-1 hover:w-2 bg-gray-200 hover:bg-indigo-400 transition-all duration-150 relative group"
+					>
+						<div
+							className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-indigo-600"></div>
+					</PanelResizeHandle>
+
+					{/* Preview Section */}
+					<Panel id="preview-panel" defaultSize={65} minSize={40}>
+						<div className="flex flex-col h-full bg-white border-l">
+							<div className="p-3 border-b">
+								<div className="flex items-center space-x-2">
+									<CodeXml className="h-5 w-5 text-indigo-500"/>
+									<h2 className="text-base font-medium">Code Preview</h2>
+								</div>
+								<p className="text-xs text-muted-foreground mt-1">Live editor and preview of generated component</p>
+							</div>
+
+							<div className="flex-1 overflow-auto p-4">
+								<LiveProvider code={generatedCode} noInline>
+									<div className="grid grid-cols-2 gap-4 h-full">
+										<div className="border rounded-md overflow-hidden shadow-sm">
+											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Editor</div>
+											<LiveEditor className="font-mono text-sm"/>
+										</div>
+										<div className="border rounded-md overflow-hidden shadow-sm">
+											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Preview</div>
+											<div className="p-4 bg-white">
+												<LivePreview/>
+												<LiveError className="text-red-600 bg-red-50 p-2 mt-2 rounded text-xs" />
+											</div>
+										</div>
+									</div>
+								</LiveProvider>
+							</div>
+						</div>
+					</Panel>
+				</PanelGroup>
+			</div>
 		</div>
 	)
 }
