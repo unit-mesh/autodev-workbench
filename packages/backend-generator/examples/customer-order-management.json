@@ -1,0 +1,73 @@
+{
+  "projectConfig": {
+    "name": "customer-order-management",
+    "description": "A microservice system for managing customer orders with user authentication, MySQL database, and REST API.",
+    "type": "microservice",
+    "language": "java",
+    "framework": "spring3"
+  },
+  "features": [
+    "authentication-authorization",
+    "database-integration",
+    "api-documentation",
+    "data-validation",
+    "docker-support",
+    "ci-cd-pipeline",
+    "testing-framework",
+    "logging-system",
+    "monitoring-metrics"
+  ],
+  "structure": {
+    "directories": [
+      "src/main/java",
+      "src/main/resources",
+      "src/test/java",
+      "src/test/resources",
+      "src/main/docker"
+    ],
+    "files": [
+      "pom.xml",
+      "build.gradle",
+      "application.properties",
+      "Dockerfile",
+      "src/main/java/com/example/customerordermanagement/CustomerOrderManagementApplication.java",
+      "src/main/java/com/example/customerordermanagement/config"
+    ]
+  },
+  "dependencies": {
+    "spring-boot-starter": "3.0.0",
+    "spring-boot-starter-web": "3.0.0",
+    "spring-boot-starter-security": "3.0.0",
+    "spring-boot-starter-data-jpa": "3.0.0",
+    "mysql-connector-java": "8.0.26",
+    "springfox-swagger2": "2.9.2",
+    "springfox-swagger-ui": "2.9.2",
+    "spring-boot-starter-validation": "3.0.0",
+    "spring-boot-starter-test": "3.0.0",
+    "junit-jupiter": "5.8.2",
+    "logback-classic": "1.2.3",
+    "micrometer-registry-prometheus": "1.9.0"
+  },
+  "configurations": {
+    "application.properties": [
+      "spring.datasource.url=jdbc:mysql://localhost:3306/customer_order_db",
+      "spring.datasource.username=root",
+      "spring.datasource.password=password",
+      "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver",
+      "spring.jpa.hibernate.ddl-auto=update",
+      "spring.security.user.name=admin",
+      "spring.security.user.password=admin",
+      "spring.security.user.role=ADMIN"
+    ],
+    "Dockerfile": [
+      "FROM openjdk:11-jdk-slim as build",
+      "WORKDIR /app",
+      "COPY . .",
+      "RUN ./mvnw install -DskipTests",
+      "FROM openjdk:11-jdk-slim as runtime",
+      "WORKDIR /app",
+      "COPY --from=build /app/target/customer-order-management-0.0.1-SNAPSHOT.jar .",
+      "ENTRYPOINT [\"java\",\"-jar\",\"/app/customer-order-management-0.0.1-SNAPSHOT.jar\"]"
+    ]
+  }
+} 
