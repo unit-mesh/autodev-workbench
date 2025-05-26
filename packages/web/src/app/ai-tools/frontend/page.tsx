@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Code, Loader2 } from 'lucide-react'
 import { extractCodeBlocks } from "@/lib/code-highlight"
 import { LiveProvider, LiveEditor, LivePreview, LiveError } from "react-live";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 type Message = {
 	role: "user" | "assistant" | "system"
@@ -142,88 +143,94 @@ export default function AIFrontendGenerator() {
 								className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
 								前端 UI 生成
 							</h1>
-							<p className="text-slate-600 dark:text-slate-400 mt-1">
-								Chat with AI to generate frontend code, preview it in real-time
-							</p>
 						</div>
 					</div>
 
-					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<PanelGroup direction="horizontal">
 						{/* Chat Section */}
-						<div className="flex flex-col border rounded-lg shadow-sm bg-background">
-							<div className="p-4 border-b">
-								<h2 className="text-lg font-semibold">Chat with AI</h2>
-								<p className="text-sm text-muted-foreground">Describe the frontend component you want to create</p>
-							</div>
-							<div className="flex-grow overflow-hidden p-4">
-								<ScrollArea className="h-[600px] pr-4">
-									{messages.length === 0 ? (
-										<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-											<Code size={48} className="mb-4"/>
-											<p>Start a conversation with the AI to generate frontend code.</p>
-											<p className="text-sm mt-2">Try: &#34;Create a sign-up form with email and password
-												fields&#34;</p>
-										</div>
-									) : (
-										<div className="space-y-4">
-											{messages.map((message, index) => (
-												<div key={index}
-												     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-													<div
-														className={`max-w-[80%] rounded-lg p-3 ${
-															message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-														}`}
-													>
-														{message.content}
-													</div>
-												</div>
-											))}
-											{isLoading && (
-												<div className="flex justify-start">
-													<div className="max-w-[80%] rounded-lg p-3 bg-muted">
-														<div className="flex items-center space-x-2">
-															<Loader2 size={16} className="animate-spin"/>
-															<span>Generating code...</span>
+						<Panel id="chat-panel" defaultSize={40} minSize={30}>
+							<div className="flex flex-col border rounded-lg shadow-sm bg-background h-full mr-3">
+								<div className="p-4 border-b">
+									<h2 className="text-lg font-semibold">Chat with AI</h2>
+								</div>
+								<div className="flex-grow overflow-hidden p-4">
+									<ScrollArea className="h-[600px] pr-4">
+										{messages.length === 0 ? (
+											<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+												<Code size={48} className="mb-4"/>
+												<p>Start a conversation with the AI to generate frontend code.</p>
+												<p className="text-sm mt-2">Try: &#34;Create a sign-up form with email and password
+													fields&#34;</p>
+											</div>
+										) : (
+											<div className="space-y-4">
+												{messages.map((message, index) => (
+													<div key={index}
+														className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+														<div
+															className={`max-w-[80%] rounded-lg p-3 ${
+																message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+															}`}
+														>
+															{message.content}
 														</div>
 													</div>
-												</div>
-											)}
-										</div>
-									)}
-								</ScrollArea>
+												))}
+												{isLoading && (
+													<div className="flex justify-start">
+														<div className="max-w-[80%] rounded-lg p-3 bg-muted">
+															<div className="flex items-center space-x-2">
+																<Loader2 size={16} className="animate-spin"/>
+																<span>Generating code...</span>
+															</div>
+														</div>
+													</div>
+												)}
+											</div>
+										)}
+									</ScrollArea>
+								</div>
+								<div className="p-4 border-t">
+									<form onSubmit={handleSubmit} className="w-full flex space-x-2">
+										<Textarea
+											placeholder="Describe the component you want to create..."
+											value={input}
+											onChange={(e) => setInput(e.target.value)}
+											className="flex-grow resize-none"
+											rows={2}
+											disabled={isLoading}
+										/>
+										<Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+											<Send size={18}/>
+										</Button>
+									</form>
+								</div>
 							</div>
-							<div className="p-4 border-t">
-								<form onSubmit={handleSubmit} className="w-full flex space-x-2">
-									<Textarea
-										placeholder="Describe the component you want to create..."
-										value={input}
-										onChange={(e) => setInput(e.target.value)}
-										className="flex-grow resize-none"
-										rows={2}
-										disabled={isLoading}
-									/>
-									<Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-										<Send size={18}/>
-									</Button>
-								</form>
-							</div>
-						</div>
+						</Panel>
 
-						<div className="flex flex-col border rounded-lg shadow-sm bg-background">
-							<div className="p-4">
-								<LiveProvider code={generatedCode} noInline>
-									<div className="grid grid-cols-2 gap-4">
-										<LiveEditor className="font-mono"/>
-										<LivePreview/>
-										<LiveError className="text-red-800 bg-red-100 mt-2" />
-									</div>
-								</LiveProvider>
+						<PanelResizeHandle
+							className="w-1 hover:w-2 bg-gray-200 hover:bg-blue-400 transition-all duration-150 relative group"
+						>
+							<div
+								className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-blue-600"></div>
+						</PanelResizeHandle>
+
+						<Panel id="preview-panel" defaultSize={60} minSize={40}>
+							<div className="flex flex-col border rounded-lg shadow-sm bg-background h-full ml-3">
+								<div className="p-4">
+									<LiveProvider code={generatedCode} noInline>
+										<div className="grid grid-cols-2 gap-4">
+											<LiveEditor className="font-mono"/>
+											<LivePreview/>
+											<LiveError className="text-red-800 bg-red-100 mt-2" />
+										</div>
+									</LiveProvider>
+								</div>
 							</div>
-						</div>
-					</div>
+						</Panel>
+					</PanelGroup>
 				</div>
 			</main>
 		</div>
 	)
 }
-
