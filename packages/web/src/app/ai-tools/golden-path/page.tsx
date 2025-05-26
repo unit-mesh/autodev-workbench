@@ -1,18 +1,16 @@
 "use client"
 
 import React, { useState, KeyboardEvent } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Sparkles, Send } from 'lucide-react';
+import { Loader2, Sparkles, Send, FileJson } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface ProjectMetadata {
 	name: string;
@@ -53,10 +51,8 @@ export default function GoldenPathPage() {
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [generatedResult, setGeneratedResult] = useState<string>('');
-	const [activeTab, setActiveTab] = useState('config');
 	const [aiPrompt, setAiPrompt] = useState('我需要一个带有用户认证、MySQL 数据库和 REST API 的微服务系统，主要用于客户订单管理');
 	const [isAiProcessing, setIsAiProcessing] = useState(false);
-	const [aiSuggested, setAiSuggested] = useState(false);
 
 	const projectTypes = [
 		{ value: 'web', label: 'Web 应用' },
@@ -149,7 +145,6 @@ export default function GoldenPathPage() {
 
 	const handleGenerate = async () => {
 		setIsLoading(true);
-		setActiveTab('result');
 
 		try {
 			// Build prompt for LLM
@@ -390,7 +385,6 @@ Provide only the JSON object without any additional text or explanations.
 					}
 
 					setMetadata(newMetadata);
-					setAiSuggested(true);
 				}
 			} catch (parseError) {
 				console.error("Error parsing suggestion JSON:", parseError);
@@ -421,277 +415,298 @@ Provide only the JSON object without any additional text or explanations.
 	};
 
 	return (
-		<div className="px-8 py-8">
-			<h1 className="text-3xl font-bold mb-2">后端应用生成</h1>
-			<p className="text-muted-foreground mb-6">基于 AI 生成符合最佳实践的项目配置</p>
-
-			{/* AI Project Description Input */}
-			<Card className="mb-8 gap-2">
-				<CardHeader className="pb-0">
-					<CardTitle className="flex items-center gap-2">
-						<Sparkles className="h-5 w-5 text-primary"/>
-						AI 项目描述
-					</CardTitle>
-					<CardDescription className="mt-0">
-						用自然语言描述你的项目，AI 将帮助你自动配置项目设置 (按 Enter 发送，Alt+Enter 换行)
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="relative">
-						<Textarea
-							value={aiPrompt}
-							onChange={(e) => setAiPrompt(e.target.value)}
-							onKeyDown={handleKeyDown}
-							placeholder="例如：我需要一个带有用户认证、MySQL 数据库和 REST API 的微服务系统，主要用于客户订单管理..."
-							className="pr-12 resize-none"
-							rows={3}
-							disabled={isAiProcessing}
-						/>
-						<Button
-							className="absolute right-2 bottom-2"
-							size="icon"
-							variant="ghost"
-							onClick={handleAiSuggest}
-							disabled={isAiProcessing || !aiPrompt.trim()}
-						>
-							{isAiProcessing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>}
-						</Button>
-					</div>
-
-					{aiSuggested && (
-						<Alert className="mt-3">
-							<AlertTitle className="text-sm font-medium">AI 已生成项目建议</AlertTitle>
-							<AlertDescription className="text-xs">
-								AI 已根据你的描述自动配置了项目设置。你可以在下方进一步调整这些设置。
-							</AlertDescription>
-						</Alert>
+		<div className="flex flex-col h-screen bg-gray-50">
+			<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
+				<div className="flex items-center">
+					<h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+						后端应用生成
+					</h1>
+				</div>
+				<div className="flex items-center gap-2">
+					{isLoading && (
+						<div className="flex items-center space-x-2 text-sm text-muted-foreground">
+							<Loader2 className="h-3 w-3 animate-spin"/>
+							<span>生成中...</span>
+						</div>
 					)}
-				</CardContent>
-			</Card>
+				</div>
+			</header>
 
-			<Tabs value={activeTab} onValueChange={setActiveTab}>
-				<TabsList className="mb-4">
-					<TabsTrigger value="config">配置项目</TabsTrigger>
-					<TabsTrigger value="result" disabled={!generatedResult && !isLoading}>查看结果</TabsTrigger>
-				</TabsList>
-
-				<TabsContent value="config">
-					<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-						<Card className="col-span-1">
-							<CardHeader>
-								<CardTitle>项目基本信息</CardTitle>
-								<CardDescription>定义你的项目核心属性</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<div>
-									<Label htmlFor="name">项目名称</Label>
-									<div className="flex gap-2 mt-1">
-										<Input
-											id="name"
-											value={metadata.name}
-											onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
-											placeholder="my-awesome-project"
-											className="flex-1"
-										/>
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={handleAutoGenerateName}
-											disabled={isLoading}
-										>
-											自动
-										</Button>
+			<div className="flex-1 overflow-hidden">
+				<PanelGroup direction="horizontal" className="h-full">
+					{/* Configuration Panel */}
+					<Panel id="config-panel" defaultSize={50} minSize={30}>
+						<div className="flex flex-col h-full bg-white border-r">
+							<ScrollArea className="flex-1">
+								<div className="p-4 space-y-4">
+									{/* AI Project Description Input */}
+									<div className="mb-2">
+										<div className="mb-1">
+											<Label className="text-sm flex items-center gap-1">
+												<Sparkles className="h-4 w-4 text-blue-500"/>
+												AI 项目描述
+											</Label>
+											<p className="text-xs text-muted-foreground">
+												用自然语言描述你的项目 (按 Enter 发送，Alt+Enter 换行)
+											</p>
+										</div>
+										<div className="relative">
+											<Textarea
+												value={aiPrompt}
+												onChange={(e) => setAiPrompt(e.target.value)}
+												onKeyDown={handleKeyDown}
+												placeholder="例如：我需要一个带有用户认证、MySQL 数据库和 REST API 的微服务系统..."
+												className="pr-12 resize-none text-sm"
+												rows={2}
+												disabled={isAiProcessing}
+											/>
+											<Button
+												className="absolute right-2 bottom-2"
+												size="icon"
+												variant="ghost"
+												onClick={handleAiSuggest}
+												disabled={isAiProcessing || !aiPrompt.trim()}
+											>
+												{isAiProcessing ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>}
+											</Button>
+										</div>
 									</div>
-								</div>
 
-								<div>
-									<Label htmlFor="description">项目描述</Label>
-									<Textarea
-										id="description"
-										value={metadata.description}
-										onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
-										placeholder="简要描述你的项目功能和目标"
-										className="mt-1"
-										rows={3}
-									/>
-								</div>
-
-								<div>
-									<Label>项目类型</Label>
-									<Select
-										value={metadata.type}
-										onValueChange={(value) => setMetadata({ ...metadata, type: value })}
-									>
-										<SelectTrigger className="mt-1">
-											<SelectValue placeholder="选择项目类型"/>
-										</SelectTrigger>
-										<SelectContent>
-											{projectTypes.map((type) => (
-												<SelectItem key={type.value} value={type.value}>
-													{type.label}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-
-								<div>
-									<Label>编程语言</Label>
-									<Select
-										value={metadata.language}
-										onValueChange={(value) => {
-											const newFramework = frameworks[value as keyof typeof frameworks]?.[0]?.value || '';
-											setMetadata({ ...metadata, language: value, framework: newFramework });
-										}}
-									>
-										<SelectTrigger className="mt-1">
-											<SelectValue placeholder="选择编程语言"/>
-										</SelectTrigger>
-										<SelectContent>
-											{languages.map((lang) => (
-												<SelectItem key={lang.value} value={lang.value}>
-													{lang.label}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-
-								<div>
-									<Label>框架</Label>
-									<Select
-										value={metadata.framework}
-										onValueChange={(value) => setMetadata({ ...metadata, framework: value })}
-									>
-										<SelectTrigger className="mt-1">
-											<SelectValue placeholder="选择框架"/>
-										</SelectTrigger>
-										<SelectContent>
-											{frameworks[metadata.language as keyof typeof frameworks]?.map((framework) => (
-												<SelectItem key={framework.value} value={framework.value} className={
-													framework.legacy ? "text-amber-500 flex items-center gap-1" : ""
-												}>
-													{framework.label}
-													{framework.legacy && (
-														<span
-															className="ml-1 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
-															Legacy
-														</span>
-													)}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								</div>
-							</CardContent>
-						</Card>
-
-						<Card className="col-span-2">
-							<CardHeader>
-								<CardTitle>功能特性</CardTitle>
-								<CardDescription>选择需要包含的组件和功能</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<ScrollArea className="h-[450px] pr-4">
-									<div className="space-y-6">
-										{featureCategories.map((category) => (
-											<div key={category.title} className="space-y-3">
-												<h3 className="text-lg font-medium">{category.title}</h3>
-												<p className="text-sm text-muted-foreground">{category.description}</p>
-												<div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-													{category.features.map((feature) => (
-														<div key={feature.id} className="flex items-start space-x-2 p-2 rounded hover:bg-muted/50">
-															<Checkbox
-																id={feature.id}
-																checked={metadata.features.includes(feature.id)}
-																onCheckedChange={(checked) =>
-																	handleFeatureToggle(feature.id, checked === true)
-																}
-																className="mt-1"
-															/>
-															<div>
-																<Label
-																	htmlFor={feature.id}
-																	className="font-medium cursor-pointer"
-																>
-																	{feature.label}
-																</Label>
-																<p className="text-xs text-muted-foreground mt-0.5">{feature.description}</p>
-															</div>
-														</div>
-													))}
+									{/* Project Basic Info - More Compact Layout */}
+									<div className="space-y-4">
+										{/* Name and Description in one row with different widths */}
+										<div className="flex gap-3">
+											<div className="w-2/5">
+												<Label htmlFor="name" className="text-xs">项目名称</Label>
+												<div className="flex gap-1 mt-1">
+													<Input
+														id="name"
+														value={metadata.name}
+														onChange={(e) => setMetadata({ ...metadata, name: e.target.value })}
+														placeholder="my-awesome-project"
+														className="flex-1 text-sm h-9"
+													/>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={handleAutoGenerateName}
+														disabled={isLoading}
+														className="text-xs h-9 whitespace-nowrap"
+													>
+														自动
+													</Button>
 												</div>
 											</div>
-										))}
+
+											<div className="flex-1">
+												<Label htmlFor="description" className="text-xs">项目描述</Label>
+												<Textarea
+													id="description"
+													value={metadata.description}
+													onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
+													placeholder="简要描述你的项目功能和目标"
+													className="mt-1 text-sm resize-none"
+													rows={1}
+												/>
+											</div>
+										</div>
+
+										{/* Type, Language, Framework in one row */}
+										<div className="flex gap-3">
+											<div className="flex-1">
+												<Label className="text-xs">项目类型</Label>
+												<Select
+													value={metadata.type}
+													onValueChange={(value) => setMetadata({ ...metadata, type: value })}
+												>
+													<SelectTrigger className="mt-1 text-sm h-9">
+														<SelectValue placeholder="选择项目类型"/>
+													</SelectTrigger>
+													<SelectContent>
+														{projectTypes.map((type) => (
+															<SelectItem key={type.value} value={type.value} className="text-sm">
+																{type.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+
+											<div className="flex-1">
+												<Label className="text-xs">编程语言</Label>
+												<Select
+													value={metadata.language}
+													onValueChange={(value) => {
+														const newFramework = frameworks[value as keyof typeof frameworks]?.[0]?.value || '';
+														setMetadata({ ...metadata, language: value, framework: newFramework });
+													}}
+												>
+													<SelectTrigger className="mt-1 text-sm h-9">
+														<SelectValue placeholder="选择编程语言"/>
+													</SelectTrigger>
+													<SelectContent>
+														{languages.map((lang) => (
+															<SelectItem key={lang.value} value={lang.value} className="text-sm">
+																{lang.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+
+											<div className="flex-1">
+												<Label className="text-xs">框架</Label>
+												<Select
+													value={metadata.framework}
+													onValueChange={(value) => setMetadata({ ...metadata, framework: value })}
+												>
+													<SelectTrigger className="mt-1 text-sm h-9">
+														<SelectValue placeholder="选择框架"/>
+													</SelectTrigger>
+													<SelectContent>
+														{frameworks[metadata.language as keyof typeof frameworks]?.map((framework) => (
+															<SelectItem key={framework.value} value={framework.value} className={
+																framework.legacy ? "text-amber-500 flex items-center gap-1 text-sm" : "text-sm"
+															}>
+																{framework.label}
+																{framework.legacy && (
+																	<span
+																		className="ml-1 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
+																		Legacy
+																	</span>
+																)}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+										</div>
+
+										{/* Feature Selection - More compact categories */}
+										<div className="pt-1">
+											<h3 className="text-sm font-medium mb-2">功能特性</h3>
+
+											{featureCategories.map((category) => (
+												<div key={category.title} className="space-y-1 border rounded-md p-2 mb-3">
+													<div className="flex justify-between items-start">
+														<div>
+															<h4 className="text-xs font-medium">{category.title}</h4>
+															<p className="text-xs text-muted-foreground">{category.description}</p>
+														</div>
+													</div>
+													<div className="grid grid-cols-3 gap-x-2 gap-y-1 mt-1">
+														{category.features.map((feature) => (
+															<div key={feature.id} className="flex items-start space-x-2 p-1 rounded hover:bg-muted/50">
+																<Checkbox
+																	id={feature.id}
+																	checked={metadata.features.includes(feature.id)}
+																	onCheckedChange={(checked) =>
+																		handleFeatureToggle(feature.id, checked === true)
+																	}
+																	className="mt-0.5"
+																/>
+																<div>
+																	<Label
+																		htmlFor={feature.id}
+																		className="text-xs font-medium cursor-pointer"
+																	>
+																		{feature.label}
+																	</Label>
+																	<p className="text-[10px] text-muted-foreground leading-tight">{feature.description}</p>
+																</div>
+															</div>
+														))}
+													</div>
+												</div>
+											))}
+										</div>
+
+										<div className="flex justify-center pt-2 pb-6">
+											<Button
+												onClick={handleGenerate}
+												disabled={!metadata.name || !metadata.framework || isLoading}
+												className="px-8"
+											>
+												{isLoading ? (
+													<>
+														<Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+														生成中...
+													</>
+												) : (
+													"生成项目配置"
+												)}
+											</Button>
+										</div>
 									</div>
-								</ScrollArea>
-							</CardContent>
-						</Card>
-					</div>
-
-					<div className="mt-8 flex justify-center">
-						<Button
-							size="lg"
-							onClick={handleGenerate}
-							disabled={!metadata.name || !metadata.framework || isLoading}
-							className="px-8"
-						>
-							{isLoading ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-									生成中...
-								</>
-							) : (
-								"生成项目模板"
-							)}
-						</Button>
-					</div>
-				</TabsContent>
-
-				<TabsContent value="result">
-					<Card>
-						<CardHeader>
-							<CardTitle>项目配置 JSON</CardTitle>
-							<CardDescription>
-								{metadata.name} ({metadata.language} / {currentFrameworkLabel})
-								{allFrameworks.find(f => f.value === metadata.framework)?.legacy && (
-									<span
-										className="ml-2 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
-										Legacy
-									</span>
-								)}
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							{isLoading ? (
-								<div className="flex flex-col items-center justify-center py-12">
-									<Loader2 className="h-12 w-12 animate-spin text-primary mb-4"/>
-									<p className="text-muted-foreground">生成项目配置中，这可能需要一点时间...</p>
 								</div>
-							) : (
-								<>
-									<ScrollArea className="h-[600px] w-full">
-										<CodeBlock code={generatedResult} language="json"/>
-									</ScrollArea>
-								</>
-							)}
-						</CardContent>
-					</Card>
+							</ScrollArea>
+						</div>
+					</Panel>
 
-					<div className="mt-6 flex justify-center gap-4">
-						<Button variant="outline" onClick={() => setActiveTab('config')}>
-							返回配置
-						</Button>
-						<Button
-							onClick={copyToClipboard}
-							disabled={isLoading || !generatedResult}
-						>
-							复制 JSON 配置
-						</Button>
-					</div>
-				</TabsContent>
-			</Tabs>
+					<PanelResizeHandle
+						className="w-1 hover:w-2 bg-gray-200 hover:bg-blue-400 transition-all duration-150 relative group"
+					>
+						<div
+							className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded group-hover:bg-blue-600"></div>
+					</PanelResizeHandle>
+
+					{/* Result Panel */}
+					<Panel id="result-panel" defaultSize={50} minSize={30}>
+						<div className="flex flex-col h-full bg-white border-l">
+							<div className="p-3 border-b">
+								<div className="flex items-center space-x-2">
+									<FileJson className="h-5 w-5 text-blue-500"/>
+									<h2 className="text-base font-medium">配置预览</h2>
+								</div>
+								<p className="text-xs text-muted-foreground mt-1">
+									{metadata.name ?
+										`${metadata.name} (${metadata.language} / ${currentFrameworkLabel})` :
+										"生成的项目配置将显示在这里"
+									}
+									{allFrameworks.find(f => f.value === metadata.framework)?.legacy && (
+										<span
+											className="ml-2 text-xs bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-1 py-0.5 rounded">
+											Legacy
+										</span>
+									)}
+								</p>
+							</div>
+
+							<div className="flex-1 overflow-hidden p-4">
+								{isLoading ? (
+									<div className="flex flex-col items-center justify-center h-full">
+										<Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-4"/>
+										<p className="text-muted-foreground">生成项目配置中，这可能需要一点时间...</p>
+									</div>
+								) : generatedResult ? (
+									<>
+										<ScrollArea className="h-full w-full">
+											<CodeBlock code={generatedResult} language="json"/>
+										</ScrollArea>
+
+										<div className="absolute bottom-4 right-4">
+											<Button
+												onClick={copyToClipboard}
+												variant="outline"
+												size="sm"
+												className="bg-white shadow-md"
+											>
+												复制 JSON
+											</Button>
+										</div>
+									</>
+								) : (
+									<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+										<FileJson size={48} className="mb-4 text-blue-200"/>
+										<p className="text-sm">填写项目信息并点击&#34;生成项目配置&#34;按钮</p>
+										<p className="text-xs mt-2">配置生成后将显示在此处</p>
+									</div>
+								)}
+							</div>
+						</div>
+					</Panel>
+				</PanelGroup>
+			</div>
 		</div>
 	);
 }
-
