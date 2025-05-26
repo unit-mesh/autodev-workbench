@@ -421,7 +421,7 @@ Provide only the JSON object without any additional text or explanations.
 	};
 
 	return (
-		<div className="container mx-auto py-8">
+		<div className="px-8 py-8">
 			<h1 className="text-3xl font-bold mb-2">后端应用生成</h1>
 			<p className="text-muted-foreground mb-6">基于 AI 生成符合最佳实践的项目配置</p>
 
