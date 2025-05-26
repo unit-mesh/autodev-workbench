@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Code, Loader2 } from 'lucide-react'
 import { extractCodeBlocks } from "@/lib/code-highlight"
-import { LiveProvider, LiveEditor, LivePreview } from "react-live";
+import { LiveProvider, LiveEditor, LivePreview, LiveError } from "react-live";
 
 type Message = {
 	role: "user" | "assistant" | "system"
@@ -22,10 +22,36 @@ Your task is to generate high-quality, working frontend code based on user reque
 - Always provide complete, working code examples that follow best practices.
 - Always return one code block so the user can copy it easily.
 - Always include necessary imports and setup code.
+- Call render() at the end of the code block to display the component.
 
 When generating code, wrap it in markdown code blocks with the appropriate language tag.
 For example: \`\`\`jsx
-// Your code here
+type Props = {
+  label: string;
+}
+const Counter = (props: Props) => {
+  const [count, setCount] =
+    React.useState<number>(0)
+  return (
+    <div>
+      <h3 style={{
+        background: 'darkslateblue',
+        color: 'white',
+        padding: 8,
+        borderRadius: 4
+      }}>
+        {props.label}: {count} 🧮
+      </h3>
+      <button
+        onClick={() =>
+          setCount(c => c + 1)
+        }>
+        Increment
+      </button>
+    </div>
+  )
+}
+render(<Counter label="Counter" />)
 \`\`\`
 `
 
@@ -34,15 +60,12 @@ export default function AIFrontendGenerator() {
 	const [input, setInput] = useState("")
 	const [isLoading, setIsLoading] = useState(false)
 	const [generatedCode, setGeneratedCode] = useState<string>("")
-	const [codeLanguage, setCodeLanguage] = useState<string>("jsx")
-	const [activeTab, setActiveTab] = useState<string>("preview")
 	const [conversationId, setConversationId] = useState<string | null>(null)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!input.trim()) return
 
-		// Add user message
 		const userMessage = { role: "user" as const, content: input }
 		setMessages((prev) => [...prev, userMessage])
 		setInput("")
@@ -50,10 +73,10 @@ export default function AIFrontendGenerator() {
 
 		try {
 			let msgList = [...messages, userMessage];
-			if (messages.length > 0 && messages[0].role !== "system") {
+			if (msgList.length > 0 && msgList[0].role !== "system") {
 				msgList = [
 					{
-						role: "system" as const,
+						role: "system",
 						content: SYSTEM_PROMPT,
 					},
 					...msgList,
@@ -94,11 +117,9 @@ export default function AIFrontendGenerator() {
 			if (codeBlocks.length > 0) {
 				const codeBlock = codeBlocks[codeBlocks.length - 1]
 				setGeneratedCode(codeBlock.code)
-				setCodeLanguage(codeBlock.language)
 			}
 		} catch (error) {
 			console.error("Error generating response:", error)
-			// Add error message
 			setMessages((prev) => [
 				...prev,
 				{
@@ -113,7 +134,7 @@ export default function AIFrontendGenerator() {
 
 	return (
 		<div className="h-full from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-			<main className="container mx-auto p-4 py-8">
+			<main className="p-4 py-8">
 				<div className="flex flex-col gap-6">
 					<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 						<div>
@@ -190,10 +211,11 @@ export default function AIFrontendGenerator() {
 
 						<div className="flex flex-col border rounded-lg shadow-sm bg-background">
 							<div className="p-4">
-								<LiveProvider code={generatedCode}>
+								<LiveProvider code={generatedCode} noInline>
 									<div className="grid grid-cols-2 gap-4">
 										<LiveEditor className="font-mono"/>
 										<LivePreview/>
+										<LiveError className="text-red-800 bg-red-100 mt-2" />
 									</div>
 								</LiveProvider>
 							</div>
