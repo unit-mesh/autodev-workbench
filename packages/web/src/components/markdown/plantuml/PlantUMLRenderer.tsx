@@ -12,7 +12,7 @@ interface PlantUMLRendererProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function plantUmlToMarkdown(plantUml: string): string {
+export function plantUmlToMarkdown(plantUml: string): string {
   const lines = plantUml.split("\n");
   const markdownLines: string[] = [];
 
@@ -73,10 +73,10 @@ export default function PlantUMLRenderer({ value }: PlantUMLRendererProps) {
       </Button>
 
       <div className="border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-        <Image 
-          src={graphUrl} 
-          alt="PlantUML图表" 
-          className="max-w-full h-auto" 
+        <Image
+          src={graphUrl}
+          alt="PlantUML图表"
+          className="max-w-full h-auto"
           width={800}
           height={600}
           style={{ width: '100%', height: 'auto' }}

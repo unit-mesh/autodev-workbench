@@ -7,7 +7,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'node',
-		include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}'],
+		include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,tsx}'],
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json', 'html'],
