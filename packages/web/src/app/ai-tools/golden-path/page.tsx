@@ -9,7 +9,7 @@ import { Loader2, Sparkles, Send, FileJson } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import ProjectBasicInfo from './components/ProjectBasicInfo';
+import GeneratedBackendProject from './components/GeneratedBackendProject';
 
 interface ProjectMetadata {
 	name: string;
@@ -472,7 +472,7 @@ Provide only the JSON object without any additional text or explanations.
 									</div>
 
 									{/* Project Basic Info Component */}
-									<ProjectBasicInfo
+									<GeneratedBackendProject
 										metadata={metadata}
 										setMetadata={setMetadata}
 										isLoading={isLoading}

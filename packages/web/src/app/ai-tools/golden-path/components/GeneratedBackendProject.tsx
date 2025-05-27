@@ -31,7 +31,7 @@ interface ProjectBasicInfoProps {
 	currentFrameworkLabel: string;
 }
 
-export default function ProjectBasicInfo({
+export default function GeneratedBackendProject({
 	                                         metadata,
 	                                         setMetadata,
 	                                         isLoading,
