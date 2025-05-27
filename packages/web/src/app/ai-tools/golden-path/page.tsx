@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileJson, Save, Copy, Terminal } from 'lucide-react';
+import { Loader2, FileJson, Save, Copy, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ProjectConfigForm from './components/ProjectConfigForm';
+// 假设有 Dialog 组件
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface ProjectMetadata {
 	name: string;
@@ -37,6 +39,7 @@ export default function GoldenPathPage() {
 	const [generatedResult, setGeneratedResult] = useState<string>('');
 	const [isSaving, setIsSaving] = useState(false);
 	const [savedConfigId, setSavedConfigId] = useState<string>('');
+	const [dialogOpen, setDialogOpen] = useState(false);
 
 	const frameworks: Record<string, FrameworkItem[]> = {
 		java: [
@@ -231,6 +234,16 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 			});
 	};
 
+	const handleDownloadJson = () => {
+		const blob = new Blob([generatedResult], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${metadata.name || 'project-config'}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	};
+
 	return (
 		<div className="flex flex-col h-screen bg-gray-50">
 			<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
@@ -240,14 +253,91 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 					</h1>
 				</div>
 				<div className="flex items-center gap-2">
+					{/* 右上角三个 Icon Button */}
+					<Button
+						variant="ghost"
+						size="icon"
+						disabled={!generatedResult}
+						onClick={() => setDialogOpen(true)}
+						title="下载/CLI"
+					>
+						<Download className="h-5 w-5" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						disabled={!generatedResult}
+						onClick={copyToClipboard}
+						title="复制 JSON"
+					>
+						<Copy className="h-5 w-5" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						disabled={!generatedResult || isSaving}
+						onClick={handleSaveConfig}
+						title="保存配置"
+					>
+						{isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+					</Button>
 					{isLoading && (
-						<div className="flex items-center space-x-2 text-sm text-muted-foreground">
+						<div className="flex items-center space-x-2 text-sm text-muted-foreground ml-2">
 							<Loader2 className="h-3 w-3 animate-spin"/>
 							<span>生成中...</span>
 						</div>
 					)}
 				</div>
 			</header>
+
+			{/* 弹窗 Dialog */}
+			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>下载配置或使用 CLI</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4">
+						<Button
+							variant="outline"
+							className="w-full"
+							onClick={() => {
+								handleDownloadJson();
+								setDialogOpen(false);
+							}}
+							disabled={!generatedResult}
+						>
+							<Download className="h-4 w-4 mr-2" />
+							下载 JSON 配置
+						</Button>
+						{savedConfigId && (
+							<div>
+								<div className="flex items-center mb-2">
+									<span className="text-sm font-medium text-gray-700">CLI 命令</span>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="ml-2"
+										onClick={() => {
+											copyCliCommand();
+											setDialogOpen(false);
+										}}
+									>
+										<Copy className="h-4 w-4" />
+									</Button>
+								</div>
+								<code className="block text-xs text-gray-600 font-mono break-all bg-gray-100 rounded p-2">
+									{getCliCommand()}
+								</code>
+							</div>
+						)}
+					</div>
+					<DialogFooter>
+						<Button variant="secondary" onClick={() => setDialogOpen(false)}>
+							关闭
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<div className="flex-1 overflow-hidden">
 				<PanelGroup direction="horizontal" className="h-full">
@@ -297,64 +387,9 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 										<p className="text-muted-foreground">生成项目配置中，这可能需要一点时间...</p>
 									</div>
 								) : generatedResult ? (
-									<>
-										<ScrollArea className="h-full w-full mb-20">
-											<CodeBlock code={generatedResult} language="json"/>
-										</ScrollArea>
-
-										{/* CLI Command Display */}
-										{savedConfigId && (
-											<div className="absolute bottom-20 left-4 right-4 bg-gray-50 border rounded-lg p-3 mb-2">
-												<div className="flex items-center justify-between">
-													<div className="flex items-center space-x-2">
-														<Terminal className="h-4 w-4 text-green-600"/>
-														<span className="text-sm font-medium text-gray-700">CLI 命令</span>
-													</div>
-													<Button
-														onClick={copyCliCommand}
-														variant="ghost"
-														size="sm"
-														className="h-6 w-6 p-0"
-													>
-														<Copy className="h-3 w-3"/>
-													</Button>
-												</div>
-												<code className="text-xs text-gray-600 font-mono break-all">
-													{getCliCommand()}
-												</code>
-											</div>
-										)}
-
-										<div className="absolute bottom-4 right-4 flex gap-2">
-											<Button
-												onClick={handleSaveConfig}
-												variant="outline"
-												size="sm"
-												className="bg-white shadow-md"
-												disabled={isSaving}
-											>
-												{isSaving ? (
-													<>
-														<Loader2 className="h-3 w-3 animate-spin mr-1" />
-														保存中
-													</>
-												) : (
-													<>
-														<Save className="h-3 w-3 mr-1" />
-														保存配置
-													</>
-												)}
-											</Button>
-											<Button
-												onClick={copyToClipboard}
-												variant="outline"
-												size="sm"
-												className="bg-white shadow-md"
-											>
-												复制 JSON
-											</Button>
-										</div>
-									</>
+									<ScrollArea className="h-full w-full">
+										<CodeBlock code={generatedResult} language="json"/>
+									</ScrollArea>
 								) : (
 									<div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
 										<FileJson size={48} className="mb-4 text-blue-200"/>
