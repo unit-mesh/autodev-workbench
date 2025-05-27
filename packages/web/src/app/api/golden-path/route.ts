@@ -32,7 +32,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('获取Golden Path配置失败:', error);
     return NextResponse.json(
-      { error: '获取配置失败' },
+      { 
+        error: '获取Golden Path配置失败',
+        message: error instanceof Error ? error.message : '未知错误'
+      },
       { status: 500 }
     );
   }
@@ -65,7 +68,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('保存Golden Path配置失败:', error);
     return NextResponse.json(
-      { error: '保存配置失败' },
+      { 
+        error: '保存Golden Path配置失败',
+        message: error instanceof Error ? error.message : '未知错误'
+      },
       { status: 500 }
     );
   }
