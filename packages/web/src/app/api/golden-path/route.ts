@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/auth';
-import { prisma } from "../../../../prisma/prisma";
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
-
+    
     const configs = await prisma.goldenPathConfig.findMany({
       where: projectId ? { projectId } : {},
       orderBy: { createdAt: 'desc' },

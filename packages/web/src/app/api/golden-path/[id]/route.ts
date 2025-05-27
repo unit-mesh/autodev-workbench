@@ -19,6 +19,12 @@ export async function GET(
             description: true,
           },
         },
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 

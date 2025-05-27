@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileJson, Save } from 'lucide-react';
+import { Loader2, FileJson, Save, Copy, Terminal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -36,6 +36,7 @@ export default function GoldenPathPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [generatedResult, setGeneratedResult] = useState<string>('');
 	const [isSaving, setIsSaving] = useState(false);
+	const [savedConfigId, setSavedConfigId] = useState<string>('');
 
 	const frameworks: Record<string, FrameworkItem[]> = {
 		java: [
@@ -191,12 +192,32 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 			}
 
 			const result = await response.json();
+			setSavedConfigId(result.data.id);
 			alert(`配置已保存，ID: ${result.data.id}`);
 		} catch (error) {
 			console.error('保存配置失败:', error);
 			alert('保存配置失败，请稍后重试');
 		} finally {
 			setIsSaving(false);
+		}
+	};
+
+	const getCliCommand = () => {
+		if (!savedConfigId) return '';
+		const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.autodev.work';
+		return `npx @autodev/backend-generator add ${baseUrl}/api/golden-path/${savedConfigId}`;
+	};
+
+	const copyCliCommand = () => {
+		const command = getCliCommand();
+		if (command) {
+			navigator.clipboard.writeText(command)
+				.then(() => {
+					alert("CLI 命令已复制到剪贴板");
+				})
+				.catch(err => {
+					console.error("无法复制到剪贴板: ", err);
+				});
 		}
 	};
 
@@ -277,9 +298,32 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 									</div>
 								) : generatedResult ? (
 									<>
-										<ScrollArea className="h-full w-full">
+										<ScrollArea className="h-full w-full mb-20">
 											<CodeBlock code={generatedResult} language="json"/>
 										</ScrollArea>
+
+										{/* CLI Command Display */}
+										{savedConfigId && (
+											<div className="absolute bottom-20 left-4 right-4 bg-gray-50 border rounded-lg p-3 mb-2">
+												<div className="flex items-center justify-between">
+													<div className="flex items-center space-x-2">
+														<Terminal className="h-4 w-4 text-green-600"/>
+														<span className="text-sm font-medium text-gray-700">CLI 命令</span>
+													</div>
+													<Button
+														onClick={copyCliCommand}
+														variant="ghost"
+														size="sm"
+														className="h-6 w-6 p-0"
+													>
+														<Copy className="h-3 w-3"/>
+													</Button>
+												</div>
+												<code className="text-xs text-gray-600 font-mono break-all">
+													{getCliCommand()}
+												</code>
+											</div>
+										)}
 
 										<div className="absolute bottom-4 right-4 flex gap-2">
 											<Button
