@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileJson } from 'lucide-react';
+import { Loader2, FileJson, Save } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -35,6 +35,7 @@ export default function GoldenPathPage() {
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [generatedResult, setGeneratedResult] = useState<string>('');
+	const [isSaving, setIsSaving] = useState(false);
 
 	const frameworks: Record<string, FrameworkItem[]> = {
 		java: [
@@ -164,6 +165,41 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 		}
 	};
 
+	const handleSaveConfig = async () => {
+		if (!generatedResult || !metadata.name) {
+			alert('请先生成配置并确保项目名称不为空');
+			return;
+		}
+
+		setIsSaving(true);
+		try {
+			const response = await fetch('/api/golden-path', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					name: metadata.name,
+					description: metadata.description,
+					metadata: metadata,
+					config: JSON.parse(generatedResult),
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error('保存失败');
+			}
+
+			const result = await response.json();
+			alert(`配置已保存，ID: ${result.data.id}`);
+		} catch (error) {
+			console.error('保存配置失败:', error);
+			alert('保存配置失败，请稍后重试');
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(generatedResult)
 			.then(() => {
@@ -245,7 +281,26 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 											<CodeBlock code={generatedResult} language="json"/>
 										</ScrollArea>
 
-										<div className="absolute bottom-4 right-4">
+										<div className="absolute bottom-4 right-4 flex gap-2">
+											<Button
+												onClick={handleSaveConfig}
+												variant="outline"
+												size="sm"
+												className="bg-white shadow-md"
+												disabled={isSaving}
+											>
+												{isSaving ? (
+													<>
+														<Loader2 className="h-3 w-3 animate-spin mr-1" />
+														保存中
+													</>
+												) : (
+													<>
+														<Save className="h-3 w-3 mr-1" />
+														保存配置
+													</>
+												)}
+											</Button>
 											<Button
 												onClick={copyToClipboard}
 												variant="outline"

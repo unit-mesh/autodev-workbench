@@ -122,6 +122,7 @@ model User {
   projects      Project[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  goldenPathConfigs GoldenPathConfig[]
 
   @@map("users")
 }
@@ -158,6 +159,7 @@ model Project {
   conceptDictionaries ConceptDictionary[]
   apiResources        ApiResource[]
   symbolAnalyses      SymbolAnalysis[]
+  goldenPathConfigs GoldenPathConfig[]
 
   isDefault Boolean @default(false)
   isPublic  Boolean @default(false)
@@ -206,4 +208,22 @@ model SymbolAnalysis {
 
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id])
+}
+
+model GoldenPathConfig {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  metadata    Json     // 存储项目元数据
+  config      Json     // 存储生成的JSON配置
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联到项目（可选）
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+  
+  // 关联到用户
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 }
