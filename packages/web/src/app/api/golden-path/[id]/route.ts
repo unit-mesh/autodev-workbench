@@ -38,9 +38,14 @@ export async function GET(
     return NextResponse.json(config);
   } catch (error) {
     console.error('获取Golden Path配置失败:', error);
+    const errorResponse = {
+      error: '获取配置失败',
+      ...(process.env.NODE_ENV === 'development' && {
+        details: error instanceof Error ? error.message : String(error)
+      })
+    };
     return NextResponse.json(
-      { error: '获取配置失败' },
-      { status: 500 }
+      errorResponse, { status: 500 }
     );
   }
 }
