@@ -15,6 +15,101 @@ program
   .description('Backend project generator with support for parsing and generating project configurations')
   .version('0.1.0');
 
+// Add command - NEW
+program
+  .command('add')
+  .description('Download and generate project from a Golden Path configuration URL')
+  .argument('<url>', 'URL to the Golden Path configuration API endpoint')
+  .option('-o, --output <dir>', 'Output directory for the generated project')
+  .option('--overwrite', 'Overwrite existing files')
+  .option('--dry-run', 'Show what would be generated without creating files')
+  .option('--save-config', 'Save the downloaded configuration to a local file')
+  .action(async (url: string, options: { 
+    output?: string; 
+    overwrite?: boolean; 
+    dryRun?: boolean;
+    saveConfig?: boolean;
+  }) => {
+    try {
+      console.log(chalk.blue('🌐 Downloading Golden Path configuration...'));
+      console.log(chalk.gray(`   URL: ${url}`));
+      
+      // Download configuration from URL
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch configuration: ${response.status} ${response.statusText}`);
+      }
+      
+      const configData = await response.json();
+      
+      // Extract the actual config from the API response
+      let projectConfig: Project;
+      if (configData.config) {
+        // API response format: { id, name, description, config: Project }
+        projectConfig = configData.config;
+        console.log(chalk.green('✅ Configuration downloaded successfully!'));
+        console.log(chalk.cyan(`   Name: ${configData.name || 'Unknown'}`));
+        console.log(chalk.cyan(`   Description: ${configData.description || 'No description'}`));
+      } else {
+        // Direct project config format
+        projectConfig = configData;
+        console.log(chalk.green('✅ Configuration downloaded successfully!'));
+      }
+      
+      // Validate the downloaded configuration
+      const validation = ProjectParser.validate(projectConfig);
+      if (!validation.success) {
+        throw new ProjectParseError('Downloaded configuration is invalid', validation.error);
+      }
+      
+      const project = validation.data!;
+      
+      // Save config to local file if requested
+      if (options.saveConfig) {
+        const configFileName = `${project.projectConfig.name}-config.json`;
+        await ProjectGenerator.saveToFile(project, configFileName);
+        console.log(chalk.green(`💾 Configuration saved to: ${configFileName}`));
+      }
+      
+      // Determine output directory
+      const outputDir = options.output || `./${project.projectConfig.name}`;
+      
+      console.log(chalk.blue(`🏗️  Generating project structure to: ${outputDir}`));
+      
+      // Generate the project
+      const generator = new ProjectGenerator(project, {
+        outputDir,
+        overwrite: options.overwrite,
+        dryRun: options.dryRun,
+      });
+      
+      await generator.generate();
+      
+      if (options.dryRun) {
+        console.log(chalk.yellow('🔍 Dry run completed. No files were created.'));
+      } else {
+        console.log(chalk.green('🎉 Project generated successfully!'));
+        console.log(chalk.cyan(`📁 Project location: ${path.resolve(outputDir)}`));
+        console.log(chalk.cyan('💡 Next steps:'));
+        console.log(chalk.gray(`   cd ${outputDir}`));
+        console.log(chalk.gray('   # Follow the README.md for further instructions'));
+      }
+      
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error(chalk.red('❌ Network error:'), 'Unable to connect to the URL. Please check your internet connection and URL.');
+      } else if (error instanceof ProjectParseError || error instanceof ProjectGenerateError) {
+        console.error(chalk.red('❌ Generation failed:'), error.message);
+        if (error.details) {
+          console.error(chalk.gray('Details:'), JSON.stringify(error.details, null, 2));
+        }
+      } else {
+        console.error(chalk.red('❌ Unexpected error:'), error);
+      }
+      process.exit(1);
+    }
+  });
+
 // Parse command
 program
   .command('parse')
@@ -212,4 +307,4 @@ program
     }
   });
 
-program.parse(); 
+program.parse();
