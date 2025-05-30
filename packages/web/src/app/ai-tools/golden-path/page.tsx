@@ -76,13 +76,25 @@ export default function GoldenPathPage() {
 	const handleGenerate = async () => {
 		setIsLoading(true);
 
+		// 首先需要将前端的 type 映射到后端期望的类型
+		const mapProjectType = (frontendType: string) => {
+			switch (frontendType) {
+				case 'web':
+				case 'api':
+					return 'monolith';
+				case 'microservice':
+					return 'microservice';
+				case 'library':
+				case 'cli':
+					return 'library';
+				default:
+					return 'monolith';
+			}
+		};
+
 		try {
 			// Build prompt for LLM
-			const selectedFeatureLabels = metadata.features.map(featureId => {
-				// Note: Feature categories would need to be shared or imported
-				// For now, keeping the feature mapping logic here or in a shared util
-				return featureId; // Simplified for now
-			});
+			const mappedType = mapProjectType(metadata.type);
 
 			const frameworkInfo = allFrameworks.find(f => f.value === metadata.framework);
 			const frameworkLabel = frameworkInfo?.label || '';
@@ -91,37 +103,56 @@ export default function GoldenPathPage() {
 				`${frameworkLabel} (Legacy version)` : frameworkLabel;
 
 			const prompt = `
-Generate a JSON configuration for a ${frameworkDescription} ${metadata.type} application named "${metadata.name}".
+Generate a JSON configuration for a ${frameworkDescription} ${mappedType} application named "${metadata.name}".
 Description: ${metadata.description || "No description provided"}
 Programming Language: ${metadata.language}
-Required Features: ${selectedFeatureLabels.join(', ') || "No specific features selected"}
+Required Features: ${metadata.features.join(', ') || "No specific features selected"}
 ${isLegacy ? "Note: This is using a legacy version of the framework which may have different dependencies and configurations." : ""}
 
-Please provide a JSON configuration with the following structure:
+IMPORTANT: You must return a JSON object that exactly matches this schema structure:
+
 {
   "projectConfig": {
     "name": "${metadata.name}",
-    "description": "${metadata.description}",
-    "type": "${metadata.type}",
+    "description": "${metadata.description || "No description provided"}",
+    "type": "${mappedType}",
     "language": "${metadata.language}",
     "framework": "${metadata.framework}"
   },
   "features": [
-    // Array of selected feature IDs
+    // Array of selected feature IDs as strings
+    // Use these exact feature IDs: ${metadata.features.join(', ')}
   ],
   "structure": {
-    // Key directories and files in the project structure
+    "directories": [
+      // Array of directory paths as strings (e.g., "src/main/java", "src/test/java")
+    ],
+    "files": [
+      // Array of file paths as strings (e.g., "pom.xml", "README.md")
+    ]
   },
   "dependencies": {
-    // Key dependencies needed for the project
-    // If using Spring Boot, specify appropriate version-specific dependencies
+    // Object with dependency names as keys and versions as string values
+    // Example: "spring-boot-starter": "3.2.0"
   },
   "configurations": {
-    // Configuration files content or snippets
+    // Object with configuration file names as keys and arrays of configuration lines as values
+    // Example: "application.yml": ["server:", "  port: 8080"]
   }
 }
 
-Only return the JSON object without any explanation or markdown. Ensure the JSON is valid and well-formatted.
+For the selected features (${metadata.features.join(', ') || 'none'}), include appropriate:
+1. Project structure directories and files
+2. Dependencies with specific versions
+3. Configuration files with proper content lines
+
+Examples for common features:
+- "database": Add JPA dependencies, database configuration in application.yml
+- "auth": Add security dependencies, security configuration
+- "docker": Add Dockerfile and docker-compose.yml files
+- "api-docs": Add OpenAPI/Swagger dependencies and configuration
+
+Return ONLY the JSON object without any explanation, comments, or markdown formatting.
       `.trim();
 
 			const response = await fetch("/api/chat", {
@@ -133,7 +164,7 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 					messages: [
 						{
 							role: "system",
-							content: "You are an expert software architect specializing in creating project configurations. Provide a detailed JSON configuration for the project based on the user's requirements. Only return the JSON object without any explanation or markdown."
+							content: "You are an expert software architect. Generate project configurations that strictly follow the provided JSON schema. Return only valid JSON without any explanation, comments, or markdown formatting. Ensure all field types match the schema exactly."
 						},
 						{ role: "user", content: prompt }
 					],
@@ -147,7 +178,10 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 			const data = await response.json();
 
 			let jsonResult = data.text;
+
+			// 清理和验证 JSON 响应
 			try {
+				// 移除可能的 markdown 格式
 				const jsonMatch = jsonResult.match(/```json\s*([\s\S]*?)\s*```/) ||
 					jsonResult.match(/```\s*([\s\S]*?)\s*```/);
 
@@ -155,9 +189,42 @@ Only return the JSON object without any explanation or markdown. Ensure the JSON
 					jsonResult = jsonMatch[1].trim();
 				}
 
-				JSON.parse(jsonResult);
+				// 验证 JSON 格式
+				const parsedConfig = JSON.parse(jsonResult);
+
+				// 基本验证，确保必需字段存在
+				if (!parsedConfig.projectConfig || !parsedConfig.features ||
+				    !parsedConfig.structure || !parsedConfig.dependencies ||
+				    !parsedConfig.configurations) {
+					throw new Error("Missing required fields in generated configuration");
+				}
+
+				// 确保 type 字段符合后端期望
+				if (!['microservice', 'monolith', 'library'].includes(parsedConfig.projectConfig.type)) {
+					parsedConfig.projectConfig.type = mappedType;
+				}
+
+				jsonResult = JSON.stringify(parsedConfig, null, 2);
 			} catch (e) {
 				console.error("Invalid JSON in response", e);
+				// 如果解析失败，提供一个基本的配置模板
+				const fallbackConfig = {
+					projectConfig: {
+						name: metadata.name,
+						description: metadata.description || "No description provided",
+						type: mappedType,
+						language: metadata.language,
+						framework: metadata.framework
+					},
+					features: metadata.features,
+					structure: {
+						directories: ["src"],
+						files: ["README.md", ".gitignore"]
+					},
+					dependencies: {},
+					configurations: {}
+				};
+				jsonResult = JSON.stringify(fallbackConfig, null, 2);
 			}
 
 			setGeneratedResult(jsonResult);
