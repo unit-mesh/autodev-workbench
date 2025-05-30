@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React, { useCallback } from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -138,7 +138,7 @@ render(<Example />)
 		}
 	}
 
-	const copyCode = () => {
+	const copyCode = useCallback(() => {
 		navigator.clipboard.writeText(generatedCode)
 			.then(() => {
 				console.log("Code copied to clipboard")
@@ -146,7 +146,7 @@ render(<Example />)
 			.catch(err => {
 				console.error("Failed to copy code: ", err)
 			})
-	}
+	}, [generatedCode])
 
 	const resetCode = () => {
 		setGeneratedCode(`
