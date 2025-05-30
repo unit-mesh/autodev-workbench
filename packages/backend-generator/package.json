@@ -1,6 +1,6 @@
 {
   "name": "@autodev/backend-generator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Backend project generator with support for parsing and generating project configurations",
   "main": "./dist/index.js",
   "bin": {
@@ -42,4 +42,4 @@
   "author": "AutoDev Team",
   "license": "MIT",
   "packageManager": "pnpm@10.10.0"
-} 
+}
