@@ -106,53 +106,64 @@ export default function GoldenPathPage() {
 
 	// 根据项目配置生成项目结构
 	const generateProjectStructure = (config: ProjectMetadata) => {
-		const baseStructure = {
-			"src/": "Source code directory",
-			"README.md": "Project documentation",
-			".gitignore": "Git ignore file"
-		};
+		const directories: string[] = [];
+		const files: string[] = [];
+
+		// 基础文件
+		files.push("README.md", ".gitignore");
 
 		// 根据语言和框架添加特定结构
 		if (config.language === 'java' || config.language === 'kotlin') {
-			return {
-				...baseStructure,
-				"src/main/": "Main source directory",
-				"src/test/": "Test source directory",
-				"pom.xml": "Maven build configuration",
-				"Dockerfile": config.features.includes('docker') ? "Docker configuration" : undefined
-			};
+			directories.push(
+				"src/main/java",
+				"src/main/resources",
+				"src/test/java",
+				"src/test/resources"
+			);
+			files.push("pom.xml");
+			
+			if (config.framework.startsWith('spring')) {
+				files.push("src/main/resources/application.yml");
+			}
 		}
-
+		
 		if (config.language === 'typescript') {
-			return {
-				...baseStructure,
-				"src/": "TypeScript source files",
-				"package.json": "Node.js dependencies",
-				"tsconfig.json": "TypeScript configuration",
-				"Dockerfile": config.features.includes('docker') ? "Docker configuration" : undefined
-			};
+			directories.push("src", "dist", "node_modules");
+			files.push("package.json", "tsconfig.json");
+			
+			if (config.framework === 'next') {
+				directories.push("pages", "components", "public");
+				files.push("next.config.js");
+			}
 		}
 
-		return baseStructure;
+		if (config.language === 'python') {
+			directories.push("src", "tests", "docs");
+			files.push("requirements.txt", "setup.py");
+		}
+
+		// Docker 支持
+		if (config.features.includes('docker')) {
+			files.push("Dockerfile", "docker-compose.yml");
+		}
+
+		return { directories, files };
 	};
 
 	// 根据项目配置生成依赖项
 	const generateDependencies = (config: ProjectMetadata) => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const deps: Record<string, any> = {};
+		const deps: Record<string, string> = {};
 
 		if (config.language === 'java' && config.framework.startsWith('spring')) {
-			deps.spring = {
-				"spring-boot-starter": config.framework === 'spring3' ? "3.x" : "2.x",
-				"spring-boot-starter-web": "Web MVC support"
-			};
+			deps["spring-boot-starter"] = config.framework === 'spring3' ? "3.x" : "2.x";
+			deps["spring-boot-starter-web"] = "Web MVC support";
 
 			if (config.features.includes('database')) {
-				deps.spring["spring-boot-starter-data-jpa"] = "JPA database support";
+				deps["spring-boot-starter-data-jpa"] = "JPA database support";
 			}
 
 			if (config.features.includes('auth')) {
-				deps.spring["spring-boot-starter-security"] = "Security framework";
+				deps["spring-boot-starter-security"] = "Security framework";
 			}
 		}
 
@@ -161,21 +172,39 @@ export default function GoldenPathPage() {
 
 	// 根据项目配置生成配置文件
 	const generateConfigurations = (config: ProjectMetadata) => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const configs: Record<string, any> = {};
+		const configs: Record<string, string[]> = {};
 
-		if (config.features.includes('database')) {
-			configs["application.yml"] = {
-				datasource: {
-					url: "jdbc:postgresql://localhost:5432/mydb",
-					username: "${DB_USERNAME:admin}",
-					password: "${DB_PASSWORD:password}"
-				}
-			};
+		if (config.language === 'java' && config.framework.startsWith('spring')) {
+			if (config.features.includes('database')) {
+				configs["application.yml"] = [
+					"spring:",
+					"  datasource:",
+					"    url: jdbc:postgresql://localhost:5432/${DB_NAME:myapp}",
+					"    username: ${DB_USERNAME:admin}",
+					"    password: ${DB_PASSWORD:password}",
+					"    driver-class-name: org.postgresql.Driver",
+					"  jpa:",
+					"    hibernate:",
+					"      ddl-auto: update",
+					"    show-sql: true"
+				];
+			}
+			
+			configs["application.properties"] = [
+				"server.port=8080",
+				"management.endpoints.web.exposure.include=health,info,metrics"
+			];
 		}
 
 		if (config.features.includes('docker')) {
-			configs["Dockerfile"] = `FROM openjdk:17-jdk-slim\nCOPY target/*.jar app.jar\nEXPOSE 8080\nENTRYPOINT ["java", "-jar", "/app.jar"]`;
+			if (config.language === 'java') {
+				configs["Dockerfile"] = [
+					"FROM openjdk:17-jdk-slim",
+					"COPY target/*.jar app.jar",
+					"EXPOSE 8080",
+					"ENTRYPOINT [\"java\", \"-jar\", \"/app.jar\"]"
+				];
+			}
 		}
 
 		return configs;
