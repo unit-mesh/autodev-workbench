@@ -180,7 +180,7 @@ render(<Example />)
 		}
 		window.addEventListener('keydown', handleKeyDown)
 		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [activeTab, generatedCode])
+	}, [activeTab, copyCode, generatedCode])
 
 	return (
 		<div className="flex flex-col h-screen bg-gray-50">
@@ -326,18 +326,18 @@ render(<Example />)
 										</Button>
 									</div>
 								</div>
-								
+
 								<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "editor" | "preview")} className="w-full">
 									<TabsList className="grid w-full grid-cols-2 rounded-none border-t bg-gray-50">
-										<TabsTrigger 
-											value="preview" 
+										<TabsTrigger
+											value="preview"
 											className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-none transition-all duration-200"
 										>
 											<Eye className="h-4 w-4" />
 											<span className="hidden sm:inline">Preview</span>
 											<span className="sm:hidden">预览</span>
 										</TabsTrigger>
-										<TabsTrigger 
+										<TabsTrigger
 											value="editor"
 											className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-none transition-all duration-200"
 										>
@@ -363,11 +363,11 @@ render(<Example />)
 												</div>
 											</div>
 										</TabsContent>
-										
+
 										<TabsContent value="editor" className="h-full m-0 p-0">
 											<div className="h-full flex flex-col">
 												<div className="flex-1 overflow-hidden">
-													<LiveEditor 
+													<LiveEditor
 														className="h-full font-mono text-sm"
 														style={{
 															minHeight: 'calc(100% - 1px)',
@@ -378,9 +378,9 @@ render(<Example />)
 												</div>
 											</div>
 										</TabsContent>
-										
+
 										{/* 共享的错误显示区域 */}
-										<LiveError 
+										<LiveError
 											className="text-red-600 bg-red-50 p-3 border-t text-sm font-mono whitespace-pre-wrap max-h-32 overflow-auto empty:hidden"
 										/>
 									</Tabs>
