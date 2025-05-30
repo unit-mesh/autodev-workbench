@@ -73,100 +73,112 @@ export default function GoldenPathPage() {
 	const allFrameworks = Object.values(frameworks).flat();
 	const currentFrameworkLabel = allFrameworks.find(f => f.value === metadata.framework)?.label || '';
 
-	const handleGenerate = async () => {
+	const handleGenerate = () => {
 		setIsLoading(true);
 
-		try {
-			// Build prompt for LLM
-			const selectedFeatureLabels = metadata.features.map(featureId => {
-				// Note: Feature categories would need to be shared or imported
-				// For now, keeping the feature mapping logic here or in a shared util
-				return featureId; // Simplified for now
-			});
+		// 构建项目配置 JSON，基于用户填写的表单数据
+		const frameworkInfo = allFrameworks.find(f => f.value === metadata.framework);
+		const isLegacy = frameworkInfo?.legacy === true;
 
-			const frameworkInfo = allFrameworks.find(f => f.value === metadata.framework);
-			const frameworkLabel = frameworkInfo?.label || '';
-			const isLegacy = frameworkInfo?.legacy === true;
-			const frameworkDescription = isLegacy ?
-				`${frameworkLabel} (Legacy version)` : frameworkLabel;
+		const projectConfig = {
+			projectConfig: {
+				name: metadata.name,
+				description: metadata.description || "No description provided",
+				type: metadata.type,
+				language: metadata.language,
+				framework: metadata.framework,
+				frameworkLabel: frameworkInfo?.label || '',
+				isLegacy: isLegacy
+			},
+			features: metadata.features,
+			structure: generateProjectStructure(metadata),
+			dependencies: generateDependencies(metadata),
+			configurations: generateConfigurations(metadata)
+		};
 
-			const prompt = `
-Generate a JSON configuration for a ${frameworkDescription} ${metadata.type} application named "${metadata.name}".
-Description: ${metadata.description || "No description provided"}
-Programming Language: ${metadata.language}
-Required Features: ${selectedFeatureLabels.join(', ') || "No specific features selected"}
-${isLegacy ? "Note: This is using a legacy version of the framework which may have different dependencies and configurations." : ""}
-
-Please provide a JSON configuration with the following structure:
-{
-  "projectConfig": {
-    "name": "${metadata.name}",
-    "description": "${metadata.description}",
-    "type": "${metadata.type}",
-    "language": "${metadata.language}",
-    "framework": "${metadata.framework}"
-  },
-  "features": [
-    // Array of selected feature IDs
-  ],
-  "structure": {
-    // Key directories and files in the project structure
-  },
-  "dependencies": {
-    // Key dependencies needed for the project
-    // If using Spring Boot, specify appropriate version-specific dependencies
-  },
-  "configurations": {
-    // Configuration files content or snippets
-  }
-}
-
-Only return the JSON object without any explanation or markdown. Ensure the JSON is valid and well-formatted.
-      `.trim();
-
-			const response = await fetch("/api/chat", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					messages: [
-						{
-							role: "system",
-							content: "You are an expert software architect specializing in creating project configurations. Provide a detailed JSON configuration for the project based on the user's requirements. Only return the JSON object without any explanation or markdown."
-						},
-						{ role: "user", content: prompt }
-					],
-				}),
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to generate response");
-			}
-
-			const data = await response.json();
-
-			let jsonResult = data.text;
-			try {
-				const jsonMatch = jsonResult.match(/```json\s*([\s\S]*?)\s*```/) ||
-					jsonResult.match(/```\s*([\s\S]*?)\s*```/);
-
-				if (jsonMatch) {
-					jsonResult = jsonMatch[1].trim();
-				}
-
-				JSON.parse(jsonResult);
-			} catch (e) {
-				console.error("Invalid JSON in response", e);
-			}
-
+		// 模拟异步操作以保持 UI 一致性
+		setTimeout(() => {
+			const jsonResult = JSON.stringify(projectConfig, null, 2);
 			setGeneratedResult(jsonResult);
-		} catch (error) {
-			console.error("Error generating project:", error);
-			setGeneratedResult("抱歉，生成项目配置时出现错误。请稍后重试。");
-		} finally {
 			setIsLoading(false);
+		}, 500);
+	};
+
+	// 根据项目配置生成项目结构
+	const generateProjectStructure = (config: ProjectMetadata) => {
+		const baseStructure = {
+			"src/": "Source code directory",
+			"README.md": "Project documentation",
+			".gitignore": "Git ignore file"
+		};
+
+		// 根据语言和框架添加特定结构
+		if (config.language === 'java' || config.language === 'kotlin') {
+			return {
+				...baseStructure,
+				"src/main/": "Main source directory",
+				"src/test/": "Test source directory",
+				"pom.xml": "Maven build configuration",
+				"Dockerfile": config.features.includes('docker') ? "Docker configuration" : undefined
+			};
 		}
+
+		if (config.language === 'typescript') {
+			return {
+				...baseStructure,
+				"src/": "TypeScript source files",
+				"package.json": "Node.js dependencies",
+				"tsconfig.json": "TypeScript configuration",
+				"Dockerfile": config.features.includes('docker') ? "Docker configuration" : undefined
+			};
+		}
+
+		return baseStructure;
+	};
+
+	// 根据项目配置生成依赖项
+	const generateDependencies = (config: ProjectMetadata) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const deps: Record<string, any> = {};
+
+		if (config.language === 'java' && config.framework.startsWith('spring')) {
+			deps.spring = {
+				"spring-boot-starter": config.framework === 'spring3' ? "3.x" : "2.x",
+				"spring-boot-starter-web": "Web MVC support"
+			};
+
+			if (config.features.includes('database')) {
+				deps.spring["spring-boot-starter-data-jpa"] = "JPA database support";
+			}
+
+			if (config.features.includes('auth')) {
+				deps.spring["spring-boot-starter-security"] = "Security framework";
+			}
+		}
+
+		return deps;
+	};
+
+	// 根据项目配置生成配置文件
+	const generateConfigurations = (config: ProjectMetadata) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const configs: Record<string, any> = {};
+
+		if (config.features.includes('database')) {
+			configs["application.yml"] = {
+				datasource: {
+					url: "jdbc:postgresql://localhost:5432/mydb",
+					username: "${DB_USERNAME:admin}",
+					password: "${DB_PASSWORD:password}"
+				}
+			};
+		}
+
+		if (config.features.includes('docker')) {
+			configs["Dockerfile"] = `FROM openjdk:17-jdk-slim\nCOPY target/*.jar app.jar\nEXPOSE 8080\nENTRYPOINT ["java", "-jar", "/app.jar"]`;
+		}
+
+		return configs;
 	};
 
 	const handleSaveConfig = async () => {
