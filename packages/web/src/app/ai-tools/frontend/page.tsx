@@ -1,102 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Code, Loader2, CodeXml } from 'lucide-react'
-/// accordion.tsx
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
-// alert.tsx
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-// alert-dialog.tsx
-import {
-	AlertDialog,
-	AlertDialogPortal,
-	AlertDialogOverlay,
-	AlertDialogTrigger,
-	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogFooter,
-	AlertDialogTitle,
-	AlertDialogDescription,
-	AlertDialogAction,
-	AlertDialogCancel,
-} from "@/components/ui/alert-dialog"
-// aspect-ratio.tsx
-import { AspectRatio } from "@/components/ui/aspect-ratio"
-// avatar.tsx
-// badge.tsx
-// breadcrumb.tsx
-// button.tsx
-// calendar.tsx
-// card.tsx
-// carousel.tsx
-// chart.tsx
-// checkbox.tsx
-// collapsible.tsx
-// command.tsx
-// context-menu.tsx
-// dialog.tsx
-// drawer.tsx
-// dropdown-menu.tsx
-// form.tsx
-// hover-card.tsx
-// input.tsx
-// input-otp.tsx
-// label.tsx
-// menubar.tsx
-// navigation-menu.tsx
-// pagination.tsx
-// popover.tsx
-// progress.tsx
-// radio-group.tsx
-// resizable.tsx
-// scroll-area.tsx
-// select.tsx
-// separator.tsx
-// sheet.tsx
-// sidebar.tsx
-// skeleton.tsx
-// slider.tsx
-// sonner.tsx
-// spinner.tsx
-// switch.tsx
-// table.tsx
-// tabs.tsx
-// textarea.tsx
-// toast.tsx
-// toaster.tsx
-// toggle.tsx
-// toggle-group.tsx
-// tooltip.tsx
+import { Code, CodeXml, Loader2, Send } from 'lucide-react'
 import { extractCodeBlocks } from "@/lib/code-highlight"
-import { LiveProvider, LiveEditor, LivePreview, LiveError } from "react-live";
+import { LiveEditor, LiveError, LivePreview, LiveProvider } from "react-live";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import uiScope from "@/lib/ui-scope";
 
 type Message = {
 	role: "user" | "assistant" | "system"
 	content: string
-}
-
-const scope = {
-	Accordion, AccordionItem, AccordionTrigger, AccordionContent,
-	Alert, AlertTitle, AlertDescription,
-	AlertDialog, AlertDialogPortal, AlertDialogOverlay, AlertDialogTrigger,
-	AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle,
-	AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
-	AspectRatio,
-	Button,
-	Textarea,
-	ScrollArea,
-	Input,
-	Checkbox,
-	Label,
 }
 
 const SYSTEM_PROMPT = `You are an expert frontend developer specializing in Reac and modern web development.
@@ -343,7 +260,7 @@ render(<Example />)
 							</div>
 
 							<div className="flex-1 overflow-auto p-4">
-								<LiveProvider code={generatedCode} noInline scope={scope}>
+								<LiveProvider code={generatedCode} noInline scope={uiScope}>
 									<div className="grid grid-cols-2 gap-4 h-full">
 										<div className="border rounded-md overflow-hidden shadow-sm">
 											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Editor</div>
