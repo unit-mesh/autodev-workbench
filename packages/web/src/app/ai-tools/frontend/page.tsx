@@ -1,22 +1,24 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Code, CodeXml, Loader2, Send } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Code, CodeXml, Loader2, Send, Eye, FileCode, Copy, RotateCcw } from 'lucide-react'
 import { extractCodeBlocks } from "@/lib/code-highlight"
 import { LiveEditor, LiveError, LivePreview, LiveProvider } from "react-live";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
-import uiScope from "@/lib/ui-scope";
+import { uiScope } from "@/lib/ui-scope";
+import { Badge } from "@/components/ui/badge"
 
 type Message = {
 	role: "user" | "assistant" | "system"
 	content: string
 }
 
-const SYSTEM_PROMPT = `You are an expert frontend developer specializing in Reac and modern web development.
+const SYSTEM_PROMPT = `You are an expert frontend developer specializing in React and modern web development.
 Your task is to generate high-quality, working frontend code based on user requests.
 
 - Tech Stack: React, Next.js, TypeScript, Tailwind CSS, Shadcn UI, Lucide icons
@@ -25,36 +27,27 @@ Your task is to generate high-quality, working frontend code based on user reque
 - Don't include imports and setup code.
 - Use React.useState instead of useState for state management.
 - Call render() at the end of the code block to display the component.
+- Available UI components: All shadcn/ui components are available in scope
+- Available icons: Lucide icons are available (e.g., Send, Code, Loader2, CodeXml)
 
 When generating code, wrap it in markdown code blocks with the appropriate language tag.
-For example: \`\`\`jsx
-type Props = {
-  label: string;
-}
-const Counter = (props: Props) => {
-  const [count, setCount] = React.useState<number>(0)
+
+Example structure:
+\`\`\`jsx
+const MyComponent = () => {
+  const [state, setState] = React.useState(initialValue)
+  
   return (
-    <div>
-      <h3 style={{
-        background: 'darkslateblue',
-        color: 'white',
-        padding: 8,
-        borderRadius: 4
-      }}>
-        {props.label}: {count} 🧮
-      </h3>
-      <button
-        onClick={() =>
-          setCount(c => c + 1)
-        }>
-        Increment
-      </button>
+    <div className="p-4">
+      {/* Your component JSX here */}
+      <Button onClick={() => setState(newValue)}>
+        Click me
+      </Button>
     </div>
   )
 }
 
-// don't call exports
-render(<Counter label="Counter" />)
+render(<MyComponent />)
 \`\`\`
 `
 
@@ -72,6 +65,8 @@ class Example extends React.Component {
 render(<Example />)
 	`)
 	const [conversationId, setConversationId] = useState<string | null>(null)
+	const [activeTab, setActiveTab] = useState<"editor" | "preview">("preview")
+	const [hasError, setHasError] = useState(false)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -143,6 +138,50 @@ render(<Example />)
 		}
 	}
 
+	const copyCode = () => {
+		navigator.clipboard.writeText(generatedCode)
+			.then(() => {
+				console.log("Code copied to clipboard")
+			})
+			.catch(err => {
+				console.error("Failed to copy code: ", err)
+			})
+	}
+
+	const resetCode = () => {
+		setGeneratedCode(`
+class Example extends React.Component {
+  render() {
+    return <strong>Hello World!</strong>;
+  }
+}
+
+render(<Example />)
+		`)
+		setHasError(false)
+	}
+
+	// 键盘快捷键
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Ctrl/Cmd + K: 切换 tab
+			if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+				e.preventDefault()
+				setActiveTab(prev => prev === "editor" ? "preview" : "editor")
+			}
+			// Ctrl/Cmd + C: 复制代码 (当焦点不在输入框时)
+			if ((e.ctrlKey || e.metaKey) && e.key === 'c' && activeTab === "preview") {
+				const activeElement = document.activeElement
+				if (activeElement?.tagName !== 'TEXTAREA' && activeElement?.tagName !== 'INPUT') {
+					e.preventDefault()
+					copyCode()
+				}
+			}
+		}
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [activeTab, generatedCode])
+
 	return (
 		<div className="flex flex-col h-screen bg-gray-50">
 			<header className="p-4 border-b bg-white z-10 flex items-center justify-between shadow-sm">
@@ -158,6 +197,10 @@ render(<Example />)
 							<span>生成代码中...</span>
 						</div>
 					)}
+					<div className="hidden md:flex items-center text-xs text-muted-foreground space-x-2">
+						<kbd className="px-2 py-1 bg-gray-100 rounded text-xs">Ctrl+K</kbd>
+						<span>切换视图</span>
+					</div>
 				</div>
 			</header>
 
@@ -251,29 +294,96 @@ render(<Example />)
 					{/* Preview Section */}
 					<Panel id="preview-panel" defaultSize={65} minSize={40}>
 						<div className="flex flex-col h-full bg-white border-l">
-							<div className="p-3 border-b">
-								<div className="flex items-center space-x-2">
-									<CodeXml className="h-5 w-5 text-indigo-500"/>
-									<h2 className="text-base font-medium">Code Preview</h2>
+							<div className="border-b">
+								<div className="flex items-center justify-between p-3">
+									<div className="flex items-center space-x-2">
+										<CodeXml className="h-5 w-5 text-indigo-500"/>
+										<h2 className="text-base font-medium">Code Preview</h2>
+										{hasError && (
+											<Badge variant="destructive" className="text-xs">
+												Error
+											</Badge>
+										)}
+									</div>
+									<div className="flex items-center space-x-2">
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={resetCode}
+											className="h-8 px-2"
+											title="Reset to default"
+										>
+											<RotateCcw className="h-4 w-4" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={copyCode}
+											className="h-8 px-2"
+											title="Copy code"
+										>
+											<Copy className="h-4 w-4" />
+										</Button>
+									</div>
 								</div>
-								<p className="text-xs text-muted-foreground mt-1">Live editor and preview of generated component</p>
+								
+								<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "editor" | "preview")} className="w-full">
+									<TabsList className="grid w-full grid-cols-2 rounded-none border-t bg-gray-50">
+										<TabsTrigger 
+											value="preview" 
+											className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-none transition-all duration-200"
+										>
+											<Eye className="h-4 w-4" />
+											<span className="hidden sm:inline">Preview</span>
+											<span className="sm:hidden">预览</span>
+										</TabsTrigger>
+										<TabsTrigger 
+											value="editor"
+											className="flex items-center space-x-2 data-[state=active]:bg-white data-[state=active]:shadow-none transition-all duration-200"
+										>
+											<FileCode className="h-4 w-4" />
+											<span className="hidden sm:inline">Editor</span>
+											<span className="sm:hidden">编辑</span>
+										</TabsTrigger>
+									</TabsList>
+								</Tabs>
 							</div>
 
-							<div className="flex-1 overflow-auto p-4">
+							<div className="flex-1 overflow-hidden">
 								<LiveProvider code={generatedCode} noInline scope={uiScope}>
-									<div className="grid grid-cols-2 gap-4 h-full">
-										<div className="border rounded-md overflow-hidden shadow-sm">
-											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Editor</div>
-											<LiveEditor className="font-mono text-sm h-full overflow-auto"/>
-										</div>
-										<div className="border rounded-md overflow-hidden shadow-sm">
-											<div className="bg-gray-100 p-2 border-b text-xs font-medium">Preview</div>
-											<div className="p-4 bg-white">
-												<LivePreview/>
-												<LiveError className="text-red-600 bg-red-50 p-2 mt-2 rounded text-xs" />
+									<Tabs value={activeTab} className="h-full">
+										<TabsContent value="preview" className="h-full m-0 p-0">
+											<div className="h-full flex flex-col">
+												<div className="flex-1 p-2 sm:p-4 bg-white overflow-auto">
+													<div className="h-full flex items-start justify-center py-8">
+														<div className="w-full max-w-4xl px-2">
+															<LivePreview />
+														</div>
+													</div>
+												</div>
 											</div>
-										</div>
-									</div>
+										</TabsContent>
+										
+										<TabsContent value="editor" className="h-full m-0 p-0">
+											<div className="h-full flex flex-col">
+												<div className="flex-1 overflow-hidden">
+													<LiveEditor 
+														className="h-full font-mono text-sm"
+														style={{
+															minHeight: 'calc(100% - 1px)',
+															backgroundColor: '#fafafa',
+															fontSize: '14px',
+														}}
+													/>
+												</div>
+											</div>
+										</TabsContent>
+										
+										{/* 共享的错误显示区域 */}
+										<LiveError 
+											className="text-red-600 bg-red-50 p-3 border-t text-sm font-mono whitespace-pre-wrap max-h-32 overflow-auto empty:hidden"
+										/>
+									</Tabs>
 								</LiveProvider>
 							</div>
 						</div>
