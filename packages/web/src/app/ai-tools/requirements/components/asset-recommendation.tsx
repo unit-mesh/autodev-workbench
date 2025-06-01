@@ -83,7 +83,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
 
   const keywordsParam = keywords && keywords.length > 0 ? `keywords=${keywords.join(',')}` : '';
 
-  // Fetch APIs without auto-selecting them
   useEffect(() => {
     const fetchApis = async () => {
       setIsLoadingApis(true)
@@ -94,7 +93,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         const fetchedApis = await response.json()
         setApis(fetchedApis)
 
-        // Remove the auto-selection logic
       } catch (error) {
         setApiError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -104,7 +102,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchApis()
   }, [keywordsParam])
 
-  // Fetch Guidelines without auto-selecting them
   useEffect(() => {
     const fetchGuidelines = async () => {
       setIsLoadingGuidelines(true)
@@ -115,7 +112,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
         const fetchedGuidelines = await response.json()
         setGuidelines(fetchedGuidelines)
 
-        // Remove the auto-selection logic
       } catch (error) {
         setGuidelinesError(error instanceof Error ? error.message : "Unknown error occurred")
       } finally {
@@ -125,7 +121,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
     fetchGuidelines()
   }, [keywordsParam])
 
-  // Fetch Code Snippets without auto-selecting them
   useEffect(() => {
     const fetchCodeSnippets = async () => {
       setIsLoadingSnippets(true)
@@ -147,7 +142,6 @@ export default function AssetRecommendation(props: AssetRecommendationProps) {
   }, [keywordsParam])
 
   const selectedCount = selectedAPIs.length + selectedCodeSnippets.length + selectedStandards.length;
-
   useEffect(() => {
     if (!isLoadingApis && apis.length > 0 && selectedAPIs.length === 0) {
       apis.forEach(api => onSelectAPI(api.id));
