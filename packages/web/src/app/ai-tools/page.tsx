@@ -51,37 +51,13 @@ export default function AIToolsPage() {
           </div>
         </div>
 
-        {/* IDE 插件配置 */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">IDE 插件配置</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a href="https://github.com/unit-mesh/auto-dev" target="_blank" className="block">
-              <div className="p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                <h3 className="font-medium text-gray-900 mb-2">AutoDev 插件</h3>
-                <p className="text-sm text-gray-600">
-                  下载和安装 AutoDev
-                </p>
-              </div>
-            </a>
-            <a href="https://ide.unitmesh.cc/" target="_blank" className="block">
-              <div className="p-4 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
-                <h3 className="font-medium text-gray-900 mb-2">插件文档</h3>
-                <p className="text-sm text-gray-600">
-                  阅读 AutoDev 文档
-                </p>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        {/* CLI 工具下载 */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">CLI 工具下载</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-gray-50 rounded-md">
               <h3 className="font-medium text-gray-900 mb-2">命令行工具</h3>
               <p className="text-sm text-gray-600">
-                下载和安装 AutoDev Work CLI 工具
+                下载和安装 AutoDev Workbench CLI 工具
               </p>
             </div>
             <div className="p-4 bg-gray-50 rounded-md">
