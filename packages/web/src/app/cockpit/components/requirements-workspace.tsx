@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import AssetRecommendation from "@/app/ai-tools/requirements/components/asset-recommendation"
 import RequirementCardComponent from "@/app/ai-tools/requirements/components/requirement-card"
 import EditRequirementDialog from "@/app/ai-tools/requirements/components/edit-requirement-dialog"
-import { useRequirementCardActions } from "@/app/ai-tools/requirements/hooks/useRequirementCardActions"
+import { useRequirementCard } from "@/app/ai-tools/requirements/use-requirement-card"
 
 interface RequirementsWorkspaceProps {
 	currentRequirement: string
@@ -78,7 +78,7 @@ export default function RequirementsWorkspace({
 		handleSaveEdit,
 		handleSaveAsDraft,
 		handleGenerateTask,
-	} = useRequirementCardActions({
+	} = useRequirementCard({
 		requirementCard,
 		setRequirementCard,
 		resetConversation,

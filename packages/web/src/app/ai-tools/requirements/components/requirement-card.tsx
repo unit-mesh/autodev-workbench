@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { RequirementCard } from "@/app/ai-tools/requirements/types/requirement.types";
+import { RequirementCard } from "@/types/requirement.types";
 import { Edit3, Clipboard, Sparkles, Copy, Check, Loader2 } from "lucide-react";
-import { EditableRequirementCardField } from "@/app/ai-tools/requirements/types/requirement.types";
+import { EditableRequirementCardField } from "@/types/requirement.types";
 import { ApiResource, CodeAnalysis, Guideline } from "@/types/project.type";
 import {
   Dialog,

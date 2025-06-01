@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EditableRequirementCardField } from "../types/requirement.types";
+import { EditableRequirementCardField } from "../../../../types/requirement.types";
 
 interface EditRequirementDialogProps {
 	open: boolean;

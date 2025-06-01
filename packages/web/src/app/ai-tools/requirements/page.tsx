@@ -21,7 +21,7 @@ import RequirementInfoPanel from "./components/requirement-info-panel"
 import AwarenessInput from "@/components/shared/awareness-input"
 import { Message, useConversation } from "@/hooks/use-conversation"
 import EditRequirementDialog from "./components/edit-requirement-dialog"
-import { useRequirementCardActions } from "./hooks/useRequirementCardActions"
+import { useRequirementCard } from "./use-requirement-card"
 
 export default function ChatPage() {
 	const { data: session, status } = useSession()
@@ -66,7 +66,7 @@ export default function ChatPage() {
 		handleSaveEdit,
 		handleSaveAsDraft,
 		handleGenerateTask,
-	} = useRequirementCardActions({
+	} = useRequirementCard({
 		requirementCard,
 		setRequirementCard,
 		resetConversation,
