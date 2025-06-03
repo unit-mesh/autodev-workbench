@@ -7,7 +7,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CodeBlock } from "@/components/code/code-block";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ProjectConfigForm from './components/ProjectConfigForm';
-// 假设有 Dialog 组件
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface ProjectMetadata {

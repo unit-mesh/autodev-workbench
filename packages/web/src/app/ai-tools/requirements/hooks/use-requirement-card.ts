@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RequirementCard, EditableRequirementCardField } from "../../../../types/requirement.types";
+import { RequirementCard, EditableRequirementCardField } from "@/types/requirement.types";
 
 interface UseRequirementCardActionsProps {
   requirementCard: RequirementCard | null;
