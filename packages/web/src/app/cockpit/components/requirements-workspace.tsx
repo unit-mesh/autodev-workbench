@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import AssetRecommendation from "@/app/ai-tools/requirements/components/asset-recommendation"
 import RequirementCardComponent from "@/app/ai-tools/requirements/components/requirement-card"
 import EditRequirementDialog from "@/app/ai-tools/requirements/components/edit-requirement-dialog"
-import { useRequirementCard } from "@/app/ai-tools/requirements/use-requirement-card"
+import { useRequirementCard } from "@/app/ai-tools/requirements/hooks/use-requirement-card"
 
 interface RequirementsWorkspaceProps {
 	currentRequirement: string
