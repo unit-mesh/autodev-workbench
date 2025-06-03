@@ -272,11 +272,6 @@ export default function AiSdlcHousePage() {
 					</CardContent>
 				</Card>
 			</div>
-
-			{/* Footer (No changes, kept for completeness) */}
-			<footer className="text-center mt-12 text-sm text-slate-500 dark:text-slate-400">
-				<p>这座“AI SDLC 之家”为现代软件开发提供了坚固、智能且高效的协作环境。</p>
-			</footer>
 		</div>
 	)
 }
