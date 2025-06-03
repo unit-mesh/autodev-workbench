@@ -47,6 +47,73 @@ const ToolInitialAvatar = ({ title } : { title: string; }) => {
   );
 };
 
+// Agent type configuration
+const AGENT_TYPE_CONFIG = {
+  devops: {
+    label: 'DevOps工具',
+    icon: GitBranch,
+  },
+  development: {
+    label: '开发工具',
+    icon: Package,
+  },
+  monitoring: {
+    label: '监控工具',
+    icon: Server,
+  },
+  security: {
+    label: '安全工具',
+    icon: Shield,
+  },
+  internal: {
+    label: '内部工具',
+    icon: Database,
+  },
+} as const;
+
+type AgentType = keyof typeof AGENT_TYPE_CONFIG;
+
+const CATEGORY_CONFIG = {
+  all: '全部',
+  ...Object.fromEntries(
+    Object.entries(AGENT_TYPE_CONFIG).map(([key, value]) => [key, value.label])
+  )
+} as const;
+
+const AgentTypeDisplay = ({ type }: { type: AgentType }) => {
+  const config = AGENT_TYPE_CONFIG[type];
+  const IconComponent = config.icon;
+
+  return (
+    <span className="text-xs text-gray-500 flex items-center gap-1">
+      <IconComponent size={14} />
+      {config.label}
+    </span>
+  );
+};
+
+const CategoryButton = ({
+  category,
+  isActive,
+  onClick
+}: {
+  category: string;
+  isActive: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+      isActive
+        ? "bg-blue-100 text-blue-800 border border-blue-200"
+        : "bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200"
+    )}
+  >
+    {CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG]}
+  </button>
+);
+
 const mockAgents = [
   {
     id: 1,
@@ -164,22 +231,12 @@ export default function AgentsPage() {
       <div className="mb-8 max-w-5xl mx-auto w-full">
         <div className="flex flex-wrap gap-2">
           {['all', 'devops', 'development', 'monitoring', 'security', 'internal'].map(category => (
-            <button
+            <CategoryButton
               key={category}
+              category={category}
+              isActive={activeCategory === category}
               onClick={() => setActiveCategory(category)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                activeCategory === category
-                  ? "bg-blue-100 text-blue-800 border border-blue-200"
-                  : "bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200"
-              )}
-            >
-              {category === 'all' ? '全部' :
-               category === 'devops' ? 'DevOps工具' :
-               category === 'development' ? '开发工具' :
-               category === 'monitoring' ? '监控工具' :
-               category === 'security' ? '安全工具' : '内部工具'}
-            </button>
+            />
           ))}
         </div>
       </div>
@@ -226,17 +283,7 @@ export default function AgentsPage() {
               )}
 
               <div className="flex justify-between items-center mt-auto pt-2 border-t border-gray-100">
-                <span className="text-xs text-gray-500 flex items-center gap-1">
-                  {agent.type === 'devops' ? <GitBranch size={14} /> :
-                   agent.type === 'development' ? <Package size={14} /> :
-                   agent.type === 'monitoring' ? <Server size={14} /> :
-                   agent.type === 'security' ? <Shield size={14} /> :
-                   <Database size={14} />}
-                  {agent.type === 'devops' ? 'DevOps工具' :
-                   agent.type === 'development' ? '开发工具' :
-                   agent.type === 'monitoring' ? '监控工具' :
-                   agent.type === 'security' ? '安全工具' : '内部工具'}
-                </span>
+                <AgentTypeDisplay type={agent.type as AgentType} />
                 <Link
                   href={`#agent-${agent.id}`}
                   className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:underline"
