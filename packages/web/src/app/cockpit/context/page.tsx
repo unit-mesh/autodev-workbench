@@ -67,7 +67,7 @@ export default function AiSdlcHousePage() {
 	]
 
 	const roofContextLayer = {
-		name: "6. AI 上下文与知识层 (智能屋檐)",
+		name: "6. AI 上下文与知识层",
 		description: "为 AI 提供理解代码意图、项目历史和领域知识的能力，是智能协作的基础。",
 		elements: ["代码知识图谱", "Prompt 工程", "需求溯源", "变更影响分析", "Embedding Models"],
 		icon: <BrainCircuit className="h-8 w-8 text-indigo-100 dark:text-indigo-300" />,
@@ -77,7 +77,7 @@ export default function AiSdlcHousePage() {
 	}
 
 	const roofCollaborationLayer = {
-		name: "7. 协作与智能代理层 (智能屋顶)",
+		name: "7. 协作与智能代理层",
 		description: "实现人类与 AI 智能体、以及多智能体间的无缝协作与任务编排，是人机协同的核心交互空间。",
 		icon: <Users className="h-8 w-8 text-purple-100 dark:text-purple-300" />,
 		bgColor: "bg-purple-600 dark:bg-purple-800", // Darkest part of the roof
@@ -106,11 +106,8 @@ export default function AiSdlcHousePage() {
 			<header className="text-center mb-10">
 				<h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center">
 					<Home className="h-10 w-10 mr-3 text-green-600" />
-					AI 友好型 SDLC 之家：坚实架构赋能智能开发
+					坚实架构适应，赋能智能开发
 				</h1>
-				<p className="text-slate-600 dark:text-slate-400 mt-2 text-lg">
-					将 AI 友好的软件开发生命周期架构比作一座房子，各层级协同支撑高效的人机协作。
-				</p>
 			</header>
 
 			{/* House Structure */}
