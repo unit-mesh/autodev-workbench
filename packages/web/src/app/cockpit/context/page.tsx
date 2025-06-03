@@ -1,276 +1,305 @@
-import {
-	User,
-	Bot,
-	Code,
-	Pencil,
-	Network,
-	FileJson,
-	ServerCog,
-	Users,
-	FileText,
-	Zap,
-	Home,
-	Database,
-	ShieldCheck,
-	Lightbulb,
-	BrainCircuit,
-	Layers3,
-} from "lucide-react"
+"use client"
+import { Database, Code, TestTube, Rocket, FileText, BrainCircuit, Users, Layers3, Sparkles, Target, Zap } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export default function AiSdlcHousePage() {
 	const foundation = {
-		name: "1. 基础执行层 (地基)",
-		description: "提供稳固的运行环境、计算资源、存储和网络，是所有上层建筑的基石。",
+		name: "基础设施层",
+		description: "提供稳固的运行环境、计算资源、存储和网络，是所有上层建筑的基石",
 		elements: ["Serverless", "Kubernetes", "WASM", "边缘计算", "数据库", "对象存储"],
-		icon: <Database className="h-10 w-10 text-neutral-700 dark:text-neutral-300" />,
-		bgColor: "bg-neutral-300 dark:bg-neutral-700",
-		borderColor: "border-neutral-400 dark:border-neutral-600",
-		textColor: "text-neutral-800 dark:text-neutral-200",
+		icon: <Database className="h-12 w-12 text-slate-700 dark:text-slate-300" />,
 	}
 
 	const platformBase = {
-		name: "5. 自动化平台层 (平台基础)",
-		description: "提供 CI/CD、可观测性和自动化工具，支撑高效的开发与运维流程。",
+		name: "平台基座层",
+		description: "构建统一的开发、测试、部署和运维平台，为上层应用提供标准化服务",
 		elements: [
-			"CI/CD 流水线",
-			"可观测性 (Logging, Metrics, Tracing)",
-			"IaC (Terraform, Pulumi)",
-			"AI 驱动的DevOps",
+			"CI/CD Platform",
+			"Container Orchestration",
+			"Service Mesh",
+			"API Gateway",
+			"DevSecOps Pipeline",
 			"Automated Testing Infrastructure",
 		],
-		icon: <Layers3 className="h-10 w-10 text-teal-700 dark:text-teal-300" />,
-		bgColor: "bg-teal-200 dark:bg-teal-800",
-		borderColor: "border-teal-300 dark:border-teal-700",
-		textColor: "text-teal-800 dark:text-teal-200",
+		icon: <Layers3 className="h-12 w-12 text-blue-600 dark:text-blue-400" />,
 	}
 
 	const pillars = [
 		{
-			name: "2. 服务架构层",
-			description: "定义系统如何组织、扩展和交互，确保结构合理。",
-			elements: ["Right-Fit 架构", "微服务/模块化", "弹性设计", "数据驱动"],
-			icon: <ServerCog className="h-8 w-8 text-stone-600 dark:text-stone-400" />,
+			name: "需求分析与设计",
+			description: "智能化需求理解、架构设计和技术方案生成",
+			elements: ["需求挖掘", "架构设计", "技术选型", "设计模式"],
+			icon: <FileText className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />,
+			color: "emerald",
 		},
 		{
-			name: "3. 接口与契约层",
-			description: "规范服务间的通信方式，确保信息准确传递。",
-			elements: ["API-first", "OpenAPI", "GraphQL", "CDC 测试", "服务网格"],
-			icon: <Network className="h-8 w-8 text-stone-600 dark:text-stone-400" />,
+			name: "编码与实现",
+			description: "AI辅助编程、代码生成和智能重构",
+			elements: ["代码生成", "智能补全", "重构建议", "代码审查"],
+			icon: <Code className="h-10 w-10 text-blue-600 dark:text-blue-400" />,
+			color: "blue",
 		},
 		{
-			name: "4. 开发与实现层",
-			description: "高质量代码的生产车间，关注代码本身的可维护性和效率。",
-			elements: ["SOLID", "TDD/BDD", "模块化代码", "AI 辅助编码", "代码元信息"],
-			icon: <Code className="h-8 w-8 text-stone-600 dark:text-stone-400" />,
+			name: "测试与质量保证",
+			description: "自动化测试生成、质量分析和性能优化",
+			elements: ["测试生成", "质量分析", "性能监控", "安全检测"],
+			icon: <TestTube className="h-10 w-10 text-orange-500 dark:text-orange-400" />,
+			color: "orange",
+		},
+		{
+			name: "部署与运维",
+			description: "智能化部署策略、监控预警和故障处理",
+			elements: ["自动部署", "监控告警", "故障诊断", "性能调优"],
+			icon: <Rocket className="h-10 w-10 text-purple-600 dark:text-purple-400" />,
+			color: "purple",
 		},
 	]
 
 	const roofContextLayer = {
-		name: "6. AI 上下文与知识层",
-		description: "为 AI 提供理解代码意图、项目历史和领域知识的能力，是智能协作的基础。",
+		name: "上下文与知识层",
+		description: "为 AI 提供理解代码意图、项目历史和领域知识的能力，是智能协作的基础",
 		elements: ["代码知识图谱", "Prompt 工程", "需求溯源", "变更影响分析", "Embedding Models"],
-		icon: <BrainCircuit className="h-8 w-8 text-indigo-100 dark:text-indigo-300" />,
-		bgColor: "bg-indigo-500 dark:bg-indigo-700", // Slightly lighter than L7
-		borderColor: "border-indigo-400 dark:border-indigo-600",
-		textColor: "text-indigo-50 dark:text-indigo-200",
+		icon: <BrainCircuit className="h-12 w-12 text-indigo-600 dark:text-indigo-400" />,
 	}
 
 	const roofCollaborationLayer = {
-		name: "7. 协作与智能代理层",
-		description: "实现人类与 AI 智能体、以及多智能体间的无缝协作与任务编排，是人机协同的核心交互空间。",
-		icon: <Users className="h-8 w-8 text-purple-100 dark:text-purple-300" />,
-		bgColor: "bg-purple-600 dark:bg-purple-800", // Darkest part of the roof
-		borderColor: "border-purple-500 dark:border-purple-700",
-		textColor: "text-purple-50 dark:text-purple-200",
+		name: "协作与智能代理层",
+		description: "实现人类与 AI 智能体、以及多智能体间的无缝协作与任务编排，是人机协同的核心交互空间",
+		elements: [
+			"多智能体协作",
+			"任务编排引擎",
+			"人机交互界面",
+			"工作流自动化",
+			"决策支持系统",
+			"协作知识共享",
+		],
+		icon: <Users className="h-12 w-12 text-pink-600 dark:text-pink-400" />,
 	}
 
-	const humanActivities = [
-		{ activity: "业务需求分析与定义", icon: <Pencil size={18} /> },
-		{ activity: "高阶架构设计与决策", icon: <ServerCog size={18} /> },
-		{ activity: "复杂逻辑编码与审查", icon: <Code size={18} /> },
-		{ activity: "探索性测试与用户验收", icon: <Zap size={18} /> },
-		{ activity: "战略规划与产品演进", icon: <Lightbulb size={18} /> },
-	]
-
-	const aiActivities = [
-		{ activity: "需求澄清与用例生成", icon: <FileText size={18} /> },
-		{ activity: "代码草稿生成与优化建议", icon: <Bot size={18} /> },
-		{ activity: "自动化测试用例创建", icon: <FileJson size={18} /> },
-		{ activity: "CI/CD 流程监控与故障预警", icon: <ShieldCheck size={18} /> },
-		{ activity: "代码库知识问答与文档生成", icon: <BrainCircuit size={18} /> },
-	]
+	const getColorClasses = (color: string) => {
+		const colorMap = {
+			emerald: {
+				bg: "bg-gradient-to-br from-emerald-50 via-white to-emerald-100/50 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-900/30",
+				border: "border-emerald-200/60 dark:border-emerald-800/60",
+				iconRing: "ring-emerald-100 dark:ring-emerald-900/50",
+				badge: "bg-emerald-100/80 text-emerald-700 hover:bg-emerald-200/80 dark:bg-emerald-900/50 dark:text-emerald-300",
+			},
+			blue: {
+				bg: "bg-gradient-to-br from-blue-50 via-white to-blue-100/50 dark:from-blue-950/30 dark:via-slate-900 dark:to-blue-900/30",
+				border: "border-blue-200/60 dark:border-blue-800/60",
+				iconRing: "ring-blue-100 dark:ring-blue-900/50",
+				badge: "bg-blue-100/80 text-blue-700 hover:bg-blue-200/80 dark:bg-blue-900/50 dark:text-blue-300",
+			},
+			orange: {
+				bg: "bg-gradient-to-br from-orange-50 via-white to-orange-100/50 dark:from-orange-950/30 dark:via-slate-900 dark:to-orange-900/30",
+				border: "border-orange-200/60 dark:border-orange-800/60",
+				iconRing: "ring-orange-100 dark:ring-orange-900/50",
+				badge: "bg-orange-100/80 text-orange-700 hover:bg-orange-200/80 dark:bg-orange-900/50 dark:text-orange-300",
+			},
+			purple: {
+				bg: "bg-gradient-to-br from-purple-50 via-white to-purple-100/50 dark:from-purple-950/30 dark:via-slate-900 dark:to-purple-900/30",
+				border: "border-purple-200/60 dark:border-purple-800/60",
+				iconRing: "ring-purple-100 dark:ring-purple-900/50",
+				badge: "bg-purple-100/80 text-purple-700 hover:bg-purple-200/80 dark:bg-purple-900/50 dark:text-purple-300",
+			},
+		}
+		return colorMap[color as keyof typeof colorMap] || colorMap.blue
+	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-sky-100 to-slate-100 dark:from-sky-900 dark:to-slate-950 p-4 md:p-8">
-			<header className="text-center mb-10">
-				<h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center">
-					<Home className="h-10 w-10 mr-3 text-green-600" />
-					坚实架构适应，赋能智能开发
-				</h1>
-			</header>
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-6">
+			<div className="max-w-7xl mx-auto space-y-8">
+				{/* Header */}
+				<div className="text-center space-y-6 mb-16">
+					<div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full text-white shadow-lg">
+						<Sparkles className="h-6 w-6" />
+						<span className="font-semibold text-lg">AI SDLC House</span>
+						<Sparkles className="h-6 w-6" />
+					</div>
+					<h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-slate-200 dark:via-blue-400 dark:to-purple-400">
+						AI 友好的架构：适应式架构实践
+					</h1>
+					<p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
+						构建人工智能驱动的软件开发生态系统，实现智能化、协作化的开发体验
+					</p>
+				</div>
 
-			{/* House Structure */}
-			<div className="max-w-5xl mx-auto">
-				{/* Roof - Top Part: L7 Collaboration & Agent Layer (with Human/AI Paths) */}
-				<Card className={`mb-1 shadow-xl ${roofCollaborationLayer.bgColor} ${roofCollaborationLayer.borderColor}`}>
-					<CardHeader className="text-center pb-2">
-						<CardTitle
-							className={`text-2xl font-bold flex items-center justify-center ${roofCollaborationLayer.textColor}`}
-						>
-							{roofCollaborationLayer.icon} <span className="ml-2">{roofCollaborationLayer.name}</span>
+				{/* Collaboration Layer - Roof */}
+				<Card className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-white to-purple-50/50 dark:from-pink-950/20 dark:via-slate-900 dark:to-purple-950/20 border-pink-200/60 dark:border-pink-800/60 border-2 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+					<div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 to-purple-500/5 dark:from-pink-400/10 dark:to-purple-400/10"></div>
+					<CardHeader className="relative text-center pb-6">
+						<div className="flex justify-center mb-6">
+							<div className="p-4 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/50 dark:to-purple-900/50 rounded-2xl ring-8 ring-pink-100/50 dark:ring-pink-900/30 shadow-lg">
+								{roofCollaborationLayer.icon}
+							</div>
+						</div>
+						<CardTitle className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+							{roofCollaborationLayer.name}
 						</CardTitle>
-						<CardDescription className={`${roofCollaborationLayer.textColor} opacity-90 px-4`}>
+						<CardDescription className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
 							{roofCollaborationLayer.description}
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="p-4">
-						<div className="grid md:grid-cols-2 gap-4 bg-white/10 dark:bg-black/10 p-4 rounded-lg backdrop-blur-sm">
-							<Card className="bg-blue-500/20 dark:bg-blue-900/30 border-blue-400/50 dark:border-blue-700/50">
-								<CardHeader className="pb-2 pt-3">
-									<CardTitle className="flex items-center text-blue-100 dark:text-blue-200 text-lg">
-										<User className="h-5 w-5 mr-2" /> 👤 人类驱动路径
-									</CardTitle>
-								</CardHeader>
-								<CardContent className="pt-1 pb-3">
-									<ul className="space-y-2">
-										{humanActivities.map((item, index) => (
-											<li key={index} className="flex items-center text-blue-100 dark:text-blue-300">
-												{item.icon} <span className="ml-2 text-xs">{item.activity}</span>
-											</li>
-										))}
-									</ul>
-								</CardContent>
-							</Card>
-							<Card className="bg-green-500/20 dark:bg-green-900/30 border-green-400/50 dark:border-green-700/50">
-								<CardHeader className="pb-2 pt-3">
-									<CardTitle className="flex items-center text-green-100 dark:text-green-200 text-lg">
-										<Bot className="h-5 w-5 mr-2" /> 🤖 AI 驱动路径
-									</CardTitle>
-								</CardHeader>
-								<CardContent className="pt-1 pb-3">
-									<ul className="space-y-2">
-										{aiActivities.map((item, index) => (
-											<li key={index} className="flex items-center text-green-100 dark:text-green-300">
-												{item.icon} <span className="ml-2 text-xs">{item.activity}</span>
-											</li>
-										))}
-									</ul>
-								</CardContent>
-							</Card>
+					<CardContent className="relative">
+						<div className="flex flex-wrap gap-3 justify-center">
+							{roofCollaborationLayer.elements.map((el, i) => (
+								<Badge
+									key={i}
+									variant="secondary"
+									className="px-4 py-2 text-sm font-medium bg-pink-100/80 text-pink-700 hover:bg-pink-200/80 dark:bg-pink-900/50 dark:text-pink-300 transition-colors"
+								>
+									{el}
+								</Badge>
+							))}
 						</div>
 					</CardContent>
 				</Card>
 
-				{/* Roof - Lower Part: L6 AI Context & Knowledge Layer */}
-				<Card className={`mb-1 shadow-lg ${roofContextLayer.bgColor} ${roofContextLayer.borderColor}`}>
-					<CardHeader className="text-center pb-2">
-						<CardTitle
-							className={`text-xl font-semibold flex items-center justify-center ${roofContextLayer.textColor}`}
-						>
-							{roofContextLayer.icon} <span className="ml-2">{roofContextLayer.name}</span>
+				{/* Context Layer */}
+				<Card className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 dark:from-indigo-950/20 dark:via-slate-900 dark:to-blue-950/20 border-indigo-200/60 dark:border-indigo-800/60 border-2 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+					<div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-blue-500/5 dark:from-indigo-400/10 dark:to-blue-400/10"></div>
+					<CardHeader className="relative text-center pb-6">
+						<div className="flex justify-center mb-6">
+							<div className="p-4 bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/50 dark:to-blue-900/50 rounded-2xl ring-8 ring-indigo-100/50 dark:ring-indigo-900/30 shadow-lg">
+								{roofContextLayer.icon}
+							</div>
+						</div>
+						<CardTitle className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+							{roofContextLayer.name}
 						</CardTitle>
-						<CardDescription className={`${roofContextLayer.textColor} opacity-90 px-4`}>
+						<CardDescription className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
 							{roofContextLayer.description}
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="text-center p-3">
-						<div className="flex flex-wrap gap-2 justify-center">
+					<CardContent className="relative">
+						<div className="flex flex-wrap gap-3 justify-center">
 							{roofContextLayer.elements.map((el, i) => (
-								<span
+								<Badge
 									key={i}
-									className={`px-2 py-1 text-xs rounded-full ${roofContextLayer.bgColor} ${roofContextLayer.textColor} border ${roofContextLayer.borderColor} bg-opacity-50 border-opacity-50`}
+									variant="secondary"
+									className="px-4 py-2 text-sm font-medium bg-indigo-100/80 text-indigo-700 hover:bg-indigo-200/80 dark:bg-indigo-900/50 dark:text-indigo-300 transition-colors"
 								>
-                  {el}
-                </span>
+									{el}
+								</Badge>
 							))}
 						</div>
 					</CardContent>
 				</Card>
 
-				{/* Pillars (L2, L3, L4) */}
-				<div
-					className={`grid md:grid-cols-3 gap-2 mb-1 p-4 rounded-md shadow-lg bg-stone-200 dark:bg-stone-800/50 border border-stone-300 dark:border-stone-700`}
-				>
-					{pillars.map((pillar, index) => (
-						<Card
-							key={index}
-							className="flex flex-col bg-stone-50 dark:bg-stone-700/60 backdrop-blur-sm h-full shadow-md"
-						>
-							<CardHeader className="pb-2">
-								<div className="flex items-center space-x-2 mb-1">
-									{pillar.icon}
-									<CardTitle className="text-md font-semibold text-stone-700 dark:text-stone-300">
+				{/* Pillars */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					{pillars.map((pillar, index) => {
+						const colors = getColorClasses(pillar.color)
+						return (
+							<Card
+								key={index}
+								className={`relative overflow-hidden ${colors.bg} ${colors.border} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group`}
+							>
+								<div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-slate-500/5 dark:from-slate-400/10 dark:to-slate-400/10 group-hover:opacity-100 opacity-0 transition-opacity"></div>
+								<CardHeader className="relative text-center pb-4">
+									<div className="flex justify-center mb-4">
+										<div className={`p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl ring-4 ${colors.iconRing} shadow-md`}>
+											{pillar.icon}
+										</div>
+									</div>
+									<CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
 										{pillar.name}
 									</CardTitle>
-								</div>
-								<CardDescription className="text-xs text-slate-500 dark:text-slate-400">
-									{pillar.description}
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="flex-grow">
-								<div className="flex flex-wrap gap-1">
-									{pillar.elements.map((el, i) => (
-										<span
-											key={i}
-											className="px-1.5 py-0.5 text-xs rounded-full bg-stone-200 text-stone-700 border border-stone-300 dark:bg-stone-600 dark:text-stone-200 dark:border-stone-500"
-										>
-                      {el}
-                    </span>
-									))}
-								</div>
-							</CardContent>
-						</Card>
-					))}
+									<CardDescription className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+										{pillar.description}
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="relative">
+									<div className="flex flex-wrap gap-2 justify-center">
+										{pillar.elements.map((el, i) => (
+											<Badge
+												key={i}
+												variant="secondary"
+												className={`px-3 py-1 text-xs font-medium ${colors.badge} transition-colors`}
+											>
+												{el}
+											</Badge>
+										))}
+									</div>
+								</CardContent>
+							</Card>
+						)
+					})}
 				</div>
 
-				{/* Platform Base (L5) */}
-				<Card className={`mb-1 shadow-lg ${platformBase.bgColor} ${platformBase.borderColor}`}>
-					<CardHeader className="text-center pb-2">
-						<CardTitle className={`text-xl font-semibold flex items-center justify-center ${platformBase.textColor}`}>
-							{platformBase.icon} <span className="ml-2">{platformBase.name}</span>
+				{/* Platform Base */}
+				<Card className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50/50 dark:from-blue-950/20 dark:via-slate-900 dark:to-cyan-950/20 border-blue-200/60 dark:border-blue-800/60 border-2 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+					<div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 dark:from-blue-400/10 dark:to-cyan-400/10"></div>
+					<CardHeader className="relative text-center pb-6">
+						<div className="flex justify-center mb-6">
+							<div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 rounded-2xl ring-8 ring-blue-100/50 dark:ring-blue-900/30 shadow-lg">
+								{platformBase.icon}
+							</div>
+						</div>
+						<CardTitle className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+							{platformBase.name}
 						</CardTitle>
-						<CardDescription className={`${platformBase.textColor} opacity-90 px-4`}>
+						<CardDescription className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
 							{platformBase.description}
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="text-center p-3">
-						<div className="flex flex-wrap gap-2 justify-center">
+					<CardContent className="relative">
+						<div className="flex flex-wrap gap-3 justify-center">
 							{platformBase.elements.map((el, i) => (
-								<span
+								<Badge
 									key={i}
-									className={`px-2 py-1 text-xs rounded-full ${platformBase.bgColor} ${platformBase.textColor} border ${platformBase.borderColor} bg-opacity-50 border-opacity-50`}
+									variant="secondary"
+									className="px-4 py-2 text-sm font-medium bg-blue-100/80 text-blue-700 hover:bg-blue-200/80 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
 								>
-                  {el}
-                </span>
+									{el}
+								</Badge>
 							))}
 						</div>
 					</CardContent>
 				</Card>
 
-				{/* Foundation (L1) */}
-				<Card className={`shadow-xl ${foundation.bgColor} ${foundation.borderColor}`}>
-					<CardHeader className="text-center pb-2">
-						<CardTitle className={`text-xl font-bold flex items-center justify-center ${foundation.textColor}`}>
-							{foundation.icon} <span className="ml-2">{foundation.name}</span>
+				{/* Foundation */}
+				<Card className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-gray-50/50 dark:from-slate-950/50 dark:via-slate-900 dark:to-gray-950/50 border-slate-200/60 dark:border-slate-700/60 border-2 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]">
+					<div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-gray-500/5 dark:from-slate-400/10 dark:to-gray-400/10"></div>
+					<CardHeader className="relative text-center pb-6">
+						<div className="flex justify-center mb-6">
+							<div className="p-4 bg-gradient-to-br from-slate-100 to-gray-100 dark:from-slate-800 dark:to-gray-800 rounded-2xl ring-8 ring-slate-100/50 dark:ring-slate-800/50 shadow-lg">
+								{foundation.icon}
+							</div>
+						</div>
+						<CardTitle className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-3">
+							{foundation.name}
 						</CardTitle>
-						<CardDescription className={`${foundation.textColor} opacity-90 px-4`}>
+						<CardDescription className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
 							{foundation.description}
 						</CardDescription>
 					</CardHeader>
-					<CardContent className="text-center p-4">
-						<div className="flex flex-wrap gap-2 justify-center">
+					<CardContent className="relative">
+						<div className="flex flex-wrap gap-3 justify-center">
 							{foundation.elements.map((el, i) => (
-								<span
+								<Badge
 									key={i}
-									className={`px-3 py-1 text-sm rounded-full ${foundation.bgColor} ${foundation.textColor} border-2 ${foundation.borderColor} font-medium`}
+									variant="secondary"
+									className="px-4 py-2 text-sm font-medium bg-slate-100/80 text-slate-700 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:text-slate-300 transition-colors"
 								>
-                  {el}
-                </span>
+									{el}
+								</Badge>
 							))}
 						</div>
 					</CardContent>
 				</Card>
+
+				{/* Footer */}
+				<div className="text-center py-12">
+					<div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-full shadow-sm">
+						<Target className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+						<span className="text-slate-700 dark:text-slate-300 font-medium">
+							构建未来的智能化软件开发生态
+						</span>
+						<Zap className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+					</div>
+				</div>
 			</div>
 		</div>
 	)
