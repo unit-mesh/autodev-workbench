@@ -41,10 +41,10 @@ const getKnowledgeBaseDetail = (id: number) => {
 // GET - 获取单个知识库详情
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json(
