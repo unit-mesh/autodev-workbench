@@ -78,10 +78,10 @@ export async function GET(
 // PUT - 更新知识库
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     const body = await request.json();
     
     if (isNaN(id)) {
@@ -123,10 +123,10 @@ export async function PUT(
 // DELETE - 删除知识库
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json(
