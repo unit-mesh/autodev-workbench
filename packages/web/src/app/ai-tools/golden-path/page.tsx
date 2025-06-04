@@ -23,7 +23,9 @@ export default function GoldenPathPage() {
         copyToClipboard,
         handleDownloadJson,
         getCliCommand,
-        copyCliCommand
+        getCurlCommand,
+        copyCliCommand,
+        copyCurlCommand
     } = useProjectGeneration(metadata);
 
     return (
@@ -44,7 +46,9 @@ export default function GoldenPathPage() {
                 savedConfigId={savedConfigId}
                 onDownloadJson={handleDownloadJson}
                 onCopyCliCommand={copyCliCommand}
+                onCopyCurlCommand={copyCurlCommand}
                 getCliCommand={getCliCommand}
+                getCurlCommand={getCurlCommand}
             />
 
             <div className="flex-1 overflow-hidden">

@@ -72,8 +72,14 @@ export function useProjectGeneration(metadata: ProjectMetadata) {
 
 	const getCliCommand = useCallback(() => {
 		if (!savedConfigId) return '';
-		const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.autodev.work';
+		const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autodev.work';
 		return `npx @autodev/backend-generator add ${baseUrl}/api/golden-path/${savedConfigId}`;
+	}, [savedConfigId]);
+
+	const getCurlCommand = useCallback(() => {
+		if (!savedConfigId) return '';
+		const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://autodev.work';
+		return `curl --proto '=https' --tlsv1.2 -sSf ${baseUrl}/api/install-script/${savedConfigId} | sh`;
 	}, [savedConfigId]);
 
 	const copyCliCommand = useCallback(() => {
@@ -89,6 +95,19 @@ export function useProjectGeneration(metadata: ProjectMetadata) {
 		}
 	}, [getCliCommand]);
 
+	const copyCurlCommand = useCallback(() => {
+		const command = getCurlCommand();
+		if (command) {
+			navigator.clipboard.writeText(command)
+				.then(() => {
+					alert("Curl 安装命令已复制到剪贴板");
+				})
+				.catch(err => {
+					console.error("无法复制到剪贴板: ", err);
+				});
+		}
+	}, [getCurlCommand]);
+
 	return {
 		isLoading,
 		generatedResult,
@@ -101,6 +120,8 @@ export function useProjectGeneration(metadata: ProjectMetadata) {
 		copyToClipboard,
 		handleDownloadJson,
 		getCliCommand,
-		copyCliCommand
+		getCurlCommand,
+		copyCliCommand,
+		copyCurlCommand
 	};
 }
