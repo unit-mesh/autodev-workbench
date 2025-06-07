@@ -59,7 +59,7 @@ autodev-github-agent --port 3001
 
 ### Available Tools
 
-The GitHub Agent provides three main MCP tools:
+The GitHub Agent provides four main MCP tools:
 
 #### 1. `github_get_issues`
 
@@ -128,6 +128,37 @@ Get detailed context for a GitHub issue including related code and suggestions.
   "max_files": 10
 }
 ```
+
+#### 4. `github_smart_search` (NEW!)
+
+Intelligently search for code related to any query using AI-generated keywords and multiple search strategies.
+
+**Parameters:**
+- `owner` (string): Repository owner
+- `repo` (string): Repository name
+- `query` (string): Search query - can be an issue description, error message, or feature request
+- `workspace_path` (optional): Path to workspace (defaults to current directory)
+- `search_depth` (optional): "shallow", "medium", or "deep" (default: "medium")
+- `include_symbols` (optional): Include symbol analysis (default: true)
+- `include_ripgrep` (optional): Use ripgrep for text search (default: true)
+
+**Example:**
+```json
+{
+  "owner": "microsoft",
+  "repo": "vscode",
+  "query": "authentication error when connecting to remote server",
+  "search_depth": "deep",
+  "include_symbols": true
+}
+```
+
+**Features:**
+- **AI-powered keyword extraction**: Automatically generates relevant search terms from your query
+- **Multi-strategy search**: Combines ripgrep text search, symbol analysis, and relevance scoring
+- **Intelligent relevance scoring**: Ranks results by likelihood of being related to your query
+- **Context-aware suggestions**: Provides actionable recommendations based on issue type
+- **Comprehensive analysis**: Includes files, symbols, APIs, and detailed explanations
 
 ## Integration with AI Assistants
 
