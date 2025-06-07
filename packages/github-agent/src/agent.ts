@@ -109,6 +109,12 @@ export class AIAgent {
       // Parse LLM response for function calls
       const parsedResponse = FunctionParser.parseResponse(llmResponse);
 
+      this.log('Parsed response:', {
+        text: parsedResponse.text.substring(0, 200) + '...',
+        functionCalls: parsedResponse.functionCalls,
+        hasError: parsedResponse.hasError
+      });
+
       if (parsedResponse.hasError) {
         return {
           text: llmResponse,
@@ -123,6 +129,8 @@ export class AIAgent {
       if (parsedResponse.functionCalls.length > 0) {
         this.log('Function calls detected:', parsedResponse.functionCalls.map(fc => fc.name));
         toolResults = this.mockExecuteFunctions(parsedResponse.functionCalls);
+      } else {
+        this.log('No function calls detected in LLM response');
       }
 
       // Update conversation history
@@ -222,6 +230,8 @@ You are an AI Agent specialized in GitHub issue analysis and code context unders
 - Fetching and analyzing GitHub issues
 - Searching and analyzing code repositories
 - Generating comprehensive analysis reports
+
+IMPORTANT: You MUST use the exact XML format for function calls. Do NOT respond with plain text function names and JSON. Always use the <function_calls> XML structure.
 
 Always invoke a function call in response to user queries. If there is any information missing for filling in a REQUIRED parameter, make your best guess for the parameter value based on the query context. If you cannot come up with any reasonable guess, fill the missing value in as <UNKNOWN>. Do not fill in optional parameters if they are not specified by the user.
 
