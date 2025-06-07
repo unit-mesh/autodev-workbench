@@ -29,7 +29,12 @@ interface LLMAnalysisReport {
       changes_needed: string[];
     }>;
   };
-  recommendations: string[];
+  recommendations: Array<{
+    type: 'file' | 'function' | 'api' | 'symbol';
+    description: string;
+    location?: string;
+    confidence: number;
+  }>;
   confidence: number;
 }
 
