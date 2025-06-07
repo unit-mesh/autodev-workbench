@@ -89,15 +89,15 @@ export class ContextAnalyzer {
 
   /**
    * Main analysis method - now uses Strategy Pattern
-   * 
+   *
    * This method is much simpler now, delegating all complex logic to strategies.
    */
   async findRelevantCode(issue: GitHubIssue): Promise<CodeContext> {
     await this.ensureInitialized();
-    
+
     // Create cache key
     const issueKey = this.cacheKeyGenerator.generateIssueKey(issue.number, issue.updated_at);
-    
+
     // Check cache first
     const cached = await this.cacheManager.get<CodeContext>(`relevantCode-${issueKey}`);
     if (cached) {
@@ -107,10 +107,13 @@ export class ContextAnalyzer {
 
     console.log(`🔍 Analyzing with strategy: ${this.analysisStrategy.name}`);
 
+    // Scan workspace for files
+    const filteredFiles = await this.scanWorkspaceFiles();
+
     // Create analysis context - strategies handle all the complex logic
     const context: AnalysisContext = {
       workspacePath: this.workspacePath,
-      filteredFiles: [], // Strategy will handle file discovery
+      filteredFiles: filteredFiles,
       analysisResult: {}, // Strategy will handle codebase analysis
       issue
     };
@@ -282,6 +285,100 @@ export class ContextAnalyzer {
       await this.cacheManager.clear();
     }
     console.log('🧹 All caches cleared');
+  }
+
+  /**
+   * Scan workspace for relevant files
+   */
+  private async scanWorkspaceFiles(): Promise<string[]> {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+
+      const files: string[] = [];
+
+      const scanDirectory = async (dir: string): Promise<void> => {
+        try {
+          const entries = await fs.promises.readdir(dir, { withFileTypes: true });
+
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            const relativePath = path.relative(this.workspacePath, fullPath);
+
+            // Skip common ignore patterns
+            if (this.shouldIgnoreFile(relativePath)) {
+              continue;
+            }
+
+            if (entry.isDirectory()) {
+              await scanDirectory(fullPath);
+            } else if (entry.isFile()) {
+              // Only include code files and relevant config files
+              if (this.isRelevantFile(relativePath)) {
+                files.push(relativePath);
+              }
+            }
+          }
+        } catch (error) {
+          // Skip directories that can't be read
+        }
+      };
+
+      await scanDirectory(this.workspacePath);
+      console.log(`📁 Found ${files.length} relevant files in workspace`);
+      return files;
+    } catch (error) {
+      console.warn('Failed to scan workspace files:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if a file should be ignored
+   */
+  private shouldIgnoreFile(relativePath: string): boolean {
+    const ignorePatterns = [
+      /node_modules/,
+      /\.git/,
+      /dist/,
+      /build/,
+      /coverage/,
+      /\.next/,
+      /\.nuxt/,
+      /vendor/,
+      /target/,
+      /bin/,
+      /obj/,
+      /\.vscode/,
+      /\.idea/,
+      /\.DS_Store/,
+      /Thumbs\.db/,
+      /\.(log|tmp|cache|lock)$/,
+      /\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|zip|tar|gz)$/
+    ];
+
+    return ignorePatterns.some(pattern => pattern.test(relativePath));
+  }
+
+  /**
+   * Check if a file is relevant for analysis
+   */
+  private isRelevantFile(relativePath: string): boolean {
+    const relevantPatterns = [
+      /\.(ts|js|tsx|jsx|py|java|cpp|c|h|cs|php|rb|go|rs|kt|swift)$/,
+      /\.(json|yaml|yml|toml|xml)$/,
+      /\.(md|txt|rst)$/i,
+      /package\.json$/,
+      /Dockerfile$/,
+      /docker-compose\./,
+      /\.env/,
+      /config\./,
+      /setup\./,
+      /init\./,
+      /readme/i
+    ];
+
+    return relevantPatterns.some(pattern => pattern.test(relativePath));
   }
 
   // Legacy method for backward compatibility
