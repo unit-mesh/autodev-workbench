@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { GitHubIssue } from "../types/index";
+import { IssueAnalysisResult } from "../types/index";
 
 interface LLMKeywordAnalysis {
   primary_keywords: string[];
@@ -10,6 +11,23 @@ interface LLMKeywordAnalysis {
   file_patterns: string[];
   search_strategies: string[];
   issue_type: string;
+  confidence: number;
+}
+
+interface LLMAnalysisReport {
+  summary: string;
+  current_issues: string[];
+  detailed_plan: {
+    title: string;
+    steps: Array<{
+      step_number: number;
+      title: string;
+      description: string;
+      files_to_modify: string[];
+      changes_needed: string[];
+    }>;
+  };
+  recommendations: string[];
   confidence: number;
 }
 
@@ -236,5 +254,158 @@ Respond only with valid JSON:`;
     }
     
     return 'general';
+  }
+
+  /**
+   * Generate comprehensive analysis report for GitHub issue
+   */
+  async generateAnalysisReport(
+    issue: GitHubIssue,
+    analysisResult: IssueAnalysisResult
+  ): Promise<LLMAnalysisReport> {
+    const prompt = this.buildAnalysisReportPrompt(issue, analysisResult);
+
+    try {
+      const { text } = await generateText({
+        model: this.openai(this.model),
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert software architect and code analyst. Generate comprehensive analysis reports for GitHub issues based on code analysis results. Always respond with valid JSON in the specified format."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+      });
+
+      const report = this.parseAnalysisReport(text);
+      return report;
+    } catch (error) {
+      console.warn(`LLM analysis report generation failed: ${error.message}`);
+      return this.fallbackAnalysisReport(issue, analysisResult);
+    }
+  }
+
+  private buildAnalysisReportPrompt(issue: GitHubIssue, analysisResult: IssueAnalysisResult): string {
+    const relevantFiles = analysisResult.relatedCode.files.slice(0, 10);
+    const relevantSymbols = analysisResult.relatedCode.symbols.slice(0, 8);
+
+    return `Analyze the following GitHub issue and code analysis results to generate a comprehensive analysis report.
+
+**GitHub Issue:**
+- Title: ${issue.title}
+- Body: ${issue.body || 'No description provided'}
+- Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}
+- State: ${issue.state}
+
+**Code Analysis Results:**
+- Relevant Files Found: ${relevantFiles.length}
+- Top Files: ${relevantFiles.map(f => f.path).join(', ')}
+- Relevant Symbols: ${relevantSymbols.map(s => s.name).join(', ')}
+- Current Summary: ${analysisResult.summary}
+
+**Current Suggestions:**
+${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+Please generate a comprehensive analysis report in the following JSON format:
+
+{
+  "summary": "Brief summary of the issue and analysis findings",
+  "current_issues": [
+    "List of specific issues identified from the analysis",
+    "Each item should be a clear, actionable problem statement"
+  ],
+  "detailed_plan": {
+    "title": "Overall plan title",
+    "steps": [
+      {
+        "step_number": 1,
+        "title": "Step title",
+        "description": "Detailed description of what needs to be done",
+        "files_to_modify": ["list", "of", "files"],
+        "changes_needed": ["specific", "changes", "required"]
+      }
+    ]
+  },
+  "recommendations": [
+    "High-level recommendations for addressing the issue",
+    "Best practices and considerations"
+  ],
+  "confidence": 0.85
+}
+
+Focus on:
+1. Identifying specific problems from the code analysis
+2. Creating actionable steps with file-level details
+3. Providing practical recommendations
+4. Being specific about what files need changes and what changes are needed`;
+  }
+
+  private parseAnalysisReport(text: string): LLMAnalysisReport {
+    try {
+      // Clean the text to extract JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Validate required fields
+      if (!parsed.summary || !parsed.current_issues || !parsed.detailed_plan || !parsed.recommendations) {
+        throw new Error('Missing required fields in analysis report');
+      }
+
+      return {
+        summary: parsed.summary,
+        current_issues: Array.isArray(parsed.current_issues) ? parsed.current_issues : [],
+        detailed_plan: {
+          title: parsed.detailed_plan?.title || 'Analysis and Implementation Plan',
+          steps: Array.isArray(parsed.detailed_plan?.steps) ? parsed.detailed_plan.steps : []
+        },
+        recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.7
+      };
+    } catch (error) {
+      console.warn(`Failed to parse LLM analysis report: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private fallbackAnalysisReport(issue: GitHubIssue, analysisResult: IssueAnalysisResult): LLMAnalysisReport {
+    const relevantFiles = analysisResult.relatedCode.files.slice(0, 5);
+
+    return {
+      summary: `Analysis of issue "${issue.title}" found ${relevantFiles.length} relevant files and ${analysisResult.relatedCode.symbols.length} related symbols.`,
+      current_issues: [
+        `Issue requires investigation in ${relevantFiles.length} files`,
+        'Detailed analysis needed to identify specific problems',
+        'Code changes may be required based on issue description'
+      ],
+      detailed_plan: {
+        title: 'Basic Analysis Plan',
+        steps: [
+          {
+            step_number: 1,
+            title: 'Review relevant files',
+            description: 'Examine the identified files for potential issues',
+            files_to_modify: relevantFiles.map(f => f.path),
+            changes_needed: ['Review code logic', 'Check for potential bugs', 'Verify implementation']
+          },
+          {
+            step_number: 2,
+            title: 'Implement fixes',
+            description: 'Apply necessary changes based on findings',
+            files_to_modify: [],
+            changes_needed: ['Apply bug fixes', 'Add missing functionality', 'Improve error handling']
+          }
+        ]
+      },
+      recommendations: analysisResult.suggestions,
+      confidence: 0.5
+    };
   }
 }

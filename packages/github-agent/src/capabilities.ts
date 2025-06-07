@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { GitHubTools } from "./capabilities/tools";
-import type { Preset, GitHubAgentImplementation } from "./types/index";
+import type { Preset, GitHubAgentImplementation } from "./types";
 
 export function installCapabilities(
   mcpInst: McpServer, 

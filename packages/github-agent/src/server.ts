@@ -5,7 +5,7 @@ import { ServerOptions as McpServerOptions } from "@modelcontextprotocol/sdk/ser
 import { StdioServerTransport as McpStdioTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport as McpHttpTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { type Preset, type GitHubAgentImplementation } from "./types/index";
+import { type Preset, type GitHubAgentImplementation } from "./types";
 export type { Preset, GitHubAgentImplementation };
 
 import http from "node:http";

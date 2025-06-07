@@ -21,6 +21,7 @@
   "files": [
     "dist",
     "bin",
+    "scripts",
     "package.json",
     ".env.example",
     "README.md"
@@ -32,7 +33,8 @@
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "pnpm run build",
+    "analyze-issue": "node scripts/analyze-and-upload.js"
   },
   "keywords": [
     "mcp",
