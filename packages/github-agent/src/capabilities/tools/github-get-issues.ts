@@ -1,6 +1,6 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github-service";
+import { GitHubService } from "../../services/github/github-service";
 
 export const installGitHubGetIssuesTool: ToolLike = (installer) => {
   installer("github_get_issues", "Get GitHub issues from a repository", {

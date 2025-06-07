@@ -14,7 +14,7 @@ import { HybridAnalysisStrategy } from "../strategies/HybridAnalysisStrategy";
 import { MemoryCacheManager, FileMemoryCacheManager } from "../cache/MemoryCacheManager";
 import { RipgrepSearchProvider } from "../search/RipgrepSearchProvider";
 import { FileSystemSearchProvider } from "../search/FileSystemSearchProvider";
-import { LLMService } from "../../llm-service";
+import { LLMService } from "../../llm/llm-service";
 
 export type AnalyzerType = 'llm' | 'rule-based' | 'hybrid' | 'auto';
 export type CacheType = 'memory' | 'file' | 'redis';

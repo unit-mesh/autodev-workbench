@@ -4,7 +4,7 @@
  * Formats analysis results into the expected markdown format for GitHub issues
  */
 
-import { GitHubIssue, IssueAnalysisResult } from "../types/index";
+import { GitHubIssue, IssueAnalysisResult } from "../../types/index";
 
 interface StructuredAnalysisPlan {
   title: string;

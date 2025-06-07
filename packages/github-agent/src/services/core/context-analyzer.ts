@@ -5,14 +5,14 @@
  * The file is now ~150 lines instead of the original 1,276 lines.
  */
 
-import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../types/index";
-import { LLMService } from "./llm-service";
+import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../../types/index";
+import { LLMService } from "../llm/llm-service";
 import { listFiles } from "@autodev/worker-core";
 
 // Import the new design pattern implementations
-import { IAnalysisStrategy, AnalysisContext } from "./analysis/interfaces/IAnalysisStrategy";
-import { ICacheManager, DefaultCacheKeyGenerator } from "./analysis/interfaces/ICacheManager";
-import { AnalyzerFactory, AnalyzerConfig } from "./analysis/factories/AnalyzerFactory";
+import { IAnalysisStrategy, AnalysisContext } from "../analysis/interfaces/IAnalysisStrategy";
+import { ICacheManager, DefaultCacheKeyGenerator } from "../analysis/interfaces/ICacheManager";
+import { AnalyzerFactory, AnalyzerConfig } from "../analysis/factories/AnalyzerFactory";
 
 /**
  * Simplified Context Analyzer - Clean Facade Pattern Implementation
@@ -69,8 +69,8 @@ export class ContextAnalyzer {
    * Fallback initialization if main initialization fails
    */
   private async initializeFallbackComponents(): Promise<void> {
-    const { RuleBasedAnalysisStrategy } = await import('./analysis/strategies/RuleBasedAnalysisStrategy');
-    const { MemoryCacheManager } = await import('./analysis/cache/MemoryCacheManager');
+    const { RuleBasedAnalysisStrategy } = await import('../analysis/strategies/RuleBasedAnalysisStrategy');
+    const { MemoryCacheManager } = await import('../analysis/cache/MemoryCacheManager');
     
     this.analysisStrategy = new RuleBasedAnalysisStrategy();
     this.cacheManager = new MemoryCacheManager();

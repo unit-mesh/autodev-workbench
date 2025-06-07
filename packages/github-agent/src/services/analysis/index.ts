@@ -26,4 +26,4 @@ export * from './search/FileSystemSearchProvider';
 export * from './factories/AnalyzerFactory';
 
 // Re-export the main analyzer
-export { ContextAnalyzer } from '../context-analyzer';
+export { ContextAnalyzer } from '../core/context-analyzer';

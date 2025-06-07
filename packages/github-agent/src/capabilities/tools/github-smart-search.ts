@@ -1,7 +1,7 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github-service";
-import { ContextAnalyzer } from "../../services/context-analyzer";
+import { GitHubService } from "../../services/github/github-service";
+import { ContextAnalyzer } from "../../services/core/context-analyzer";
 
 export const installGitHubSmartSearchTool: ToolLike = (installer) => {
   installer("github_smart_search", "Intelligently search for code related to GitHub issues using AI-generated keywords and multiple search strategies", {

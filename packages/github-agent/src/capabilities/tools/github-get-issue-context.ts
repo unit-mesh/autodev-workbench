@@ -1,7 +1,7 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github-service";
-import { ContextAnalyzer } from "../../services/context-analyzer";
+import { GitHubService } from "../../services/github/github-service";
+import { ContextAnalyzer } from "../../services/core/context-analyzer";
 
 export const installGitHubGetIssueContextTool: ToolLike = (installer) => {
   installer("github_get_issue_context", "Get detailed context for a GitHub issue including related code and suggestions", {

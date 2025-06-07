@@ -1,11 +1,10 @@
 export { GitHubAgentServer } from "./server";
 export type * from "./server";
 export type * from "./types/index";
-export { GitHubService } from "./services/github-service";
-export { ContextAnalyzer } from "./services/context-analyzer";
-export { LLMService } from "./services/llm-service";
-export { configureLLMProvider, hasLLMProvider, getLLMProviderStatus } from "./services/llm-provider";
-export { AnalysisReportGenerator } from "./services/analysis-report-generator";
+export { GitHubService } from "./services/github";
+export { ContextAnalyzer, FileLoader } from "./services/core";
+export { LLMService, configureLLMProvider, hasLLMProvider, getLLMProviderStatus, type LLMProviderConfig } from "./services/llm";
+export { AnalysisReportGenerator, AnalysisFormatter } from "./services/reporting";
 export { installGitHubFetchUrlContentTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/github-fetch-url-content";
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analyze-issue";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";

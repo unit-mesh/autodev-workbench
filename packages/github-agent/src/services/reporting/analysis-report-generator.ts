@@ -1,6 +1,6 @@
-import { IssueAnalysisResult } from "../types/index";
-import { LLMService } from "./llm-service";
-import { GitHubService } from "./github-service";
+import { IssueAnalysisResult } from "../../types/index";
+import { LLMService } from "../llm/llm-service";
+import { GitHubService } from "../github/github-service";
 
 interface AnalysisReportOptions {
   uploadToGitHub?: boolean;

@@ -1,7 +1,7 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github-service";
-import { ContextAnalyzer } from "../../services/context-analyzer";
+import { GitHubService } from "../../services/github/github-service";
+import { ContextAnalyzer } from "../../services/core/context-analyzer";
 import * as https from "https";
 import * as http from "http";
 import { URL } from "url";

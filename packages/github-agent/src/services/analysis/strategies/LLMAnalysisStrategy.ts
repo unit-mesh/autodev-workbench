@@ -6,7 +6,7 @@
  */
 
 import { GitHubIssue } from "../../../types/index";
-import { LLMService } from "../../llm-service";
+import { LLMService } from "../../llm/llm-service";
 import {
   BaseAnalysisStrategy,
   SearchKeywords,

@@ -1,5 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import { GitHubIssue } from "../types/index";
+import { GitHubIssue } from "../../types/index";
 
 export class GitHubService {
   private octokit: Octokit;

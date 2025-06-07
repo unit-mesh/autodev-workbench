@@ -1,6 +1,6 @@
 import { generateText, CoreMessage } from "ai";
-import { GitHubIssue } from "../types/index";
-import { IssueAnalysisResult } from "../types/index";
+import { GitHubIssue } from "../../types/index";
+import { IssueAnalysisResult } from "../../types/index";
 import * as fs from "fs";
 import * as path from "path";
 import { configureLLMProvider, LLMProviderConfig } from "./llm-provider";
@@ -10,7 +10,7 @@ import {
   CodeRelevanceAnalysis,
   StructuredAnalysisPlan,
   LLMAnalysisReport
-} from "./analysis/FallbackAnalysisService";
+} from "../analysis/FallbackAnalysisService";
 
 // Remove duplicate interfaces and classes - now imported from FallbackAnalysisService
 

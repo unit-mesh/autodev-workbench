@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { ToolLike } from "../_typing";
-import { GitHubService } from "../../services/github-service";
-import { ContextAnalyzer } from "../../services/context-analyzer";
-import { AnalysisReportGenerator } from "../../services/analysis-report-generator";
+import { GitHubService } from "../../services/github/github-service";
+import { ContextAnalyzer } from "../../services/core/context-analyzer";
+import { AnalysisReportGenerator } from "../../services/reporting/analysis-report-generator";
 
 export const installGitHubUploadAnalysisTool: ToolLike = (installer) => {
   installer(
