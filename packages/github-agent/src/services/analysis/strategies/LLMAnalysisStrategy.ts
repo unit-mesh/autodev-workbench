@@ -51,7 +51,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
           ...llmAnalysis.search_strategies
         ]
       };
-    } catch (error: Error) {
+    } catch (error: any) {
       console.warn(`LLM keyword extraction failed, falling back to rule-based: ${error.message}`);
       return this.fallbackKeywordGeneration(issue);
     }
@@ -86,7 +86,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
             file.content
           );
           return { file, llmAnalysis, error: null };
-        } catch (error: Error) {
+        } catch (error: any) {
           console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
           return { file, llmAnalysis: null, error };
         }
@@ -222,7 +222,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       
       await this.llmService.analyzeIssueForKeywords(testIssue);
       return true;
-    } catch (error: Error) {
+    } catch (error: any) {
       console.warn('LLM service not available:', error.message);
       return false;
     }
@@ -233,9 +233,62 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     content: string;
     relevanceScore: number;
   }>> {
-    // This would use the search provider to find candidate files
-    // For now, return a simplified implementation
-    return [];
+    console.log('🔍 Finding candidate files for LLM analysis...');
+
+    const fileScores = new Map<string, number>();
+
+    // First pass: Score files based on file paths only (no I/O)
+    for (const file of context.filteredFiles) {
+      const score = this.calculateFilePathScore(file, keywords);
+      if (score > 0.3) { // Higher threshold for path-only scoring
+        fileScores.set(file, score);
+      }
+    }
+
+    // Sort by path score and only load content for top candidates
+    const topCandidates = Array.from(fileScores.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, this.maxFilesToAnalyze * 2) // Only load 2x the files we'll actually analyze
+      .map(([file]) => file);
+
+    console.log(`📁 Loading content for top ${topCandidates.length} candidates (filtered from ${context.filteredFiles.length} files)...`);
+
+    // Second pass: Load content only for promising candidates
+    const candidates: Array<{
+      path: string;
+      content: string;
+      relevanceScore: number;
+    }> = [];
+
+    for (const file of topCandidates) {
+      try {
+        const content = await this.loadFileContent(path.join(context.workspacePath, file));
+        if (content) {
+          // Calculate final score combining path and content
+          const pathScore = fileScores.get(file) || 0;
+          const contentScore = this.calculateContentScore(content, keywords);
+          const finalScore = pathScore + contentScore;
+
+          if (finalScore > 0.5) { // Only include files with decent combined score
+            candidates.push({
+              path: file,
+              content: content.substring(0, 4000), // Limit content size for LLM analysis
+              relevanceScore: Math.min(finalScore / 10, 1), // Normalize score
+            });
+          }
+        }
+      } catch (error) {
+        // Skip files that can't be read
+        continue;
+      }
+    }
+
+    // Sort by final relevance score
+    const sortedCandidates = candidates
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    console.log(`✅ Found ${sortedCandidates.length} candidate files for LLM analysis (loaded content for ${topCandidates.length} files)`);
+    return sortedCandidates;
   }
 
   private fallbackKeywordGeneration(issue: GitHubIssue): SearchKeywords {
@@ -283,6 +336,145 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     });
 
     return [...new Set(matches.filter(m => m.length > 2))].slice(0, 10);
+  }
+
+  private calculateFilePathScore(filePath: string, keywords: SearchKeywords): number {
+    let score = 0;
+    const fileName = path.basename(filePath).toLowerCase();
+    const dirName = path.dirname(filePath).toLowerCase();
+    const fullPath = filePath.toLowerCase();
+
+    // Primary keywords get highest weight
+    for (const keyword of keywords.primary) {
+      const keywordLower = keyword.toLowerCase();
+      if (fileName.includes(keywordLower)) {
+        score += 3; // Highest score for primary keywords in filename
+      } else if (dirName.includes(keywordLower)) {
+        score += 1.5; // Medium score for primary keywords in directory
+      }
+    }
+
+    // Secondary keywords get medium weight
+    for (const keyword of keywords.secondary) {
+      const keywordLower = keyword.toLowerCase();
+      if (fileName.includes(keywordLower)) {
+        score += 2;
+      } else if (dirName.includes(keywordLower)) {
+        score += 1;
+      }
+    }
+
+    // Technical terms get lower weight but still important
+    for (const keyword of keywords.technical) {
+      const keywordLower = keyword.toLowerCase();
+      if (fullPath.includes(keywordLower)) {
+        score += 1;
+      }
+    }
+
+    // Contextual keywords get lowest weight
+    for (const keyword of keywords.contextual) {
+      const keywordLower = keyword.toLowerCase();
+      if (fullPath.includes(keywordLower)) {
+        score += 0.5;
+      }
+    }
+
+    // Bonus for important file types and patterns
+    const codeFilePatterns = [
+      /\.(ts|js|tsx|jsx|py|java|cpp|c|h|cs|php|rb|go|rs|kt|swift)$/,
+      /\.(json|yaml|yml|toml|xml|config)$/,
+      /\.(md|txt|rst)$/i
+    ];
+
+    const importantFilePatterns = [
+      /index\./,
+      /main\./,
+      /app\./,
+      /server\./,
+      /client\./,
+      /api\./,
+      /package\.json$/,
+      /readme\.md$/i,
+      /config\./,
+      /setup\./,
+      /init\./
+    ];
+
+    const importantDirPatterns = [
+      /\/(src|lib|core|api|routes|controllers|services|components|utils|helpers|models|types|interfaces)\//,
+      /\/(test|tests|spec|specs)\//,
+      /\/(config|configs|settings)\//
+    ];
+
+    if (codeFilePatterns.some(pattern => pattern.test(filePath))) {
+      score += 1;
+    }
+
+    if (importantFilePatterns.some(pattern => pattern.test(filePath))) {
+      score += 1.5;
+    }
+
+    if (importantDirPatterns.some(pattern => pattern.test(filePath))) {
+      score += 0.8;
+    }
+
+    // Penalty for less relevant files
+    const excludePatterns = [
+      /node_modules/,
+      /\.git/,
+      /dist/,
+      /build/,
+      /coverage/,
+      /\.next/,
+      /\.nuxt/,
+      /vendor/,
+      /target/,
+      /bin/,
+      /obj/,
+      /\.vscode/,
+      /\.idea/,
+      /\.(log|tmp|cache|lock)$/,
+      /\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/
+    ];
+
+    if (excludePatterns.some(pattern => pattern.test(filePath))) {
+      score *= 0.1; // Heavy penalty for excluded patterns
+    }
+
+    return score;
+  }
+
+  private calculateContentScore(content: string, keywords: SearchKeywords): number {
+    const allKeywords = [
+      ...keywords.primary,
+      ...keywords.secondary,
+      ...keywords.technical,
+      ...keywords.contextual
+    ];
+
+    let score = 0;
+    const contentLower = content.toLowerCase();
+
+    for (const keyword of allKeywords) {
+      const keywordLower = keyword.toLowerCase();
+      const matches = (contentLower.match(new RegExp(keywordLower, 'g')) || []).length;
+
+      // Score based on frequency, but with diminishing returns
+      score += Math.min(matches * 0.1, 2);
+    }
+
+    // Normalize by content length to avoid bias towards longer files
+    return score / Math.max(content.length / 1000, 1);
+  }
+
+  private async loadFileContent(filePath: string): Promise<string | null> {
+    try {
+      const fs = await import('fs');
+      return await fs.promises.readFile(filePath, 'utf-8');
+    } catch (error) {
+      return null;
+    }
   }
 
   private getSymbolKindName(kind: number): string {
