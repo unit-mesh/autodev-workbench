@@ -1,3 +1,88 @@
+## 0.4.0 (2025-06-07)
+
+### 🚀 Features
+
+- **ai-hub:** refactor agent categorization with config objects ([86e420e](https://github.com/unit-mesh/autodev-worker/commit/86e420e))
+- **ai-tools:** replace code preview with react-live ([94a6d00](https://github.com/unit-mesh/autodev-worker/commit/94a6d00))
+- **ai-tools:** improve code preview and error handling ([cc08242](https://github.com/unit-mesh/autodev-worker/commit/cc08242))
+- **ai-tools:** enhance code playground with UI components ([641e1ad](https://github.com/unit-mesh/autodev-worker/commit/641e1ad))
+- **ai-tools:** redesign golden-path layout with resizable panels ([29a1a56](https://github.com/unit-mesh/autodev-worker/commit/29a1a56))
+- **ai-tools:** extract ProjectConfigForm component ([fa9006a](https://github.com/unit-mesh/autodev-worker/commit/fa9006a))
+- **ai-tools:** add download dialog for golden-path config ([db3e51f](https://github.com/unit-mesh/autodev-worker/commit/db3e51f))
+- **ai-tools:** update prompt to match ProjectConfigSchema ([865de4b](https://github.com/unit-mesh/autodev-worker/commit/865de4b))
+- **ai-tools:** add asset data hook and refactor component ([87e0f97](https://github.com/unit-mesh/autodev-worker/commit/87e0f97))
+- **analysis:** refactor ContextAnalyzer with design patterns ([c8194c5](https://github.com/unit-mesh/autodev-worker/commit/c8194c5))
+- **analysis:** add FallbackAnalysisService for rule-based analysis ([398a592](https://github.com/unit-mesh/autodev-worker/commit/398a592))
+- **api:** enhance error responses in golden-path ([dd7a4f1](https://github.com/unit-mesh/autodev-worker/commit/dd7a4f1))
+- **backend-generator:** add project parser and config tsconfig ([49eb04a](https://github.com/unit-mesh/autodev-worker/commit/49eb04a))
+- **backend-generator:** read version from package.json ([f3555a2](https://github.com/unit-mesh/autodev-worker/commit/f3555a2))
+- **cli:** add 'add' command for remote config generation ([827f77b](https://github.com/unit-mesh/autodev-worker/commit/827f77b))
+- **cockpit:** redesign AI SDLC House architecture page ([f830d95](https://github.com/unit-mesh/autodev-worker/commit/f830d95))
+- **code-analysis:** extract code block renderer to component ([08acc2a](https://github.com/unit-mesh/autodev-worker/commit/08acc2a))
+- **components:** standardize component file naming ([f1b5731](https://github.com/unit-mesh/autodev-worker/commit/f1b5731))
+- **context-analyzer:** integrate worker-core for enhanced regex search functionality ([fa007c8](https://github.com/unit-mesh/autodev-worker/commit/fa007c8))
+- **context-analyzer:** add LLM-powered code relevance analysis ([6cdad26](https://github.com/unit-mesh/autodev-worker/commit/6cdad26))
+- **frontend:** add tabbed interface and keyboard shortcuts ([684f2ae](https://github.com/unit-mesh/autodev-worker/commit/684f2ae))
+- **github-agent:** add GitHub Smart Search tool for intelligent code search and analysis ([4972983](https://github.com/unit-mesh/autodev-worker/commit/4972983))
+- **github-agent:** add issue analysis report generation ([07c31e7](https://github.com/unit-mesh/autodev-worker/commit/07c31e7))
+- **github-agent:** add structured analysis plan service ([05553ae](https://github.com/unit-mesh/autodev-worker/commit/05553ae))
+- **github-agent:** add CLI tool for GitHub issue analysis ([74ad3aa](https://github.com/unit-mesh/autodev-worker/commit/74ad3aa))
+- **github-agent:** add config loading and analysis optimizations ([f32aea4](https://github.com/unit-mesh/autodev-worker/commit/f32aea4))
+- **github-agent:** implement file candidate scoring for LLM analysis ([b4f4686](https://github.com/unit-mesh/autodev-worker/commit/b4f4686))
+- **github-agent:** add URL content fetching tool ([1b84443](https://github.com/unit-mesh/autodev-worker/commit/1b84443))
+- **github-agent:** add URL content fetching to issue analysis ([8c55a6f](https://github.com/unit-mesh/autodev-worker/commit/8c55a6f))
+- **github-agent:** implement file scanning for relevant code analysis ([e9efcb3](https://github.com/unit-mesh/autodev-worker/commit/e9efcb3))
+- **github-agent:** add multi-provider LLM support ([0aabcf6](https://github.com/unit-mesh/autodev-worker/commit/0aabcf6))
+- **github-agent:** add enhanced UI and performance monitoring ([99ccfae](https://github.com/unit-mesh/autodev-worker/commit/99ccfae))
+- **github-agent): implement GitHub Agent MCP server with issue analysis and code contextfeat(github-agent:** add GitHub MCP server package ([3726028](https://github.com/unit-mesh/autodev-worker/commit/3726028))
+- **github-service:** add methods for adding and retrieving comments on GitHub issues ([818e00b](https://github.com/unit-mesh/autodev-worker/commit/818e00b))
+- **golden-path:** extract ProjectBasicInfo into separate component ([fcf7c87](https://github.com/unit-mesh/autodev-worker/commit/fcf7c87))
+- **golden-path:** replace ProjectBasicInfo with GeneratedBackendProject ([d1bd8d5](https://github.com/unit-mesh/autodev-worker/commit/d1bd8d5))
+- **golden-path:** add config management API and UI ([ff6488d](https://github.com/unit-mesh/autodev-worker/commit/ff6488d))
+- **golden-path:** add CLI command display and copy functionality for saved configurations ([d6c0854](https://github.com/unit-mesh/autodev-worker/commit/d6c0854))
+- **golden-path:** refactor project generation into modular components ([a1f1c93](https://github.com/unit-mesh/autodev-worker/commit/a1f1c93))
+- **issue-analyzer:** add script for analyzing GitHub issues with AI-powered keyword extraction and code context analysis ([a20abef](https://github.com/unit-mesh/autodev-worker/commit/a20abef))
+- **layout:** add resizable panels to AI frontend generator ([06b3478](https://github.com/unit-mesh/autodev-worker/commit/06b3478))
+- **llm-service:** integrate LLM for intelligent keyword extraction and issue type detection ([31f1ef3](https://github.com/unit-mesh/autodev-worker/commit/31f1ef3))
+- **logging:** add structured logging system with verbose controls ([877a4cc](https://github.com/unit-mesh/autodev-worker/commit/877a4cc))
+- **navigation:** update route paths and names ([172f5d8](https://github.com/unit-mesh/autodev-worker/commit/172f5d8))
+- **page:** refactor MCP servers config generation into a function ([4786df5](https://github.com/unit-mesh/autodev-worker/commit/4786df5))
+- **page:** add AI-friendly SDLC house page with structured layers and activities ([117e6e9](https://github.com/unit-mesh/autodev-worker/commit/117e6e9))
+- **performance:** add performance monitoring and logging utilities ([d6bce8a](https://github.com/unit-mesh/autodev-worker/commit/d6bce8a))
+- **prisma:** add GoldenPathConfig table ([d267b9d](https://github.com/unit-mesh/autodev-worker/commit/d267b9d))
+- **project-structure:** enhance project structure generation for multiple languages and frameworks ([280d1b7](https://github.com/unit-mesh/autodev-worker/commit/280d1b7))
+- **testing:** add vitest setup and mindmap node tests ([c6854df](https://github.com/unit-mesh/autodev-worker/commit/c6854df))
+- **ui:** redesign AI tools interface ([c55b4ae](https://github.com/unit-mesh/autodev-worker/commit/c55b4ae))
+- **vector-db:** add vector database API and integration ([786623e](https://github.com/unit-mesh/autodev-worker/commit/786623e))
+- **web:** add copy button for MCP config ([bc54d7d](https://github.com/unit-mesh/autodev-worker/commit/bc54d7d))
+- **web:** remove CLI tools download section ([8b00abf](https://github.com/unit-mesh/autodev-worker/commit/8b00abf))
+- **web:** simplify AI SDLC architecture layer names ([bdc389d](https://github.com/unit-mesh/autodev-worker/commit/bdc389d))
+- **web:** replace API data fetching with mock data for knowledge bases ([05cadb4](https://github.com/unit-mesh/autodev-worker/commit/05cadb4))
+- **web:** add curl install script for project generation ([7d69395](https://github.com/unit-mesh/autodev-worker/commit/7d69395))
+
+### 🩹 Fixes
+
+- remove duplicate import of ToolLike in github-upload-analysis.ts ([89c5b81](https://github.com/unit-mesh/autodev-worker/commit/89c5b81))
+- **api:** improve error handling in golden path endpoint ([cfd80b2](https://github.com/unit-mesh/autodev-worker/commit/cfd80b2))
+- **api:** 修复异步参数解析问题 ([01f1ede](https://github.com/unit-mesh/autodev-worker/commit/01f1ede))
+- **github-agent:** improve error handling and formatting ([8cdc510](https://github.com/unit-mesh/autodev-worker/commit/8cdc510))
+- **github-agent:** disable response compression ([1c5d370](https://github.com/unit-mesh/autodev-worker/commit/1c5d370))
+- **llm-service:** handle empty content in URL prompts ([cbaf99c](https://github.com/unit-mesh/autodev-worker/commit/cbaf99c))
+- **package:** update version and enhance description for clarity ([2bf7817](https://github.com/unit-mesh/autodev-worker/commit/2bf7817))
+- **project-config:** fix scroll container layout ([7c62ccb](https://github.com/unit-mesh/autodev-worker/commit/7c62ccb))
+- **route:** await params in GET function to correctly parse id ([0685638](https://github.com/unit-mesh/autodev-worker/commit/0685638))
+- **ui:** adjust container padding in page layout ([c8c959a](https://github.com/unit-mesh/autodev-worker/commit/c8c959a))
+- **web:** add missing copyCode dependency to useEffect ([9f0d853](https://github.com/unit-mesh/autodev-worker/commit/9f0d853))
+
+### 🔥 Performance
+
+- **frontend:** optimize copyCode with useCallback ([b6befea](https://github.com/unit-mesh/autodev-worker/commit/b6befea))
+
+### ❤️ Thank You
+
+- CGQAQ
+- Phodal Huang @phodal
+
 ## 0.1.2 (2025-06-07)
 
 ### 🚀 Features
