@@ -122,7 +122,7 @@ export class LLMService {
         status: u.status,
         title: u.title,
         contentLength: u.content?.length || 0,
-        contentPreview: u.content?.substring(0, 200) + (u.content && u.content.length > 200 ? '...' : '')
+        contentPreview: u.content ? (u.content.substring(0, 200) + (u.content.length > 200 ? '...' : '')) : 'No content'
       }))
     });
     this.log('Generated prompt:', { prompt: prompt.substring(0, 2000) + (prompt.length > 2000 ? '...' : '') });
@@ -180,7 +180,10 @@ Analyze this GitHub issue and extract keywords for code search:
         prompt += `\n\n**Additional Context from URLs:**\n`;
         successfulUrls.forEach((urlData, index) => {
           prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
-          prompt += `${urlData.content.substring(0, 1000)}${urlData.content.length > 1000 ? '...' : ''}\n`;
+          const content = urlData.content || '';
+          if (content) {
+            prompt += `${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}\n`;
+          }
         });
       }
     }
@@ -844,7 +847,10 @@ Focus on:
         prompt += `\n\n**Additional Context from URLs:**\n`;
         successfulUrls.forEach((urlData, index) => {
           prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
-          prompt += `${urlData.content.substring(0, 800)}${urlData.content.length > 800 ? '...' : ''}\n`;
+          const content = urlData.content || '';
+          if (content) {
+            prompt += `${content.substring(0, 800)}${content.length > 800 ? '...' : ''}\n`;
+          }
         });
       }
     }
