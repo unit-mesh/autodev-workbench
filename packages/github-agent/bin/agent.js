@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { AIAgent } = require('../dist/agent.js');
 const readline = require('readline');
 const path = require('path');
