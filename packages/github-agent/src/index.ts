@@ -6,3 +6,4 @@ export { ContextAnalyzer } from "./services/context-analyzer";
 export { LLMService } from "./services/llm-service";
 export { AnalysisReportGenerator } from "./services/analysis-report-generator";
 export { installGitHubFetchUrlContentTool } from "./capabilities/tools/github-fetch-url-content";
+export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analyze-issue";
