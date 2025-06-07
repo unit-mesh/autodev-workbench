@@ -19,7 +19,7 @@ const http = require('http');
 require('dotenv').config();
 
 // Import services from the built package
-const { GitHubService, ContextAnalyzer, AnalysisReportGenerator } = require('../dist/index.js');
+const { GitHubService, ContextAnalyzer, AnalysisReportGenerator, performanceMonitor, EnhancedUI } = require('../dist/index.js');
 
 /**
  * CLI Configuration and Constants
@@ -284,184 +284,32 @@ async function performPreChecks(owner, repo, issueNumber, githubToken, options) 
 }
 
 /**
- * Enhanced logging system for better user experience and debugging
+ * Enhanced UI for better developer experience
+ * EnhancedUI is now imported from the main module above
  */
-class AnalysisLogger {
-  constructor(options = {}) {
-    this.verbose = options.verbose || false;
-    this.logFile = options.logFile || path.join(process.cwd(), 'analysis.log');
-    this.startTime = Date.now();
-    this.stepLogs = [];
 
-    // Initialize log file
-    this.writeToFile(`\n=== Analysis Session Started at ${new Date().toISOString()} ===\n`);
-  }
-
-  writeToFile(message) {
-    try {
-      fs.appendFileSync(this.logFile, message + '\n');
-    } catch (error) {
-      // Silently fail if can't write to log file
-    }
-  }
-
-  // User-friendly output
-  info(message) {
-    console.log(message);
-    this.writeToFile(`[INFO] ${message}`);
-  }
-
-  // Success messages
-  success(message) {
-    console.log(`✅ ${message}`);
-    this.writeToFile(`[SUCCESS] ${message}`);
-  }
-
-  // Warning messages
-  warn(message) {
-    console.log(`⚠️  ${message}`);
-    this.writeToFile(`[WARN] ${message}`);
-  }
-
-  // Error messages
-  error(message) {
-    console.log(`❌ ${message}`);
-    this.writeToFile(`[ERROR] ${message}`);
-  }
-
-  // Verbose-only messages
-  debug(message, data = null) {
-    if (this.verbose) {
-      console.log(`🔍 ${message}`);
-    }
-    this.writeToFile(`[DEBUG] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}`);
-  }
-
-  // Step logging with details
-  step(stepName, details = null) {
-    const stepInfo = {
-      name: stepName,
-      timestamp: new Date().toISOString(),
-      details: details
-    };
-    this.stepLogs.push(stepInfo);
-    this.writeToFile(`[STEP] ${stepName}${details ? '\n' + JSON.stringify(details, null, 2) : ''}`);
-  }
-
-  // LLM call logging
-  llmCall(provider, model, operation, input = null, output = null) {
-    const llmLog = {
-      provider,
-      model,
-      operation,
-      timestamp: new Date().toISOString(),
-      inputLength: input ? input.length : 0,
-      outputLength: output ? output.length : 0
-    };
-
-    this.info(`🤖 ${operation} using ${provider} (${model})`);
-    this.writeToFile(`[LLM] ${JSON.stringify(llmLog, null, 2)}`);
-
-    if (input && this.verbose) {
-      this.writeToFile(`[LLM_INPUT] ${input.substring(0, 1000)}${input.length > 1000 ? '...' : ''}`);
-    }
-    if (output) {
-      this.writeToFile(`[LLM_OUTPUT] ${output.substring(0, 2000)}${output.length > 2000 ? '...' : ''}`);
-    }
-  }
-
-  // URL processing logging
-  urlProcessing(urls, results) {
-    const successful = results.filter(r => r.status === 'success').length;
-    const failed = results.filter(r => r.status === 'error').length;
-
-    this.info(`🌐 Processed ${urls.length} URLs: ${successful} successful, ${failed} failed`);
-
-    if (this.verbose && successful > 0) {
-      results.filter(r => r.status === 'success').forEach(result => {
-        this.debug(`  ✅ ${result.url} (${result.content_length} chars)`);
-      });
-    }
-
-    if (failed > 0) {
-      results.filter(r => r.status === 'error').forEach(result => {
-        this.debug(`  ❌ ${result.url}: ${result.error}`);
-      });
-    }
-
-    this.writeToFile(`[URL_PROCESSING] ${JSON.stringify({ urls, results }, null, 2)}`);
-  }
-
-  // Analysis results logging
-  analysisResults(results) {
-    const { relatedCode, suggestions } = results;
-
-    this.info(`📊 Analysis Results:`);
-    this.info(`   • ${relatedCode.files.length} relevant files found`);
-    this.info(`   • ${relatedCode.symbols.length} symbols identified`);
-    this.info(`   • ${suggestions.length} suggestions generated`);
-
-    if (this.verbose && relatedCode.files.length > 0) {
-      this.debug('Top relevant files:');
-      relatedCode.files.slice(0, 5).forEach((file, index) => {
-        this.debug(`  ${index + 1}. ${file.path} (${(file.relevanceScore * 100).toFixed(1)}% relevance)`);
-      });
-    }
-
-    this.writeToFile(`[ANALYSIS_RESULTS] ${JSON.stringify(results, null, 2)}`);
-  }
-
-  // Final summary
-  complete(message) {
-    const elapsed = Math.round((Date.now() - this.startTime) / 1000);
-    this.success(`${message} (completed in ${elapsed}s)`);
-    this.info(`📝 Detailed logs saved to: ${this.logFile}`);
-    this.writeToFile(`=== Analysis Session Completed in ${elapsed}s ===\n`);
-  }
-}
-
-/**
- * Enhanced progress tracker with cleaner output
- */
-class ProgressTracker {
-  constructor(totalSteps, logger) {
-    this.totalSteps = totalSteps;
-    this.currentStep = 0;
-    this.logger = logger;
-    this.startTime = Date.now();
-  }
-
-  step(message, details = null) {
-    this.currentStep++;
-    const progress = Math.round((this.currentStep / this.totalSteps) * 100);
-
-    console.log(`\n[${this.currentStep}/${this.totalSteps}] ${message}`);
-    this.logger.step(message, details);
-  }
-
-  complete(message) {
-    const elapsed = Math.round((Date.now() - this.startTime) / 1000);
-    this.logger.complete(message);
-  }
-}
+// ProgressTracker functionality is now integrated into EnhancedUI
 
 /**
  * Main analysis function
  */
 async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
-  // Initialize enhanced logging
-  const logger = new AnalysisLogger({
+  // Initialize enhanced UI
+  const ui = new EnhancedUI({
     verbose: options.verbose,
-    logFile: path.join(process.cwd(), `analysis-${owner}-${repo}-${issueNumber}.log`)
+    logFile: path.join(process.cwd(), `analysis-${owner}-${repo}-${issueNumber}.log`),
+    showProgress: true,
+    colorOutput: true
   });
 
-  const progress = new ProgressTracker(5, logger);
-
   try {
-    logger.info(`🔍 Analyzing issue #${issueNumber} in ${owner}/${repo}`);
+    // Display header
+    ui.header(
+      `GitHub Issue Analysis`,
+      `Analyzing issue #${issueNumber} in ${owner}/${repo}`
+    );
 
     // Initialize performance monitoring
-    const { performanceMonitor } = require('../dist/utils/performance-monitor.js');
     performanceMonitor.start('total_analysis');
 
     // Initialize services
@@ -469,15 +317,18 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
     const contextAnalyzer = new ContextAnalyzer(options.workspace);
     const reportGenerator = new AnalysisReportGenerator(githubToken);
 
-    progress.step('Fetching issue details from GitHub', {
+    ui.step('Fetching issue details from GitHub', {
       repository: `${owner}/${repo}`,
       issueNumber: issueNumber
     });
 
     // Get the issue
+    const issueStepStartTime = Date.now();
     const issue = await githubService.getIssue(owner, repo, issueNumber);
-    logger.info(`📋 Issue: "${issue.title}"`);
-    logger.debug('Issue details', {
+    ui.stepComplete(Date.now() - issueStepStartTime);
+
+    ui.info(`📋 Issue: "${issue.title}"`);
+    ui.debug('Issue details', {
       created: issue.created_at,
       state: issue.state,
       labels: issue.labels.map(l => l.name),
@@ -487,41 +338,44 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
     // Fetch URL content if enabled
     let urlContent = [];
     if (options.fetchUrls && issue.body) {
-      progress.step('Extracting and fetching URLs from issue content', {
+      ui.step('Extracting and fetching URLs from issue content', {
         fetchUrls: true,
         timeout: options.urlTimeout
       });
 
       try {
+        const urlStepStartTime = Date.now();
         // Use the existing URL fetching capability from github-analyze-issue
         const { fetchUrlsFromIssue, extractUrlsFromText } = require('../dist/index.js');
 
         // First extract URLs to show what we found
         const extractedUrls = extractUrlsFromText(issue.body);
         if (extractedUrls.length > 0) {
-          logger.debug(`Found ${extractedUrls.length} URLs to process`, extractedUrls);
+          ui.debug(`Found ${extractedUrls.length} URLs to process`, extractedUrls);
         } else {
-          logger.debug('No URLs found in issue content');
+          ui.debug('No URLs found in issue content');
         }
 
         // Fetch content from URLs
         urlContent = await fetchUrlsFromIssue(issue.body, options.urlTimeout);
+        ui.stepComplete(Date.now() - urlStepStartTime);
 
         // Log results in a clean, summarized way
         if (urlContent.length > 0) {
-          logger.urlProcessing(extractedUrls, urlContent);
+          ui.urlProcessing(extractedUrls, urlContent);
         }
       } catch (error) {
-        logger.warn(`URL fetching failed: ${error.message}`);
-        logger.debug('URL fetching error details', { error: error.stack });
+        ui.stepFailed(error.message);
+        ui.warn(`URL fetching failed: ${error.message}`);
+        ui.debug('URL fetching error details', { error: error.stack });
       }
     } else if (!options.fetchUrls) {
-      logger.debug('URL fetching disabled by user option');
+      ui.debug('URL fetching disabled by user option');
     } else {
-      logger.debug('No issue body content to extract URLs from');
+      ui.debug('No issue body content to extract URLs from');
     }
 
-    progress.step('Analyzing codebase for relevant code', {
+    ui.step('Analyzing codebase for relevant code', {
       workspace: options.workspace,
       urlContentAvailable: urlContent.length > 0
     });
@@ -533,20 +387,24 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
     };
 
     // Perform the analysis
+    const analysisStepStartTime = Date.now();
     const analysisResult = await contextAnalyzer.analyzeIssue(enhancedIssue);
+    ui.stepComplete(Date.now() - analysisStepStartTime);
 
-    progress.step('Processing analysis results');
+    ui.step('Processing analysis results');
 
     // Log analysis results in a structured way
-    logger.analysisResults(analysisResult);
+    ui.analysisResults(analysisResult);
+    ui.stepComplete();
 
-    progress.step('Generating comprehensive analysis report', {
+    ui.step('Generating comprehensive analysis report', {
       language: options.language,
       includeFileContent: options.includeContent,
       maxFiles: options.maxFiles,
       uploadToGitHub: options.upload
     });
 
+    const reportStepStartTime = Date.now();
     const { report, uploadResult } = await reportGenerator.generateAndUploadReport(
       owner,
       repo,
@@ -559,26 +417,21 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
         maxFiles: options.maxFiles
       }
     );
+    ui.stepComplete(Date.now() - reportStepStartTime);
 
     // Handle results
     if (options.upload) {
       if (uploadResult?.success) {
-        logger.success('Report uploaded to GitHub successfully!');
-        logger.info(`   📝 Comment ID: ${uploadResult.commentId}`);
-        logger.info(`   🔗 Comment URL: ${uploadResult.commentUrl}`);
-        progress.complete('Analysis completed and uploaded to GitHub');
+        ui.uploadSuccess(uploadResult.commentId, uploadResult.commentUrl);
+        ui.complete('Analysis completed and uploaded to GitHub');
       } else {
-        logger.error(`Upload failed: ${uploadResult?.error}`);
-        logger.debug('Upload error details', uploadResult);
+        ui.error(`Upload failed: ${uploadResult?.error}`);
+        ui.debug('Upload error details', uploadResult);
         process.exit(EXIT_CODES.UPLOAD_ERROR);
       }
     } else {
-      progress.complete('Analysis report generated');
-      logger.info(`\n📄 Generated Analysis Report:`);
-      logger.info(`   Use --upload flag to post this report to GitHub issue #${issueNumber}`);
-      console.log('\n' + '='.repeat(80));
-      console.log(report);
-      console.log('='.repeat(80));
+      ui.complete('Analysis report generated');
+      ui.displayReport(report, issueNumber);
     }
 
     // End performance monitoring and log summary
@@ -590,8 +443,8 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
     return EXIT_CODES.SUCCESS;
 
   } catch (error) {
-    logger.error(`Analysis failed: ${error.message}`);
-    logger.debug('Error details', {
+    ui.error(`Analysis failed: ${error.message}`);
+    ui.debug('Error details', {
       message: error.message,
       stack: error.stack,
       name: error.name
@@ -599,11 +452,13 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
 
     // Provide user-friendly error messages based on error type
     if (error.message.includes('GitHub API')) {
-      logger.info('💡 Tip: Check your GITHUB_TOKEN and repository access permissions');
+      ui.helpTip('github');
     } else if (error.message.includes('workspace')) {
-      logger.info('💡 Tip: Verify the workspace path exists and contains code files');
+      ui.helpTip('workspace');
     } else if (error.message.includes('LLM') || error.message.includes('model')) {
-      logger.info('💡 Tip: Check your LLM provider configuration (GLM_TOKEN, DEEPSEEK_TOKEN, etc.)');
+      ui.helpTip('llm');
+    } else {
+      ui.helpTip('general');
     }
 
     return EXIT_CODES.ANALYSIS_ERROR;

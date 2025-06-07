@@ -8,3 +8,5 @@ export { configureLLMProvider, hasLLMProvider, getLLMProviderStatus } from "./se
 export { AnalysisReportGenerator } from "./services/analysis-report-generator";
 export { installGitHubFetchUrlContentTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/github-fetch-url-content";
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analyze-issue";
+export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
+export { EnhancedUI } from "./utils/enhanced-ui";

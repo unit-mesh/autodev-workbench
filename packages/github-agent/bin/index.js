@@ -4,7 +4,7 @@ const { GitHubAgentServer } = require('../dist/index.js');
 
 async function main() {
   const server = new GitHubAgentServer({
-    name: "github-agent",
+    name: "autodev-github-agent",
     version: "0.1.0",
   });
 
