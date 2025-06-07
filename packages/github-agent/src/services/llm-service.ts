@@ -363,51 +363,6 @@ Respond only with valid JSON:`;
     return 'general';
   }
 
-  /**
-   * Generate structured analysis plan in the expected format
-   */
-  async generateStructuredAnalysisPlan(
-    issue: GitHubIssue,
-    analysisResult: IssueAnalysisResult,
-    language: 'zh' | 'en' = 'zh'
-  ): Promise<StructuredAnalysisPlan> {
-    const prompt = this.buildStructuredAnalysisPlanPrompt(issue, analysisResult, language);
-
-    if (!this.llmConfig) {
-      return this.fallbackStructuredAnalysisPlan(issue, analysisResult, language);
-    }
-
-    try {
-      const messages: CoreMessage[] = [
-        {
-          role: "system",
-          content: language === 'zh'
-            ? "你是一个专业的软件架构师和代码分析专家。基于GitHub问题和代码分析结果，生成结构化的分析和优化计划。始终用有效的JSON格式回复。"
-            : "You are an expert software architect and code analyst. Generate structured analysis and optimization plans based on GitHub issues and code analysis results. Always respond with valid JSON format."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ];
-
-      const { text } = await generateText({
-        model: this.llmConfig.openai(this.llmConfig.fullModel),
-        messages,
-        temperature: 0.3,
-      });
-
-      const plan = this.parseStructuredAnalysisPlan(text, language);
-      return plan;
-    } catch (error) {
-      console.warn(`LLM structured analysis plan generation failed: ${error.message}`);
-      return this.fallbackStructuredAnalysisPlan(issue, analysisResult, language);
-    }
-  }
-
-  /**
-   * Generate comprehensive analysis report for GitHub issue
-   */
   async generateAnalysisReport(
     issue: GitHubIssue,
     analysisResult: IssueAnalysisResult
