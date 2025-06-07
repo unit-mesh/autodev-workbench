@@ -1,16 +1,20 @@
-# GitHub Agent MCP Server
+# AutoDev GitHub Backend Agent
 
-A Model Context Protocol (MCP) server that provides GitHub issue analysis capabilities with code context integration. This server can fetch GitHub issues, analyze them, and provide relevant code context from your local workspace using the AutoDev context-worker.
+A comprehensive Model Context Protocol (MCP) server that provides advanced GitHub issue analysis capabilities with intelligent code context integration. This server can fetch GitHub issues, analyze them with AI-powered insights, and provide relevant code context from your local workspace using the AutoDev ecosystem.
 
-## Features
+## ✨ Key Features
 
-- **GitHub Issues Integration**: Fetch and analyze GitHub issues from any repository
-- **🧠 AI-Powered Keyword Extraction**: Uses LLM to intelligently extract search keywords from issue descriptions
-- **Code Context Analysis**: Analyze your local codebase to find relevant files, symbols, and APIs
-- **Multi-Strategy Search**: Combines ripgrep, symbol analysis, and relevance scoring
-- **Issue-Code Correlation**: Automatically correlate GitHub issues with relevant code in your workspace
-- **Smart Fallback**: Works with or without LLM configuration
-- **MCP Protocol Support**: Full Model Context Protocol implementation for seamless AI assistant integration
+- **🔍 GitHub Issues Integration**: Fetch, analyze, and interact with GitHub issues from any repository
+- **🧠 AI-Powered Analysis**: Uses LLM to intelligently extract keywords, generate insights, and create analysis reports
+- **🌐 Web Content Processing**: Automatically fetch and convert web URLs to markdown using Puppeteer, Cheerio, and TurndownService
+- **📊 Code Context Analysis**: Analyze your local codebase to find relevant files, symbols, and APIs using advanced search strategies
+- **🎯 Multi-Strategy Search**: Combines LLM analysis, ripgrep text search, symbol analysis, and relevance scoring
+- **📝 Automated Reporting**: Generate and upload comprehensive analysis reports directly to GitHub issues
+- **🌍 Multi-Language Support**: Supports both English and Chinese report generation
+- **🏗️ Design Pattern Architecture**: Built with Strategy, Factory, and Template Method patterns for extensibility
+- **⚡ Smart Caching**: Advanced caching system for improved performance
+- **🔄 Smart Fallback**: Works with or without LLM configuration using rule-based alternatives
+- **🔌 MCP Protocol Support**: Full Model Context Protocol implementation for seamless AI assistant integration
 
 ## Installation
 
@@ -86,13 +90,19 @@ autodev-github-agent
 autodev-github-agent --port 3001
 ```
 
+#### Standalone Issue Analysis
+
+```bash
+autodev-analyze-issue --owner microsoft --repo vscode --issue 12345
+```
+
 ### Available Tools
 
-The GitHub Agent provides four main MCP tools:
+The GitHub Agent provides six comprehensive MCP tools:
 
 #### 1. `github_get_issues`
 
-Fetch GitHub issues from a repository.
+Fetch GitHub issues from a repository with advanced filtering options.
 
 **Parameters:**
 - `owner` (string): Repository owner (username or organization)
@@ -117,13 +127,15 @@ Fetch GitHub issues from a repository.
 
 #### 2. `github_analyze_issue`
 
-Analyze a specific GitHub issue and find related code in your workspace.
+Analyze a specific GitHub issue with AI-powered insights and automatic URL content fetching.
 
 **Parameters:**
 - `owner` (string): Repository owner
 - `repo` (string): Repository name
 - `issue_number` (number): Issue number to analyze
 - `workspace_path` (optional): Path to workspace (defaults to current directory)
+- `fetch_urls` (optional): Automatically fetch content from URLs in issue (default: true)
+- `url_timeout` (optional): Timeout for URL fetching in milliseconds (default: 10000)
 
 **Example:**
 ```json
@@ -131,7 +143,8 @@ Analyze a specific GitHub issue and find related code in your workspace.
   "owner": "microsoft",
   "repo": "vscode",
   "issue_number": 12345,
-  "workspace_path": "/path/to/your/project"
+  "workspace_path": "/path/to/your/project",
+  "fetch_urls": true
 }
 ```
 
@@ -158,7 +171,7 @@ Get detailed context for a GitHub issue including related code and suggestions.
 }
 ```
 
-#### 4. `github_smart_search` (NEW!)
+#### 4. `github_smart_search`
 
 Intelligently search for code related to any query using AI-generated keywords and multiple search strategies.
 
@@ -182,13 +195,108 @@ Intelligently search for code related to any query using AI-generated keywords a
 }
 ```
 
-**Features:**
+#### 5. `github_upload_analysis`
+
+Analyze a GitHub issue and automatically upload the analysis results as a comment to the issue.
+
+**Parameters:**
+- `owner` (string): Repository owner
+- `repo` (string): Repository name
+- `issue_number` (number): Issue number to analyze and upload results to
+- `workspace_path` (optional): Path to workspace (defaults to current directory)
+- `language` (optional): Language for the report - "en" or "zh" (default: "en")
+- `include_file_content` (optional): Include file content in the report (default: false)
+- `max_files` (optional): Maximum number of files to include (default: 10)
+
+**Example:**
+```json
+{
+  "owner": "microsoft",
+  "repo": "vscode",
+  "issue_number": 12345,
+  "language": "zh",
+  "include_file_content": true
+}
+```
+
+#### 6. `github_fetch_url_content`
+
+Fetch and convert web page content to markdown for analysis, with support for extracting URLs from GitHub issues.
+
+**Parameters:**
+- `url` (string): URL to fetch content from
+- `timeout` (optional): Request timeout in milliseconds (default: 10000)
+- `extract_urls` (optional): Extract URLs from GitHub issue content (default: false)
+- `issue_content` (optional): GitHub issue content to extract URLs from
+
+**Example:**
+```json
+{
+  "url": "https://example.com/documentation",
+  "timeout": 15000
+}
+```
+
+## 🚀 Advanced Capabilities
+
+### AI-Powered Analysis
 - **🧠 LLM-powered keyword extraction**: Uses AI models to intelligently analyze issue descriptions and generate relevant search terms
-- **🔍 Multi-strategy search**: Combines ripgrep text search, symbol analysis, and relevance scoring
 - **📊 Intelligent relevance scoring**: Ranks results by likelihood of being related to your query
 - **🎯 Context-aware suggestions**: Provides actionable recommendations based on AI-detected issue type
+- **📝 Automated report generation**: Creates comprehensive analysis reports with detailed plans and recommendations
+
+### Multi-Strategy Search
+- **🔍 Hybrid search approach**: Combines LLM analysis, ripgrep text search, symbol analysis, and relevance scoring
 - **📋 Comprehensive analysis**: Includes files, symbols, APIs, and detailed explanations
 - **🔄 Smart fallback**: Works with rule-based extraction when LLM is not configured
+- **⚡ Performance optimization**: Advanced caching and efficient search algorithms
+
+### Web Content Integration
+- **🌐 Automatic URL fetching**: Extracts and processes URLs from GitHub issues
+- **📄 HTML to Markdown conversion**: Uses Cheerio and TurndownService for clean content extraction
+- **🧹 Content cleaning**: Removes scripts, styles, and navigation elements for focused analysis
+
+## 💡 Usage Examples
+
+### Basic Issue Analysis
+```json
+{
+  "tool": "github_analyze_issue",
+  "arguments": {
+    "owner": "microsoft",
+    "repo": "vscode",
+    "issue_number": 12345,
+    "workspace_path": "/path/to/your/project"
+  }
+}
+```
+
+### Smart Search for Bug Investigation
+```json
+{
+  "tool": "github_smart_search",
+  "arguments": {
+    "owner": "microsoft",
+    "repo": "vscode",
+    "query": "TypeError: Cannot read property 'length' of undefined in file explorer",
+    "search_depth": "deep"
+  }
+}
+```
+
+### Automated Analysis Upload
+```json
+{
+  "tool": "github_upload_analysis",
+  "arguments": {
+    "owner": "microsoft",
+    "repo": "vscode",
+    "issue_number": 12345,
+    "language": "zh",
+    "include_file_content": true
+  }
+}
+```
 
 ## Integration with AI Assistants
 
@@ -209,19 +317,34 @@ Add to your Claude Desktop MCP configuration:
       "command": "npx",
       "args": ["@autodev/github-agent@latest"],
       "env": {
-        "GITHUB_TOKEN": "your_github_token_here"
+        "GITHUB_TOKEN": "your_github_token_here",
+        "GLM_TOKEN": "your_glm_token_here"
       }
     }
   }
 }
 ```
 
-## How It Works
+## 🏗️ Architecture & How It Works
 
-1. **GitHub API Integration**: Uses the GitHub REST API to fetch issue data
-2. **Code Analysis**: Leverages the AutoDev context-worker to analyze your local codebase
-3. **Relevance Scoring**: Matches issue content with code files using keyword extraction and relevance scoring
-4. **Context Correlation**: Provides suggestions and correlations between issues and code
+### Design Patterns Implementation
+- **Strategy Pattern**: Multiple analysis strategies (LLM, rule-based, hybrid) for different scenarios
+- **Factory Pattern**: Dynamic creation of analyzers based on configuration and available resources
+- **Template Method Pattern**: Consistent analysis workflow with customizable steps
+
+### Processing Pipeline
+1. **GitHub API Integration**: Uses the GitHub REST API to fetch issue data and repository information
+2. **Content Processing**: Automatically fetches and converts web URLs to markdown using Puppeteer and Cheerio
+3. **AI Analysis**: Leverages LLM services for intelligent keyword extraction and context understanding
+4. **Code Analysis**: Uses the AutoDev context-worker ecosystem to analyze your local codebase
+5. **Multi-Strategy Search**: Combines ripgrep, symbol analysis, and AI-powered relevance scoring
+6. **Report Generation**: Creates comprehensive analysis reports with actionable recommendations
+7. **GitHub Integration**: Optionally uploads analysis results directly to GitHub issues as comments
+
+### Caching & Performance
+- **Advanced caching system**: Memory, file, and Redis-based caching options
+- **Intelligent cache invalidation**: Based on issue updates and workspace changes
+- **Optimized search algorithms**: Efficient file filtering and content analysis
 
 ## Development
 
@@ -246,13 +369,54 @@ pnpm test
 pnpm dev
 ```
 
-## Dependencies
+## 🔧 Available Binaries
 
-- `@autodev/context-worker`: Code analysis and context building
+The package provides two executable binaries:
+
+### `autodev-github-agent`
+Main MCP server for GitHub integration. Supports both stdio and HTTP modes.
+
+```bash
+# Start as MCP server (stdio)
+autodev-github-agent
+
+# Start as HTTP server
+autodev-github-agent --port 3000
+```
+
+### `autodev-analyze-issue`
+Standalone CLI tool for analyzing GitHub issues with code context.
+
+```bash
+# Analyze a specific issue
+autodev-analyze-issue --owner microsoft --repo vscode --issue 12345
+
+# Analyze with custom workspace
+autodev-analyze-issue --owner microsoft --repo vscode --issue 12345 --workspace /path/to/project
+```
+
+## 📦 Dependencies
+
+### Core Dependencies
+- `@autodev/context-worker`: Advanced code analysis and context building
+- `@autodev/worker-core`: Core worker functionality and utilities
 - `@modelcontextprotocol/sdk`: MCP protocol implementation
 - `@octokit/rest`: GitHub API client
 - `express`: HTTP server for MCP over HTTP
-- `zod`: Schema validation
+
+### AI & Analysis
+- `@ai-sdk/openai`: AI SDK for LLM integration
+- `ai`: AI utilities and providers
+- `zod`: Schema validation and type safety
+
+### Web Content Processing
+- `cheerio`: Server-side HTML parsing and manipulation
+- `turndown`: HTML to Markdown conversion
+- `@types/cheerio`: TypeScript definitions for Cheerio
+
+### Search & Performance
+- `@vscode/ripgrep`: Fast text search capabilities
+- `dotenv`: Environment variable management
 
 ## License
 
@@ -262,9 +426,29 @@ MIT License - see LICENSE file for details.
 
 Contributions are welcome! Please read the contributing guidelines and submit pull requests to the main repository.
 
-## Support
+## 📚 Additional Resources
+
+### Configuration Examples
+- See `.env.example` for environment variable templates
+- Check `USAGE_EXAMPLES.md` for detailed usage scenarios
+- Review `INTEGRATION_SUMMARY.md` for technical implementation details
+
+### Troubleshooting
+- Ensure GitHub token has appropriate permissions (repo, issues)
+- Verify LLM configuration for AI-powered features
+- Check workspace path accessibility for code analysis
+- Monitor timeout settings for web content fetching
+
+## 🆘 Support
 
 For issues and questions:
 - Create an issue in the GitHub repository
-- Check the documentation
+- Check the documentation and examples
 - Review existing issues for solutions
+- Consult the AutoDev ecosystem documentation
+
+## 🔗 Related Projects
+
+- [`@autodev/context-worker`](../context-worker): Core code analysis engine
+- [`@autodev/worker-core`](../worker-core): Shared utilities and functionality
+- [AutoDev Web Interface](../web): Web-based interface for the AutoDev ecosystem
