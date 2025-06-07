@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../types/index";
 import { LLMService } from "./llm-service";
 import { regexSearchFiles } from "@autodev/worker-core";
+import { listFiles } from "@autodev/worker-core";
 
 // Import context-worker functionality
 // We'll use the actual context-worker package for analysis
@@ -60,24 +61,75 @@ interface SearchKeywords {
   contextual: string[];
 }
 
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // time to live in milliseconds
+}
+
+interface AnalysisCache {
+  codebaseAnalysis?: CacheEntry<ContextWorkerResult>;
+  fileList?: CacheEntry<string[]>;
+  fileContents?: Map<string, CacheEntry<string>>;
+}
+
 export class ContextAnalyzer {
   private workspacePath: string;
   private llmService: LLMService;
+  private cache: AnalysisCache;
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly FILE_CACHE_TTL = 2 * 60 * 1000; // 2 minutes for file contents
 
   constructor(workspacePath: string = process.cwd()) {
     this.workspacePath = workspacePath;
     this.llmService = new LLMService();
+    this.cache = {
+      fileContents: new Map()
+    };
+  }
+
+  private isCacheValid<T>(entry: CacheEntry<T> | undefined): boolean {
+    if (!entry) return false;
+    return Date.now() - entry.timestamp < entry.ttl;
+  }
+
+  private setCacheEntry<T>(key: keyof AnalysisCache, data: T, ttl: number = this.CACHE_TTL): void {
+    if (key === 'fileContents') return; // Handle file contents separately
+
+    (this.cache as any)[key] = {
+      data,
+      timestamp: Date.now(),
+      ttl
+    };
+  }
+
+  private getCacheEntry<T>(key: keyof AnalysisCache): T | null {
+    if (key === 'fileContents') return null; // Handle file contents separately
+
+    const entry = (this.cache as any)[key] as CacheEntry<T> | undefined;
+    return this.isCacheValid(entry) ? entry.data : null;
   }
 
   async analyzeCodebase(): Promise<ContextWorkerResult> {
+    // Check cache first
+    const cached = this.getCacheEntry<ContextWorkerResult>('codebaseAnalysis');
+    if (cached) {
+      console.log('Using cached codebase analysis');
+      return cached;
+    }
+
     try {
       // Use context-worker to analyze the codebase
       const result = await this.runContextWorker();
+
+      // Cache the result
+      this.setCacheEntry('codebaseAnalysis', result);
+
       return result;
     } catch (error: any) {
       console.warn(`Failed to run context-worker: ${error.message}`);
       // Fallback to basic analysis
-      return {
+      const fallbackResult = {
         symbolAnalysis: {
           symbols: [],
           fileSymbols: {},
@@ -89,6 +141,11 @@ export class ContextAnalyzer {
           }
         }
       };
+
+      // Cache the fallback result with shorter TTL
+      this.setCacheEntry('codebaseAnalysis', fallbackResult, 60 * 1000); // 1 minute
+
+      return fallbackResult;
     }
   }
 
@@ -156,14 +213,73 @@ export class ContextAnalyzer {
     return result;
   }
 
+  async getFilteredFileList(): Promise<string[]> {
+    // Check cache first
+    const cached = this.getCacheEntry<string[]>('fileList');
+    if (cached) {
+      console.log('Using cached file list');
+      return cached;
+    }
+
+    try {
+      // Use worker-core's listFiles with proper filtering
+      const [files] = await listFiles(this.workspacePath, true, 5000);
+
+      // Filter out unwanted files
+      const filteredFiles = files.filter(file => {
+        // Skip directories (they end with /)
+        if (file.endsWith('/')) return false;
+
+        // Skip files that should be ignored
+        return !this.shouldSkipFileAdvanced(file);
+      });
+
+      // Cache the result
+      this.setCacheEntry('fileList', filteredFiles);
+
+      return filteredFiles;
+    } catch (error) {
+      console.warn(`Failed to get filtered file list: ${error}`);
+      // Fallback to basic file listing
+      return this.getAllFiles(this.workspacePath);
+    }
+  }
+
+  private shouldSkipFileAdvanced(filePath: string): boolean {
+    // Skip dist/, build/, and other generated directories
+    const pathParts = filePath.split('/');
+    const skipDirs = new Set(['dist', 'build', 'out', 'target', 'node_modules', '.git', '.next', 'coverage', '.nyc_output', '__pycache__', '.pytest_cache', '.cache']);
+
+    for (const part of pathParts) {
+      if (skipDirs.has(part) || part.startsWith('.')) {
+        return true;
+      }
+    }
+
+    // Skip certain file types
+    const ext = path.extname(filePath).toLowerCase();
+    const skipExts = new Set(['.map', '.min.js', '.min.css', '.bundle.js', '.chunk.js', '.lock', '.log', '.tmp', '.temp']);
+    if (skipExts.has(ext)) {
+      return true;
+    }
+
+    // Only include source code files
+    const allowedExts = new Set(['.ts', '.js', '.tsx', '.jsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h', '.cs', '.php', '.rb', '.md', '.json', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf']);
+    return !allowedExts.has(ext);
+  }
+
   async findRelevantCode(issue: GitHubIssue): Promise<CodeContext> {
-    const analysisResult = await this.analyzeCodebase();
+    // Prioritize local data - get analysis and file list in parallel
+    const [analysisResult, filteredFiles] = await Promise.all([
+      this.analyzeCodebase(),
+      this.getFilteredFileList()
+    ]);
 
     // Generate intelligent keywords using LLM-like analysis
     const keywords = await this.generateSmartKeywords(issue);
 
-    // Use ripgrep for fast text search
-    const ripgrepResults = await this.searchWithRipgrep(keywords);
+    // Use optimized search with filtered file list
+    const ripgrepResults = await this.searchWithRipgrepOptimized(keywords, filteredFiles);
 
     // Find relevant files based on multiple search strategies
     const relevantFiles = await this.findRelevantFilesAdvanced(keywords, ripgrepResults, analysisResult);
@@ -279,6 +395,74 @@ export class ContextAnalyzer {
     return [...new Set(matches.filter(m => m.length > 2))].slice(0, 10);
   }
 
+  private async searchWithRipgrepOptimized(keywords: SearchKeywords, filteredFiles: string[]): Promise<RipgrepSearchResult[]> {
+    const allKeywords = [
+      ...keywords.primary,
+      ...keywords.secondary,
+      ...keywords.technical,
+      ...keywords.contextual
+    ];
+
+    const results: RipgrepSearchResult[] = [];
+
+    // First, do a quick filename-based filtering
+    const relevantFiles = this.filterFilesByKeywords(filteredFiles, allKeywords);
+
+    console.log(`Filtered to ${relevantFiles.length} potentially relevant files from ${filteredFiles.length} total files`);
+
+    for (const keyword of allKeywords.slice(0, 10)) { // Limit to top 10 keywords
+      try {
+        const searchResults = await this.executeRipgrepSearchOptimized(keyword, relevantFiles);
+        if (searchResults) {
+          results.push(searchResults);
+        }
+      } catch (error) {
+        console.warn(`Ripgrep search failed for keyword "${keyword}":`, error);
+      }
+    }
+
+    return results;
+  }
+
+  private filterFilesByKeywords(files: string[], keywords: string[]): string[] {
+    const keywordSet = new Set(keywords.map(k => k.toLowerCase()));
+
+    return files.filter(file => {
+      const fileName = path.basename(file).toLowerCase();
+      const dirName = path.dirname(file).toLowerCase();
+
+      // Check if filename or directory contains any keywords
+      for (const keyword of keywordSet) {
+        if (fileName.includes(keyword) || dirName.includes(keyword)) {
+          return true;
+        }
+      }
+
+      // Always include certain important files
+      const importantPatterns = [
+        /\.(ts|js|tsx|jsx)$/,
+        /package\.json$/,
+        /readme\.md$/i,
+        /index\./,
+        /main\./,
+        /app\./,
+        /server\./,
+        /client\./,
+        /api\./,
+        /route/,
+        /controller/,
+        /service/,
+        /component/,
+        /util/,
+        /helper/,
+        /lib/,
+        /core/
+      ];
+
+      return importantPatterns.some(pattern => pattern.test(file));
+    });
+  }
+
   private async searchWithRipgrep(keywords: SearchKeywords): Promise<RipgrepSearchResult[]> {
     const allKeywords = [
       ...keywords.primary,
@@ -301,6 +485,114 @@ export class ContextAnalyzer {
     }
 
     return results;
+  }
+
+  private async executeRipgrepSearchOptimized(pattern: string, relevantFiles: string[]): Promise<RipgrepSearchResult | null> {
+    try {
+      // If we have a small set of relevant files, search them directly
+      if (relevantFiles.length <= 100) {
+        return await this.searchInSpecificFiles(pattern, relevantFiles);
+      }
+
+      // Otherwise, use the regular search but with better filtering
+      return await this.executeRipgrepSearch(pattern);
+    } catch (error) {
+      console.warn(`Optimized ripgrep search failed for pattern "${pattern}":`, error);
+      return null;
+    }
+  }
+
+  private async searchInSpecificFiles(pattern: string, files: string[]): Promise<RipgrepSearchResult | null> {
+    const fileMatches: Array<{
+      file: string;
+      matches: Array<{
+        line: number;
+        text: string;
+        isMatch: boolean;
+      }>;
+    }> = [];
+
+    let totalMatches = 0;
+
+    for (const file of files) {
+      if (totalMatches >= 100) break; // Limit total matches
+
+      try {
+        const content = await this.getCachedFileContent(file);
+        if (!content) continue;
+
+        const lines = content.split('\n');
+        const matches: Array<{
+          line: number;
+          text: string;
+          isMatch: boolean;
+        }> = [];
+
+        const regex = new RegExp(pattern, 'gi');
+
+        for (let i = 0; i < lines.length; i++) {
+          if (regex.test(lines[i])) {
+            matches.push({
+              line: i + 1,
+              text: lines[i],
+              isMatch: true
+            });
+            totalMatches++;
+
+            if (totalMatches >= 100) break;
+          }
+        }
+
+        if (matches.length > 0) {
+          fileMatches.push({
+            file: path.relative(this.workspacePath, file),
+            matches
+          });
+        }
+      } catch (error) {
+        // Skip files that can't be read
+        continue;
+      }
+    }
+
+    if (fileMatches.length === 0) {
+      return null;
+    }
+
+    return {
+      keyword: pattern,
+      results: `Found ${totalMatches} matches in ${fileMatches.length} files`,
+      fileMatches
+    };
+  }
+
+  private async getCachedFileContent(filePath: string): Promise<string | null> {
+    const fullPath = path.isAbsolute(filePath) ? filePath : path.join(this.workspacePath, filePath);
+
+    // Check cache first
+    const cached = this.cache.fileContents?.get(fullPath);
+    if (cached && this.isCacheValid(cached)) {
+      return cached.data;
+    }
+
+    try {
+      const content = await fs.promises.readFile(fullPath, 'utf-8');
+
+      // Cache the content
+      if (!this.cache.fileContents) {
+        this.cache.fileContents = new Map();
+      }
+
+      this.cache.fileContents.set(fullPath, {
+        data: content,
+        timestamp: Date.now(),
+        ttl: this.FILE_CACHE_TTL
+      });
+
+      return content;
+    } catch (error) {
+      return null;
+    }
   }
 
   private async executeRipgrepSearch(pattern: string): Promise<RipgrepSearchResult | null> {
@@ -439,15 +731,11 @@ export class ContextAnalyzer {
 
         fileScores.set(filePath, currentScore + matchScore);
 
-        // Store file content if we don't have it yet
+        // Store file content if we don't have it yet (use cached version)
         if (!fileContents.has(filePath)) {
-          const fullPath = path.isAbsolute(filePath) ? filePath : path.join(this.workspacePath, filePath);
-          try {
-            const content = await fs.promises.readFile(fullPath, 'utf-8');
+          const content = await this.getCachedFileContent(filePath);
+          if (content) {
             fileContents.set(filePath, content);
-          } catch (error) {
-            // Skip files that can't be read
-            console.warn(`Could not read file ${fullPath}:`, error);
           }
         }
       }
@@ -462,13 +750,11 @@ export class ContextAnalyzer {
           const currentScore = fileScores.get(relativePath) || 0;
           fileScores.set(relativePath, currentScore + symbolRelevance);
 
-          // Load file content if needed
+          // Load file content if needed (use cached version)
           if (!fileContents.has(relativePath)) {
-            try {
-              const content = await fs.promises.readFile(symbol.filePath, 'utf-8');
+            const content = await this.getCachedFileContent(symbol.filePath);
+            if (content) {
               fileContents.set(relativePath, content);
-            } catch (error) {
-              // Skip files that can't be read
             }
           }
         }
