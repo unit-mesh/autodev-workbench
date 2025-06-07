@@ -4,20 +4,50 @@ This directory contains command-line tools for the GitHub Agent package.
 
 ## Available Binaries
 
-### `autodev-github-agent`
-**File:** `index.js`  
-**Purpose:** Main MCP (Model Context Protocol) server for GitHub integration
+### `autodev-github-server`
+**File:** `server.js`
+**Purpose:** MCP (Model Context Protocol) server for GitHub integration
 
-Starts the GitHub Agent MCP server that can be used with MCP-compatible clients.
+Starts the GitHub Agent MCP server that provides GitHub-related tools via the Model Context Protocol.
 
 **Usage:**
 ```bash
 # Start server on stdio (default)
-autodev-github-agent
+autodev-github-server
 
 # Start server on HTTP port
-autodev-github-agent --port 3000
+autodev-github-server --port 3000
 ```
+
+### `autodev-ai-agent`
+**File:** `agent.js`
+**Purpose:** Autonomous AI Agent that can call MCP tools and make decisions
+
+A true AI Agent that uses LLM reasoning to plan and execute complex tasks autonomously. It can call MCP tools, analyze GitHub issues, search code, and interact with users in natural language.
+
+**Usage:**
+```bash
+# Interactive mode
+autodev-ai-agent
+
+# Single command mode
+autodev-ai-agent "Analyze GitHub issue #123 in owner/repo"
+
+# With options
+autodev-ai-agent --verbose --workspace /path/to/project
+```
+
+**Options:**
+- `--verbose, -v`: Enable verbose logging
+- `--workspace PATH, -w PATH`: Set workspace path (default: current directory)
+- `--command TEXT, -c TEXT`: Execute single command and exit
+- `--help, -h`: Show help message
+
+**Environment Variables:**
+- `GITHUB_TOKEN`: GitHub personal access token
+- `GLM_TOKEN`: 智谱AI API token
+- `DEEPSEEK_TOKEN`: DeepSeek API token
+- `OPENAI_API_KEY`: OpenAI API key
 
 ### `autodev-analyze-issue`
 **File:** `analyze-issue.js`  
@@ -75,7 +105,10 @@ During development, you can run the binaries directly:
 node bin/analyze-issue.js microsoft vscode 12345 --verbose
 
 # Run the MCP server
-node bin/index.js --port 3000
+node bin/server.js --port 3000
+
+# Run the AI Agent
+node bin/agent.js --verbose
 ```
 
 ## Migration from Scripts

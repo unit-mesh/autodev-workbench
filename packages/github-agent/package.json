@@ -4,7 +4,8 @@
   "description": "AutoDev GitHub Issue Agent MCP Server - Analyze GitHub issues with code context",
   "main": "dist/index.js",
   "bin": {
-    "autodev-github-agent": "./bin/index.js",
+    "autodev-github-server": "./bin/server.js",
+    "autodev-ai-agent": "./bin/agent.js",
     "autodev-analyze-issue": "./bin/analyze-issue.js"
   },
   "module": "dist/index.esm.js",
