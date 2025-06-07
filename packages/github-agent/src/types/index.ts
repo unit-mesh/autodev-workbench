@@ -1,3 +1,18 @@
+// Re-export platform types for unified interface
+export type {
+  PlatformType,
+  PlatformIssue,
+  PlatformRepository,
+  PlatformComment,
+  PlatformUser,
+  PlatformLabel,
+  PlatformConfig,
+  IssueQueryOptions,
+  IssueState,
+  IPlatformService
+} from '../services/platform/interfaces/IPlatformService';
+
+// Legacy GitHub-specific types (for backward compatibility)
 export interface GitHubConfig {
   token: string;
   owner: string;
@@ -54,7 +69,7 @@ export interface CodeContext {
 }
 
 export interface IssueAnalysisResult {
-  issue: GitHubIssue;
+  issue: GitHubIssue | PlatformIssue;
   relatedCode: CodeContext;
   suggestions: Array<{
     type: 'file' | 'function' | 'api' | 'symbol';
@@ -65,11 +80,14 @@ export interface IssueAnalysisResult {
   summary: string;
 }
 
-export type Preset = "GitHub";
+export type Preset = "GitHub" | "GitLab" | "Jira" | "AzureDevOps" | "Bitbucket" | "Multi";
 
 export interface GitHubAgentImplementation {
   name: string;
   version: string;
   githubToken?: string;
   workspacePath?: string;
+  // Platform-agnostic configuration
+  platformType?: PlatformType;
+  platformConfig?: PlatformConfig;
 }

@@ -2,6 +2,9 @@ export { GitHubAgentServer } from "./server";
 export type * from "./server";
 export type * from "./types/index";
 export { GitHubService } from "./services/github";
+// Platform abstraction exports
+export * from "./services/platform";
+export { PlatformAdapter } from "./services/platform/adapters/PlatformAdapter";
 export { ContextAnalyzer, FileLoader } from "./services/core";
 export { LLMService, configureLLMProvider, hasLLMProvider, getLLMProviderStatus, type LLMProviderConfig } from "./services/llm";
 export { AnalysisReportGenerator, AnalysisFormatter } from "./services/reporting";
