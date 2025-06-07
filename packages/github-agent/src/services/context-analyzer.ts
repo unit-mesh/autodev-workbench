@@ -71,6 +71,7 @@ interface AnalysisCache {
   codebaseAnalysis?: CacheEntry<ContextWorkerResult>;
   fileList?: CacheEntry<string[]>;
   fileContents?: Map<string, CacheEntry<string>>;
+  [key: string]: CacheEntry<any> | Map<string, CacheEntry<string>> | undefined;
 }
 
 export class ContextAnalyzer {
@@ -93,7 +94,7 @@ export class ContextAnalyzer {
     return Date.now() - entry.timestamp < entry.ttl;
   }
 
-  private setCacheEntry<T>(key: keyof AnalysisCache, data: T, ttl: number = this.CACHE_TTL): void {
+  private setCacheEntry<T>(key: string, data: T, ttl: number = this.CACHE_TTL): void {
     if (key === 'fileContents') return; // Handle file contents separately
 
     (this.cache as any)[key] = {
@@ -103,7 +104,7 @@ export class ContextAnalyzer {
     };
   }
 
-  private getCacheEntry<T>(key: keyof AnalysisCache): T | null {
+  private getCacheEntry<T>(key: string): T | null {
     if (key === 'fileContents') return null; // Handle file contents separately
 
     const entry = (this.cache as any)[key] as CacheEntry<T> | undefined;
@@ -269,6 +270,14 @@ export class ContextAnalyzer {
   }
 
   async findRelevantCode(issue: GitHubIssue): Promise<CodeContext> {
+    // Create cache key based on issue content
+    const issueKey = `${issue.number}-${issue.updated_at}`;
+    const cached = this.getCacheEntry<CodeContext>(`relevantCode-${issueKey}`);
+    if (cached) {
+      console.log('📦 Using cached relevant code analysis');
+      return cached;
+    }
+
     // Prioritize local data - get analysis and file list in parallel
     const [analysisResult, filteredFiles] = await Promise.all([
       this.analyzeCodebase(),
@@ -290,11 +299,16 @@ export class ContextAnalyzer {
     // Find relevant APIs
     const relevantApis = this.findRelevantApis(keywords, analysisResult);
 
-    return {
+    const result = {
       files: relevantFiles,
       symbols: relevantSymbols,
       apis: relevantApis,
     };
+
+    // Cache the result for 10 minutes
+    this.setCacheEntry(`relevantCode-${issueKey}`, result, 10 * 60 * 1000);
+
+    return result;
   }
 
   async generateSmartKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
@@ -723,7 +737,7 @@ export class ContextAnalyzer {
     // First, get candidate files using traditional methods
     const candidateFiles = await this.findRelevantFilesAdvanced(keywords, ripgrepResults, analysisResult);
 
-    // Then use LLM to analyze each candidate file
+    // Then use LLM to analyze candidate files in parallel batches
     const llmAnalyzedFiles: Array<{
       path: string;
       content: string;
@@ -734,27 +748,40 @@ export class ContextAnalyzer {
     // Analyze top candidate files with LLM (limit to avoid API costs)
     const filesToAnalyze = candidateFiles.slice(0, 8);
 
-    for (const file of filesToAnalyze) {
-      try {
-        console.log(`🔍 LLM analyzing: ${file.path}`);
-        const llmAnalysis = await this.llmService.analyzeCodeRelevance(issue, file.path, file.content);
+    // Process files in parallel batches of 3 to balance speed and API limits
+    const batchSize = 3;
+    for (let i = 0; i < filesToAnalyze.length; i += batchSize) {
+      const batch = filesToAnalyze.slice(i, i + batchSize);
 
-        if (llmAnalysis.is_relevant) {
+      console.log(`🔍 LLM analyzing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(filesToAnalyze.length / batchSize)}: ${batch.map(f => f.path).join(', ')}`);
+
+      const batchPromises = batch.map(async (file) => {
+        try {
+          const llmAnalysis = await this.llmService.analyzeCodeRelevance(issue, file.path, file.content);
+          return { file, llmAnalysis, error: null };
+        } catch (error) {
+          console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
+          return { file, llmAnalysis: null, error };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+
+      for (const { file, llmAnalysis, error } of batchResults) {
+        if (llmAnalysis && llmAnalysis.is_relevant) {
           llmAnalyzedFiles.push({
             path: file.path,
             content: file.content,
             relevanceScore: llmAnalysis.relevance_score,
             reason: llmAnalysis.reason
           });
-
           console.log(`✅ ${file.path}: ${(llmAnalysis.relevance_score * 100).toFixed(1)}% relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
-        } else {
+        } else if (llmAnalysis) {
           console.log(`❌ ${file.path}: Not relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
+        } else {
+          // Fall back to original scoring for failed files
+          llmAnalyzedFiles.push(file);
         }
-      } catch (error) {
-        console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
-        // Fall back to original scoring for this file
-        llmAnalyzedFiles.push(file);
       }
     }
 

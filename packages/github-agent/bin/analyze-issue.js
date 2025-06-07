@@ -24,6 +24,23 @@ const { GitHubService, ContextAnalyzer, AnalysisReportGenerator } = require('../
  */
 const CLI_NAME = 'autodev-analyze-issue';
 const CLI_VERSION = '0.1.0';
+
+/**
+ * Load configuration from file
+ */
+function loadConfig(configPath) {
+  try {
+    const configFile = configPath || path.join(__dirname, '..', '.autodev-config.json');
+    if (fs.existsSync(configFile)) {
+      const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+      return config;
+    }
+  } catch (error) {
+    console.warn(`⚠️  Failed to load config file: ${error.message}`);
+  }
+  return null;
+}
+
 const DEFAULT_OPTIONS = {
   language: 'en',
   upload: false,
@@ -177,15 +194,15 @@ function validateEnvironment(positionalArgs) {
     console.error('Use --help for more information');
     process.exit(EXIT_CODES.INVALID_ARGS);
   }
-  
+
   const [owner, repo, issueNumberStr] = positionalArgs;
   const issueNumber = parseInt(issueNumberStr);
-  
+
   if (isNaN(issueNumber) || issueNumber < 1) {
     console.error('Error: Issue number must be a positive integer');
     process.exit(EXIT_CODES.INVALID_ARGS);
   }
-  
+
   // Check GitHub token
   const githubToken = process.env.GITHUB_TOKEN;
   if (!githubToken) {
@@ -196,8 +213,56 @@ function validateEnvironment(positionalArgs) {
     console.error('You can create a token at: https://github.com/settings/tokens');
     process.exit(EXIT_CODES.MISSING_TOKEN);
   }
-  
+
   return { owner, repo, issueNumber, githubToken };
+}
+
+/**
+ * Perform pre-analysis checks
+ */
+async function performPreChecks(owner, repo, issueNumber, githubToken, options) {
+  console.log('🔍 Performing pre-analysis checks...');
+
+  // Check workspace
+  if (!fs.existsSync(options.workspace)) {
+    console.error(`❌ Workspace not found: ${options.workspace}`);
+    process.exit(EXIT_CODES.VALIDATION_ERROR);
+  }
+
+  // Check if workspace has code files
+  const codeFiles = fs.readdirSync(options.workspace)
+    .filter(file => {
+      const ext = path.extname(file);
+      return ['.ts', '.js', '.py', '.java', '.go', '.rs'].includes(ext);
+    });
+
+  if (codeFiles.length === 0) {
+    console.warn('⚠️  No common code files found in workspace. Analysis may be limited.');
+  }
+
+  // Test GitHub API access
+  try {
+    const { GitHubService } = require('../dist/index.js');
+    const githubService = new GitHubService(githubToken);
+    await githubService.getIssue(owner, repo, issueNumber);
+    console.log('✅ GitHub API access verified');
+  } catch (error) {
+    console.error(`❌ GitHub API access failed: ${error.message}`);
+    if (error.message.includes('Not Found')) {
+      console.error('   - Check if the repository and issue number exist');
+      console.error('   - Verify your GitHub token has access to this repository');
+    }
+    process.exit(EXIT_CODES.VALIDATION_ERROR);
+  }
+
+  // Check LLM service availability
+  if (process.env.OPENAI_API_KEY) {
+    console.log('✅ OpenAI API key found');
+  } else {
+    console.warn('⚠️  No OpenAI API key found. Using fallback analysis methods.');
+  }
+
+  console.log('✅ Pre-checks completed successfully\n');
 }
 
 /**
@@ -210,47 +275,76 @@ function log(message, isVerbose = false, options) {
 }
 
 /**
+ * Progress tracker for better user experience
+ */
+class ProgressTracker {
+  constructor(totalSteps, verbose = false) {
+    this.totalSteps = totalSteps;
+    this.currentStep = 0;
+    this.verbose = verbose;
+    this.startTime = Date.now();
+  }
+
+  step(message) {
+    this.currentStep++;
+    const progress = Math.round((this.currentStep / this.totalSteps) * 100);
+    const elapsed = Math.round((Date.now() - this.startTime) / 1000);
+
+    if (this.verbose) {
+      console.log(`[${this.currentStep}/${this.totalSteps}] (${progress}%, ${elapsed}s) ${message}`);
+    } else {
+      console.log(`[${progress}%] ${message}`);
+    }
+  }
+
+  complete(message) {
+    const elapsed = Math.round((Date.now() - this.startTime) / 1000);
+    console.log(`✅ ${message} (completed in ${elapsed}s)`);
+  }
+}
+
+/**
  * Main analysis function
  */
 async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
+  const progress = new ProgressTracker(5, options.verbose);
+
   try {
     log(`🔍 Analyzing issue #${issueNumber} in ${owner}/${repo}...`, false, options);
-    
+
     // Initialize services
     const githubService = new GitHubService(githubToken);
     const contextAnalyzer = new ContextAnalyzer(options.workspace);
     const reportGenerator = new AnalysisReportGenerator(githubToken);
-    
-    log(`📡 Fetching issue details...`, true, options);
-    
+
+    progress.step('Fetching issue details...');
+
     // Get the issue
     const issue = await githubService.getIssue(owner, repo, issueNumber);
     log(`📋 Issue: ${issue.title}`, false, options);
-    
+
     if (options.verbose) {
       log(`   Created: ${issue.created_at}`, true, options);
       log(`   State: ${issue.state}`, true, options);
       log(`   Labels: ${issue.labels.map(l => l.name).join(', ') || 'none'}`, true, options);
     }
-    
-    // Analyze the issue
-    log(`🔎 Analyzing codebase in: ${options.workspace}`, false, options);
+
+    progress.step(`Analyzing codebase in: ${options.workspace}`);
     const analysisResult = await contextAnalyzer.analyzeIssue(issue);
-    
-    log(`✅ Analysis complete:`, false, options);
+
+    progress.step('Analysis complete, processing results...');
     log(`  - Found ${analysisResult.relatedCode.files.length} relevant files`, false, options);
     log(`  - Found ${analysisResult.relatedCode.symbols.length} relevant symbols`, false, options);
     log(`  - Generated ${analysisResult.suggestions.length} suggestions`, false, options);
-    
+
     if (options.verbose) {
       log(`\n📁 Top relevant files:`, true, options);
       analysisResult.relatedCode.files.slice(0, 5).forEach((file, index) => {
         log(`  ${index + 1}. ${file.path} (${(file.relevanceScore * 100).toFixed(1)}%)`, true, options);
       });
     }
-    
-    // Generate report
-    log(`📝 Generating analysis report...`, false, options);
+
+    progress.step('Generating analysis report...');
     const { report, uploadResult } = await reportGenerator.generateAndUploadReport(
       owner,
       repo,
@@ -263,11 +357,12 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
         maxFiles: options.maxFiles
       }
     );
-    
+
     // Handle results
     if (options.upload) {
+      progress.step('Uploading report to GitHub...');
       if (uploadResult?.success) {
-        log(`✅ Report uploaded successfully!`, false, options);
+        progress.complete('Report uploaded successfully!');
         log(`   Comment ID: ${uploadResult.commentId}`, false, options);
         log(`   Comment URL: ${uploadResult.commentUrl}`, false, options);
       } else {
@@ -275,13 +370,14 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
         process.exit(EXIT_CODES.UPLOAD_ERROR);
       }
     } else {
+      progress.complete('Analysis report generated');
       log(`📄 Generated report (use --upload to post to GitHub):`, false, options);
       console.log('---');
       console.log(report);
     }
-    
+
     return EXIT_CODES.SUCCESS;
-    
+
   } catch (error) {
     console.error(`❌ Analysis failed: ${error.message}`);
     if (options.verbose) {
@@ -296,13 +392,27 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
  */
 async function main() {
   const args = process.argv.slice(2);
-  
-  // Parse arguments
+
+  // Load configuration
+  const config = loadConfig();
+
+  // Parse arguments (config provides defaults)
   const { options, positionalArgs } = parseArguments(args);
-  
+
+  // Merge config with options
+  if (config) {
+    options.maxFiles = options.maxFiles || config.analysis?.maxFiles || DEFAULT_OPTIONS.maxFiles;
+    options.language = options.language || config.analysis?.language || DEFAULT_OPTIONS.language;
+    options.includeContent = options.includeContent || config.analysis?.includeContent || DEFAULT_OPTIONS.includeContent;
+    options.upload = options.upload || config.github?.uploadByDefault || DEFAULT_OPTIONS.upload;
+  }
+
   // Validate environment
   const { owner, repo, issueNumber, githubToken } = validateEnvironment(positionalArgs);
-  
+
+  // Perform pre-checks
+  await performPreChecks(owner, repo, issueNumber, githubToken, options);
+
   // Run analysis
   const exitCode = await runAnalysis(owner, repo, issueNumber, githubToken, options);
   process.exit(exitCode);
