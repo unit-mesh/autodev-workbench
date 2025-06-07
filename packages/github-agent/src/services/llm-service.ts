@@ -4,68 +4,20 @@ import { IssueAnalysisResult } from "../types/index";
 import * as fs from "fs";
 import * as path from "path";
 import { configureLLMProvider, hasLLMProvider, LLMProviderConfig } from "./llm-provider";
+import {
+  FallbackAnalysisService,
+  LLMKeywordAnalysis,
+  CodeRelevanceAnalysis,
+  StructuredAnalysisPlan,
+  LLMAnalysisReport
+} from "./analysis/FallbackAnalysisService";
 
-interface LLMKeywordAnalysis {
-  primary_keywords: string[];
-  technical_terms: string[];
-  error_patterns: string[];
-  component_names: string[];
-  file_patterns: string[];
-  search_strategies: string[];
-  issue_type: string;
-  confidence: number;
-}
-
-interface LLMAnalysisReport {
-  summary: string;
-  current_issues: string[];
-  detailed_plan: {
-    title: string;
-    steps: Array<{
-      step_number: number;
-      title: string;
-      description: string;
-      files_to_modify: string[];
-      changes_needed: string[];
-    }>;
-  };
-  recommendations: Array<{
-    type: 'file' | 'function' | 'api' | 'symbol';
-    description: string;
-    location?: string;
-    confidence: number;
-  }>;
-  confidence: number;
-}
-
-interface StructuredAnalysisPlan {
-  title: string;
-  current_issues: Array<{
-    issue: string;
-    description: string;
-    severity: 'high' | 'medium' | 'low';
-  }>;
-  detailed_plan: Array<{
-    step_number: number;
-    title: string;
-    file_to_modify: string;
-    changes_needed: string[];
-    description: string;
-  }>;
-  language: 'zh' | 'en';
-}
-
-interface CodeRelevanceAnalysis {
-  is_relevant: boolean;
-  relevance_score: number; // 0.0 - 1.0
-  reason: string;
-  specific_areas: string[]; // Specific parts of the code that are relevant
-  confidence: number;
-}
+// Remove duplicate interfaces and classes - now imported from FallbackAnalysisService
 
 export class LLMService {
   private llmConfig: LLMProviderConfig | null;
   private logFile: string;
+  private fallbackService: FallbackAnalysisService;
 
   constructor() {
     // Configure LLM provider
@@ -73,6 +25,9 @@ export class LLMService {
 
     // Set up log file
     this.logFile = path.join(process.cwd(), 'llm-service.log');
+
+    // Initialize fallback analysis service
+    this.fallbackService = new FallbackAnalysisService();
 
     if (this.llmConfig) {
       console.log(`🤖 Using LLM provider: ${this.llmConfig.providerName}`);
@@ -111,7 +66,7 @@ export class LLMService {
     // Check if LLM provider is available
     if (!this.llmConfig) {
       this.log('LLM provider not available, using fallback');
-      return this.fallbackKeywordExtraction(issue);
+      return this.fallbackService.extractKeywords(issue);
     }
 
     const prompt = this.buildKeywordExtractionPrompt(issue);
@@ -161,7 +116,7 @@ export class LLMService {
       this.log('LLM keyword analysis failed:', { error: error.message, stack: error.stack });
       console.warn(`LLM keyword analysis failed: ${error.message}`);
       // Fallback to rule-based extraction
-      const fallbackResult = this.fallbackKeywordExtraction(issue);
+      const fallbackResult = this.fallbackService.extractKeywords(issue);
       this.log('Using fallback analysis:', fallbackResult);
       this.log('=== KEYWORD ANALYSIS FALLBACK ===');
       return fallbackResult;
@@ -250,123 +205,7 @@ Respond only with valid JSON:`;
     }
   }
 
-  private fallbackKeywordExtraction(issue: GitHubIssue): LLMKeywordAnalysis {
-    // Fallback to rule-based extraction if LLM fails
-    const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
-    
-    const primary = this.extractBasicKeywords(text);
-    const technical = this.extractTechnicalTerms(text);
-    const errors = this.extractErrorPatterns(text);
-    
-    return {
-      primary_keywords: primary.slice(0, 8),
-      technical_terms: technical.slice(0, 12),
-      error_patterns: errors.slice(0, 5),
-      component_names: this.extractComponentNames(text).slice(0, 8),
-      file_patterns: this.extractFilePatterns(text).slice(0, 6),
-      search_strategies: [...primary, ...technical].slice(0, 10),
-      issue_type: this.detectIssueType(text),
-      confidence: 0.6 // Lower confidence for fallback
-    };
-  }
-
-  private extractBasicKeywords(text: string): string[] {
-    const words = text.match(/\b\w{3,}\b/g) || [];
-    const stopWords = new Set(['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may', 'new', 'now', 'old', 'see', 'two', 'who', 'boy', 'did', 'man', 'way', 'she', 'use', 'this', 'that', 'with', 'have', 'from', 'they', 'know', 'want', 'been', 'good', 'much', 'some', 'time', 'very', 'when', 'come', 'here', 'just', 'like', 'long', 'make', 'many', 'over', 'such', 'take', 'than', 'them', 'well', 'were']);
-    
-    return [...new Set(words.filter(word => 
-      !stopWords.has(word) && 
-      word.length > 3 &&
-      !/^\d+$/.test(word)
-    ))];
-  }
-
-  private extractTechnicalTerms(text: string): string[] {
-    const patterns = [
-      /\b\w+\.(js|ts|jsx|tsx|py|java|go|rs|cpp|c|h|cs|php|rb|md)\b/g,
-      /\b(function|class|interface|method|api|endpoint|route|component|service|controller|model|view|database|table|column|field|property|attribute|parameter|argument|variable|constant|enum|struct|union|namespace|package|module|import|export|async|await|promise|callback|event|listener|handler|middleware|decorator|annotation|generic|template|abstract|static|final|private|public|protected|override|virtual|extends|implements|inherits|throws|catch|try|finally|if|else|switch|case|default|for|while|do|break|continue|return|yield|new|delete|this|super|null|undefined|true|false)\b/gi,
-      /\b(react|vue|angular|node|express|spring|django|flask|rails|laravel|symfony|asp\.net|blazor|xamarin|flutter|ionic|cordova|electron|webpack|vite|rollup|babel|typescript|javascript|python|java|kotlin|swift|objective-c|c\+\+|c#|go|rust|php|ruby|scala|clojure|haskell|erlang|elixir|dart|lua|perl|r|matlab|julia|fortran|cobol|assembly|sql|nosql|mongodb|postgresql|mysql|sqlite|redis|elasticsearch|docker|kubernetes|aws|azure|gcp|firebase|heroku|vercel|netlify|github|gitlab|bitbucket|jenkins|travis|circleci|jest|mocha|jasmine|cypress|selenium|puppeteer|playwright)\b/gi,
-    ];
-    
-    const matches: string[] = [];
-    patterns.forEach(pattern => {
-      const found = text.match(pattern) || [];
-      matches.push(...found);
-    });
-    
-    return [...new Set(matches.map(m => m.toLowerCase()))];
-  }
-
-  private extractErrorPatterns(text: string): string[] {
-    const patterns = [
-      /"[^"]+error[^"]*"/gi,
-      /'[^']+error[^']*'/gi,
-      /\berror\s*:\s*[^\n]+/gi,
-      /\bfailed\s*:\s*[^\n]+/gi,
-      /\bexception\s*:\s*[^\n]+/gi,
-      /\b\d{3}\s+(error|unauthorized|forbidden|not found|internal server error)/gi,
-    ];
-    
-    const matches: string[] = [];
-    patterns.forEach(pattern => {
-      const found = text.match(pattern) || [];
-      matches.push(...found.map(m => m.replace(/['"]/g, '').trim()));
-    });
-    
-    return [...new Set(matches.filter(m => m.length > 5))];
-  }
-
-  private extractComponentNames(text: string): string[] {
-    const patterns = [
-      /\b[A-Z][a-zA-Z0-9]*Component\b/g,
-      /\b[A-Z][a-zA-Z0-9]*Service\b/g,
-      /\b[A-Z][a-zA-Z0-9]*Controller\b/g,
-      /\b[A-Z][a-zA-Z0-9]*Manager\b/g,
-      /\b[A-Z][a-zA-Z0-9]*Handler\b/g,
-      /\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b/g, // camelCase
-    ];
-    
-    const matches: string[] = [];
-    patterns.forEach(pattern => {
-      const found = text.match(pattern) || [];
-      matches.push(...found);
-    });
-    
-    return [...new Set(matches)];
-  }
-
-  private extractFilePatterns(text: string): string[] {
-    const patterns = [
-      /\b\w+\.(js|ts|jsx|tsx|py|java|go|rs|cpp|c|h|cs|php|rb|md|json|yaml|yml|xml|html|css|scss|sass|less)\b/g,
-      /\b[a-z]+[-_][a-z]+\b/g, // kebab-case and snake_case
-    ];
-    
-    const matches: string[] = [];
-    patterns.forEach(pattern => {
-      const found = text.match(pattern) || [];
-      matches.push(...found.map(m => m.toLowerCase()));
-    });
-    
-    return [...new Set(matches)];
-  }
-
-  private detectIssueType(text: string): string {
-    if (text.includes('bug') || text.includes('error') || text.includes('fail') || text.includes('crash')) {
-      return 'bug';
-    } else if (text.includes('feature') || text.includes('enhancement') || text.includes('add') || text.includes('implement')) {
-      return 'feature';
-    } else if (text.includes('performance') || text.includes('slow') || text.includes('optimize')) {
-      return 'performance';
-    } else if (text.includes('test') || text.includes('spec') || text.includes('coverage')) {
-      return 'testing';
-    } else if (text.includes('doc') || text.includes('readme') || text.includes('comment')) {
-      return 'documentation';
-    } else if (text.includes('security') || text.includes('vulnerability') || text.includes('auth')) {
-      return 'security';
-    }
-    
-    return 'general';
-  }
+  // All fallback methods moved to FallbackAnalysisService
 
   async generateAnalysisReport(
     issue: GitHubIssue,
@@ -375,7 +214,7 @@ Respond only with valid JSON:`;
     const prompt = this.buildAnalysisReportPrompt(issue, analysisResult);
 
     if (!this.llmConfig) {
-      return this.fallbackAnalysisReport(issue, analysisResult);
+      return this.fallbackService.generateAnalysisReport(issue, analysisResult);
     }
 
     try {
@@ -400,7 +239,7 @@ Respond only with valid JSON:`;
       return report;
     } catch (error) {
       console.warn(`LLM analysis report generation failed: ${error.message}`);
-      return this.fallbackAnalysisReport(issue, analysisResult);
+      return this.fallbackService.generateAnalysisReport(issue, analysisResult);
     }
   }
 
@@ -610,91 +449,7 @@ Focus on:
     analysisResult: IssueAnalysisResult,
     language: 'zh' | 'en'
   ): StructuredAnalysisPlan {
-    const relevantFiles = analysisResult.relatedCode.files.slice(0, 5);
-
-    if (language === 'zh') {
-      return {
-        title: '分析和优化计划',
-        current_issues: [
-          {
-            issue: '需要进一步分析代码问题',
-            description: `在 ${relevantFiles.length} 个相关文件中发现潜在问题`,
-            severity: 'medium'
-          },
-          {
-            issue: '缺少详细的错误处理机制',
-            description: '基于问题描述，可能需要改进错误处理逻辑',
-            severity: 'medium'
-          }
-        ],
-        detailed_plan: [
-          {
-            step_number: 1,
-            title: '检查相关文件',
-            file_to_modify: relevantFiles[0]?.path || '待确定',
-            changes_needed: [
-              '审查代码逻辑',
-              '检查潜在的错误',
-              '验证实现方式'
-            ],
-            description: '详细检查已识别的相关文件，寻找可能导致问题的代码段'
-          },
-          {
-            step_number: 2,
-            title: '实施修复方案',
-            file_to_modify: '根据分析结果确定',
-            changes_needed: [
-              '应用错误修复',
-              '添加缺失功能',
-              '改进错误处理'
-            ],
-            description: '基于分析结果实施必要的代码修改'
-          }
-        ],
-        language: 'zh'
-      };
-    } else {
-      return {
-        title: 'Analysis and Optimization Plan',
-        current_issues: [
-          {
-            issue: 'Code analysis required for further investigation',
-            description: `Potential issues found in ${relevantFiles.length} relevant files`,
-            severity: 'medium'
-          },
-          {
-            issue: 'Missing detailed error handling mechanisms',
-            description: 'Based on issue description, error handling logic may need improvement',
-            severity: 'medium'
-          }
-        ],
-        detailed_plan: [
-          {
-            step_number: 1,
-            title: 'Review relevant files',
-            file_to_modify: relevantFiles[0]?.path || 'To be determined',
-            changes_needed: [
-              'Review code logic',
-              'Check for potential bugs',
-              'Verify implementation'
-            ],
-            description: 'Thoroughly examine the identified relevant files for potential problematic code segments'
-          },
-          {
-            step_number: 2,
-            title: 'Implement fixes',
-            file_to_modify: 'Based on analysis results',
-            changes_needed: [
-              'Apply bug fixes',
-              'Add missing functionality',
-              'Improve error handling'
-            ],
-            description: 'Implement necessary code modifications based on analysis findings'
-          }
-        ],
-        language: 'en'
-      };
-    }
+    return this.fallbackService.generateStructuredAnalysisPlan(issue, analysisResult, language);
   }
 
   private parseAnalysisReport(text: string): LLMAnalysisReport {
@@ -748,7 +503,7 @@ Focus on:
     });
 
     if (!this.llmConfig) {
-      const fallbackResult = this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+      const fallbackResult = this.fallbackService.analyzeCodeRelevance(issue, filePath, fileContent);
       this.log('Using fallback relevance analysis (no LLM provider):', { filePath, fallbackResult });
       this.log('=== CODE RELEVANCE ANALYSIS FALLBACK ===');
       return fallbackResult;
@@ -780,7 +535,7 @@ Focus on:
     } catch (error) {
       this.log('LLM code relevance analysis failed:', { filePath, error: error.message, stack: error.stack });
       console.warn(`LLM code relevance analysis failed: ${error.message}`);
-      const fallbackResult = this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+      const fallbackResult = this.fallbackService.analyzeCodeRelevance(issue, filePath, fileContent);
       this.log('Using fallback relevance analysis:', { filePath, fallbackResult });
       this.log('=== CODE RELEVANCE ANALYSIS FALLBACK ===');
       return fallbackResult;
@@ -870,72 +625,5 @@ Be precise and specific in your analysis.`;
     }
   }
 
-  private fallbackCodeRelevanceAnalysis(
-    issue: GitHubIssue,
-    filePath: string,
-    fileContent: string
-  ): CodeRelevanceAnalysis {
-    const issueText = `${issue.title} ${issue.body || ''}`.toLowerCase();
-    const contentLower = fileContent.toLowerCase();
-
-    // Simple keyword matching fallback
-    const keywords = this.extractBasicKeywords(issueText);
-    let matchCount = 0;
-    const foundKeywords: string[] = [];
-
-    for (const keyword of keywords.slice(0, 10)) {
-      if (contentLower.includes(keyword.toLowerCase())) {
-        matchCount++;
-        foundKeywords.push(keyword);
-      }
-    }
-
-    const relevanceScore = Math.min(matchCount / 5, 1); // Normalize to 0-1
-    const isRelevant = relevanceScore > 0.2;
-
-    return {
-      is_relevant: isRelevant,
-      relevance_score: relevanceScore,
-      reason: isRelevant ?
-        `File contains ${matchCount} keywords from the issue: ${foundKeywords.join(', ')}` :
-        'File does not contain significant keywords from the issue',
-      specific_areas: foundKeywords.length > 0 ?
-        [`Keywords found: ${foundKeywords.join(', ')}`] : [],
-      confidence: 0.4 // Lower confidence for fallback analysis
-    };
-  }
-
-  private fallbackAnalysisReport(issue: GitHubIssue, analysisResult: IssueAnalysisResult): LLMAnalysisReport {
-    const relevantFiles = analysisResult.relatedCode.files.slice(0, 5);
-
-    return {
-      summary: `Analysis of issue "${issue.title}" found ${relevantFiles.length} relevant files and ${analysisResult.relatedCode.symbols.length} related symbols.`,
-      current_issues: [
-        `Issue requires investigation in ${relevantFiles.length} files`,
-        'Detailed analysis needed to identify specific problems',
-        'Code changes may be required based on issue description'
-      ],
-      detailed_plan: {
-        title: 'Basic Analysis Plan',
-        steps: [
-          {
-            step_number: 1,
-            title: 'Review relevant files',
-            description: 'Examine the identified files for potential issues',
-            files_to_modify: relevantFiles.map(f => f.path),
-            changes_needed: ['Review code logic', 'Check for potential bugs', 'Verify implementation']
-          },
-          {
-            step_number: 2,
-            title: 'Implement fixes',
-            description: 'Apply necessary changes based on findings',
-            files_to_modify: [],
-            changes_needed: ['Apply bug fixes', 'Add missing functionality', 'Improve error handling']
-          }
-        ]
-      },
-      recommendations: analysisResult.suggestions,
-      confidence: 0.5
-    };
-  }
+  // All fallback methods moved to FallbackAnalysisService
 }
