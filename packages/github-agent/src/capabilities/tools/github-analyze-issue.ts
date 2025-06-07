@@ -53,7 +53,9 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
       // Fetch URL content if enabled
       let urlContent: any[] = [];
       if (fetch_urls && issue.body) {
-        console.log('🔗 Fetching URL content from issue...');
+        if (process.env.VERBOSE_URL_LOGS === 'true') {
+          console.log('🔗 Fetching URL content from issue...');
+        }
         urlContent = await fetchUrlsFromIssue(issue.body, url_timeout);
       }
 
@@ -155,12 +157,16 @@ async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promis
     return [];
   }
 
-  console.log(`📋 Found ${urls.length} URLs to fetch: ${urls.join(', ')}`);
+  if (process.env.VERBOSE_URL_LOGS === 'true') {
+    console.log(`📋 Found ${urls.length} URLs to fetch: ${urls.join(', ')}`);
+  }
 
   const results = [];
   for (const url of urls) {
     try {
-      console.log(`🌐 Fetching: ${url}`);
+      if (process.env.VERBOSE_URL_LOGS === 'true') {
+        console.log(`🌐 Fetching: ${url}`);
+      }
       const htmlContent = await fetchHtmlContent(url, timeout);
       const markdownContent = await urlToMarkdown(htmlContent);
       results.push({
@@ -170,9 +176,13 @@ async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promis
         content_length: markdownContent.length,
         status: "success"
       });
-      console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
+      if (process.env.VERBOSE_URL_LOGS === 'true') {
+        console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
+      }
     } catch (error: any) {
-      console.log(`❌ Failed to fetch: ${url} - ${error.message}`);
+      if (process.env.VERBOSE_URL_LOGS === 'true') {
+        console.log(`❌ Failed to fetch: ${url} - ${error.message}`);
+      }
       results.push({
         url: url,
         error: error.message,

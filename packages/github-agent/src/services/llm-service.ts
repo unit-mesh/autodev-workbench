@@ -29,9 +29,10 @@ export class LLMService {
     // Initialize fallback analysis service
     this.fallbackService = new FallbackAnalysisService();
 
-    if (this.llmConfig) {
+    // Only log LLM provider info in verbose mode to reduce noise
+    if (this.llmConfig && process.env.VERBOSE_LLM_LOGS === 'true') {
       console.log(`🤖 Using LLM provider: ${this.llmConfig.providerName}`);
-    } else {
+    } else if (!this.llmConfig && process.env.VERBOSE_LLM_LOGS === 'true') {
       console.warn('⚠️  No LLM provider available. LLM features will be disabled.');
     }
   }
@@ -56,9 +57,12 @@ export class LLMService {
 
     try {
       fs.appendFileSync(this.logFile, logEntry);
-      console.log(`📝 Logged to ${this.logFile}: ${message}`);
+      // Only log to console in verbose mode - reduce noise
+      if (process.env.VERBOSE_LLM_LOGS === 'true') {
+        console.log(`📝 Logged to ${this.logFile}: ${message}`);
+      }
     } catch (error) {
-      console.warn(`Failed to write to log file: ${error.message}`);
+      // Silently fail if can't write to log file to avoid noise
     }
   }
 
