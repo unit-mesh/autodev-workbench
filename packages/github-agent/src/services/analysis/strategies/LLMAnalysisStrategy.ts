@@ -51,7 +51,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
           ...llmAnalysis.search_strategies
         ]
       };
-    } catch (error) {
+    } catch (error: Error) {
       console.warn(`LLM keyword extraction failed, falling back to rule-based: ${error.message}`);
       return this.fallbackKeywordGeneration(issue);
     }
@@ -86,7 +86,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
             file.content
           );
           return { file, llmAnalysis, error: null };
-        } catch (error) {
+        } catch (error: Error) {
           console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
           return { file, llmAnalysis: null, error };
         }
@@ -222,16 +222,13 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       
       await this.llmService.analyzeIssueForKeywords(testIssue);
       return true;
-    } catch (error) {
+    } catch (error: Error) {
       console.warn('LLM service not available:', error.message);
       return false;
     }
   }
 
-  private async findCandidateFiles(
-    context: AnalysisContext,
-    keywords: SearchKeywords
-  ): Promise<Array<{
+  private async findCandidateFiles(context: AnalysisContext, keywords: SearchKeywords): Promise<Array<{
     path: string;
     content: string;
     relevanceScore: number;
