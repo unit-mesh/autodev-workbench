@@ -204,24 +204,8 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
   async isAvailable(): Promise<boolean> {
     try {
-      // Test if LLM service is accessible
-      const testIssue: GitHubIssue = {
-        id: 0,
-        number: 0,
-        title: 'test',
-        body: 'test',
-        state: 'open',
-        user: null,
-        labels: [],
-        assignees: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        closed_at: null,
-        html_url: 'test'
-      };
-      
-      await this.llmService.analyzeIssueForKeywords(testIssue);
-      return true;
+      // Simply check if LLM service is available without making actual calls
+      return this.llmService.isAvailable();
     } catch (error: any) {
       console.warn('LLM service not available:', error.message);
       return false;

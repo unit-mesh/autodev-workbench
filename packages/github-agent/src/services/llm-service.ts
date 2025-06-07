@@ -1,9 +1,9 @@
-import { generateText } from "ai";
+import { generateText, CoreMessage } from "ai";
 import { GitHubIssue } from "../types/index";
 import { IssueAnalysisResult } from "../types/index";
 import * as fs from "fs";
 import * as path from "path";
-import { getBestLLMProvider, hasLLMProvider, LLMProvider } from "./llm-provider";
+import { configureLLMProvider, hasLLMProvider, LLMProviderConfig } from "./llm-provider";
 
 interface LLMKeywordAnalysis {
   primary_keywords: string[];
@@ -59,17 +59,19 @@ interface CodeRelevanceAnalysis {
 }
 
 export class LLMService {
-  private llmProvider: LLMProvider | null;
+  private llmConfig: LLMProviderConfig | null;
   private logFile: string;
 
   constructor() {
-    // Get the best available LLM provider
-    this.llmProvider = getBestLLMProvider();
+    // Configure LLM provider
+    this.llmConfig = configureLLMProvider();
 
     // Set up log file
     this.logFile = path.join(process.cwd(), 'llm-service.log');
 
-    if (!this.llmProvider) {
+    if (this.llmConfig) {
+      console.log(`🤖 Using LLM provider: ${this.llmConfig.providerName}`);
+    } else {
       console.warn('⚠️  No LLM provider available. LLM features will be disabled.');
     }
   }
@@ -78,14 +80,14 @@ export class LLMService {
    * Check if LLM service is available
    */
   isAvailable(): boolean {
-    return this.llmProvider !== null;
+    return this.llmConfig !== null;
   }
 
   /**
    * Get the current LLM provider name
    */
   getProviderName(): string {
-    return this.llmProvider?.name || 'None';
+    return this.llmConfig?.providerName || 'None';
   }
 
   private log(message: string, data?: any): void {
@@ -102,7 +104,7 @@ export class LLMService {
 
   async analyzeIssueForKeywords(issue: GitHubIssue & { urlContent?: any[] }): Promise<LLMKeywordAnalysis> {
     // Check if LLM provider is available
-    if (!this.llmProvider) {
+    if (!this.llmConfig) {
       this.log('LLM provider not available, using fallback');
       return this.fallbackKeywordExtraction(issue);
     }
@@ -114,30 +116,32 @@ export class LLMService {
     this.log('Issue data:', {
       number: issue.number,
       title: issue.title,
-      body: issue.body?.substring(0, 500) + (issue.body?.length > 500 ? '...' : ''),
+      body: issue.body?.substring(0, 500) + (issue.body && issue.body.length > 500 ? '...' : ''),
       urlContent: issue.urlContent?.map(u => ({
         url: u.url,
         status: u.status,
         title: u.title,
         contentLength: u.content?.length || 0,
-        contentPreview: u.content?.substring(0, 200) + (u.content?.length > 200 ? '...' : '')
+        contentPreview: u.content?.substring(0, 200) + (u.content && u.content.length > 200 ? '...' : '')
       }))
     });
     this.log('Generated prompt:', { prompt: prompt.substring(0, 2000) + (prompt.length > 2000 ? '...' : '') });
 
     try {
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: "You are an expert code analyst. Analyze GitHub issues and extract relevant keywords for code search. Always respond with valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ];
+
       const { text } = await generateText({
-        model: this.llmProvider.model,
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert code analyst. Analyze GitHub issues and extract relevant keywords for code search. Always respond with valid JSON."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
         temperature: 0.3, // Lower temperature for more consistent results
       });
 
@@ -148,7 +152,7 @@ export class LLMService {
       this.log('Parsed analysis:', analysis);
       this.log('=== KEYWORD ANALYSIS SUCCESS ===');
       return analysis;
-    } catch (error) {
+    } catch (error: any) {
       this.log('LLM keyword analysis failed:', { error: error.message, stack: error.stack });
       console.warn(`LLM keyword analysis failed: ${error.message}`);
       // Fallback to rule-based extraction
@@ -366,25 +370,27 @@ Respond only with valid JSON:`;
   ): Promise<StructuredAnalysisPlan> {
     const prompt = this.buildStructuredAnalysisPlanPrompt(issue, analysisResult, language);
 
-    if (!this.llmProvider) {
+    if (!this.llmConfig) {
       return this.fallbackStructuredAnalysisPlan(issue, analysisResult, language);
     }
 
     try {
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: language === 'zh'
+            ? "你是一个专业的软件架构师和代码分析专家。基于GitHub问题和代码分析结果，生成结构化的分析和优化计划。始终用有效的JSON格式回复。"
+            : "You are an expert software architect and code analyst. Generate structured analysis and optimization plans based on GitHub issues and code analysis results. Always respond with valid JSON format."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ];
+
       const { text } = await generateText({
-        model: this.llmProvider.model,
-        messages: [
-          {
-            role: "system",
-            content: language === 'zh'
-              ? "你是一个专业的软件架构师和代码分析专家。基于GitHub问题和代码分析结果，生成结构化的分析和优化计划。始终用有效的JSON格式回复。"
-              : "You are an expert software architect and code analyst. Generate structured analysis and optimization plans based on GitHub issues and code analysis results. Always respond with valid JSON format."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
         temperature: 0.3,
       });
 
@@ -405,23 +411,25 @@ Respond only with valid JSON:`;
   ): Promise<LLMAnalysisReport> {
     const prompt = this.buildAnalysisReportPrompt(issue, analysisResult);
 
-    if (!this.llmProvider) {
+    if (!this.llmConfig) {
       return this.fallbackAnalysisReport(issue, analysisResult);
     }
 
     try {
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: "You are an expert software architect and code analyst. Generate comprehensive analysis reports for GitHub issues based on code analysis results. Always respond with valid JSON in the specified format."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ];
+
       const { text } = await generateText({
-        model: this.llmProvider.model,
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert software architect and code analyst. Generate comprehensive analysis reports for GitHub issues based on code analysis results. Always respond with valid JSON in the specified format."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
         temperature: 0.3,
       });
 
@@ -776,7 +784,7 @@ Focus on:
       fileContentPreview: fileContent.substring(0, 300) + (fileContent.length > 300 ? '...' : '')
     });
 
-    if (!this.llmProvider) {
+    if (!this.llmConfig) {
       const fallbackResult = this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
       this.log('Using fallback relevance analysis (no LLM provider):', { filePath, fallbackResult });
       this.log('=== CODE RELEVANCE ANALYSIS FALLBACK ===');
@@ -784,18 +792,20 @@ Focus on:
     }
 
     try {
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: "You are an expert code analyst. Analyze whether a specific code file is relevant to a GitHub issue. Always respond with valid JSON in the specified format."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ];
+
       const { text } = await generateText({
-        model: this.llmProvider.model,
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert code analyst. Analyze whether a specific code file is relevant to a GitHub issue. Always respond with valid JSON in the specified format."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
         temperature: 0.2, // Lower temperature for more consistent analysis
       });
 
