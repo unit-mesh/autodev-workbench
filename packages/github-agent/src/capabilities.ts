@@ -1,0 +1,17 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { GitHubTools } from "./capabilities/tools";
+import type { Preset, GitHubAgentImplementation } from "./types/index";
+
+export function installCapabilities(
+  mcpInst: McpServer, 
+  metadata: GitHubAgentImplementation, 
+  preset: Preset
+) {
+  switch (preset) {
+    case "GitHub":
+      GitHubTools.forEach(tool => tool(mcpInst.tool.bind(mcpInst)));
+      break;
+    default:
+      throw new Error(`Unsupported preset: ${preset}`);
+  }
+}
