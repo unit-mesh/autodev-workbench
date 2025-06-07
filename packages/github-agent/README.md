@@ -5,8 +5,11 @@ A Model Context Protocol (MCP) server that provides GitHub issue analysis capabi
 ## Features
 
 - **GitHub Issues Integration**: Fetch and analyze GitHub issues from any repository
+- **🧠 AI-Powered Keyword Extraction**: Uses LLM to intelligently extract search keywords from issue descriptions
 - **Code Context Analysis**: Analyze your local codebase to find relevant files, symbols, and APIs
+- **Multi-Strategy Search**: Combines ripgrep, symbol analysis, and relevance scoring
 - **Issue-Code Correlation**: Automatically correlate GitHub issues with relevant code in your workspace
+- **Smart Fallback**: Works with or without LLM configuration
 - **MCP Protocol Support**: Full Model Context Protocol implementation for seamless AI assistant integration
 
 ## Installation
@@ -27,11 +30,37 @@ pnpm add -g @autodev/github-agent
 
 ### Environment Variables
 
+#### Required: GitHub Token
 Set your GitHub personal access token:
 
 ```bash
 export GITHUB_TOKEN=your_github_token_here
 ```
+
+#### Optional: LLM Configuration (for AI-powered features)
+
+**Option 1: GLM (ZhipuAI) - Recommended**
+```bash
+export GLM_TOKEN=your_glm_token_here
+export LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+export LLM_MODEL=glm-4-air
+```
+
+**Option 2: OpenAI**
+```bash
+export OPENAI_API_KEY=your_openai_api_key_here
+export LLM_BASE_URL=https://api.openai.com/v1
+export LLM_MODEL=gpt-4o-mini
+```
+
+**Option 3: Other OpenAI-compatible APIs**
+```bash
+export LLM_BASE_URL=https://your-api-endpoint.com/v1
+export OPENAI_API_KEY=your_api_key_here
+export LLM_MODEL=your_model_name
+```
+
+> **Note**: LLM configuration is optional. The system will fall back to rule-based keyword extraction if no LLM is configured.
 
 ### GitHub Token Setup
 
@@ -154,11 +183,12 @@ Intelligently search for code related to any query using AI-generated keywords a
 ```
 
 **Features:**
-- **AI-powered keyword extraction**: Automatically generates relevant search terms from your query
-- **Multi-strategy search**: Combines ripgrep text search, symbol analysis, and relevance scoring
-- **Intelligent relevance scoring**: Ranks results by likelihood of being related to your query
-- **Context-aware suggestions**: Provides actionable recommendations based on issue type
-- **Comprehensive analysis**: Includes files, symbols, APIs, and detailed explanations
+- **🧠 LLM-powered keyword extraction**: Uses AI models to intelligently analyze issue descriptions and generate relevant search terms
+- **🔍 Multi-strategy search**: Combines ripgrep text search, symbol analysis, and relevance scoring
+- **📊 Intelligent relevance scoring**: Ranks results by likelihood of being related to your query
+- **🎯 Context-aware suggestions**: Provides actionable recommendations based on AI-detected issue type
+- **📋 Comprehensive analysis**: Includes files, symbols, APIs, and detailed explanations
+- **🔄 Smart fallback**: Works with rule-based extraction when LLM is not configured
 
 ## Integration with AI Assistants
 

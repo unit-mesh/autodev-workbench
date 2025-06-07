@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../types/index";
+import { LLMService } from "./llm-service";
 
 // Import context-worker functionality
 // We'll use the actual context-worker package for analysis
@@ -66,9 +67,11 @@ interface SearchKeywords {
 
 export class ContextAnalyzer {
   private workspacePath: string;
+  private llmService: LLMService;
 
   constructor(workspacePath: string = process.cwd()) {
     this.workspacePath = workspacePath;
+    this.llmService = new LLMService();
   }
 
   async analyzeCodebase(): Promise<ContextWorkerResult> {
@@ -183,21 +186,35 @@ export class ContextAnalyzer {
     };
   }
 
-  private async generateSmartKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
-    const text = `${issue.title} ${issue.body || ''}`;
+  async generateSmartKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
+    try {
+      // Use LLM for intelligent keyword extraction
+      const llmAnalysis = await this.llmService.analyzeIssueForKeywords(issue);
 
-    // Extract different types of keywords
-    const primary = this.extractPrimaryKeywords(text);
-    const secondary = this.extractSecondaryKeywords(text);
-    const technical = this.extractTechnicalTerms(text);
-    const contextual = this.extractContextualKeywords(text);
+      return {
+        primary: llmAnalysis.primary_keywords,
+        secondary: llmAnalysis.component_names,
+        technical: llmAnalysis.technical_terms,
+        contextual: [...llmAnalysis.error_patterns, ...llmAnalysis.file_patterns, ...llmAnalysis.search_strategies]
+      };
+    } catch (error) {
+      console.warn(`LLM keyword extraction failed, falling back to rule-based: ${error.message}`);
 
-    return {
-      primary,
-      secondary,
-      technical,
-      contextual
-    };
+      // Fallback to rule-based extraction
+      const text = `${issue.title} ${issue.body || ''}`;
+
+      const primary = this.extractPrimaryKeywords(text);
+      const secondary = this.extractSecondaryKeywords(text);
+      const technical = this.extractTechnicalTerms(text);
+      const contextual = this.extractContextualKeywords(text);
+
+      return {
+        primary,
+        secondary,
+        technical,
+        contextual
+      };
+    }
   }
 
   private extractPrimaryKeywords(text: string): string[] {
@@ -348,8 +365,8 @@ export class ContextAnalyzer {
   async analyzeIssue(issue: GitHubIssue): Promise<IssueAnalysisResult> {
     const relatedCode = await this.findRelevantCode(issue);
 
-    const suggestions = this.generateSuggestions(issue, relatedCode);
-    const summary = this.generateSummary(issue, relatedCode);
+    const suggestions = await this.generateSuggestions(issue, relatedCode);
+    const summary = await this.generateSummary(issue, relatedCode);
 
     return {
       issue,
@@ -640,12 +657,12 @@ export class ContextAnalyzer {
     return null;
   }
 
-  private generateSuggestions(issue: GitHubIssue, codeContext: CodeContext): Array<{
+  private async generateSuggestions(issue: GitHubIssue, codeContext: CodeContext): Promise<Array<{
     type: 'file' | 'function' | 'api' | 'symbol';
     description: string;
     location?: string;
     confidence: number;
-  }> {
+  }>> {
     const suggestions: Array<{
       type: 'file' | 'function' | 'api' | 'symbol';
       description: string;
@@ -654,7 +671,7 @@ export class ContextAnalyzer {
     }> = [];
 
     // Analyze issue type and generate targeted suggestions
-    const issueType = this.analyzeIssueType(issue);
+    const issueType = await this.analyzeIssueType(issue);
 
     // Generate suggestions based on relevant files
     for (const file of codeContext.files.slice(0, 5)) {
@@ -684,22 +701,33 @@ export class ContextAnalyzer {
       .slice(0, 10);
   }
 
-  private analyzeIssueType(issue: GitHubIssue): string {
-    const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+  async analyzeIssueType(issue: GitHubIssue): Promise<string> {
+    try {
+      // Use LLM for intelligent issue type detection
+      const llmAnalysis = await this.llmService.analyzeIssueForKeywords(issue);
+      return llmAnalysis.issue_type;
+    } catch (error) {
+      console.warn(`LLM issue type analysis failed, falling back to rule-based: ${error.message}`);
 
-    if (text.includes('bug') || text.includes('error') || text.includes('fail') || text.includes('crash')) {
-      return 'bug';
-    } else if (text.includes('feature') || text.includes('enhancement') || text.includes('add') || text.includes('implement')) {
-      return 'feature';
-    } else if (text.includes('performance') || text.includes('slow') || text.includes('optimize')) {
-      return 'performance';
-    } else if (text.includes('test') || text.includes('spec') || text.includes('coverage')) {
-      return 'testing';
-    } else if (text.includes('doc') || text.includes('readme') || text.includes('comment')) {
-      return 'documentation';
+      // Fallback to rule-based detection
+      const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+
+      if (text.includes('bug') || text.includes('error') || text.includes('fail') || text.includes('crash')) {
+        return 'bug';
+      } else if (text.includes('feature') || text.includes('enhancement') || text.includes('add') || text.includes('implement')) {
+        return 'feature';
+      } else if (text.includes('performance') || text.includes('slow') || text.includes('optimize')) {
+        return 'performance';
+      } else if (text.includes('test') || text.includes('spec') || text.includes('coverage')) {
+        return 'testing';
+      } else if (text.includes('doc') || text.includes('readme') || text.includes('comment')) {
+        return 'documentation';
+      } else if (text.includes('security') || text.includes('vulnerability') || text.includes('auth')) {
+        return 'security';
+      }
+
+      return 'general';
     }
-
-    return 'general';
   }
 
   private generateFileSuggestion(file: any, issueType: string): {
@@ -765,11 +793,11 @@ export class ContextAnalyzer {
     };
   }
 
-  private generateSummary(issue: GitHubIssue, codeContext: CodeContext): string {
+  private async generateSummary(issue: GitHubIssue, codeContext: CodeContext): Promise<string> {
     const fileCount = codeContext.files.length;
     const symbolCount = codeContext.symbols.length;
     const apiCount = codeContext.apis.length;
-    const issueType = this.analyzeIssueType(issue);
+    const issueType = await this.analyzeIssueType(issue);
 
     let summary = `## Issue Analysis: #${issue.number} - "${issue.title}"\n\n`;
 
