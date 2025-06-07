@@ -4,7 +4,8 @@
   "description": "GitHub Agent MCP Server - Analyze GitHub issues with code context",
   "main": "dist/index.js",
   "bin": {
-    "autodev-github-agent": "./bin/index.js"
+    "autodev-github-agent": "./bin/index.js",
+    "autodev-analyze-issue": "./bin/analyze-issue.js"
   },
   "module": "dist/index.esm.js",
   "type": "commonjs",
@@ -34,7 +35,7 @@
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rimraf dist",
     "prepublishOnly": "pnpm run build",
-    "analyze-issue": "node scripts/analyze-and-upload.js"
+    "analyze-issue": "node bin/analyze-issue.js"
   },
   "keywords": [
     "mcp",
