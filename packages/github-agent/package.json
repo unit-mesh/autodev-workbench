@@ -53,10 +53,13 @@
     "@autodev/worker-core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.11.1",
     "@octokit/rest": "^20.1.2",
+    "@types/cheerio": "^1.0.0",
     "@vscode/ripgrep": "^1.15.9",
     "ai": "^4.0.0",
+    "cheerio": "^1.0.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "turndown": "^7.2.0",
     "zod": "^3.24.4"
   },
   "devDependencies": {
