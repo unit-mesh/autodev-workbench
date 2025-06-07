@@ -122,4 +122,84 @@ export class GitHubService {
       throw new Error(`Failed to fetch repository info: ${error.message}`);
     }
   }
+
+  /**
+   * Add a comment to a GitHub issue
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @param issueNumber Issue number
+   * @param body Comment body (markdown supported)
+   * @returns Comment data
+   */
+  async addIssueComment(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    body: string
+  ): Promise<{
+    id: number;
+    html_url: string;
+    created_at: string;
+    updated_at: string;
+  }> {
+    try {
+      const { data } = await this.octokit.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body,
+      });
+
+      return {
+        id: data.id,
+        html_url: data.html_url,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to add comment to issue #${issueNumber}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get comments for a GitHub issue
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @param issueNumber Issue number
+   * @returns Array of comments
+   */
+  async getIssueComments(
+    owner: string,
+    repo: string,
+    issueNumber: number
+  ): Promise<Array<{
+    id: number;
+    body: string;
+    user: { login: string; id: number } | null;
+    created_at: string;
+    updated_at: string;
+    html_url: string;
+  }>> {
+    try {
+      const { data } = await this.octokit.issues.listComments({
+        owner,
+        repo,
+        issue_number: issueNumber,
+      });
+
+      return data.map(comment => ({
+        id: comment.id,
+        body: comment.body,
+        user: comment.user ? {
+          login: comment.user.login,
+          id: comment.user.id,
+        } : null,
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        html_url: comment.html_url,
+      }));
+    } catch (error: any) {
+      throw new Error(`Failed to fetch comments for issue #${issueNumber}: ${error.message}`);
+    }
+  }
 }
