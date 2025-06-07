@@ -1,6 +1,6 @@
 {
   "name": "@autodev/worker-core",
-  "version": "0.1.2",
+  "version": "0.3.5",
   "description": "AutoDev Worker Core",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
