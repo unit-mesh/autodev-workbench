@@ -152,9 +152,15 @@ export class ContextAnalyzer {
   /**
    * Main issue analysis method - uses Template Method Pattern
    */
-  async analyzeIssue(issue: GitHubIssue): Promise<IssueAnalysisResult> {
+  async analyzeIssue(issue: GitHubIssue & { urlContent?: any[] }): Promise<IssueAnalysisResult> {
     console.log(`🎯 Analyzing issue #${issue.number}: ${issue.title}`);
-    
+
+    // Log URL content if available
+    if (issue.urlContent && issue.urlContent.length > 0) {
+      const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
+      console.log(`📄 Using content from ${successfulUrls.length} URLs for enhanced analysis`);
+    }
+
     // Step 1: Find relevant code using strategy pattern
     const relatedCode = await this.findRelevantCode(issue);
 

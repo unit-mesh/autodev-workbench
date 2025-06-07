@@ -12,6 +12,8 @@
 
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 
 // Load environment variables from .env file
 require('dotenv').config();
@@ -47,7 +49,9 @@ const DEFAULT_OPTIONS = {
   includeContent: false,
   maxFiles: 10,
   workspace: process.cwd(),
-  verbose: false
+  verbose: false,
+  fetchUrls: true,
+  urlTimeout: 10000
 };
 
 /**
@@ -88,6 +92,9 @@ OPTIONS:
   --include-content   Include file content in the report [default: false]
   --max-files=N       Maximum number of files to include [default: 10]
   --workspace=PATH    Workspace path to analyze [default: current directory]
+  --fetch-urls        Fetch and analyze URLs from issue content [default: true]
+  --no-fetch-urls     Disable URL fetching
+  --url-timeout=MS    Timeout for URL fetching in milliseconds [default: 10000]
   --verbose, -v       Enable verbose output
   --help, -h          Show this help message
   --version           Show version information
@@ -150,6 +157,10 @@ function parseArguments(args) {
       options.upload = true;
     } else if (arg === '--include-content') {
       options.includeContent = true;
+    } else if (arg === '--fetch-urls') {
+      options.fetchUrls = true;
+    } else if (arg === '--no-fetch-urls') {
+      options.fetchUrls = false;
     } else if (arg.startsWith('--language=')) {
       const language = arg.split('=')[1];
       if (!['en', 'zh'].includes(language)) {
@@ -171,6 +182,13 @@ function parseArguments(args) {
         process.exit(EXIT_CODES.INVALID_ARGS);
       }
       options.workspace = path.resolve(workspace);
+    } else if (arg.startsWith('--url-timeout=')) {
+      const timeout = parseInt(arg.split('=')[1]);
+      if (isNaN(timeout) || timeout < 1000 || timeout > 60000) {
+        console.error('Error: url-timeout must be a number between 1000 and 60000 milliseconds');
+        process.exit(EXIT_CODES.INVALID_ARGS);
+      }
+      options.urlTimeout = timeout;
     } else if (!arg.startsWith('--')) {
       positionalArgs.push(arg);
     } else {
@@ -329,8 +347,31 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
       log(`   Labels: ${issue.labels.map(l => l.name).join(', ') || 'none'}`, true, options);
     }
 
+    // Fetch URL content if enabled
+    let urlContent = [];
+    if (options.fetchUrls && issue.body) {
+      progress.step('Fetching URL content from issue...');
+      try {
+        // Use the existing URL fetching capability from github-analyze-issue
+        const { fetchUrlsFromIssue } = require('../dist/index.js');
+        urlContent = await fetchUrlsFromIssue(issue.body, options.urlTimeout);
+        if (urlContent.length > 0) {
+          log(`📄 Fetched content from ${urlContent.filter(u => u.status === 'success').length} URLs`, false, options);
+        }
+      } catch (error) {
+        log(`⚠️  URL fetching failed: ${error.message}`, true, options);
+      }
+    }
+
     progress.step(`Analyzing codebase in: ${options.workspace}`);
-    const analysisResult = await contextAnalyzer.analyzeIssue(issue);
+
+    // Enhance issue with URL content for better analysis
+    const enhancedIssue = {
+      ...issue,
+      urlContent: urlContent
+    };
+
+    const analysisResult = await contextAnalyzer.analyzeIssue(enhancedIssue);
 
     progress.step('Analysis complete, processing results...');
     log(`  - Found ${analysisResult.relatedCode.files.length} relevant files`, false, options);
@@ -425,5 +466,7 @@ if (require.main === module) {
     process.exit(EXIT_CODES.ANALYSIS_ERROR);
   });
 }
+
+
 
 module.exports = { main, parseArguments, validateEnvironment, runAnalysis };

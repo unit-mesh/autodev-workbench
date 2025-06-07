@@ -70,9 +70,9 @@ export class LLMService {
     this.model = process.env.LLM_MODEL || "glm-4-air";
   }
 
-  async analyzeIssueForKeywords(issue: GitHubIssue): Promise<LLMKeywordAnalysis> {
+  async analyzeIssueForKeywords(issue: GitHubIssue & { urlContent?: any[] }): Promise<LLMKeywordAnalysis> {
     const prompt = this.buildKeywordExtractionPrompt(issue);
-    
+
     try {
       const { text } = await generateText({
         model: this.openai(this.model),
@@ -99,15 +99,29 @@ export class LLMService {
     }
   }
 
-  private buildKeywordExtractionPrompt(issue: GitHubIssue): string {
-    return `
+  private buildKeywordExtractionPrompt(issue: GitHubIssue & { urlContent?: any[] }): string {
+    let prompt = `
 Analyze this GitHub issue and extract keywords for code search:
 
 **Issue Title:** ${issue.title}
 
 **Issue Body:** ${issue.body || 'No description provided'}
 
-**Labels:** ${issue.labels.map(l => l.name).join(', ') || 'None'}
+**Labels:** ${issue.labels.map(l => l.name).join(', ') || 'None'}`;
+
+    // Add URL content if available
+    if (issue.urlContent && issue.urlContent.length > 0) {
+      const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
+      if (successfulUrls.length > 0) {
+        prompt += `\n\n**Additional Context from URLs:**\n`;
+        successfulUrls.forEach((urlData, index) => {
+          prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
+          prompt += `${urlData.content.substring(0, 1000)}${urlData.content.length > 1000 ? '...' : ''}\n`;
+        });
+      }
+    }
+
+    prompt += `
 
 Please extract keywords in the following categories and respond with JSON:
 
@@ -121,6 +135,7 @@ Please extract keywords in the following categories and respond with JSON:
 8. **confidence**: Float between 0.0-1.0 indicating confidence in the analysis
 
 Focus on terms that would help find relevant code files, functions, and components.
+Pay special attention to any technical information from the URL content provided above.
 
 Example response format:
 {

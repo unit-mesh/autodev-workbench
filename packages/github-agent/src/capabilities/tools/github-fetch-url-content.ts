@@ -137,7 +137,7 @@ export const installGitHubFetchUrlContentTool: ToolLike = (installer) => {
   });
 };
 
-function extractUrlsFromText(text: string): string[] {
+export function extractUrlsFromText(text: string): string[] {
   // Regular expression to match URLs
   const urlRegex = /https?:\/\/[^\s\)]+/g;
   const matches = text.match(urlRegex) || [];
@@ -156,7 +156,7 @@ function extractUrlsFromText(text: string): string[] {
   return filteredUrls;
 }
 
-function fetchHtmlContent(url: string, timeout: number): Promise<string> {
+export function fetchHtmlContent(url: string, timeout: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === 'https:' ? https : http;
@@ -215,13 +215,13 @@ function fetchHtmlContent(url: string, timeout: number): Promise<string> {
   });
 }
 
-function extractTitle(html: string): string {
+export function extractTitle(html: string): string {
   const $ = cheerio.load(html);
   const title = $('title').text().trim();
   return title || 'Untitled';
 }
 
-async function urlToMarkdown(html: string): Promise<string> {
+export async function urlToMarkdown(html: string): Promise<string> {
   // Use cheerio to parse and clean up the HTML
   const $ = cheerio.load(html);
 
@@ -258,4 +258,43 @@ async function urlToMarkdown(html: string): Promise<string> {
     .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive line breaks
     .replace(/^\s+|\s+$/g, '') // Trim
     .replace(/\s+$/gm, ''); // Remove trailing spaces from lines
+}
+
+/**
+ * Fetch URLs from issue content and return processed results
+ */
+export async function fetchUrlsFromIssue(issueContent: string, timeout: number = 10000): Promise<any[]> {
+  const urls = extractUrlsFromText(issueContent);
+
+  if (urls.length === 0) {
+    return [];
+  }
+
+  console.log(`📋 Found ${urls.length} URLs to fetch: ${urls.join(', ')}`);
+
+  const results = [];
+  for (const url of urls) {
+    try {
+      console.log(`🌐 Fetching: ${url}`);
+      const htmlContent = await fetchHtmlContent(url, timeout);
+      const markdownContent = await urlToMarkdown(htmlContent);
+      results.push({
+        url: url,
+        title: extractTitle(htmlContent),
+        content: markdownContent,
+        content_length: markdownContent.length,
+        status: "success"
+      });
+      console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
+    } catch (error: any) {
+      console.log(`❌ Failed to fetch: ${url} - ${error.message}`);
+      results.push({
+        url: url,
+        error: error.message,
+        status: "error"
+      });
+    }
+  }
+
+  return results;
 }
