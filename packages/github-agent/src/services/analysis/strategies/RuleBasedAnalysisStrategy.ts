@@ -1,8 +1,9 @@
 /**
  * Rule-Based Analysis Strategy
- * 
+ *
  * Implements analysis using traditional rule-based approaches.
  * Serves as a fallback when LLM services are unavailable.
+ * Now integrates with SymbolAnalyser for intelligent symbol analysis.
  */
 
 import { GitHubIssue } from "../../../types/index";
@@ -14,8 +15,35 @@ import {
 } from "../interfaces/IAnalysisStrategy";
 import * as path from 'path';
 
+// Import SymbolAnalyser and related types from context-worker
+import { SymbolAnalyser } from "@autodev/context-worker/src/analyzer/analyzers/SymbolAnalyser";
+import { SymbolAnalysisResult, SymbolInfo } from "@autodev/context-worker/src/analyzer/CodeAnalysisResult";
+import { CodeCollector } from "@autodev/context-worker/src/analyzer/CodeCollector";
+import { ILanguageServiceProvider, LanguageServiceProvider } from "@autodev/context-worker/src/base/common/languages/languageService";
+
 export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
   readonly name = 'rule-based';
+  private symbolAnalyser: SymbolAnalyser | null = null;
+  private languageService: ILanguageServiceProvider | null = null;
+
+  constructor() {
+    super();
+    this.initializeSymbolAnalyser();
+  }
+
+  /**
+   * Initialize SymbolAnalyser for intelligent symbol analysis
+   */
+  private async initializeSymbolAnalyser(): Promise<void> {
+    try {
+      this.languageService = new LanguageServiceProvider();
+      this.symbolAnalyser = new SymbolAnalyser(this.languageService);
+      console.log('🔧 SymbolAnalyser initialized for RuleBasedAnalysisStrategy');
+    } catch (error) {
+      console.warn('Failed to initialize SymbolAnalyser:', error);
+      this.symbolAnalyser = null;
+    }
+  }
 
   async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
     console.log('📋 Generating keywords using rule-based analysis...');
@@ -92,6 +120,92 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     context: AnalysisContext,
     keywords: SearchKeywords
   ): Promise<AnalysisResult['symbols']> {
+    console.log('🔍 Finding relevant symbols using SymbolAnalyser...');
+
+    const relevantSymbols: AnalysisResult['symbols'] = [];
+
+    // Ensure SymbolAnalyser is initialized
+    if (!this.symbolAnalyser) {
+      await this.initializeSymbolAnalyser();
+    }
+
+    if (!this.symbolAnalyser) {
+      console.warn('SymbolAnalyser not available, falling back to context analysis');
+      return this.findRelevantSymbolsFallback(context, keywords);
+    }
+
+    try {
+      // Create CodeCollector with workspace path
+      const codeCollector = new CodeCollector(context.workspacePath);
+
+      // Add relevant files to the collector (limit to avoid performance issues)
+      const filesToAnalyze = context.filteredFiles
+        .filter(file => this.isCodeFile(file))
+        .slice(0, 50) // Limit to top 50 files for performance
+        .map(file => {
+          const fullPath = path.join(context.workspacePath, file);
+          const language = codeCollector.inferLanguage(file) || 'unknown';
+          return {
+            file: fullPath,
+            content: '', // Content will be loaded by SymbolAnalyser
+            language: language
+          };
+        });
+
+      codeCollector.setAllFiles(filesToAnalyze);
+
+      // Perform symbol analysis
+      const symbolAnalysisResult: SymbolAnalysisResult = await this.symbolAnalyser.analyze(codeCollector);
+
+      console.log(`📊 Analyzed ${symbolAnalysisResult.symbols.length} symbols from ${filesToAnalyze.length} files`);
+
+      // Find symbols that match keywords
+      for (const symbol of symbolAnalysisResult.symbols) {
+        const relevanceScore = this.calculateSymbolRelevanceWithKeywords(symbol, keywords);
+
+        if (relevanceScore > 0.3) { // Lower threshold for better recall
+          relevantSymbols.push({
+            name: symbol.name,
+            type: this.getSymbolKindName(symbol.kind),
+            location: {
+              file: path.relative(context.workspacePath, symbol.filePath),
+              line: symbol.position.start.row,
+              column: symbol.position.start.column,
+            },
+            description: symbol.comment || symbol.qualifiedName,
+          });
+        }
+      }
+
+      // Sort by relevance and return top results
+      return relevantSymbols
+        .sort((a, b) => {
+          // Re-calculate scores for sorting
+          const scoreA = this.calculateSymbolRelevanceWithKeywords(
+            symbolAnalysisResult.symbols.find(s => s.name === a.name) || {} as SymbolInfo,
+            keywords
+          );
+          const scoreB = this.calculateSymbolRelevanceWithKeywords(
+            symbolAnalysisResult.symbols.find(s => s.name === b.name) || {} as SymbolInfo,
+            keywords
+          );
+          return scoreB - scoreA;
+        })
+        .slice(0, 15); // Return top 15 symbols
+
+    } catch (error) {
+      console.error('Error in symbol analysis:', error);
+      return this.findRelevantSymbolsFallback(context, keywords);
+    }
+  }
+
+  /**
+   * Fallback method when SymbolAnalyser is not available
+   */
+  private findRelevantSymbolsFallback(
+    context: AnalysisContext,
+    keywords: SearchKeywords
+  ): AnalysisResult['symbols'] {
     const relevantSymbols: AnalysisResult['symbols'] = [];
 
     if (!context.analysisResult.symbolAnalysis) {
@@ -291,7 +405,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
   private extractHttpMethod(symbol: any): string | null {
     const text = `${symbol.name} ${symbol.qualifiedName}`.toLowerCase();
     const methods = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options'];
-    
+
     for (const method of methods) {
       if (text.includes(method)) {
         return method.toUpperCase();
@@ -299,5 +413,107 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     }
 
     return null;
+  }
+
+  /**
+   * Enhanced symbol relevance calculation with keyword matching
+   */
+  private calculateSymbolRelevanceWithKeywords(symbol: SymbolInfo, keywords: SearchKeywords): number {
+    const allKeywords = [
+      ...keywords.primary.map(k => ({ keyword: k, weight: 3.0 })),
+      ...keywords.secondary.map(k => ({ keyword: k, weight: 2.0 })),
+      ...keywords.technical.map(k => ({ keyword: k, weight: 2.5 })),
+      ...keywords.contextual.map(k => ({ keyword: k, weight: 1.5 }))
+    ];
+
+    let score = 0;
+    const symbolName = symbol.name.toLowerCase();
+    const qualifiedName = symbol.qualifiedName.toLowerCase();
+    const comment = (symbol.comment || '').toLowerCase();
+    const filePath = symbol.filePath.toLowerCase();
+
+    for (const { keyword, weight } of allKeywords) {
+      const keywordLower = keyword.toLowerCase();
+
+      // Exact name match (highest score)
+      if (symbolName === keywordLower) {
+        score += weight * 4;
+        continue;
+      }
+
+      // Name contains keyword
+      if (symbolName.includes(keywordLower)) {
+        score += weight * 2;
+      }
+
+      // Qualified name contains keyword
+      if (qualifiedName.includes(keywordLower)) {
+        score += weight * 1.5;
+      }
+
+      // Comment contains keyword
+      if (comment.includes(keywordLower)) {
+        score += weight * 1;
+      }
+
+      // File path contains keyword
+      if (filePath.includes(keywordLower)) {
+        score += weight * 0.5;
+      }
+
+      // Fuzzy matching for camelCase/snake_case
+      if (this.fuzzyMatch(symbolName, keywordLower)) {
+        score += weight * 1.5;
+      }
+    }
+
+    // Bonus for important symbol types
+    const symbolKind = symbol.kind;
+    if (symbolKind === 5 || symbolKind === 11) { // Class or Interface
+      score *= 1.2;
+    } else if (symbolKind === 6 || symbolKind === 12) { // Method or Function
+      score *= 1.1;
+    }
+
+    return score;
+  }
+
+  /**
+   * Fuzzy matching for camelCase and snake_case patterns
+   */
+  private fuzzyMatch(symbolName: string, keyword: string): boolean {
+    // Convert camelCase to words
+    const symbolWords = symbolName
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .filter(w => w.length > 0);
+
+    const keywordWords = keyword
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .filter(w => w.length > 0);
+
+    // Check if any keyword word matches any symbol word
+    return keywordWords.some(kw =>
+      symbolWords.some(sw => sw.includes(kw) || kw.includes(sw))
+    );
+  }
+
+  /**
+   * Check if a file is a code file that should be analyzed for symbols
+   */
+  private isCodeFile(filePath: string): boolean {
+    const codeExtensions = [
+      '.ts', '.js', '.tsx', '.jsx',
+      '.py', '.java', '.cpp', '.c', '.h',
+      '.cs', '.php', '.rb', '.go', '.rs',
+      '.kt', '.swift', '.scala', '.clj'
+    ];
+
+    return codeExtensions.some(ext => filePath.toLowerCase().endsWith(ext));
   }
 }
