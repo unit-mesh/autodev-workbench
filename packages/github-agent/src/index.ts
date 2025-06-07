@@ -4,6 +4,7 @@ export type * from "./types/index";
 export { GitHubService } from "./services/github-service";
 export { ContextAnalyzer } from "./services/context-analyzer";
 export { LLMService } from "./services/llm-service";
+export { LLMProviderFactory, getBestLLMProvider, hasLLMProvider } from "./services/llm-provider";
 export { AnalysisReportGenerator } from "./services/analysis-report-generator";
 export { installGitHubFetchUrlContentTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/github-fetch-url-content";
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analyze-issue";

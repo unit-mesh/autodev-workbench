@@ -1,7 +1,9 @@
 import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { GitHubIssue } from "../types/index";
 import { IssueAnalysisResult } from "../types/index";
+import * as fs from "fs";
+import * as path from "path";
+import { getBestLLMProvider, hasLLMProvider, LLMProvider } from "./llm-provider";
 
 interface LLMKeywordAnalysis {
   primary_keywords: string[];
@@ -57,25 +59,75 @@ interface CodeRelevanceAnalysis {
 }
 
 export class LLMService {
-  private openai;
-  private model: string;
+  private llmProvider: LLMProvider | null;
+  private logFile: string;
 
   constructor() {
-    // Configure LLM provider similar to web package
-    this.openai = createOpenAI({
-      compatibility: "compatible",
-      baseURL: process.env.LLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4",
-      apiKey: process.env.GLM_TOKEN || process.env.OPENAI_API_KEY,
-    });
-    this.model = process.env.LLM_MODEL || "glm-4-air";
+    // Get the best available LLM provider
+    this.llmProvider = getBestLLMProvider();
+
+    // Set up log file
+    this.logFile = path.join(process.cwd(), 'llm-service.log');
+
+    if (!this.llmProvider) {
+      console.warn('⚠️  No LLM provider available. LLM features will be disabled.');
+    }
+  }
+
+  /**
+   * Check if LLM service is available
+   */
+  isAvailable(): boolean {
+    return this.llmProvider !== null;
+  }
+
+  /**
+   * Get the current LLM provider name
+   */
+  getProviderName(): string {
+    return this.llmProvider?.name || 'None';
+  }
+
+  private log(message: string, data?: any): void {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}\n\n`;
+
+    try {
+      fs.appendFileSync(this.logFile, logEntry);
+      console.log(`📝 Logged to ${this.logFile}: ${message}`);
+    } catch (error) {
+      console.warn(`Failed to write to log file: ${error.message}`);
+    }
   }
 
   async analyzeIssueForKeywords(issue: GitHubIssue & { urlContent?: any[] }): Promise<LLMKeywordAnalysis> {
+    // Check if LLM provider is available
+    if (!this.llmProvider) {
+      this.log('LLM provider not available, using fallback');
+      return this.fallbackKeywordExtraction(issue);
+    }
+
     const prompt = this.buildKeywordExtractionPrompt(issue);
+
+    // Log the input data
+    this.log('=== KEYWORD ANALYSIS START ===');
+    this.log('Issue data:', {
+      number: issue.number,
+      title: issue.title,
+      body: issue.body?.substring(0, 500) + (issue.body?.length > 500 ? '...' : ''),
+      urlContent: issue.urlContent?.map(u => ({
+        url: u.url,
+        status: u.status,
+        title: u.title,
+        contentLength: u.content?.length || 0,
+        contentPreview: u.content?.substring(0, 200) + (u.content?.length > 200 ? '...' : '')
+      }))
+    });
+    this.log('Generated prompt:', { prompt: prompt.substring(0, 2000) + (prompt.length > 2000 ? '...' : '') });
 
     try {
       const { text } = await generateText({
-        model: this.openai(this.model),
+        model: this.llmProvider.model,
         messages: [
           {
             role: "system",
@@ -89,13 +141,21 @@ export class LLMService {
         temperature: 0.3, // Lower temperature for more consistent results
       });
 
+      this.log('LLM response:', { response: text });
+
       // Parse the LLM response
       const analysis = this.parseKeywordAnalysis(text);
+      this.log('Parsed analysis:', analysis);
+      this.log('=== KEYWORD ANALYSIS SUCCESS ===');
       return analysis;
     } catch (error) {
+      this.log('LLM keyword analysis failed:', { error: error.message, stack: error.stack });
       console.warn(`LLM keyword analysis failed: ${error.message}`);
       // Fallback to rule-based extraction
-      return this.fallbackKeywordExtraction(issue);
+      const fallbackResult = this.fallbackKeywordExtraction(issue);
+      this.log('Using fallback analysis:', fallbackResult);
+      this.log('=== KEYWORD ANALYSIS FALLBACK ===');
+      return fallbackResult;
     }
   }
 
@@ -306,9 +366,13 @@ Respond only with valid JSON:`;
   ): Promise<StructuredAnalysisPlan> {
     const prompt = this.buildStructuredAnalysisPlanPrompt(issue, analysisResult, language);
 
+    if (!this.llmProvider) {
+      return this.fallbackStructuredAnalysisPlan(issue, analysisResult, language);
+    }
+
     try {
       const { text } = await generateText({
-        model: this.openai(this.model),
+        model: this.llmProvider.model,
         messages: [
           {
             role: "system",
@@ -341,9 +405,13 @@ Respond only with valid JSON:`;
   ): Promise<LLMAnalysisReport> {
     const prompt = this.buildAnalysisReportPrompt(issue, analysisResult);
 
+    if (!this.llmProvider) {
+      return this.fallbackAnalysisReport(issue, analysisResult);
+    }
+
     try {
       const { text } = await generateText({
-        model: this.openai(this.model),
+        model: this.llmProvider.model,
         messages: [
           {
             role: "system",
@@ -693,15 +761,31 @@ Focus on:
    * Analyze if a specific code file is relevant to the GitHub issue using LLM
    */
   async analyzeCodeRelevance(
-    issue: GitHubIssue,
+    issue: GitHubIssue & { urlContent?: any[] },
     filePath: string,
     fileContent: string
   ): Promise<CodeRelevanceAnalysis> {
     const prompt = this.buildCodeRelevancePrompt(issue, filePath, fileContent);
 
+    this.log('=== CODE RELEVANCE ANALYSIS START ===');
+    this.log('Analyzing file relevance:', {
+      issueNumber: issue.number,
+      issueTitle: issue.title,
+      filePath: filePath,
+      fileContentLength: fileContent.length,
+      fileContentPreview: fileContent.substring(0, 300) + (fileContent.length > 300 ? '...' : '')
+    });
+
+    if (!this.llmProvider) {
+      const fallbackResult = this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+      this.log('Using fallback relevance analysis (no LLM provider):', { filePath, fallbackResult });
+      this.log('=== CODE RELEVANCE ANALYSIS FALLBACK ===');
+      return fallbackResult;
+    }
+
     try {
       const { text } = await generateText({
-        model: this.openai(this.model),
+        model: this.llmProvider.model,
         messages: [
           {
             role: "system",
@@ -715,26 +799,47 @@ Focus on:
         temperature: 0.2, // Lower temperature for more consistent analysis
       });
 
+      this.log('LLM relevance response:', { filePath, response: text });
       const analysis = this.parseCodeRelevanceAnalysis(text);
+      this.log('Parsed relevance analysis:', { filePath, analysis });
+      this.log('=== CODE RELEVANCE ANALYSIS SUCCESS ===');
       return analysis;
     } catch (error) {
+      this.log('LLM code relevance analysis failed:', { filePath, error: error.message, stack: error.stack });
       console.warn(`LLM code relevance analysis failed: ${error.message}`);
-      return this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+      const fallbackResult = this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+      this.log('Using fallback relevance analysis:', { filePath, fallbackResult });
+      this.log('=== CODE RELEVANCE ANALYSIS FALLBACK ===');
+      return fallbackResult;
     }
   }
 
-  private buildCodeRelevancePrompt(issue: GitHubIssue, filePath: string, fileContent: string): string {
+  private buildCodeRelevancePrompt(issue: GitHubIssue & { urlContent?: any[] }, filePath: string, fileContent: string): string {
     // Limit file content to avoid token limits
     const limitedContent = fileContent.length > 3000 ?
       fileContent.substring(0, 3000) + '\n... (content truncated)' :
       fileContent;
 
-    return `Analyze whether this code file is relevant to the GitHub issue.
+    let prompt = `Analyze whether this code file is relevant to the GitHub issue.
 
 **GitHub Issue:**
 - Title: ${issue.title}
 - Body: ${issue.body || 'No description provided'}
-- Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}
+- Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}`;
+
+    // Add URL content if available
+    if (issue.urlContent && issue.urlContent.length > 0) {
+      const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
+      if (successfulUrls.length > 0) {
+        prompt += `\n\n**Additional Context from URLs:**\n`;
+        successfulUrls.forEach((urlData, index) => {
+          prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
+          prompt += `${urlData.content.substring(0, 800)}${urlData.content.length > 800 ? '...' : ''}\n`;
+        });
+      }
+    }
+
+    prompt += `
 
 **Code File:**
 - Path: ${filePath}

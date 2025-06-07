@@ -93,7 +93,7 @@ export class ContextAnalyzer {
    *
    * This method is much simpler now, delegating all complex logic to strategies.
    */
-  async findRelevantCode(issue: GitHubIssue): Promise<CodeContext> {
+  async findRelevantCode(issue: GitHubIssue & { urlContent?: any[] }): Promise<CodeContext> {
     await this.ensureInitialized();
 
     // Create cache key
@@ -128,13 +128,23 @@ export class ContextAnalyzer {
       this.analysisStrategy.findRelevantApis(context, keywords)
     ]);
 
-    // Convert to expected format
+    // Convert to expected format with deduplication
+    const uniqueFiles = new Map<string, { path: string; content: string; relevanceScore: number }>();
+
+    // Deduplicate files by path, keeping the one with highest relevance score
+    for (const file of relevantFiles) {
+      const existing = uniqueFiles.get(file.path);
+      if (!existing || file.relevanceScore > existing.relevanceScore) {
+        uniqueFiles.set(file.path, {
+          path: file.path,
+          content: file.content,
+          relevanceScore: file.relevanceScore
+        });
+      }
+    }
+
     const result: CodeContext = {
-      files: relevantFiles.map(f => ({
-        path: f.path,
-        content: f.content,
-        relevanceScore: f.relevanceScore
-      })),
+      files: Array.from(uniqueFiles.values()).sort((a, b) => b.relevanceScore - a.relevanceScore),
       symbols: relevantSymbols,
       apis: relevantApis,
     };
