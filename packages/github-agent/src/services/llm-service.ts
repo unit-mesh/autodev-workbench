@@ -31,6 +31,23 @@ interface LLMAnalysisReport {
   confidence: number;
 }
 
+interface StructuredAnalysisPlan {
+  title: string;
+  current_issues: Array<{
+    issue: string;
+    description: string;
+    severity: 'high' | 'medium' | 'low';
+  }>;
+  detailed_plan: Array<{
+    step_number: number;
+    title: string;
+    file_to_modify: string;
+    changes_needed: string[];
+    description: string;
+  }>;
+  language: 'zh' | 'en';
+}
+
 interface CodeRelevanceAnalysis {
   is_relevant: boolean;
   relevance_score: number; // 0.0 - 1.0
@@ -265,6 +282,42 @@ Respond only with valid JSON:`;
   }
 
   /**
+   * Generate structured analysis plan in the expected format
+   */
+  async generateStructuredAnalysisPlan(
+    issue: GitHubIssue,
+    analysisResult: IssueAnalysisResult,
+    language: 'zh' | 'en' = 'zh'
+  ): Promise<StructuredAnalysisPlan> {
+    const prompt = this.buildStructuredAnalysisPlanPrompt(issue, analysisResult, language);
+
+    try {
+      const { text } = await generateText({
+        model: this.openai(this.model),
+        messages: [
+          {
+            role: "system",
+            content: language === 'zh'
+              ? "你是一个专业的软件架构师和代码分析专家。基于GitHub问题和代码分析结果，生成结构化的分析和优化计划。始终用有效的JSON格式回复。"
+              : "You are an expert software architect and code analyst. Generate structured analysis and optimization plans based on GitHub issues and code analysis results. Always respond with valid JSON format."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+      });
+
+      const plan = this.parseStructuredAnalysisPlan(text, language);
+      return plan;
+    } catch (error) {
+      console.warn(`LLM structured analysis plan generation failed: ${error.message}`);
+      return this.fallbackStructuredAnalysisPlan(issue, analysisResult, language);
+    }
+  }
+
+  /**
    * Generate comprehensive analysis report for GitHub issue
    */
   async generateAnalysisReport(
@@ -294,6 +347,115 @@ Respond only with valid JSON:`;
     } catch (error) {
       console.warn(`LLM analysis report generation failed: ${error.message}`);
       return this.fallbackAnalysisReport(issue, analysisResult);
+    }
+  }
+
+  private buildStructuredAnalysisPlanPrompt(
+    issue: GitHubIssue,
+    analysisResult: IssueAnalysisResult,
+    language: 'zh' | 'en'
+  ): string {
+    const relevantFiles = analysisResult.relatedCode.files.slice(0, 10);
+    const relevantSymbols = analysisResult.relatedCode.symbols.slice(0, 8);
+
+    if (language === 'zh') {
+      return `基于以下GitHub问题和代码分析结果，生成结构化的分析和优化计划。
+
+**GitHub 问题:**
+- 标题: ${issue.title}
+- 描述: ${issue.body || '无描述'}
+- 标签: ${issue.labels.map(l => l.name).join(', ') || '无'}
+- 状态: ${issue.state}
+
+**代码分析结果:**
+- 找到相关文件: ${relevantFiles.length}个
+- 主要文件: ${relevantFiles.map(f => f.path).join(', ')}
+- 相关符号: ${relevantSymbols.map(s => s.name).join(', ')}
+- 当前摘要: ${analysisResult.summary}
+
+**当前建议:**
+${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}
+
+请生成以下JSON格式的结构化分析计划:
+
+{
+  "title": "分析和优化计划",
+  "current_issues": [
+    {
+      "issue": "具体问题描述",
+      "description": "问题的详细说明和影响",
+      "severity": "high|medium|low"
+    }
+  ],
+  "detailed_plan": [
+    {
+      "step_number": 1,
+      "title": "步骤标题",
+      "file_to_modify": "需要修改的文件路径",
+      "changes_needed": [
+        "具体需要的修改1",
+        "具体需要的修改2"
+      ],
+      "description": "详细的实施说明"
+    }
+  ],
+  "language": "zh"
+}
+
+重点关注:
+1. 从代码分析中识别具体问题
+2. 提供可操作的步骤和文件级别的详细信息
+3. 确保修改建议具体且实用
+4. 明确指出需要修改哪些文件以及需要什么样的修改`;
+    } else {
+      return `Based on the following GitHub issue and code analysis results, generate a structured analysis and optimization plan.
+
+**GitHub Issue:**
+- Title: ${issue.title}
+- Body: ${issue.body || 'No description provided'}
+- Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}
+- State: ${issue.state}
+
+**Code Analysis Results:**
+- Relevant Files Found: ${relevantFiles.length}
+- Top Files: ${relevantFiles.map(f => f.path).join(', ')}
+- Relevant Symbols: ${relevantSymbols.map(s => s.name).join(', ')}
+- Current Summary: ${analysisResult.summary}
+
+**Current Suggestions:**
+${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}
+
+Please generate a structured analysis plan in the following JSON format:
+
+{
+  "title": "Analysis and Optimization Plan",
+  "current_issues": [
+    {
+      "issue": "Specific issue description",
+      "description": "Detailed explanation and impact of the issue",
+      "severity": "high|medium|low"
+    }
+  ],
+  "detailed_plan": [
+    {
+      "step_number": 1,
+      "title": "Step title",
+      "file_to_modify": "Path to file that needs modification",
+      "changes_needed": [
+        "Specific change needed 1",
+        "Specific change needed 2"
+      ],
+      "description": "Detailed implementation instructions"
+    }
+  ],
+  "language": "en"
+}
+
+Focus on:
+1. Identifying specific problems from the code analysis
+2. Providing actionable steps with file-level details
+3. Ensuring modification suggestions are specific and practical
+4. Clearly stating which files need changes and what kind of changes are needed`;
     }
   }
 
@@ -350,6 +512,135 @@ Focus on:
 2. Creating actionable steps with file-level details
 3. Providing practical recommendations
 4. Being specific about what files need changes and what changes are needed`;
+  }
+
+  private parseStructuredAnalysisPlan(text: string, language: 'zh' | 'en'): StructuredAnalysisPlan {
+    try {
+      // Clean the text to extract JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Validate required fields
+      if (!parsed.title || !parsed.current_issues || !parsed.detailed_plan) {
+        throw new Error('Missing required fields in structured analysis plan');
+      }
+
+      return {
+        title: parsed.title || (language === 'zh' ? '分析和优化计划' : 'Analysis and Optimization Plan'),
+        current_issues: Array.isArray(parsed.current_issues) ? parsed.current_issues.map((item: any) => ({
+          issue: item.issue || item,
+          description: item.description || '',
+          severity: ['high', 'medium', 'low'].includes(item.severity) ? item.severity : 'medium'
+        })) : [],
+        detailed_plan: Array.isArray(parsed.detailed_plan) ? parsed.detailed_plan.map((step: any, index: number) => ({
+          step_number: step.step_number || index + 1,
+          title: step.title || `Step ${index + 1}`,
+          file_to_modify: step.file_to_modify || '',
+          changes_needed: Array.isArray(step.changes_needed) ? step.changes_needed : [],
+          description: step.description || ''
+        })) : [],
+        language: language
+      };
+    } catch (error) {
+      console.warn(`Failed to parse LLM structured analysis plan: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private fallbackStructuredAnalysisPlan(
+    issue: GitHubIssue,
+    analysisResult: IssueAnalysisResult,
+    language: 'zh' | 'en'
+  ): StructuredAnalysisPlan {
+    const relevantFiles = analysisResult.relatedCode.files.slice(0, 5);
+
+    if (language === 'zh') {
+      return {
+        title: '分析和优化计划',
+        current_issues: [
+          {
+            issue: '需要进一步分析代码问题',
+            description: `在 ${relevantFiles.length} 个相关文件中发现潜在问题`,
+            severity: 'medium'
+          },
+          {
+            issue: '缺少详细的错误处理机制',
+            description: '基于问题描述，可能需要改进错误处理逻辑',
+            severity: 'medium'
+          }
+        ],
+        detailed_plan: [
+          {
+            step_number: 1,
+            title: '检查相关文件',
+            file_to_modify: relevantFiles[0]?.path || '待确定',
+            changes_needed: [
+              '审查代码逻辑',
+              '检查潜在的错误',
+              '验证实现方式'
+            ],
+            description: '详细检查已识别的相关文件，寻找可能导致问题的代码段'
+          },
+          {
+            step_number: 2,
+            title: '实施修复方案',
+            file_to_modify: '根据分析结果确定',
+            changes_needed: [
+              '应用错误修复',
+              '添加缺失功能',
+              '改进错误处理'
+            ],
+            description: '基于分析结果实施必要的代码修改'
+          }
+        ],
+        language: 'zh'
+      };
+    } else {
+      return {
+        title: 'Analysis and Optimization Plan',
+        current_issues: [
+          {
+            issue: 'Code analysis required for further investigation',
+            description: `Potential issues found in ${relevantFiles.length} relevant files`,
+            severity: 'medium'
+          },
+          {
+            issue: 'Missing detailed error handling mechanisms',
+            description: 'Based on issue description, error handling logic may need improvement',
+            severity: 'medium'
+          }
+        ],
+        detailed_plan: [
+          {
+            step_number: 1,
+            title: 'Review relevant files',
+            file_to_modify: relevantFiles[0]?.path || 'To be determined',
+            changes_needed: [
+              'Review code logic',
+              'Check for potential bugs',
+              'Verify implementation'
+            ],
+            description: 'Thoroughly examine the identified relevant files for potential problematic code segments'
+          },
+          {
+            step_number: 2,
+            title: 'Implement fixes',
+            file_to_modify: 'Based on analysis results',
+            changes_needed: [
+              'Apply bug fixes',
+              'Add missing functionality',
+              'Improve error handling'
+            ],
+            description: 'Implement necessary code modifications based on analysis findings'
+          }
+        ],
+        language: 'en'
+      };
+    }
   }
 
   private parseAnalysisReport(text: string): LLMAnalysisReport {
