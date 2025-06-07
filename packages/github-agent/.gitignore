@@ -1,2 +1,4 @@
 bin
 dist
+symbol_analysis_result.json
+interface_analysis_result.json

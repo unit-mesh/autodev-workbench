@@ -52,6 +52,7 @@
     "@octokit/rest": "^20.1.2",
     "@vscode/ripgrep": "^1.15.9",
     "ai": "^4.0.0",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "zod": "^3.24.4"
   },
@@ -72,10 +73,10 @@
     "rimraf": "^5.0.5",
     "rollup": "^4.9.1",
     "rollup-plugin-dts": "^6.1.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.3.3",
     "rollup-plugin-typescript2": "^0.36.0",
-    "tsx": "^4.7.0"
+    "ts-jest": "^29.1.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"
