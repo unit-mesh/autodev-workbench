@@ -7,6 +7,7 @@
 
 import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../types/index";
 import { LLMService } from "./llm-service";
+import { listFiles } from "@autodev/worker-core";
 
 // Import the new design pattern implementations
 import { IAnalysisStrategy, AnalysisContext } from "./analysis/interfaces/IAnalysisStrategy";
@@ -288,77 +289,42 @@ export class ContextAnalyzer {
   }
 
   /**
-   * Scan workspace for relevant files
+   * Scan workspace for relevant files using the optimized listFiles function
    */
   private async scanWorkspaceFiles(): Promise<string[]> {
     try {
-      const fs = await import('fs');
-      const path = await import('path');
+      // Use the optimized listFiles function from worker-core
+      // It uses ripgrep for fast file scanning and respects .gitignore
+      const [allFiles] = await listFiles(this.workspacePath, true, 10000);
 
-      const files: string[] = [];
-
-      const scanDirectory = async (dir: string): Promise<void> => {
-        try {
-          const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-
-          for (const entry of entries) {
-            const fullPath = path.join(dir, entry.name);
-            const relativePath = path.relative(this.workspacePath, fullPath);
-
-            // Skip common ignore patterns
-            if (this.shouldIgnoreFile(relativePath)) {
-              continue;
-            }
-
-            if (entry.isDirectory()) {
-              await scanDirectory(fullPath);
-            } else if (entry.isFile()) {
-              // Only include code files and relevant config files
-              if (this.isRelevantFile(relativePath)) {
-                files.push(relativePath);
-              }
-            }
-          }
-        } catch (error) {
-          // Skip directories that can't be read
+      // Filter to only include relevant files for code analysis
+      const relevantFiles = allFiles.filter(file => {
+        // Remove directories (they end with /)
+        if (file.endsWith('/')) {
+          return false;
         }
-      };
 
-      await scanDirectory(this.workspacePath);
-      console.log(`📁 Found ${files.length} relevant files in workspace`);
-      return files;
+        // Convert to relative path for consistency
+        const relativePath = file.startsWith(this.workspacePath)
+          ? file.substring(this.workspacePath.length + 1)
+          : file;
+
+        return this.isRelevantFile(relativePath);
+      });
+
+      console.log(`📁 Found ${relevantFiles.length} relevant files in workspace (from ${allFiles.length} total)`);
+      return relevantFiles.map(file =>
+        file.startsWith(this.workspacePath)
+          ? file.substring(this.workspacePath.length + 1)
+          : file
+      );
     } catch (error) {
       console.warn('Failed to scan workspace files:', error);
       return [];
     }
   }
 
-  /**
-   * Check if a file should be ignored
-   */
-  private shouldIgnoreFile(relativePath: string): boolean {
-    const ignorePatterns = [
-      /node_modules/,
-      /\.git/,
-      /dist/,
-      /build/,
-      /coverage/,
-      /\.next/,
-      /\.nuxt/,
-      /vendor/,
-      /target/,
-      /bin/,
-      /obj/,
-      /\.vscode/,
-      /\.idea/,
-      /\.DS_Store/,
-      /Thumbs\.db/,
-      /\.(log|tmp|cache|lock)$/,
-      /\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|zip|tar|gz)$/
-    ];
 
-    return ignorePatterns.some(pattern => pattern.test(relativePath));
-  }
 
   /**
    * Check if a file is relevant for analysis
