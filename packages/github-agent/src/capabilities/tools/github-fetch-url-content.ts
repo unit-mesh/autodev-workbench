@@ -5,7 +5,6 @@ import * as http from "http";
 import { URL } from "url";
 import * as cheerio from "cheerio";
 import TurndownService from "turndown";
-import * as zlib from "zlib";
 
 export const installGitHubFetchUrlContentTool: ToolLike = (installer) => {
   installer("github_fetch_url_content", "Fetch and convert web page content to markdown for analysis", {
@@ -139,7 +138,7 @@ export const installGitHubFetchUrlContentTool: ToolLike = (installer) => {
 
 export function extractUrlsFromText(text: string): string[] {
   // Regular expression to match URLs
-  const urlRegex = /https?:\/\/[^\s\)]+/g;
+  const urlRegex = /https?:\/\/[^\s)]+/g;
   const matches = text.match(urlRegex) || [];
 
   // Remove duplicates and filter out common non-content URLs
@@ -263,7 +262,14 @@ export async function urlToMarkdown(html: string): Promise<string> {
 /**
  * Fetch URLs from issue content and return processed results
  */
-export async function fetchUrlsFromIssue(issueContent: string, timeout: number = 10000): Promise<any[]> {
+export async function fetchUrlsFromIssue(issueContent: string, timeout: number = 10000): Promise<Array<{
+  url: string;
+  title?: string;
+  content?: string;
+  content_length?: number;
+  status: 'success' | 'error';
+  error?: string;
+}>> {
   const urls = extractUrlsFromText(issueContent);
 
   if (urls.length === 0) {
@@ -286,11 +292,12 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
         status: "success"
       });
       console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
-    } catch (error: any) {
-      console.log(`❌ Failed to fetch: ${url} - ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.log(`❌ Failed to fetch: ${url} - ${errorMessage}`);
       results.push({
         url: url,
-        error: error.message,
+        error: errorMessage,
         status: "error"
       });
     }

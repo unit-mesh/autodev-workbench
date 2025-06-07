@@ -11,7 +11,6 @@ export type { Preset, GitHubAgentImplementation };
 import http from "node:http";
 
 import {
-  Implementation as McpImplementation,
   isInitializeRequest,
 } from "@modelcontextprotocol/sdk/types.js";
 

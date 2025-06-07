@@ -7,12 +7,11 @@
 
 import { GitHubIssue } from "../../../types/index";
 import { LLMService } from "../../llm-service";
-import { 
-  IAnalysisStrategy, 
-  BaseAnalysisStrategy, 
-  SearchKeywords, 
-  AnalysisContext, 
-  AnalysisResult 
+import {
+  BaseAnalysisStrategy,
+  SearchKeywords,
+  AnalysisContext,
+  AnalysisResult
 } from "../interfaces/IAnalysisStrategy";
 import * as path from 'path';
 
@@ -94,7 +93,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
       const batchResults = await Promise.all(batchPromises);
 
-      for (const { file, llmAnalysis, error } of batchResults) {
+      for (const { file, llmAnalysis } of batchResults) {
         if (llmAnalysis && llmAnalysis.is_relevant) {
           llmAnalyzedFiles.push({
             path: file.path,

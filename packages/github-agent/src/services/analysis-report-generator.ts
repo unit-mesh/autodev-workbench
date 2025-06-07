@@ -1,4 +1,4 @@
-import { GitHubIssue, IssueAnalysisResult } from "../types/index";
+import { IssueAnalysisResult } from "../types/index";
 import { LLMService } from "./llm-service";
 import { GitHubService } from "./github-service";
 
@@ -76,10 +76,11 @@ export class AnalysisReportGenerator {
           commentId: comment.id,
           commentUrl: comment.html_url
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         uploadResult = {
           success: false,
-          error: error.message
+          error: errorMessage
         };
       }
     }
@@ -95,10 +96,10 @@ export class AnalysisReportGenerator {
    */
   private formatReportAsMarkdown(
     llmReport: any,
-    analysisResult: IssueAnalysisResult,
+    _analysisResult: IssueAnalysisResult,
     language: 'en' | 'zh',
-    includeFileContent: boolean,
-    maxFiles: number
+    _includeFileContent: boolean,
+    _maxFiles: number
   ): string {
     const isZh = language === 'zh';
 
@@ -157,7 +158,7 @@ export class AnalysisReportGenerator {
    */
   async generateChineseReport(
     analysisResult: IssueAnalysisResult,
-    options: { uploadToGitHub?: boolean } = {}
+    _options: { uploadToGitHub?: boolean } = {}
   ): Promise<string> {
     const llmReport = await this.llmService.generateAnalysisReport(
       analysisResult.issue,

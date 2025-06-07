@@ -6,12 +6,11 @@
  */
 
 import { GitHubIssue } from "../../../types/index";
-import { 
-  IAnalysisStrategy, 
-  BaseAnalysisStrategy, 
-  SearchKeywords, 
-  AnalysisContext, 
-  AnalysisResult 
+import {
+  BaseAnalysisStrategy,
+  SearchKeywords,
+  AnalysisContext,
+  AnalysisResult
 } from "../interfaces/IAnalysisStrategy";
 import * as path from 'path';
 

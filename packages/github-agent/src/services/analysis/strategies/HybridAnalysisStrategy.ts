@@ -7,12 +7,11 @@
 
 import { GitHubIssue } from "../../../types/index";
 import { LLMService } from "../../llm-service";
-import { 
-  IAnalysisStrategy, 
-  BaseAnalysisStrategy, 
-  SearchKeywords, 
-  AnalysisContext, 
-  AnalysisResult 
+import {
+  BaseAnalysisStrategy,
+  SearchKeywords,
+  AnalysisContext,
+  AnalysisResult
 } from "../interfaces/IAnalysisStrategy";
 import { LLMAnalysisStrategy } from "./LLMAnalysisStrategy";
 import { RuleBasedAnalysisStrategy } from "./RuleBasedAnalysisStrategy";

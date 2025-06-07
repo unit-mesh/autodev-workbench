@@ -5,7 +5,7 @@
  * This allows for flexible switching between LLM-based, rule-based, and hybrid approaches.
  */
 
-import { GitHubIssue, CodeContext } from "../../../types/index";
+import { GitHubIssue } from "../../../types/index";
 
 export interface SearchKeywords {
   primary: string[];

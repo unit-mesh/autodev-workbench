@@ -3,7 +3,7 @@ import { GitHubIssue } from "../types/index";
 import { IssueAnalysisResult } from "../types/index";
 import * as fs from "fs";
 import * as path from "path";
-import { configureLLMProvider, hasLLMProvider, LLMProviderConfig } from "./llm-provider";
+import { configureLLMProvider, LLMProviderConfig } from "./llm-provider";
 import {
   FallbackAnalysisService,
   LLMKeywordAnalysis,
@@ -73,7 +73,7 @@ export class LLMService {
       return this.fallbackService.extractKeywords(issue);
     }
 
-    const prompt = this.buildKeywordExtractionPrompt(issue);
+    // const prompt = this.buildKeywordExtractionPrompt(issue);
 
     // Log the input data
     this.log('=== KEYWORD ANALYSIS START ===');
@@ -181,6 +181,8 @@ Example response format:
 }
 
 Respond only with valid JSON:`;
+
+    return prompt;
   }
 
   private parseKeywordAnalysis(text: string): LLMKeywordAnalysis {
@@ -495,7 +497,7 @@ Focus on:
     filePath: string,
     fileContent: string
   ): Promise<CodeRelevanceAnalysis> {
-    const prompt = this.buildCodeRelevancePrompt(issue, filePath, fileContent);
+    // const prompt = this.buildCodeRelevancePrompt(issue, filePath, fileContent);
 
     this.log('=== CODE RELEVANCE ANALYSIS START ===');
     this.log('Analyzing file relevance:', {
@@ -521,7 +523,7 @@ Focus on:
         },
         {
           role: "user",
-          content: prompt
+          content: this.buildCodeRelevancePrompt(issue, filePath, fileContent)
         }
       ];
 
@@ -603,6 +605,8 @@ Consider:
 4. Could changes to this file help resolve the issue?
 
 Be precise and specific in your analysis.`;
+
+    return prompt;
   }
 
   private parseCodeRelevanceAnalysis(text: string): CodeRelevanceAnalysis {

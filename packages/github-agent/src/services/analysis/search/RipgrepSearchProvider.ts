@@ -5,12 +5,11 @@
  * Uses the Strategy Pattern to provide high-performance search capabilities.
  */
 
-import { 
-  ISearchProvider, 
-  BaseSearchProvider, 
-  SearchResult, 
-  SearchOptions, 
-  SearchFilter, 
+import {
+  BaseSearchProvider,
+  SearchResult,
+  SearchOptions,
+  SearchFilter,
   SearchCapabilities,
   FileMatch,
   SearchMatch
@@ -55,7 +54,7 @@ export class RipgrepSearchProvider extends BaseSearchProvider {
     pattern: string,
     directory: string,
     filter?: SearchFilter,
-    options: SearchOptions = {}
+    _options: SearchOptions = {}
   ): Promise<SearchResult> {
     const startTime = Date.now();
 

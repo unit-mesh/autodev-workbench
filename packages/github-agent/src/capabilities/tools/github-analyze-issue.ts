@@ -133,7 +133,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 // Helper functions for URL content fetching
 function extractUrlsFromText(text: string): string[] {
   // Regular expression to match URLs
-  const urlRegex = /https?:\/\/[^\s\)]+/g;
+  const urlRegex = /https?:\/\/[^\s)]+/g;
   const matches = text.match(urlRegex) || [];
 
   // Remove duplicates and filter out common non-content URLs
@@ -150,7 +150,14 @@ function extractUrlsFromText(text: string): string[] {
   return filteredUrls;
 }
 
-async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promise<any[]> {
+async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promise<Array<{
+  url: string;
+  title?: string;
+  content?: string;
+  content_length?: number;
+  status: 'success' | 'error';
+  error?: string;
+}>> {
   const urls = extractUrlsFromText(issueContent);
 
   if (urls.length === 0) {
@@ -179,13 +186,14 @@ async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promis
       if (process.env.VERBOSE_URL_LOGS === 'true') {
         console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       if (process.env.VERBOSE_URL_LOGS === 'true') {
-        console.log(`❌ Failed to fetch: ${url} - ${error.message}`);
+        console.log(`❌ Failed to fetch: ${url} - ${errorMessage}`);
       }
       results.push({
         url: url,
-        error: error.message,
+        error: errorMessage,
         status: "error"
       });
     }

@@ -5,12 +5,11 @@
  * Serves as a fallback when ripgrep is not available.
  */
 
-import { 
-  ISearchProvider, 
-  BaseSearchProvider, 
-  SearchResult, 
-  SearchOptions, 
-  SearchFilter, 
+import {
+  BaseSearchProvider,
+  SearchResult,
+  SearchOptions,
+  SearchFilter,
   SearchCapabilities,
   FileMatch,
   SearchMatch
@@ -78,11 +77,9 @@ export class FileSystemSearchProvider extends BaseSearchProvider {
     filter?: SearchFilter,
     options: SearchOptions = {}
   ): Promise<SearchResult> {
-    const startTime = Date.now();
-    
     // Get all files in directory
     const files = await this.getAllFilesInDirectory(directory, filter);
-    
+
     // Search in the files
     return await this.search(pattern, files, options);
   }
