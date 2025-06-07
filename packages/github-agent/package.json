@@ -29,12 +29,17 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "build:clean": "pnpm run clean && pnpm run build",
     "dev": "rollup -c -w",
     "start": "node dist/index.js",
     "test": "jest",
     "lint": "eslint src --ext .ts,.tsx",
-    "clean": "rimraf dist",
-    "prepublishOnly": "pnpm run build",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "clean": "rimraf dist node_modules/.cache",
+    "clean:all": "rimraf dist node_modules/.cache materials *.log *.json",
+    "cleanup": "node -e \"require('./dist/utils/cleanup.js').CleanupManager.runCleanup()\"",
+    "cleanup:dry": "node -e \"require('./dist/utils/cleanup.js').CleanupManager.runCleanup({dryRun: true})\"",
+    "prepublishOnly": "pnpm run build:clean",
     "analyze-issue": "node bin/analyze-issue.js"
   },
   "keywords": [

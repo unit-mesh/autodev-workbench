@@ -460,6 +460,10 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
   try {
     logger.info(`🔍 Analyzing issue #${issueNumber} in ${owner}/${repo}`);
 
+    // Initialize performance monitoring
+    const { performanceMonitor } = require('../dist/utils/performance-monitor.js');
+    performanceMonitor.start('total_analysis');
+
     // Initialize services
     const githubService = new GitHubService(githubToken);
     const contextAnalyzer = new ContextAnalyzer(options.workspace);
@@ -575,6 +579,12 @@ async function runAnalysis(owner, repo, issueNumber, githubToken, options) {
       console.log('\n' + '='.repeat(80));
       console.log(report);
       console.log('='.repeat(80));
+    }
+
+    // End performance monitoring and log summary
+    performanceMonitor.end('total_analysis');
+    if (options.verbose) {
+      performanceMonitor.logSummary();
     }
 
     return EXIT_CODES.SUCCESS;

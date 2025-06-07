@@ -1,4 +1,66 @@
-dist
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+build/
+
+# Development
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Analysis files
+analysis-*.log
+llm-service.log
 symbol_analysis_result.json
 interface_analysis_result.json
-materials
+*.json
+!package.json
+!tsconfig.json
+!.eslintrc.json
+
+# Materials (generated content)
+materials/
+
+# Cache
+.cache/
+node_modules/.cache/
+.tsbuildinfo
+dist/.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.temp/

@@ -132,7 +132,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 
 // Helper functions for URL content fetching
 function extractUrlsFromText(text: string): string[] {
-  // Regular expression to match URLs
+  // Use simple regex for now to avoid async issues
   const urlRegex = /https?:\/\/[^\s)]+/g;
   const matches = text.match(urlRegex) || [];
 
@@ -181,7 +181,7 @@ async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promis
         title: extractTitle(htmlContent),
         content: markdownContent,
         content_length: markdownContent.length,
-        status: "success"
+        status: "success" as const
       });
       if (process.env.VERBOSE_URL_LOGS === 'true') {
         console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
@@ -194,7 +194,7 @@ async function fetchUrlsFromIssue(issueContent: string, timeout: number): Promis
       results.push({
         url: url,
         error: errorMessage,
-        status: "error"
+        status: "error" as const
       });
     }
   }
@@ -289,7 +289,7 @@ async function urlToMarkdown(html: string): Promise<string> {
 
   // Add custom rules for better conversion
   turndownService.addRule('removeComments', {
-    filter: function (node) {
+    filter: function (node: any) {
       return node.nodeType === 8; // Comment node
     },
     replacement: function () {

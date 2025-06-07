@@ -76,7 +76,7 @@ export class GitHubService {
         id: issue.id,
         number: issue.number,
         title: issue.title,
-        body: issue.body,
+        body: issue.body || null,
         state: issue.state as 'open' | 'closed',
         user: issue.user ? {
           login: issue.user.login,
@@ -189,7 +189,7 @@ export class GitHubService {
 
       return data.map(comment => ({
         id: comment.id,
-        body: comment.body,
+        body: comment.body || '',
         user: comment.user ? {
           login: comment.user.login,
           id: comment.user.id,

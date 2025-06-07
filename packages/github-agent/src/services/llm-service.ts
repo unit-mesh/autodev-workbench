@@ -89,7 +89,8 @@ export class LLMService {
         contentPreview: u.content ? (u.content.substring(0, 200) + (u.content.length > 200 ? '...' : '')) : 'No content'
       }))
     });
-    this.log('Generated prompt:', { prompt: prompt.substring(0, 2000) + (prompt.length > 2000 ? '...' : '') });
+    const promptStr = this.buildKeywordExtractionPrompt(issue);
+    this.log('Generated prompt:', { prompt: promptStr.substring(0, 2000) + (promptStr.length > 2000 ? '...' : '') });
 
     try {
       const messages: CoreMessage[] = [
@@ -99,7 +100,7 @@ export class LLMService {
         },
         {
           role: "user",
-          content: prompt
+          content: promptStr
         }
       ];
 
@@ -207,7 +208,8 @@ Respond only with valid JSON:`;
         confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.5
       };
     } catch (error) {
-      throw new Error(`Failed to parse LLM response: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to parse LLM response: ${errorMessage}`);
     }
   }
 
@@ -244,7 +246,8 @@ Respond only with valid JSON:`;
       const report = this.parseAnalysisReport(text);
       return report;
     } catch (error) {
-      console.warn(`LLM analysis report generation failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`LLM analysis report generation failed: ${errorMessage}`);
       return this.fallbackService.generateAnalysisReport(issue, analysisResult);
     }
   }

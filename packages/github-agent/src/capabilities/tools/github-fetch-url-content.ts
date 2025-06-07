@@ -137,7 +137,7 @@ export const installGitHubFetchUrlContentTool: ToolLike = (installer) => {
 };
 
 export function extractUrlsFromText(text: string): string[] {
-  // Regular expression to match URLs
+  // Use simple regex for now to avoid async issues
   const urlRegex = /https?:\/\/[^\s)]+/g;
   const matches = text.match(urlRegex) || [];
 
@@ -242,7 +242,7 @@ export async function urlToMarkdown(html: string): Promise<string> {
 
   // Add custom rules for better conversion
   turndownService.addRule('removeComments', {
-    filter: function (node) {
+    filter: function (node: any) {
       return node.nodeType === 8; // Comment node
     },
     replacement: function () {
@@ -289,7 +289,7 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
         title: extractTitle(htmlContent),
         content: markdownContent,
         content_length: markdownContent.length,
-        status: "success"
+        status: "success" as const
       });
       console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
     } catch (error: unknown) {
@@ -298,7 +298,7 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
       results.push({
         url: url,
         error: errorMessage,
-        status: "error"
+        status: "error" as const
       });
     }
   }

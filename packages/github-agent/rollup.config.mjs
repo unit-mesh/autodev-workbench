@@ -50,6 +50,7 @@ export default defineConfig([
         sourceMap: true,
         declaration: false,
         module: "ESNext",
+        cacheDir: "node_modules/.cache/rollup-typescript",
       }),
     ],
   },
