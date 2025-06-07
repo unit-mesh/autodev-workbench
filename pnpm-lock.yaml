@@ -357,12 +357,18 @@ importers:
       '@autodev/context-worker':
         specifier: workspace:*
         version: link:../context-worker
+      '@autodev/worker-core':
+        specifier: workspace:*
+        version: link:../worker-core
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.1
         version: 1.11.1
       '@octokit/rest':
         specifier: ^20.1.2
         version: 20.1.2
+      '@vscode/ripgrep':
+        specifier: ^1.15.9
+        version: 1.15.11
       ai:
         specifier: ^4.0.0
         version: 4.3.15(react@19.0.0)(zod@3.24.4)

@@ -3,6 +3,7 @@ import * as path from 'path';
 import { spawn } from 'child_process';
 import { CodeContext, GitHubIssue, IssueAnalysisResult } from "../types/index";
 import { LLMService } from "./llm-service";
+import { regexSearchFiles } from "@autodev/worker-core";
 
 // Import context-worker functionality
 // We'll use the actual context-worker package for analysis
@@ -39,23 +40,17 @@ interface ContextWorkerResult {
   };
 }
 
-interface RipgrepResult {
-  type: 'match' | 'context';
-  data: {
-    path?: {
+interface RipgrepSearchResult {
+  keyword: string;
+  results: string;
+  fileMatches: Array<{
+    file: string;
+    matches: Array<{
+      line: number;
       text: string;
-    };
-    lines?: {
-      text: string;
-    };
-    line_number?: number;
-    absolute_offset?: number;
-    submatches?: Array<{
-      match: { text: string };
-      start: number;
-      end: number;
+      isMatch: boolean;
     }>;
-  };
+  }>;
 }
 
 interface SearchKeywords {
@@ -284,7 +279,7 @@ export class ContextAnalyzer {
     return [...new Set(matches.filter(m => m.length > 2))].slice(0, 10);
   }
 
-  private async searchWithRipgrep(keywords: SearchKeywords): Promise<RipgrepResult[]> {
+  private async searchWithRipgrep(keywords: SearchKeywords): Promise<RipgrepSearchResult[]> {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
@@ -292,12 +287,14 @@ export class ContextAnalyzer {
       ...keywords.contextual
     ];
 
-    const results: RipgrepResult[] = [];
+    const results: RipgrepSearchResult[] = [];
 
     for (const keyword of allKeywords.slice(0, 10)) { // Limit to top 10 keywords
       try {
-        const keywordResults = await this.executeRipgrep(keyword);
-        results.push(...keywordResults);
+        const searchResults = await this.executeRipgrepSearch(keyword);
+        if (searchResults) {
+          results.push(searchResults);
+        }
       } catch (error) {
         console.warn(`Ripgrep search failed for keyword "${keyword}":`, error);
       }
@@ -306,60 +303,99 @@ export class ContextAnalyzer {
     return results;
   }
 
-  private async executeRipgrep(pattern: string): Promise<RipgrepResult[]> {
-    return new Promise((resolve, reject) => {
-      const args = [
-        '--json',
-        '--smart-case',
-        '--context', '2',
-        '--max-count', '5',
-        '--type-not', 'binary',
-        '--glob', '!node_modules/**',
-        '--glob', '!.git/**',
-        '--glob', '!dist/**',
-        '--glob', '!build/**',
-        '--glob', '!coverage/**',
-        pattern,
-        this.workspacePath
-      ];
+  private async executeRipgrepSearch(pattern: string): Promise<RipgrepSearchResult | null> {
+    try {
+      // Use worker-core's regexSearchFiles function
+      const searchResults = await regexSearchFiles(
+        this.workspacePath, // cwd
+        this.workspacePath, // directoryPath
+        pattern,           // regex pattern
+        false,            // includeNodeModules
+        undefined         // filePattern (search all files)
+      );
 
-      const child = spawn('rg', args, {
-        cwd: this.workspacePath,
-        stdio: ['pipe', 'pipe', 'pipe']
-      });
+      if (!searchResults || searchResults === "No results found") {
+        return null;
+      }
 
-      let stdout = '';
-      let stderr = '';
+      // Parse the formatted results to extract file matches
+      const fileMatches = this.parseRipgrepResults(searchResults);
 
-      child.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
+      return {
+        keyword: pattern,
+        results: searchResults,
+        fileMatches
+      };
+    } catch (error) {
+      console.warn(`Ripgrep search failed for pattern "${pattern}":`, error);
+      return null;
+    }
+  }
 
-      child.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
+  private parseRipgrepResults(results: string): Array<{
+    file: string;
+    matches: Array<{
+      line: number;
+      text: string;
+      isMatch: boolean;
+    }>;
+  }> {
+    const fileMatches: Array<{
+      file: string;
+      matches: Array<{
+        line: number;
+        text: string;
+        isMatch: boolean;
+      }>;
+    }> = [];
 
-      child.on('close', (code) => {
-        if (code === 0 || code === 1) { // 0 = found, 1 = not found
-          try {
-            const results = stdout
-              .split('\n')
-              .filter(line => line.trim())
-              .map(line => JSON.parse(line) as RipgrepResult);
-            resolve(results);
-          } catch (error) {
-            resolve([]); // Return empty array if parsing fails
-          }
-        } else {
-          reject(new Error(`Ripgrep failed with code ${code}: ${stderr}`));
+    const lines = results.split('\n');
+    let currentFile: string | null = null;
+    let currentMatches: Array<{
+      line: number;
+      text: string;
+      isMatch: boolean;
+    }> = [];
+
+    for (const line of lines) {
+      // Check if this is a file header (starts with #)
+      if (line.startsWith('# ')) {
+        // Save previous file if exists
+        if (currentFile && currentMatches.length > 0) {
+          fileMatches.push({
+            file: currentFile,
+            matches: [...currentMatches]
+          });
         }
-      });
 
-      child.on('error', (error) => {
-        // If ripgrep is not installed, return empty results
-        resolve([]);
+        // Start new file
+        currentFile = line.substring(2).trim();
+        currentMatches = [];
+      } else if (line.match(/^\s*\d+\s*\|\s*/)) {
+        // This is a line with line number
+        const match = line.match(/^\s*(\d+)\s*\|\s*(.*)$/);
+        if (match && currentFile) {
+          const lineNumber = parseInt(match[1], 10);
+          const text = match[2];
+
+          currentMatches.push({
+            line: lineNumber,
+            text: text,
+            isMatch: true // In the formatted output, all lines are matches or context
+          });
+        }
+      }
+    }
+
+    // Don't forget the last file
+    if (currentFile && currentMatches.length > 0) {
+      fileMatches.push({
+        file: currentFile,
+        matches: [...currentMatches]
       });
-    });
+    }
+
+    return fileMatches;
   }
 
   async analyzeIssue(issue: GitHubIssue): Promise<IssueAnalysisResult> {
@@ -378,7 +414,7 @@ export class ContextAnalyzer {
 
   private async findRelevantFilesAdvanced(
     keywords: SearchKeywords,
-    ripgrepResults: RipgrepResult[],
+    ripgrepResults: RipgrepSearchResult[],
     analysisResult: ContextWorkerResult
   ): Promise<Array<{
     path: string;
@@ -389,27 +425,29 @@ export class ContextAnalyzer {
     const fileContents = new Map<string, string>();
 
     // Score files based on ripgrep results
-    for (const result of ripgrepResults) {
-      if (result.type === 'match' && result.data.path) {
-        const filePath = result.data.path.text;
+    for (const searchResult of ripgrepResults) {
+      for (const fileMatch of searchResult.fileMatches) {
+        const filePath = fileMatch.file;
         const currentScore = fileScores.get(filePath) || 0;
 
-        // Higher score for exact matches
-        let matchScore = 1;
-        if (result.data.submatches) {
-          matchScore += result.data.submatches.length * 0.5;
-        }
+        // Calculate score based on number of matches and their quality
+        let matchScore = fileMatch.matches.length;
+
+        // Bonus for files with multiple different keywords
+        const keywordBonus = 0.5;
+        matchScore += keywordBonus;
 
         fileScores.set(filePath, currentScore + matchScore);
 
         // Store file content if we don't have it yet
         if (!fileContents.has(filePath)) {
+          const fullPath = path.isAbsolute(filePath) ? filePath : path.join(this.workspacePath, filePath);
           try {
-            const fullPath = path.isAbsolute(filePath) ? filePath : path.join(this.workspacePath, filePath);
             const content = await fs.promises.readFile(fullPath, 'utf-8');
             fileContents.set(filePath, content);
           } catch (error) {
             // Skip files that can't be read
+            console.warn(`Could not read file ${fullPath}:`, error);
           }
         }
       }
