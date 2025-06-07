@@ -31,6 +31,14 @@ interface LLMAnalysisReport {
   confidence: number;
 }
 
+interface CodeRelevanceAnalysis {
+  is_relevant: boolean;
+  relevance_score: number; // 0.0 - 1.0
+  reason: string;
+  specific_areas: string[]; // Specific parts of the code that are relevant
+  confidence: number;
+}
+
 export class LLMService {
   private openai;
   private model: string;
@@ -373,6 +381,141 @@ Focus on:
       console.warn(`Failed to parse LLM analysis report: ${error.message}`);
       throw error;
     }
+  }
+
+  /**
+   * Analyze if a specific code file is relevant to the GitHub issue using LLM
+   */
+  async analyzeCodeRelevance(
+    issue: GitHubIssue,
+    filePath: string,
+    fileContent: string
+  ): Promise<CodeRelevanceAnalysis> {
+    const prompt = this.buildCodeRelevancePrompt(issue, filePath, fileContent);
+
+    try {
+      const { text } = await generateText({
+        model: this.openai(this.model),
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert code analyst. Analyze whether a specific code file is relevant to a GitHub issue. Always respond with valid JSON in the specified format."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.2, // Lower temperature for more consistent analysis
+      });
+
+      const analysis = this.parseCodeRelevanceAnalysis(text);
+      return analysis;
+    } catch (error) {
+      console.warn(`LLM code relevance analysis failed: ${error.message}`);
+      return this.fallbackCodeRelevanceAnalysis(issue, filePath, fileContent);
+    }
+  }
+
+  private buildCodeRelevancePrompt(issue: GitHubIssue, filePath: string, fileContent: string): string {
+    // Limit file content to avoid token limits
+    const limitedContent = fileContent.length > 3000 ?
+      fileContent.substring(0, 3000) + '\n... (content truncated)' :
+      fileContent;
+
+    return `Analyze whether this code file is relevant to the GitHub issue.
+
+**GitHub Issue:**
+- Title: ${issue.title}
+- Body: ${issue.body || 'No description provided'}
+- Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}
+
+**Code File:**
+- Path: ${filePath}
+- Content:
+\`\`\`
+${limitedContent}
+\`\`\`
+
+Please analyze if this code file is relevant to the issue and respond in the following JSON format:
+
+{
+  "is_relevant": true/false,
+  "relevance_score": 0.85,
+  "reason": "Detailed explanation of why this file is or isn't relevant",
+  "specific_areas": [
+    "List of specific functions, classes, or code sections that are relevant",
+    "Include line numbers or function names if applicable"
+  ],
+  "confidence": 0.9
+}
+
+Consider:
+1. Does the file contain code that could cause the reported issue?
+2. Does the file implement functionality mentioned in the issue?
+3. Are there error patterns, database connections, API endpoints, or other elements mentioned in the issue?
+4. Could changes to this file help resolve the issue?
+
+Be precise and specific in your analysis.`;
+  }
+
+  private parseCodeRelevanceAnalysis(text: string): CodeRelevanceAnalysis {
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      return {
+        is_relevant: Boolean(parsed.is_relevant),
+        relevance_score: typeof parsed.relevance_score === 'number' ?
+          Math.max(0, Math.min(1, parsed.relevance_score)) : 0.5,
+        reason: parsed.reason || 'No reason provided',
+        specific_areas: Array.isArray(parsed.specific_areas) ? parsed.specific_areas : [],
+        confidence: typeof parsed.confidence === 'number' ?
+          Math.max(0, Math.min(1, parsed.confidence)) : 0.5
+      };
+    } catch (error) {
+      console.warn(`Failed to parse LLM code relevance analysis: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private fallbackCodeRelevanceAnalysis(
+    issue: GitHubIssue,
+    filePath: string,
+    fileContent: string
+  ): CodeRelevanceAnalysis {
+    const issueText = `${issue.title} ${issue.body || ''}`.toLowerCase();
+    const contentLower = fileContent.toLowerCase();
+
+    // Simple keyword matching fallback
+    const keywords = this.extractBasicKeywords(issueText);
+    let matchCount = 0;
+    const foundKeywords: string[] = [];
+
+    for (const keyword of keywords.slice(0, 10)) {
+      if (contentLower.includes(keyword.toLowerCase())) {
+        matchCount++;
+        foundKeywords.push(keyword);
+      }
+    }
+
+    const relevanceScore = Math.min(matchCount / 5, 1); // Normalize to 0-1
+    const isRelevant = relevanceScore > 0.2;
+
+    return {
+      is_relevant: isRelevant,
+      relevance_score: relevanceScore,
+      reason: isRelevant ?
+        `File contains ${matchCount} keywords from the issue: ${foundKeywords.join(', ')}` :
+        'File does not contain significant keywords from the issue',
+      specific_areas: foundKeywords.length > 0 ?
+        [`Keywords found: ${foundKeywords.join(', ')}`] : [],
+      confidence: 0.4 // Lower confidence for fallback analysis
+    };
   }
 
   private fallbackAnalysisReport(issue: GitHubIssue, analysisResult: IssueAnalysisResult): LLMAnalysisReport {

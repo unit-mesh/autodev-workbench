@@ -281,8 +281,8 @@ export class ContextAnalyzer {
     // Use optimized search with filtered file list
     const ripgrepResults = await this.searchWithRipgrepOptimized(keywords, filteredFiles);
 
-    // Find relevant files based on multiple search strategies
-    const relevantFiles = await this.findRelevantFilesAdvanced(keywords, ripgrepResults, analysisResult);
+    // Find relevant files using LLM-powered analysis
+    const relevantFiles = await this.findRelevantFilesWithLLM(issue, keywords, ripgrepResults, analysisResult);
 
     // Find relevant symbols using symbol analysis
     const relevantSymbols = this.findRelevantSymbols(keywords, analysisResult);
@@ -702,6 +702,72 @@ export class ContextAnalyzer {
       suggestions,
       summary,
     };
+  }
+
+  /**
+   * Find relevant files using LLM to analyze code relevance
+   */
+  private async findRelevantFilesWithLLM(
+    issue: GitHubIssue,
+    keywords: SearchKeywords,
+    ripgrepResults: RipgrepSearchResult[],
+    analysisResult: ContextWorkerResult
+  ): Promise<Array<{
+    path: string;
+    content: string;
+    relevanceScore: number;
+    reason?: string;
+  }>> {
+    console.log('🧠 Using LLM to analyze code relevance...');
+
+    // First, get candidate files using traditional methods
+    const candidateFiles = await this.findRelevantFilesAdvanced(keywords, ripgrepResults, analysisResult);
+
+    // Then use LLM to analyze each candidate file
+    const llmAnalyzedFiles: Array<{
+      path: string;
+      content: string;
+      relevanceScore: number;
+      reason?: string;
+    }> = [];
+
+    // Analyze top candidate files with LLM (limit to avoid API costs)
+    const filesToAnalyze = candidateFiles.slice(0, 8);
+
+    for (const file of filesToAnalyze) {
+      try {
+        console.log(`🔍 LLM analyzing: ${file.path}`);
+        const llmAnalysis = await this.llmService.analyzeCodeRelevance(issue, file.path, file.content);
+
+        if (llmAnalysis.is_relevant) {
+          llmAnalyzedFiles.push({
+            path: file.path,
+            content: file.content,
+            relevanceScore: llmAnalysis.relevance_score,
+            reason: llmAnalysis.reason
+          });
+
+          console.log(`✅ ${file.path}: ${(llmAnalysis.relevance_score * 100).toFixed(1)}% relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
+        } else {
+          console.log(`❌ ${file.path}: Not relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
+        }
+      } catch (error) {
+        console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
+        // Fall back to original scoring for this file
+        llmAnalyzedFiles.push(file);
+      }
+    }
+
+    // If LLM analysis found no relevant files, fall back to traditional method
+    if (llmAnalyzedFiles.length === 0) {
+      console.log('🔄 No LLM-relevant files found, falling back to traditional analysis');
+      return candidateFiles.slice(0, 5);
+    }
+
+    // Sort by LLM relevance score and return top files
+    return llmAnalyzedFiles
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, 10);
   }
 
   private async findRelevantFilesAdvanced(
