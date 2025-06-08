@@ -32,6 +32,12 @@ export class FunctionParser {
       const matches = [...response.matchAll(functionCallsRegex)];
 
       if (matches.length === 0) {
+        // Try fallback JSON format parsing
+        const jsonResult = this.parseJSONFormat(response);
+        if (jsonResult.functionCalls.length > 0) {
+          return jsonResult;
+        }
+
         // No function calls found - this is normal for text-only responses
         return result;
       }
@@ -154,5 +160,77 @@ export class FunctionParser {
    */
   static hasFunctionCalls(response: string): boolean {
     return /<function_calls>[\s\S]*?<\/function_calls>/.test(response);
+  }
+
+  /**
+   * Parse JSON format function calls (fallback for models that don't follow XML)
+   * Looks for patterns like:
+   * function_name
+   * {"param1": "value1", "param2": "value2"}
+   */
+  private static parseJSONFormat(response: string): ParsedResponse {
+    const functionCalls: FunctionCall[] = [];
+    let text = response;
+
+    // Look for patterns like:
+    // function_name
+    // {"param1": "value1", "param2": "value2"}
+    const lines = response.split('\n');
+
+    for (let i = 0; i < lines.length - 1; i++) {
+      const currentLine = lines[i].trim();
+      const nextLine = lines[i + 1].trim();
+
+      // Check if current line looks like a function name and next line looks like JSON
+      if (this.isValidFunctionName(currentLine) && this.looksLikeJSON(nextLine)) {
+        try {
+          const parameters = JSON.parse(nextLine);
+
+          // Validate that parameters is an object
+          if (typeof parameters === 'object' && parameters !== null && !Array.isArray(parameters)) {
+            functionCalls.push({
+              name: currentLine,
+              parameters
+            });
+
+            // Remove these lines from text
+            text = text.replace(currentLine, '').replace(nextLine, '').trim();
+          }
+        } catch (error) {
+          // JSON parsing failed, continue
+        }
+      }
+    }
+
+    return {
+      text: text.trim(),
+      functionCalls,
+      hasError: false
+    };
+  }
+
+  /**
+   * Check if a string looks like a valid function name
+   */
+  private static isValidFunctionName(str: string): boolean {
+    // Function names should be alphanumeric with underscores, no spaces
+    // Also check against known function names
+    const knownFunctions = [
+      'github_analyze_issue',
+      'github_smart_search',
+      'github_get_issues',
+      'github_get_issue_context',
+      'github_upload_analysis',
+      'github_fetch_url_content'
+    ];
+
+    return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str) && knownFunctions.includes(str);
+  }
+
+  /**
+   * Check if a string looks like JSON
+   */
+  private static looksLikeJSON(str: string): boolean {
+    return str.startsWith('{') && str.endsWith('}');
   }
 }

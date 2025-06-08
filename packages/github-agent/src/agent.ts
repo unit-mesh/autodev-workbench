@@ -215,8 +215,26 @@ export class AIAgent {
       lastLLMResponse = llmResponse;
       this.log(`Round ${currentRound} LLM response:`, llmResponse.substring(0, 200) + '...');
 
+      // Debug: Show full response if verbose
+      if (this.config.verbose) {
+        console.log(`[AIAgent] Full LLM Response (Round ${currentRound}):`);
+        console.log('---START---');
+        console.log(llmResponse);
+        console.log('---END---');
+      }
+
       // Parse for function calls
       const parsedResponse = FunctionParser.parseResponse(llmResponse);
+
+      // Debug: Show parsing details
+      if (this.config.verbose) {
+        console.log(`[AIAgent] Parsing result:`, {
+          functionCallsFound: parsedResponse.functionCalls.length,
+          hasError: parsedResponse.hasError,
+          error: parsedResponse.error,
+          functionCalls: parsedResponse.functionCalls.map(fc => ({ name: fc.name, parameters: fc.parameters }))
+        });
+      }
 
       if (parsedResponse.hasError) {
         this.log(`Round ${currentRound} parsing error:`, parsedResponse.error);
@@ -818,14 +836,34 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
 3. **Be strategic**: Choose tools that best address the user's specific needs
 4. **Chain tools intelligently**: Use results from one tool to inform parameters for subsequent tools
 
-## Function Call Format:
-You can invoke functions by writing a "<function_calls>" block like the following:
+## CRITICAL: Function Call Format
+You MUST use the exact XML format below to call functions. This is MANDATORY and NON-NEGOTIABLE.
+
+**ONLY ACCEPTABLE FORMAT:**
 <function_calls>
 <invoke name="$FUNCTION_NAME">
 <parameter name="$PARAMETER_NAME">$PARAMETER_VALUE</parameter>
-...
 </invoke>
 </function_calls>
+
+**EXAMPLE - Analyze GitHub Issue:**
+<function_calls>
+<invoke name="github_analyze_issue">
+<parameter name="owner">unit-mesh</parameter>
+<parameter name="repo">autodev-workbench</parameter>
+<parameter name="issue_number">81</parameter>
+<parameter name="fetch_urls">true</parameter>
+</invoke>
+</function_calls>
+
+**FORBIDDEN FORMATS (WILL BE IGNORED):**
+- github_analyze_issue {"owner": "...", "repo": "..."}
+- {"function": "github_analyze_issue", "parameters": {...}}
+- github_analyze_issue(owner="...", repo="...")
+- Any JSON format
+- Any function call syntax without XML tags
+
+**IMPORTANT:** If you don't use the exact XML format above, your function calls will be completely ignored and the user will not get the help they need.
 
 ## Example Usage Patterns:
 

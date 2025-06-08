@@ -16,10 +16,14 @@ import {
 import * as path from 'path';
 
 // Import SymbolAnalyser and related types from context-worker
-import { SymbolAnalyser } from "@autodev/context-worker/src/analyzer/analyzers/SymbolAnalyser";
-import { SymbolAnalysisResult, SymbolInfo } from "@autodev/context-worker/src/analyzer/CodeAnalysisResult";
-import { CodeCollector } from "@autodev/context-worker/src/analyzer/CodeCollector";
-import { ILanguageServiceProvider, LanguageServiceProvider } from "@autodev/context-worker/src/base/common/languages/languageService";
+import {
+  SymbolAnalyser,
+  CodeCollector,
+  SymbolAnalysisResult,
+  SymbolInfo,
+  ILanguageServiceProvider,
+  LanguageServiceProvider
+} from "@autodev/context-worker";
 
 export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
   readonly name = 'rule-based';
