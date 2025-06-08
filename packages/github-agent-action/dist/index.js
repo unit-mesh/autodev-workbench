@@ -333,6 +333,19 @@ class GitHubActionService {
         if (!config.githubToken) {
             throw new Error('GitHub token is required. Set GITHUB_TOKEN environment variable or github-token input.');
         }
+        // Set LLM API keys as environment variables for the underlying github-agent
+        const openaiKey = this.getInput('openai-api-key') || process.env.OPENAI_API_KEY;
+        const deepseekToken = this.getInput('deepseek-token') || process.env.DEEPSEEK_TOKEN;
+        const glmToken = this.getInput('glm-token') || process.env.GLM_TOKEN;
+        if (openaiKey) {
+            process.env.OPENAI_API_KEY = openaiKey;
+        }
+        if (deepseekToken) {
+            process.env.DEEPSEEK_TOKEN = deepseekToken;
+        }
+        if (glmToken) {
+            process.env.GLM_TOKEN = glmToken;
+        }
         return config;
     }
     /**

@@ -52,6 +52,21 @@ inputs:
     required: false
     default: ''
 
+  openai-api-key:
+    description: 'OpenAI API key for LLM analysis'
+    required: false
+    default: ''
+
+  deepseek-token:
+    description: 'DeepSeek API token for LLM analysis'
+    required: false
+    default: ''
+
+  glm-token:
+    description: 'GLM API token for LLM analysis'
+    required: false
+    default: ''
+
 outputs:
   success:
     description: 'Whether the analysis was successful'
