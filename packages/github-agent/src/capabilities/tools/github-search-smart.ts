@@ -3,8 +3,8 @@ import { z } from "zod";
 import { GitHubService } from "../../services/github/github-service";
 import { ContextAnalyzer } from "../../services/core/context-analyzer";
 
-export const installGitHubSmartSearchTool: ToolLike = (installer) => {
-  installer("github_smart_search", "Intelligently search for code related to GitHub issues using AI-generated keywords and multiple search strategies", {
+export const installGitHubSearchSmartTool: ToolLike = (installer) => {
+  installer("github-search-smart", "Intelligently search for code related to GitHub issues using AI-generated keywords and multiple search strategies", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
     query: z.string().describe("Search query - can be an issue description, error message, or feature request"),

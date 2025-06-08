@@ -4,9 +4,9 @@ import { GitHubService } from "../../services/github/github-service";
 import { ContextAnalyzer } from "../../services/core/context-analyzer";
 import { AnalysisReportGenerator } from "../../services/reporting/analysis-report-generator";
 
-export const installGitHubUploadAnalysisTool: ToolLike = (installer) => {
+export const installGitHubAnalysisUploadTool: ToolLike = (installer) => {
   installer(
-    "github_upload_analysis", 
+    "github-analysis-upload", 
     "Analyze a GitHub issue and automatically upload the analysis results as a comment to the issue", 
     {
       owner: z.string().describe("Repository owner (username or organization)"),

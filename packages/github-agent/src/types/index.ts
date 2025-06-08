@@ -39,6 +39,10 @@ export interface GitHubIssue {
     login: string;
     id: number;
   }>;
+  milestone?: {
+    number: number;
+    title: string;
+  };
   created_at: string;
   updated_at: string;
   closed_at: string | null;

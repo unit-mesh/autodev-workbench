@@ -162,6 +162,69 @@ export class GitHubService {
   }
 
   /**
+   * Create a new GitHub issue
+   * @param owner Repository owner
+   * @param repo Repository name
+   * @param issueData Issue data
+   * @returns Created issue data
+   */
+  async createIssue(
+    owner: string,
+    repo: string,
+    issueData: {
+      title: string;
+      body?: string;
+      labels?: string[];
+      assignees?: string[];
+      milestone?: number;
+    }
+  ): Promise<GitHubIssue> {
+    try {
+      const { data } = await this.octokit.issues.create({
+        owner,
+        repo,
+        title: issueData.title,
+        body: issueData.body,
+        labels: issueData.labels,
+        assignees: issueData.assignees,
+        milestone: issueData.milestone,
+      });
+
+      return {
+        id: data.id,
+        number: data.number,
+        title: data.title,
+        body: data.body,
+        state: data.state as 'open' | 'closed',
+        user: data.user ? {
+          login: data.user.login,
+          id: data.user.id,
+        } : null,
+        labels: data.labels.map(label => ({
+          id: typeof label === 'string' ? 0 : label.id || 0,
+          name: typeof label === 'string' ? label : label.name || '',
+          color: typeof label === 'string' ? '' : label.color || '',
+          description: typeof label === 'string' ? '' : label.description || '',
+        })),
+        assignees: data.assignees?.map(assignee => ({
+          login: assignee.login,
+          id: assignee.id,
+        })) || [],
+        milestone: data.milestone ? {
+          number: data.milestone.number,
+          title: data.milestone.title,
+        } : undefined,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        closed_at: data.closed_at,
+        html_url: data.html_url,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to create issue: ${error.message}`);
+    }
+  }
+
+  /**
    * Get comments for a GitHub issue
    * @param owner Repository owner
    * @param repo Repository name

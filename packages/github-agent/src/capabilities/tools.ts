@@ -1,15 +1,38 @@
-import { installGitHubGetIssuesTool } from "./tools/github-get-issues";
-import { installGitHubAnalyzeIssueTool } from "./tools/github-analyze-issue";
-import { installGitHubGetIssueContextTool } from "./tools/github-get-issue-context";
-import { installGitHubSmartSearchTool } from "./tools/github-smart-search";
-import { installGitHubUploadAnalysisTool } from "./tools/github-upload-analysis";
-import { installFetchUrlContentTool } from "./tools/fetch-url-content";
+// Issue Management Tools
+import { installGitHubIssueListTool } from "./tools/github-issue-list";
+import { installGitHubIssueGetTool } from "./tools/github-issue-get";
+import { installGitHubIssueCreateTool } from "./tools/github-issue-create";
+import { installGitHubIssueCommentTool } from "./tools/github-issue-comment";
 
+// Analysis & Search Tools
+import { installGitHubSearchSmartTool } from "./tools/github-search-smart";
+import { installGitHubAnalysisUploadTool } from "./tools/github-analysis-upload";
+
+// Web Content Tools
+import { installWebFetchContentTool } from "./tools/web-fetch-content";
+
+// Issue Management Tools
+export const GitHubIssueTools = [
+  installGitHubIssueListTool,
+  installGitHubIssueGetTool,
+  installGitHubIssueCreateTool,
+  installGitHubIssueCommentTool,
+] as const;
+
+// Analysis & Search Tools
+export const GitHubAnalysisTools = [
+  installGitHubSearchSmartTool,
+  installGitHubAnalysisUploadTool,
+] as const;
+
+// Web Content Tools
+export const WebContentTools = [
+  installWebFetchContentTool,
+] as const;
+
+// All GitHub Tools (for backward compatibility)
 export const GitHubTools = [
-  installGitHubGetIssuesTool,
-  installGitHubAnalyzeIssueTool,
-  installGitHubGetIssueContextTool,
-  installGitHubSmartSearchTool,
-  installGitHubUploadAnalysisTool,
-  installFetchUrlContentTool,
+  ...GitHubIssueTools,
+  ...GitHubAnalysisTools,
+  ...WebContentTools,
 ] as const;
