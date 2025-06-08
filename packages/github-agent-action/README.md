@@ -81,7 +81,7 @@ npx autodev-github-action validate
 | `analysis-depth` | Analysis depth (shallow/medium/deep) | `medium` | No |
 | `auto-comment` | Add analysis comment to issues | `true` | No |
 | `auto-label` | Add labels based on analysis | `true` | No |
-| `trigger-events` | Events that trigger analysis | `opened,edited` | No |
+| `trigger-events` | Events that trigger analysis | `opened,edited,reopened` | No |
 | `exclude-labels` | Labels to exclude from analysis | `` | No |
 | `include-labels` | Labels to include for analysis | `` | No |
 
@@ -95,7 +95,7 @@ npx autodev-github-action validate
 | `AUTO_COMMENT` | Auto-add comments | `true` |
 | `AUTO_LABEL` | Auto-add labels | `true` |
 | `ANALYSIS_DEPTH` | Analysis depth | `medium` |
-| `TRIGGER_EVENTS` | Trigger events | `opened,edited` |
+| `TRIGGER_EVENTS` | Trigger events | `opened,edited,reopened` |
 | `EXCLUDE_LABELS` | Exclude labels | `` |
 | `INCLUDE_LABELS` | Include labels | `` |
 

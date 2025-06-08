@@ -10,7 +10,7 @@
 name: Automated Issue Analysis
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, reopened]
 
 jobs:
   analyze:
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Analyze Issue
-        uses: unit-mesh/autodev-workbench/packages/github-agent-action@v0.4.2
+        uses: unit-mesh/autodev-workbench/packages/github-agent-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           analysis-depth: medium
@@ -74,14 +74,14 @@ jobs:
 
 ### 基础配置
 ```yaml
-- uses: unit-mesh/autodev-workbench/packages/github-agent-action@v0.4.2
+- uses: unit-mesh/autodev-workbench/packages/github-agent-action@master
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### 高级配置
 ```yaml
-- uses: unit-mesh/autodev-workbench/packages/github-agent-action@v0.4.2
+- uses: unit-mesh/autodev-workbench/packages/github-agent-action@master
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     analysis-depth: deep

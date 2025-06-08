@@ -35,7 +35,7 @@ inputs:
   trigger-events:
     description: 'Comma-separated list of issue events to trigger analysis'
     required: false
-    default: 'opened,edited'
+    default: 'opened,edited,reopened'
   
   exclude-labels:
     description: 'Comma-separated list of labels to exclude from analysis'

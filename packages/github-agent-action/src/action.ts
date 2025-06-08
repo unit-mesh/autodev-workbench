@@ -44,7 +44,7 @@ export class GitHubActionService {
       autoComment: this.getBooleanInput('auto-comment') ?? true,
       autoLabel: this.getBooleanInput('auto-label') ?? true,
       analysisDepth: (this.getInput('analysis-depth') as any) || 'medium',
-      triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited'],
+      triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited', 'reopened'],
       excludeLabels: this.getInput('exclude-labels')?.split(',').filter(Boolean) || [],
       includeLabels: this.getInput('include-labels')?.split(',').filter(Boolean) || [],
       ...overrides

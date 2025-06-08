@@ -2,7 +2,7 @@ name: Test GitHub Agent Action
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, reopened]
   workflow_dispatch:  # 允许手动触发测试
 
 jobs:

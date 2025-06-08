@@ -325,7 +325,7 @@ class GitHubActionService {
             autoComment: this.getBooleanInput('auto-comment') ?? true,
             autoLabel: this.getBooleanInput('auto-label') ?? true,
             analysisDepth: this.getInput('analysis-depth') || 'medium',
-            triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited'],
+            triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited', 'reopened'],
             excludeLabels: this.getInput('exclude-labels')?.split(',').filter(Boolean) || [],
             includeLabels: this.getInput('include-labels')?.split(',').filter(Boolean) || [],
             ...overrides
@@ -801,7 +801,7 @@ class WebhookHandler {
             autoComment: process.env.AUTO_COMMENT === 'true',
             autoLabel: process.env.AUTO_LABEL === 'true',
             analysisDepth: process.env.ANALYSIS_DEPTH || 'medium',
-            triggerEvents: process.env.TRIGGER_EVENTS?.split(',') || ['opened', 'edited'],
+            triggerEvents: process.env.TRIGGER_EVENTS?.split(',') || ['opened', 'edited', 'reopened'],
             excludeLabels: process.env.EXCLUDE_LABELS?.split(',') || [],
             includeLabels: process.env.INCLUDE_LABELS?.split(',') || []
         };
