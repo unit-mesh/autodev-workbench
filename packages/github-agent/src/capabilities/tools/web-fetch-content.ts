@@ -6,8 +6,8 @@ import { URL } from "url";
 import * as cheerio from "cheerio";
 import TurndownService from "turndown";
 
-export const installWebFetchContentTool: ToolLike = (installer) => {
-  installer("web-fetch-content", "Fetch and convert web page content to markdown for analysis", {
+export const installExtractWebpageAsMarkdownTool: ToolLike = (installer) => {
+  installer("extract-webpage-as-markdown", "Extract and convert web page content to clean markdown format, removing navigation and ads for better readability", {
     url: z.string().describe("URL to fetch content from"),
     timeout: z.number().optional().default(10000).describe("Request timeout in milliseconds"),
     extract_urls: z.boolean().optional().default(false).describe("Whether to extract URLs from GitHub issue content"),

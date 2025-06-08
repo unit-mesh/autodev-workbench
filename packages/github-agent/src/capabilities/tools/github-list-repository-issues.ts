@@ -2,8 +2,8 @@ import { ToolLike } from "../_typing";
 import { z } from "zod";
 import { GitHubService } from "../../services/github/github-service";
 
-export const installGitHubIssueListTool: ToolLike = (installer) => {
-  installer("github-issue-list", "List GitHub issues from a repository", {
+export const installGitHubListRepositoryIssuesTool: ToolLike = (installer) => {
+  installer("github-list-repository-issues", "Browse and filter issues in a GitHub repository with support for pagination, labels, assignees, and date filtering", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
     state: z.enum(["open", "closed", "all"]).optional().describe("State of issues to retrieve"),

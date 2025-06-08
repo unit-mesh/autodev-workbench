@@ -4,8 +4,8 @@ import { GitHubService } from "../../services/github/github-service";
 import { ContextAnalyzer } from "../../services/core/context-analyzer";
 import { fetchUrlsFromIssue } from "./web-fetch-content";
 
-export const installGitHubIssueGetTool: ToolLike = (installer) => {
-  installer("github-issue-get", "Get detailed information about a GitHub issue including context analysis and related code", {
+export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
+  installer("github-get-issue-with-analysis", "Retrieve a GitHub issue with intelligent code analysis, finding related files, symbols, and APIs in your workspace", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
     issue_number: z.number().describe("Issue number to get"),

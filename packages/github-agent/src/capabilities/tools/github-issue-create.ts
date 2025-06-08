@@ -2,8 +2,8 @@ import { ToolLike } from "../_typing";
 import { z } from "zod";
 import { GitHubService } from "../../services/github/github-service";
 
-export const installGitHubIssueCreateTool: ToolLike = (installer) => {
-  installer("github-issue-create", "Create a new GitHub issue", {
+export const installGitHubCreateNewIssueTool: ToolLike = (installer) => {
+  installer("github-create-new-issue", "Create a new GitHub issue with title, description, labels, assignees, and milestone assignment", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
     title: z.string().describe("Issue title"),

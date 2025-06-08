@@ -1,33 +1,33 @@
 // Issue Management Tools
-import { installGitHubIssueListTool } from "./tools/github-issue-list";
-import { installGitHubIssueGetTool } from "./tools/github-issue-get";
-import { installGitHubIssueCreateTool } from "./tools/github-issue-create";
-import { installGitHubIssueCommentTool } from "./tools/github-issue-comment";
+import { installGitHubListRepositoryIssuesTool } from "./tools/github-list-repository-issues";
+import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-issue-get";
+import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
+import { installGitHubAddIssueCommentTool } from "./tools/github-issue-comment";
 
 // Analysis & Search Tools
-import { installGitHubSearchSmartTool } from "./tools/github-search-smart";
-import { installGitHubAnalysisUploadTool } from "./tools/github-analysis-upload";
+import { installGitHubFindCodeByDescriptionTool } from "./tools/github-search-smart";
+import { installGitHubAnalyzeIssueAndPostResultsTool } from "./tools/github-analysis-upload";
 
 // Web Content Tools
-import { installWebFetchContentTool } from "./tools/web-fetch-content";
+import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
 
 // Issue Management Tools
 export const GitHubIssueTools = [
-  installGitHubIssueListTool,
-  installGitHubIssueGetTool,
-  installGitHubIssueCreateTool,
-  installGitHubIssueCommentTool,
+  installGitHubListRepositoryIssuesTool,
+  installGitHubGetIssueWithAnalysisTool,
+  installGitHubCreateNewIssueTool,
+  installGitHubAddIssueCommentTool,
 ] as const;
 
 // Analysis & Search Tools
 export const GitHubAnalysisTools = [
-  installGitHubSearchSmartTool,
-  installGitHubAnalysisUploadTool,
+  installGitHubFindCodeByDescriptionTool,
+  installGitHubAnalyzeIssueAndPostResultsTool,
 ] as const;
 
 // Web Content Tools
 export const WebContentTools = [
-  installWebFetchContentTool,
+  installExtractWebpageAsMarkdownTool,
 ] as const;
 
 // All GitHub Tools (for backward compatibility)

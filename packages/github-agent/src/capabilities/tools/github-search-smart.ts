@@ -3,11 +3,11 @@ import { z } from "zod";
 import { GitHubService } from "../../services/github/github-service";
 import { ContextAnalyzer } from "../../services/core/context-analyzer";
 
-export const installGitHubSearchSmartTool: ToolLike = (installer) => {
-  installer("github-search-smart", "Intelligently search for code related to GitHub issues using AI-generated keywords and multiple search strategies", {
+export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
+  installer("github-find-code-by-description", "Find relevant code files and functions by describing what you're looking for in natural language, using AI-powered semantic search", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
-    query: z.string().describe("Search query - can be an issue description, error message, or feature request"),
+    query: z.string().describe("Natural language description of what you're looking for (e.g., 'authentication logic', 'database connection code', 'error handling for API calls')"),
     workspace_path: z.string().optional().describe("Path to the workspace to analyze (defaults to current directory)"),
     search_depth: z.enum(["shallow", "medium", "deep"]).optional().describe("Search depth - affects number of results and analysis detail"),
     include_symbols: z.boolean().optional().describe("Whether to include symbol analysis in results"),

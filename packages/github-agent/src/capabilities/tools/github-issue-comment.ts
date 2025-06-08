@@ -2,8 +2,8 @@ import { ToolLike } from "../_typing";
 import { z } from "zod";
 import { GitHubService } from "../../services/github/github-service";
 
-export const installGitHubIssueCommentTool: ToolLike = (installer) => {
-  installer("github-issue-comment", "Add a comment to a GitHub issue", {
+export const installGitHubAddIssueCommentTool: ToolLike = (installer) => {
+  installer("github-add-issue-comment", "Add a comment to an existing GitHub issue with full markdown support for rich formatting", {
     owner: z.string().describe("Repository owner (username or organization)"),
     repo: z.string().describe("Repository name"),
     issue_number: z.number().describe("Issue number to comment on"),
