@@ -6,7 +6,7 @@
 import { generateText, CoreMessage } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm/llm-provider";
 import { FunctionParser, ParsedResponse, FunctionCall } from "./agent/function-parser";
-import { MCPToolFactory, MCPToolName } from "./capabilities/tools/tool-factory";
+import { GitHubTools } from "./capabilities/tools";
 import { ToolLike } from "./capabilities/_typing";
 
 // Tool definitions - dynamically extracted from actual MCP tools
@@ -18,21 +18,55 @@ let GITHUB_TOOLS: Array<{
 
 // Function to extract tool definitions from MCP tools
 function extractToolDefinitions(): void {
-  // Initialize the tool factory
-  MCPToolFactory.initialize();
+  const toolDefinitions: Array<{ name: string; description: string; parameters: any }> = [];
 
-  // Get all tools and convert to the format expected by the agent
-  const tools = MCPToolFactory.getAllTools();
-
-  GITHUB_TOOLS = tools.map(tool => ({
-    name: tool.name,
-    description: tool.description,
-    parameters: {
+  // Mock installer that captures tool definitions
+  const mockInstaller = (
+    name: string,
+    description: string,
+    inputSchema: Record<string, any>,
+    handler: Function
+  ) => {
+    // Convert Zod schema to JSON schema format
+    const parameters = {
       type: "object",
-      properties: {}, // Will be populated by the tool's schema
-      required: []
+      properties: {},
+      required: [] as string[]
+    };
+
+    // Extract properties and required fields from Zod schema
+    Object.entries(inputSchema).forEach(([key, zodSchema]: [string, any]) => {
+      if (zodSchema && typeof zodSchema === 'object') {
+        // Basic property definition
+        (parameters.properties as any)[key] = {
+          type: "string", // Default type, could be enhanced
+          description: zodSchema.description || `${key} parameter`
+        };
+
+        // Check if required (simplified check)
+        if (zodSchema._def && !zodSchema._def.optional) {
+          parameters.required.push(key);
+        }
+      }
+    });
+
+    toolDefinitions.push({
+      name,
+      description,
+      parameters
+    });
+  };
+
+  // Extract definitions from all GitHub tools
+  GitHubTools.forEach(installer => {
+    try {
+      installer(mockInstaller);
+    } catch (error) {
+      console.warn(`Failed to extract tool definition:`, error);
     }
-  }));
+  });
+
+  GITHUB_TOOLS = toolDefinitions;
 }
 
 export interface AgentConfig {
@@ -131,8 +165,14 @@ export class AIAgent {
       this.toolHandlers.set(name, handler);
     };
 
-    // Use the tool factory to install all tools
-    MCPToolFactory.installAllTools(mockInstaller);
+    // Execute tool installers to register handlers
+    GitHubTools.forEach(installer => {
+      try {
+        installer(mockInstaller);
+      } catch (error) {
+        console.warn(`Failed to register tool:`, error);
+      }
+    });
 
     this.log(`Registered ${this.toolHandlers.size} tool handlers:`, Array.from(this.toolHandlers.keys()));
   }
@@ -423,16 +463,16 @@ export class AIAgent {
 
     // Add workspace_path if not provided and tool supports it
     if (!enhanced.workspace_path && (
-      toolName === MCPToolName.GITHUB_GET_ISSUE_WITH_ANALYSIS ||
-      toolName === MCPToolName.GITHUB_FIND_CODE_BY_DESCRIPTION
+      toolName === 'github-get-issue-with-analysis' ||
+      toolName === 'github-find-code-by-description'
     )) {
       enhanced.workspace_path = context.workspacePath;
     }
 
     // Add context from previous results if relevant
-    if (context.previousResults.length > 0 && toolName === MCPToolName.GITHUB_FIND_CODE_BY_DESCRIPTION) {
+    if (context.previousResults.length > 0 && toolName === 'github-find-code-by-description') {
       const previousAnalysis = context.previousResults
-        .filter(r => r.success && r.functionCall.name === MCPToolName.GITHUB_GET_ISSUE_WITH_ANALYSIS)
+        .filter(r => r.success && r.functionCall.name === 'github-get-issue-with-analysis')
         .map(r => r.result)
         .filter(Boolean);
 
@@ -493,10 +533,10 @@ export class AIAgent {
 
     // Don't continue if we have comprehensive results
     const hasAnalysisResult = roundResults.some(r =>
-      r.success && r.functionCall.name === MCPToolName.GITHUB_GET_ISSUE_WITH_ANALYSIS
+      r.success && r.functionCall.name === 'github-get-issue-with-analysis'
     );
     const hasSearchResult = roundResults.some(r =>
-      r.success && r.functionCall.name === MCPToolName.GITHUB_FIND_CODE_BY_DESCRIPTION
+      r.success && r.functionCall.name === 'github-find-code-by-description'
     );
 
     if (hasAnalysisResult && hasSearchResult) {
@@ -809,8 +849,8 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
 - Provide actionable insights and recommendations
 
 ## Tool Usage Guidelines:
-1. **Start with issue analysis**: Use ${MCPToolName.GITHUB_GET_ISSUE_WITH_ANALYSIS} to get comprehensive issue details and initial code analysis
-2. **Enhance with smart search**: Use ${MCPToolName.GITHUB_FIND_CODE_BY_DESCRIPTION} for deeper code investigation if needed
+1. **Start with issue analysis**: Use github-get-issue-with-analysis to get comprehensive issue details and initial code analysis
+2. **Enhance with smart search**: Use github-find-code-by-description for deeper code investigation if needed
 3. **Be strategic**: Choose tools that best address the user's specific needs
 4. **Chain tools intelligently**: Use results from one tool to inform parameters for subsequent tools
 
@@ -826,7 +866,7 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 
 **EXAMPLE - Analyze GitHub Issue:**
 <function_calls>
-<invoke name="${MCPToolName.GITHUB_GET_ISSUE_WITH_ANALYSIS}">
+<invoke name="github-get-issue-with-analysis">
 <parameter name="owner">unit-mesh</parameter>
 <parameter name="repo">autodev-workbench</parameter>
 <parameter name="issue_number">81</parameter>

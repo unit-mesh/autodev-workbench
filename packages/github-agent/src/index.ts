@@ -21,16 +21,7 @@ export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-iss
 export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-search-smart";
 export { installGitHubAnalyzeIssueAndPostResultsTool } from "./capabilities/tools/github-analysis-upload";
-// Tool collections (legacy)
+// Tool collections
 export { GitHubTools, GitHubIssueTools, GitHubAnalysisTools, WebContentTools } from "./capabilities/tools";
-
-// New tool system exports
-export {
-  MCPToolFactory,
-  MCPToolName,
-  MCPToolCategory,
-  BaseMCPTool,
-  ToolRegistry
-} from "./capabilities/tools/tool-factory";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
 export { EnhancedUI } from "./utils/enhanced-ui";
