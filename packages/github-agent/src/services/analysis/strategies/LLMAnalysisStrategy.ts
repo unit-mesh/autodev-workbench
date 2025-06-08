@@ -13,12 +13,14 @@ import {
   AnalysisContext,
   AnalysisResult
 } from "../interfaces/IAnalysisStrategy";
+import { FilePriorityManager } from "../priority/FilePriorityManager";
 import * as path from 'path';
 
 export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   readonly name = 'llm';
-  
+
   private llmService: LLMService;
+  private priorityManager: FilePriorityManager;
   private batchSize: number;
   private maxFilesToAnalyze: number;
 
@@ -31,6 +33,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   ) {
     super();
     this.llmService = llmService || new LLMService();
+    this.priorityManager = new FilePriorityManager();
     this.batchSize = options.batchSize || 3;
     this.maxFilesToAnalyze = options.maxFilesToAnalyze || 8;
   }
@@ -73,8 +76,8 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     // First, get candidate files using traditional methods
     const candidateFiles = await this.findCandidateFiles(context, keywords);
 
-    // Apply priority-based filtering if available
-    const prioritizedFiles = this.applyPriorityFiltering(candidateFiles, keywords.priorities);
+    // Apply priority-based filtering using the new FilePriorityManager
+    const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords);
 
     // Then use LLM to analyze only high-priority candidate files
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
@@ -129,7 +132,14 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
           console.log(`❌ ${file.path}: Not relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
         } else {
           // Fall back to original scoring for failed files
-          llmAnalyzedFiles.push(file);
+          if (file.content) {
+            llmAnalyzedFiles.push({
+              path: file.path,
+              content: file.content,
+              relevanceScore: file.relevanceScore,
+              reason: 'LLM analysis failed, using traditional scoring'
+            });
+          }
         }
       }
     }
@@ -298,69 +308,69 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   }
 
   /**
-   * Apply priority-based filtering to reduce LLM analysis overhead
+   * Apply advanced priority-based filtering using FilePriorityManager
    */
-  private applyPriorityFiltering(
+  private applyAdvancedPriorityFiltering(
     candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
-    priorities?: Array<{ pattern: string; score: number; reason: string }>
-  ): Array<{ path: string; relevanceScore: number; content?: string; priorityScore?: number }> {
-    if (!priorities || priorities.length === 0) {
-      console.log('📋 No priority information available, using traditional filtering');
-      return candidateFiles;
-    }
+    issue: GitHubIssue,
+    keywords: SearchKeywords & { priorities?: any[] }
+  ): Array<{ path: string; relevanceScore: number; content?: string; priorityScore?: number; reason?: string }> {
+    console.log('🎯 Applying advanced priority-based filtering...');
 
-    console.log('🎯 Applying priority-based filtering...');
-
-    // Calculate priority scores for each file
+    // Calculate priority scores for each file using the new manager
     const prioritizedFiles = candidateFiles.map(file => {
-      let priorityScore = 0;
-      let matchedPatterns: string[] = [];
-
-      for (const priority of priorities) {
-        const pattern = priority.pattern.toLowerCase();
-        const filePath = file.path.toLowerCase();
-
-        // Check if file path contains the priority pattern
-        if (filePath.includes(pattern)) {
-          priorityScore = Math.max(priorityScore, priority.score);
-          matchedPatterns.push(`${pattern}(${priority.score})`);
-        }
-      }
+      const priorityResult = this.priorityManager.calculatePriority(
+        file.path,
+        issue,
+        keywords,
+        keywords.priorities
+      );
 
       return {
         ...file,
-        priorityScore,
-        matchedPatterns
+        priorityScore: priorityResult.score,
+        reason: priorityResult.reason
       };
     });
 
-    // Filter out low-priority files (score < 4) to reduce LLM calls
-    const highPriorityFiles = prioritizedFiles.filter(file => {
-      const shouldAnalyze = (file.priorityScore || 0) >= 4;
+    // Filter out files that should be skipped from LLM analysis
+    const filteredFiles = prioritizedFiles.filter(file => {
+      const shouldSkip = this.priorityManager.shouldSkipLLMAnalysis(file.path, file.priorityScore || 0);
 
-      if (!shouldAnalyze && file.priorityScore) {
-        console.log(`⏭️  Skipping low-priority file: ${file.path} (priority: ${file.priorityScore})`);
+      if (shouldSkip) {
+        console.log(`⏭️  Skipping file (advanced filter): ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'})`);
+        return false;
       }
 
-      return shouldAnalyze || !file.priorityScore; // Include files without priority scores as fallback
+      return true;
     });
 
     // Sort by priority score (descending) then by relevance score
-    const sortedFiles = highPriorityFiles.sort((a, b) => {
+    const sortedFiles = filteredFiles.sort((a, b) => {
       const priorityDiff = (b.priorityScore || 0) - (a.priorityScore || 0);
       if (priorityDiff !== 0) return priorityDiff;
       return b.relevanceScore - a.relevanceScore;
     });
 
-    console.log(`🎯 Priority filtering: ${candidateFiles.length} → ${sortedFiles.length} files`);
+    console.log(`🎯 Advanced priority filtering: ${candidateFiles.length} → ${sortedFiles.length} files`);
 
-    // Log top priority files
+    // Log top priority files with detailed reasons
     const topFiles = sortedFiles.slice(0, 5);
     topFiles.forEach(file => {
-      if (file.priorityScore) {
-        console.log(`   📁 ${file.path} (priority: ${file.priorityScore}, relevance: ${file.relevanceScore.toFixed(2)})`);
+      if (file.priorityScore && file.priorityScore > 0) {
+        console.log(`   📁 ${file.path} (priority: ${file.priorityScore.toFixed(1)}, relevance: ${file.relevanceScore.toFixed(2)}) - ${file.reason}`);
       }
     });
+
+    // Log priority statistics for debugging
+    if (candidateFiles.length > 0) {
+      const stats = this.priorityManager.getPriorityStats(
+        candidateFiles.map(f => f.path),
+        issue,
+        keywords
+      );
+      console.log(`📊 Priority stats: ${stats.highPriorityFiles}/${stats.totalFiles} high-priority files, avg score: ${stats.averageScore.toFixed(2)}`);
+    }
 
     return sortedFiles;
   }
