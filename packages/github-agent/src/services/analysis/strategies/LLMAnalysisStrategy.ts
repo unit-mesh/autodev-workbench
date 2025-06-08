@@ -35,12 +35,12 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     this.maxFilesToAnalyze = options.maxFilesToAnalyze || 8;
   }
 
-  async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
+  async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords & { priorities?: any[] }> {
     try {
       console.log('🧠 Generating keywords using LLM...');
       const llmAnalysis = await this.llmService.analyzeIssueForKeywords(issue);
 
-      return {
+      const keywords = {
         primary: llmAnalysis.primary_keywords,
         secondary: llmAnalysis.component_names,
         technical: llmAnalysis.technical_terms,
@@ -50,6 +50,14 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
           ...llmAnalysis.search_strategies
         ]
       };
+
+      // Store priorities for later use in file filtering
+      if (llmAnalysis.file_priorities) {
+        (keywords as any).priorities = llmAnalysis.file_priorities;
+        console.log('📊 File priorities from LLM:', llmAnalysis.file_priorities);
+      }
+
+      return keywords;
     } catch (error: any) {
       console.warn(`LLM keyword extraction failed, falling back to rule-based: ${error.message}`);
       return this.fallbackKeywordGeneration(issue);
@@ -58,18 +66,21 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
   async findRelevantFiles(
     context: AnalysisContext,
-    keywords: SearchKeywords
+    keywords: SearchKeywords & { priorities?: any[] }
   ): Promise<AnalysisResult['files']> {
     console.log('🧠 Using LLM to analyze file relevance...');
 
     // First, get candidate files using traditional methods
     const candidateFiles = await this.findCandidateFiles(context, keywords);
 
-    // Then use LLM to analyze candidate files in parallel batches
+    // Apply priority-based filtering if available
+    const prioritizedFiles = this.applyPriorityFiltering(candidateFiles, keywords.priorities);
+
+    // Then use LLM to analyze only high-priority candidate files
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
 
-    // Analyze top candidate files with LLM (limit to avoid API costs)
-    const filesToAnalyze = candidateFiles.slice(0, this.maxFilesToAnalyze);
+    // Analyze prioritized files with LLM (significantly reduced set)
+    const filesToAnalyze = prioritizedFiles.slice(0, this.maxFilesToAnalyze);
 
     // Process files in parallel batches to balance speed and API limits
     for (let i = 0; i < filesToAnalyze.length; i += this.batchSize) {
@@ -78,22 +89,34 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       console.log(`🔍 LLM analyzing batch ${Math.floor(i / this.batchSize) + 1}/${Math.ceil(filesToAnalyze.length / this.batchSize)}: ${batch.map(f => f.path).join(', ')}`);
 
       const batchPromises = batch.map(async (file) => {
+        // Pre-filter with basic relevance check to avoid unnecessary LLM calls
+        const basicRelevance = this.calculateBasicRelevance(file, keywords, context.issue);
+        if (basicRelevance < 0.2) {
+          console.log(`⏭️  Skipping file with low basic relevance: ${file.path} (${basicRelevance.toFixed(2)})`);
+          return { file, llmAnalysis: null, error: null, skipped: true };
+        }
+
         try {
           const llmAnalysis = await this.llmService.analyzeCodeRelevance(
             context.issue,
             file.path,
             file.content
           );
-          return { file, llmAnalysis, error: null };
+          return { file, llmAnalysis, error: null, skipped: false };
         } catch (error: any) {
           console.warn(`⚠️  LLM analysis failed for ${file.path}: ${error.message}`);
-          return { file, llmAnalysis: null, error };
+          return { file, llmAnalysis: null, error, skipped: false };
         }
       });
 
       const batchResults = await Promise.all(batchPromises);
 
-      for (const { file, llmAnalysis } of batchResults) {
+      for (const { file, llmAnalysis, skipped } of batchResults) {
+        if (skipped) {
+          // File was skipped due to low basic relevance
+          continue;
+        }
+
         if (llmAnalysis && llmAnalysis.is_relevant) {
           llmAnalyzedFiles.push({
             path: file.path,
@@ -272,6 +295,147 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
     console.log(`✅ Found ${sortedCandidates.length} candidate files for LLM analysis (loaded content for ${topCandidates.length} files)`);
     return sortedCandidates;
+  }
+
+  /**
+   * Apply priority-based filtering to reduce LLM analysis overhead
+   */
+  private applyPriorityFiltering(
+    candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
+    priorities?: Array<{ pattern: string; score: number; reason: string }>
+  ): Array<{ path: string; relevanceScore: number; content?: string; priorityScore?: number }> {
+    if (!priorities || priorities.length === 0) {
+      console.log('📋 No priority information available, using traditional filtering');
+      return candidateFiles;
+    }
+
+    console.log('🎯 Applying priority-based filtering...');
+
+    // Calculate priority scores for each file
+    const prioritizedFiles = candidateFiles.map(file => {
+      let priorityScore = 0;
+      let matchedPatterns: string[] = [];
+
+      for (const priority of priorities) {
+        const pattern = priority.pattern.toLowerCase();
+        const filePath = file.path.toLowerCase();
+
+        // Check if file path contains the priority pattern
+        if (filePath.includes(pattern)) {
+          priorityScore = Math.max(priorityScore, priority.score);
+          matchedPatterns.push(`${pattern}(${priority.score})`);
+        }
+      }
+
+      return {
+        ...file,
+        priorityScore,
+        matchedPatterns
+      };
+    });
+
+    // Filter out low-priority files (score < 4) to reduce LLM calls
+    const highPriorityFiles = prioritizedFiles.filter(file => {
+      const shouldAnalyze = (file.priorityScore || 0) >= 4;
+
+      if (!shouldAnalyze && file.priorityScore) {
+        console.log(`⏭️  Skipping low-priority file: ${file.path} (priority: ${file.priorityScore})`);
+      }
+
+      return shouldAnalyze || !file.priorityScore; // Include files without priority scores as fallback
+    });
+
+    // Sort by priority score (descending) then by relevance score
+    const sortedFiles = highPriorityFiles.sort((a, b) => {
+      const priorityDiff = (b.priorityScore || 0) - (a.priorityScore || 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return b.relevanceScore - a.relevanceScore;
+    });
+
+    console.log(`🎯 Priority filtering: ${candidateFiles.length} → ${sortedFiles.length} files`);
+
+    // Log top priority files
+    const topFiles = sortedFiles.slice(0, 5);
+    topFiles.forEach(file => {
+      if (file.priorityScore) {
+        console.log(`   📁 ${file.path} (priority: ${file.priorityScore}, relevance: ${file.relevanceScore.toFixed(2)})`);
+      }
+    });
+
+    return sortedFiles;
+  }
+
+  /**
+   * Calculate basic relevance score to avoid unnecessary LLM calls
+   */
+  private calculateBasicRelevance(
+    file: { path: string; content?: string; relevanceScore?: number },
+    keywords: SearchKeywords,
+    issue: GitHubIssue
+  ): number {
+    let score = 0;
+
+    // Use existing relevance score as base
+    if (file.relevanceScore) {
+      score += file.relevanceScore * 0.5;
+    }
+
+    // Check file path relevance
+    const pathScore = this.calculateFilePathScore(file.path, keywords);
+    score += pathScore * 0.1;
+
+    // Check content relevance if available
+    if (file.content) {
+      const contentScore = this.calculateContentScore(file.content, keywords);
+      score += contentScore * 0.3;
+
+      // Quick check for issue-specific terms
+      const issueText = `${issue.title} ${issue.body || ''}`.toLowerCase();
+      const content = file.content.toLowerCase();
+
+      // Look for exact matches of key terms from the issue
+      const keyTerms = this.extractKeyTermsFromIssue(issueText);
+      for (const term of keyTerms) {
+        if (content.includes(term)) {
+          score += 0.2;
+        }
+      }
+    }
+
+    // Boost score for high-priority file patterns
+    const highPriorityPatterns = [
+      /auth/i, /prisma/i, /database/i, /config/i, /api/i, /server/i, /client/i,
+      /error/i, /exception/i, /handler/i, /middleware/i, /service/i
+    ];
+
+    for (const pattern of highPriorityPatterns) {
+      if (pattern.test(file.path)) {
+        score += 0.1;
+      }
+    }
+
+    return Math.min(score, 1);
+  }
+
+  /**
+   * Extract key terms from issue text for quick relevance checking
+   */
+  private extractKeyTermsFromIssue(issueText: string): string[] {
+    const terms: string[] = [];
+
+    // Extract quoted strings
+    const quotedMatches = issueText.match(/"[^"]+"|'[^']+'/g) || [];
+    terms.push(...quotedMatches.map(m => m.replace(/['"]/g, '').toLowerCase()));
+
+    // Extract error patterns
+    const errorMatches = issueText.match(/error[:\s]+[^\n.!?]+/gi) || [];
+    terms.push(...errorMatches.map(m => m.toLowerCase()));
+
+    // Extract technical terms (camelCase, PascalCase, snake_case)
+    const techMatches = issueText.match(/\b[a-zA-Z][a-zA-Z0-9_]*[A-Z][a-zA-Z0-9_]*\b/g) || [];
+    terms.push(...techMatches.map(m => m.toLowerCase()));
+
+    return [...new Set(terms)].filter(term => term.length > 3);
   }
 
   private fallbackKeywordGeneration(issue: GitHubIssue): SearchKeywords {

@@ -163,11 +163,18 @@ Please extract keywords in the following categories and respond with JSON:
 4. **component_names**: Likely class names, function names, module names (3-10 words)
 5. **file_patterns**: Likely file names, directory patterns, file types (3-8 patterns)
 6. **search_strategies**: Specific search terms that would help find related code (5-10 terms)
-7. **issue_type**: One of: "bug", "feature", "performance", "documentation", "testing", "security", "refactor"
-8. **confidence**: Float between 0.0-1.0 indicating confidence in the analysis
+7. **file_priorities**: Prioritized file patterns with importance scores (1-10 scale)
+8. **issue_type**: One of: "bug", "feature", "performance", "documentation", "testing", "security", "refactor"
+9. **confidence**: Float between 0.0-1.0 indicating confidence in the analysis
 
 Focus on terms that would help find relevant code files, functions, and components.
 Pay special attention to any technical information from the URL content provided above.
+
+For file_priorities, provide patterns with scores where:
+- 10: Critical files that must be analyzed (e.g., main config, auth files for auth issues)
+- 7-9: High priority files likely to contain relevant code
+- 4-6: Medium priority files that might be relevant
+- 1-3: Low priority files that could provide context
 
 Example response format:
 {
@@ -177,6 +184,13 @@ Example response format:
   "component_names": ["AuthMiddleware", "LoginController", "UserService"],
   "file_patterns": ["auth", "login", "user", "middleware", "controller"],
   "search_strategies": ["authenticate", "verify", "token", "session", "login"],
+  "file_priorities": [
+    {"pattern": "auth", "score": 10, "reason": "Core authentication logic"},
+    {"pattern": "prisma", "score": 9, "reason": "Database connection for auth"},
+    {"pattern": "middleware", "score": 7, "reason": "Auth middleware implementation"},
+    {"pattern": "config", "score": 6, "reason": "Configuration files"},
+    {"pattern": "test", "score": 2, "reason": "Test files for context only"}
+  ],
   "issue_type": "bug",
   "confidence": 0.85
 }
@@ -204,6 +218,11 @@ Respond only with valid JSON:`;
         component_names: Array.isArray(parsed.component_names) ? parsed.component_names.slice(0, 10) : [],
         file_patterns: Array.isArray(parsed.file_patterns) ? parsed.file_patterns.slice(0, 8) : [],
         search_strategies: Array.isArray(parsed.search_strategies) ? parsed.search_strategies.slice(0, 10) : [],
+        file_priorities: Array.isArray(parsed.file_priorities) ? parsed.file_priorities.slice(0, 10).map((fp: any) => ({
+          pattern: typeof fp.pattern === 'string' ? fp.pattern : '',
+          score: typeof fp.score === 'number' ? Math.min(Math.max(fp.score, 1), 10) : 5,
+          reason: typeof fp.reason === 'string' ? fp.reason : ''
+        })) : [],
         issue_type: typeof parsed.issue_type === 'string' ? parsed.issue_type : 'general',
         confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.5
       };

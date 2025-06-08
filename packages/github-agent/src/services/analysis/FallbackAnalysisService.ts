@@ -2,6 +2,12 @@ import { GitHubIssue } from "../../types/index";
 import { IssueAnalysisResult } from "../../types/index";
 
 // Interfaces for different analysis types
+export interface FilePriority {
+  pattern: string;
+  score: number;
+  reason: string;
+}
+
 export interface LLMKeywordAnalysis {
   primary_keywords: string[];
   technical_terms: string[];
@@ -9,6 +15,7 @@ export interface LLMKeywordAnalysis {
   component_names: string[];
   file_patterns: string[];
   search_strategies: string[];
+  file_priorities?: FilePriority[];
   issue_type: string;
   confidence: number;
 }

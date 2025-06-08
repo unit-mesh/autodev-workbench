@@ -16,7 +16,7 @@ const https = require('https');
 const http = require('http');
 
 // Load environment variables from .env file
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Import services from the built package
 const { GitHubService, ContextAnalyzer, AnalysisReportGenerator, performanceMonitor, EnhancedUI } = require('../dist/index.js');
