@@ -1,0 +1,72 @@
+{
+  "issue_81": {
+    "number": 81,
+    "title": "Authentication and error handling improvements",
+    "state": "open",
+    "labels": [
+      { "name": "bug", "color": "d73a4a" },
+      { "name": "enhancement", "color": "a2eeef" },
+      { "name": "authentication", "color": "0052cc" }
+    ],
+    "body": "## Description\nThis issue addresses authentication flow problems and error handling improvements.\n\n## Steps to Reproduce\n1. Login with expired token\n2. Observe generic error message\n3. User gets confused\n\n## Expected Behavior\n- Clear error messages\n- Automatic token refresh\n- Better user experience\n\n## Additional Context\nRelated to authentication module in src/auth/\nSee also: https://example.com/docs/auth\n\n## Files Involved\n- `src/auth/authentication.js`\n- `src/api/client.js`\n- `src/components/ErrorDisplay.jsx`",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-02T00:00:00Z",
+    "comments": 5,
+    "assignees": [],
+    "milestone": null,
+    "user": {
+      "login": "developer1",
+      "id": 12345
+    }
+  },
+  "issue_92": {
+    "number": 92,
+    "title": "Feature enhancement request",
+    "state": "open",
+    "labels": [
+      { "name": "enhancement", "color": "a2eeef" },
+      { "name": "feature-request", "color": "0052cc" }
+    ],
+    "body": "## Feature Request\nAdd support for advanced code analysis features.\n\n## Use Case\nDevelopers need better insights into code quality and patterns.\n\n## Proposed Solution\n1. Implement pattern detection\n2. Add quality metrics\n3. Generate improvement suggestions\n\n## Additional Notes\nThis should integrate with existing analysis tools.",
+    "created_at": "2024-01-05T00:00:00Z",
+    "updated_at": "2024-01-06T00:00:00Z",
+    "comments": 2,
+    "assignees": [
+      {
+        "login": "maintainer1",
+        "id": 67890
+      }
+    ],
+    "milestone": {
+      "title": "v2.0",
+      "number": 1
+    },
+    "user": {
+      "login": "contributor1",
+      "id": 54321
+    }
+  },
+  "issue_closed": {
+    "number": 75,
+    "title": "Fixed: Memory leak in analysis worker",
+    "state": "closed",
+    "labels": [
+      { "name": "bug", "color": "d73a4a" },
+      { "name": "fixed", "color": "0e8a16" }
+    ],
+    "body": "## Problem\nMemory usage was growing over time during analysis.\n\n## Solution\nImplemented proper cleanup in worker threads.\n\n## Testing\n- [x] Unit tests added\n- [x] Memory usage verified\n- [x] Performance benchmarks passed",
+    "created_at": "2023-12-15T00:00:00Z",
+    "updated_at": "2023-12-20T00:00:00Z",
+    "closed_at": "2023-12-20T00:00:00Z",
+    "comments": 8,
+    "assignees": [],
+    "milestone": {
+      "title": "v1.5",
+      "number": 2
+    },
+    "user": {
+      "login": "developer2",
+      "id": 98765
+    }
+  }
+}

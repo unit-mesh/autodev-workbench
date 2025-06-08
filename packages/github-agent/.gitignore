@@ -64,3 +64,4 @@ coverage/
 *.tmp
 *.temp
 .temp/
+!__tests__/fixtures/*.json

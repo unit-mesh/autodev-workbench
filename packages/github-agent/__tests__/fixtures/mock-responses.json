@@ -1,0 +1,79 @@
+{
+  "llm_responses": {
+    "analyze_issue_request": {
+      "text": "I'll analyze this GitHub issue for you.\n\n<function_calls>\n<invoke name=\"github_analyze_issue\">\n<parameter name=\"owner\">unit-mesh</parameter>\n<parameter name=\"repo\">autodev-workbench</parameter>\n<parameter name=\"issue_number\">81</parameter>\n<parameter name=\"fetch_urls\">true</parameter>\n</invoke>\n</function_calls>\n\nLet me get the issue details and analyze the related code.",
+      "usage": {
+        "prompt_tokens": 150,
+        "completion_tokens": 80,
+        "total_tokens": 230
+      }
+    },
+    "multi_tool_request": {
+      "text": "I'll analyze this step by step.\n\n<function_calls>\n<invoke name=\"github_analyze_issue\">\n<parameter name=\"owner\">unit-mesh</parameter>\n<parameter name=\"repo\">autodev-workbench</parameter>\n<parameter name=\"issue_number\">81</parameter>\n</invoke>\n</function_calls>\n\nNow let me search for related code.\n\n<function_calls>\n<invoke name=\"github_smart_search\">\n<parameter name=\"owner\">unit-mesh</parameter>\n<parameter name=\"repo\">autodev-workbench</parameter>\n<parameter name=\"query\">authentication error</parameter>\n</invoke>\n</function_calls>\n\nBased on my analysis, I can provide comprehensive insights.",
+      "usage": {
+        "prompt_tokens": 200,
+        "completion_tokens": 120,
+        "total_tokens": 320
+      }
+    },
+    "no_function_calls": {
+      "text": "Based on the information provided, I can offer some general insights about authentication and error handling patterns. However, to provide a more detailed analysis, I would need to examine the specific codebase and issue details.",
+      "usage": {
+        "prompt_tokens": 100,
+        "completion_tokens": 50,
+        "total_tokens": 150
+      }
+    }
+  },
+  "tool_responses": {
+    "github_analyze_issue": {
+      "content": [{
+        "type": "text",
+        "text": "# GitHub Issue Analysis Report\n\n## Issue Details\n- **Repository**: unit-mesh/autodev-workbench\n- **Issue Number**: #81\n- **Analysis Date**: 2024-01-01T00:00:00Z\n\n## Current Issues Identified\n\n### 1. Authentication Flow Issues\n- **Location**: `src/auth/authentication.js`\n- **Problem**: Missing error handling for expired tokens\n- **Impact**: Users experience unexpected logouts\n\n### 2. API Client Configuration\n- **Location**: `src/api/client.js`\n- **Problem**: Hardcoded timeout values\n- **Impact**: Poor user experience on slow networks\n\n### 3. Error Message Clarity\n- **Location**: `src/components/ErrorDisplay.jsx`\n- **Problem**: Generic error messages\n- **Impact**: Users can't understand what went wrong\n\n## Detailed Plan\n\n### Phase 1: Authentication Improvements\n1. **Add token validation middleware**\n   - File: `src/middleware/auth.js`\n   - Add expiration checks\n   - Implement refresh token logic\n\n2. **Enhance error handling**\n   - File: `src/auth/authentication.js`\n   - Add specific error types\n   - Implement retry mechanisms\n\n### Phase 2: API Client Enhancements\n1. **Dynamic timeout configuration**\n   - File: `src/api/client.js`\n   - Add environment-based timeouts\n   - Implement progressive backoff\n\n2. **Request/Response interceptors**\n   - Add logging capabilities\n   - Implement error transformation\n\n### Phase 3: User Experience\n1. **Improved error messages**\n   - File: `src/components/ErrorDisplay.jsx`\n   - Add user-friendly descriptions\n   - Include suggested actions\n\n2. **Loading states**\n   - Add progress indicators\n   - Implement skeleton screens\n\n---\n**Powered by AutoDev Backend Agent**"
+      }]
+    },
+    "github_smart_search": {
+      "content": [{
+        "type": "text",
+        "text": "# Smart Code Search Results\n\n## Search Query: \"authentication error handling\"\n\n### Relevant Code Locations\n\n#### 1. Authentication Module\n- **File**: `src/auth/authentication.js`\n- **Lines**: 45-78\n- **Relevance**: High\n- **Description**: Main authentication logic with token handling\n\n#### 2. API Client\n- **File**: `src/api/client.js`\n- **Lines**: 123-156\n- **Relevance**: High\n- **Description**: HTTP client configuration and error handling\n\n#### 3. Error Handling Utilities\n- **File**: `src/utils/errorHandler.js`\n- **Lines**: 12-34\n- **Relevance**: Medium\n- **Description**: Generic error processing functions\n\n#### 4. Test Coverage\n- **File**: `tests/auth.test.js`\n- **Lines**: 89-145\n- **Relevance**: Medium\n- **Description**: Authentication test cases (some gaps identified)\n\n### Code Patterns Found\n\n1. **Error Handling Pattern**\n   ```javascript\n   try {\n     const result = await apiCall();\n     return result;\n   } catch (error) {\n     // Generic error handling - needs improvement\n     throw new Error('Something went wrong');\n   }\n   ```\n\n2. **Token Management Pattern**\n   ```javascript\n   const token = localStorage.getItem('auth_token');\n   // Missing expiration check\n   return token;\n   ```\n\n### Recommendations\n\n1. **Implement proper error types**\n2. **Add token expiration validation**\n3. **Enhance test coverage for edge cases**\n4. **Add retry logic for network failures**"
+      }]
+    }
+  },
+  "agent_responses": {
+    "comprehensive_analysis": {
+      "text": "# Comprehensive Issue Analysis\n\nBased on my analysis of GitHub issue #81 in unit-mesh/autodev-workbench, I've identified several key areas for improvement:\n\n## Key Findings\n\n### 1. Authentication Issues\n- Missing token expiration validation\n- Inadequate error handling for auth failures\n- Need for refresh token implementation\n\n### 2. Code Quality Concerns\n- Generic error messages that don't help users\n- Hardcoded configuration values\n- Insufficient test coverage for edge cases\n\n### 3. User Experience Impact\n- Users experiencing unexpected logouts\n- Poor error messaging\n- Slow response times on network issues\n\n## Recommended Actions\n\n1. **Immediate Fixes**\n   - Add token expiration checks\n   - Implement proper error types\n   - Enhance error messages\n\n2. **Medium-term Improvements**\n   - Add comprehensive test coverage\n   - Implement retry mechanisms\n   - Add configuration management\n\n3. **Long-term Enhancements**\n   - Consider implementing refresh tokens\n   - Add monitoring and alerting\n   - Improve overall error handling strategy\n\n## Technical Implementation\n\nThe analysis shows that the main issues are in:\n- `src/auth/authentication.js` (authentication logic)\n- `src/api/client.js` (API client configuration)\n- `src/components/ErrorDisplay.jsx` (user-facing errors)\n\nThis multi-tool analysis provides a comprehensive view of both the specific issue and the broader codebase context, enabling more informed decision-making for the development team.",
+      "toolResults": [
+        {
+          "success": true,
+          "functionCall": {
+            "name": "github_analyze_issue",
+            "parameters": {
+              "owner": "unit-mesh",
+              "repo": "autodev-workbench",
+              "issue_number": 81,
+              "fetch_urls": true
+            }
+          },
+          "executionTime": 1200,
+          "round": 1
+        },
+        {
+          "success": true,
+          "functionCall": {
+            "name": "github_smart_search",
+            "parameters": {
+              "owner": "unit-mesh",
+              "repo": "autodev-workbench",
+              "query": "authentication error handling"
+            }
+          },
+          "executionTime": 800,
+          "round": 2
+        }
+      ],
+      "success": true,
+      "totalRounds": 2,
+      "executionTime": 3500
+    }
+  }
+}
