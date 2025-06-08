@@ -29,6 +29,20 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install
 
+      - name: Build dependencies first
+        run: |
+          # Build worker-core first
+          cd packages/worker-core
+          pnpm run build
+
+          # Build context-worker
+          cd ../context-worker
+          pnpm run build
+
+          # Build github-agent
+          cd ../github-agent
+          pnpm run build
+
       - name: Build the action
         run: |
           cd packages/github-agent-action
@@ -71,6 +85,20 @@ jobs:
 
       - name: Install workspace dependencies
         run: pnpm install
+
+      - name: Build dependencies first
+        run: |
+          # Build worker-core first
+          cd packages/worker-core
+          pnpm run build
+
+          # Build context-worker
+          cd ../context-worker
+          pnpm run build
+
+          # Build github-agent
+          cd ../github-agent
+          pnpm run build
 
       - name: Build the action
         run: |
