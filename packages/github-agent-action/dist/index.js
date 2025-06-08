@@ -86,7 +86,7 @@ class IssueAnalyzer {
             const recommendedLabels = this.determineLabels(report);
             const result = {
                 success: true,
-                analysisResult: agentResponse.toolResults.find(r => r.success)?.result,
+                analysisResult: agentResponse.toolResults.find((r) => r.success)?.result,
                 labelsAdded: recommendedLabels,
                 executionTime: Date.now() - startTime
             };

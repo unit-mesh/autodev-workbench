@@ -82,7 +82,7 @@ export class IssueAnalyzer {
 
       const result: ActionResult = {
         success: true,
-        analysisResult: agentResponse.toolResults.find(r => r.success)?.result,
+        analysisResult: agentResponse.toolResults.find((r: any) => r.success)?.result,
         labelsAdded: recommendedLabels,
         executionTime: Date.now() - startTime
       };
