@@ -204,33 +204,17 @@ declare class IssueAnalyzer {
     private labelConfig;
     constructor(context: ActionContext, agentConfig?: AgentConfig);
     /**
-     * Analyze an issue and generate comprehensive report
+     * Analyze an issue using the same logic as github-agent
      */
     analyzeIssue(options?: AnalysisOptions): Promise<ActionResult>;
     /**
-     * Build analysis prompt based on issue context and options
+     * Extract labels from analysis text using simple pattern matching
      */
-    private buildAnalysisPrompt;
+    private extractLabelsFromAnalysis;
     /**
-     * Generate structured analysis report
+     * Generate comment text for the issue using agent's response directly
      */
-    private generateReport;
-    /**
-     * Extract actionable suggestions from analysis text
-     */
-    private extractSuggestions;
-    /**
-     * Estimate issue complexity based on analysis
-     */
-    private estimateComplexity;
-    /**
-     * Determine appropriate labels based on analysis
-     */
-    private determineLabels;
-    /**
-     * Generate comment text for the issue
-     */
-    private generateComment;
+    generateComment(analysisResult: any): string;
     /**
      * Update comment template
      */

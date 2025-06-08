@@ -8,7 +8,7 @@ import * as github from '@actions/github';
 class IssueAnalyzer {
     constructor(context, agentConfig) {
         this.context = context;
-        // Initialize AI Agent with enhanced configuration
+        // Initialize AI Agent with enhanced configuration matching github-agent behavior
         const enhancedConfig = {
             workspacePath: context.workspacePath,
             githubToken: context.config.githubToken,
@@ -37,15 +37,15 @@ class IssueAnalyzer {
         };
     }
     /**
-     * Analyze an issue and generate comprehensive report
+     * Analyze an issue using the same logic as github-agent
      */
     async analyzeIssue(options = {}) {
         const startTime = Date.now();
         try {
             console.log(`🔍 Starting analysis for issue #${this.context.issueNumber} in ${this.context.owner}/${this.context.repo}`);
-            // Build analysis prompt based on context
-            const analysisPrompt = this.buildAnalysisPrompt(options);
-            // Execute analysis using AI Agent
+            // Use the same prompt format as the original github-agent
+            const analysisPrompt = `Analyze GitHub issue #${this.context.issueNumber} in repository ${this.context.owner}/${this.context.repo}. Please provide a comprehensive analysis including code search, root cause analysis, and actionable recommendations.`;
+            // Execute analysis using AI Agent with the same context format as github-agent
             const agentResponse = await this.agent.processInput(analysisPrompt, {
                 owner: this.context.owner,
                 repo: this.context.repo,
@@ -56,22 +56,20 @@ class IssueAnalyzer {
             if (!agentResponse.success) {
                 throw new Error(`Analysis failed: ${agentResponse.error}`);
             }
-            // Generate structured report
-            const report = await this.generateReport(agentResponse);
-            // Determine recommended actions
-            const recommendedLabels = this.determineLabels(report);
+            // Use the agent's response directly instead of generating our own report
             const result = {
                 success: true,
-                analysisResult: agentResponse.toolResults.find((r) => r.success)?.result,
-                labelsAdded: recommendedLabels,
+                analysisResult: {
+                    text: agentResponse.text,
+                    toolResults: agentResponse.toolResults,
+                    totalRounds: agentResponse.totalRounds,
+                    executionTime: agentResponse.executionTime
+                },
                 executionTime: Date.now() - startTime
             };
-            // Add comment if configured
-            if (this.context.config.autoComment) {
-                const comment = this.generateComment(report);
-                result.commentAdded = true;
-                console.log('📝 Generated analysis comment:', comment.substring(0, 200) + '...');
-            }
+            // Generate labels based on the agent's analysis
+            const recommendedLabels = this.extractLabelsFromAnalysis(agentResponse.text);
+            result.labelsAdded = recommendedLabels;
             console.log(`✅ Analysis completed in ${result.executionTime}ms`);
             return result;
         }
@@ -86,182 +84,55 @@ class IssueAnalyzer {
         }
     }
     /**
-     * Build analysis prompt based on issue context and options
+     * Extract labels from analysis text using simple pattern matching
      */
-    buildAnalysisPrompt(options) {
-        const { depth = 'medium', includeCodeSearch = true, includeSymbolAnalysis = true } = options;
-        let prompt = `Analyze GitHub issue #${this.context.issueNumber} in repository ${this.context.owner}/${this.context.repo}.
-
-Please provide a comprehensive analysis including:
-
-1. **Issue Understanding**: Summarize what the issue is about
-2. **Code Analysis**: Find relevant code files and functions related to this issue
-3. **Root Cause Analysis**: Identify potential causes and areas of concern
-4. **Recommendations**: Provide specific, actionable suggestions for resolution
-5. **Complexity Assessment**: Estimate the complexity and effort required
-
-Analysis Configuration:
-- Depth: ${depth}
-- Include Code Search: ${includeCodeSearch}
-- Include Symbol Analysis: ${includeSymbolAnalysis}
-- Workspace: ${this.context.workspacePath}
-
-Focus on providing practical, actionable insights that will help developers understand and resolve the issue efficiently.`;
-        // Add specific instructions based on depth
-        switch (depth) {
-            case 'shallow':
-                prompt += '\n\nPerform a quick analysis focusing on the most obvious patterns and immediate code references.';
-                break;
-            case 'deep':
-                prompt += '\n\nPerform an in-depth analysis including dependency analysis, architectural patterns, and comprehensive code exploration.';
-                break;
-            default: // medium
-                prompt += '\n\nPerform a balanced analysis covering key code areas and providing meaningful insights without excessive detail.';
-        }
-        return prompt;
-    }
-    /**
-     * Generate structured analysis report
-     */
-    async generateReport(agentResponse) {
-        const report = {
-            issueNumber: this.context.issueNumber,
-            repository: `${this.context.owner}/${this.context.repo}`,
-            analysisTimestamp: new Date().toISOString(),
-            summary: agentResponse.text || 'Analysis completed',
-            codeReferences: [],
-            suggestions: [],
-            relatedIssues: [],
-            estimatedComplexity: 'medium',
-            recommendedLabels: []
-        };
-        // Extract code references from tool results
-        const toolResults = agentResponse.toolResults || [];
-        for (const result of toolResults) {
-            if (result.success && result.result?.content) {
-                // Parse tool results to extract code references
-                // This would be enhanced based on actual tool result structure
-                report.codeReferences.push({
-                    file: result.functionCall?.parameters?.file || 'unknown',
-                    relevance: 0.8,
-                    description: 'Found relevant code section'
-                });
-            }
-        }
-        // Generate suggestions based on analysis
-        report.suggestions = this.extractSuggestions(agentResponse.text);
-        // Estimate complexity
-        report.estimatedComplexity = this.estimateComplexity(report);
-        return report;
-    }
-    /**
-     * Extract actionable suggestions from analysis text
-     */
-    extractSuggestions(analysisText) {
-        const suggestions = [];
-        // Simple pattern matching for common suggestion types
-        if (analysisText.toLowerCase().includes('bug') || analysisText.toLowerCase().includes('error')) {
-            suggestions.push({
-                type: 'fix',
-                priority: 'high',
-                description: 'Investigate and fix the identified bug or error'
-            });
-        }
-        if (analysisText.toLowerCase().includes('enhancement') || analysisText.toLowerCase().includes('improve')) {
-            suggestions.push({
-                type: 'enhancement',
-                priority: 'medium',
-                description: 'Consider implementing the suggested enhancement'
-            });
-        }
-        if (analysisText.toLowerCase().includes('investigate') || analysisText.toLowerCase().includes('unclear')) {
-            suggestions.push({
-                type: 'investigation',
-                priority: 'medium',
-                description: 'Further investigation needed to understand the issue'
-            });
-        }
-        return suggestions;
-    }
-    /**
-     * Estimate issue complexity based on analysis
-     */
-    estimateComplexity(report) {
-        let complexityScore = 0;
-        // Factor in number of code references
-        complexityScore += Math.min(report.codeReferences.length * 0.2, 1);
-        // Factor in number of suggestions
-        complexityScore += Math.min(report.suggestions.length * 0.3, 1);
-        // Factor in suggestion types
-        const hasHighPriority = report.suggestions.some(s => s.priority === 'high');
-        if (hasHighPriority)
-            complexityScore += 0.5;
-        if (complexityScore < 0.3)
-            return 'low';
-        if (complexityScore < 0.7)
-            return 'medium';
-        return 'high';
-    }
-    /**
-     * Determine appropriate labels based on analysis
-     */
-    determineLabels(report) {
+    extractLabelsFromAnalysis(analysisText) {
         const labels = [];
-        // Add complexity-based labels
-        if (report.estimatedComplexity === 'high') {
+        // Convert to lowercase for pattern matching
+        const text = analysisText.toLowerCase();
+        // Pattern matching for different types of issues
+        if (text.includes('bug') || text.includes('error') || text.includes('issue') || text.includes('problem')) {
+            labels.push(this.labelConfig.bugLabel || 'bug');
+        }
+        if (text.includes('enhancement') || text.includes('feature') || text.includes('improve')) {
+            labels.push(this.labelConfig.enhancementLabel || 'enhancement');
+        }
+        if (text.includes('documentation') || text.includes('docs') || text.includes('readme')) {
+            labels.push(this.labelConfig.documentationLabel || 'documentation');
+        }
+        if (text.includes('question') || text.includes('help') || text.includes('how to')) {
+            labels.push(this.labelConfig.questionLabel || 'question');
+        }
+        // Complexity assessment
+        if (text.includes('complex') || text.includes('difficult') || text.includes('challenging')) {
             labels.push('complex');
         }
-        // Add suggestion-based labels
-        const hasBugSuggestion = report.suggestions.some(s => s.type === 'fix');
-        const hasEnhancementSuggestion = report.suggestions.some(s => s.type === 'enhancement');
-        if (hasBugSuggestion && this.labelConfig.bugLabel) {
-            labels.push(this.labelConfig.bugLabel);
-        }
-        if (hasEnhancementSuggestion && this.labelConfig.enhancementLabel) {
-            labels.push(this.labelConfig.enhancementLabel);
-        }
-        // Add analysis complete label
+        // Always add analysis complete label
         if (this.labelConfig.analysisCompleteLabel) {
             labels.push(this.labelConfig.analysisCompleteLabel);
         }
-        return labels;
+        // Remove duplicates
+        return [...new Set(labels)];
     }
     /**
-     * Generate comment text for the issue
+     * Generate comment text for the issue using agent's response directly
      */
-    generateComment(report) {
-        const sections = [];
-        // Header
-        if (this.commentTemplate.header) {
-            sections.push(this.commentTemplate.header);
+    generateComment(analysisResult) {
+        if (!analysisResult || !analysisResult.text) {
+            return `${this.commentTemplate.header}
+
+Analysis completed successfully. Please check the analysis results for detailed information.
+
+${this.commentTemplate.footer}`;
         }
-        // Analysis section
-        sections.push(`\n${this.commentTemplate.analysisSection || '### Analysis'}`);
-        sections.push(`\n**Complexity**: ${report.estimatedComplexity}`);
-        sections.push(`**Code References Found**: ${report.codeReferences.length}`);
-        if (report.summary) {
-            sections.push(`\n${report.summary}`);
-        }
-        // Code references
-        if (report.codeReferences.length > 0) {
-            sections.push('\n**Relevant Code Files:**');
-            report.codeReferences.slice(0, 5).forEach(ref => {
-                sections.push(`- \`${ref.file}\`${ref.line ? ` (line ${ref.line})` : ''}: ${ref.description}`);
-            });
-        }
-        // Suggestions section
-        if (report.suggestions.length > 0) {
-            sections.push(`\n${this.commentTemplate.suggestionsSection || '### Recommendations'}`);
-            report.suggestions.forEach((suggestion, index) => {
-                const priority = suggestion.priority === 'high' ? '🔴' : suggestion.priority === 'medium' ? '🟡' : '🟢';
-                sections.push(`${index + 1}. ${priority} **${suggestion.type.toUpperCase()}**: ${suggestion.description}`);
-            });
-        }
-        // Footer
-        if (this.commentTemplate.footer) {
-            sections.push(this.commentTemplate.footer);
-        }
-        return sections.join('\n');
+        // Use the agent's response directly as it already contains comprehensive analysis
+        return `${this.commentTemplate.header}
+
+${analysisResult.text}
+
+Analysis completed in: ${analysisResult.executionTime || 'N/A'}ms
+
+${this.commentTemplate.footer}`;
     }
     /**
      * Update comment template
