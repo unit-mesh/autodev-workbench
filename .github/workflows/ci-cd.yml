@@ -39,6 +39,12 @@ jobs:
       - name: ContextWorker Build
         run: pnpm --filter context-worker build
 
+      - name: GitHub Agent Build
+        run: pnpm --filter github-agent build
+
+      - name: GitHub Agent Action Build
+        run: pnpm --filter github-agent-action build
+
       - name: Run Core Tests
         run: pnpm --filter worker-core vitest run
 
@@ -50,3 +56,10 @@ jobs:
 
       - name: Run MCP Tests
         run: pnpm --filter context-mcp vitest run
+
+      - name: Run GitHub Agent Tests
+        run: pnpm --filter github-agent test
+
+      - name: Run GitHub Agent Action Tests
+        run: pnpm --filter github-agent-action test
+        continue-on-error: true
