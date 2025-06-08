@@ -213,18 +213,16 @@ export class FunctionParser {
    * Check if a string looks like a valid function name
    */
   private static isValidFunctionName(str: string): boolean {
-    // Function names should be alphanumeric with underscores, no spaces
-    // Also check against known function names
-    const knownFunctions = [
-      'github_analyze_issue',
-      'github_smart_search',
-      'github_get_issues',
-      'github_get_issue_context',
-      'github_upload_analysis',
-      'github_fetch_url_content'
-    ];
+    // Import the tool registry to check valid function names
+    const { MCPToolFactory } = require('../capabilities/tools/tool-factory');
 
-    return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(str) && knownFunctions.includes(str);
+    // Function names should be alphanumeric with underscores/hyphens, no spaces
+    const validFormat = /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(str);
+
+    // Check against registered tools (including aliases for backward compatibility)
+    const isRegisteredTool = MCPToolFactory.isValidToolName(str);
+
+    return validFormat && isRegisteredTool;
   }
 
   /**
