@@ -1,3 +1,31 @@
+## 0.4.1 (2025-06-08)
+
+### 🚀 Features
+
+- **agent:** add dotenv config for environment variables ([7bbeecf](https://github.com/unit-mesh/autodev-worker/commit/7bbeecf))
+- **agent:** add dotenv config for environment variables ([09ec5f1](https://github.com/unit-mesh/autodev-worker/commit/09ec5f1))
+- **agent:** enhance AI agent with tool chaining support ([5418d0a](https://github.com/unit-mesh/autodev-worker/commit/5418d0a))
+- **analysis:** integrate SymbolAnalyser with rule-based strategy ([75fe694](https://github.com/unit-mesh/autodev-worker/commit/75fe694))
+- **context-worker:** add multi-format build support ([8cb98f5](https://github.com/unit-mesh/autodev-worker/commit/8cb98f5))
+- **github-agent:** add autonomous AI Agent with CLI ([#123](https://github.com/unit-mesh/autodev-worker/issues/123))
+- **github-agent:** add JSON fallback parsing and improve function call format ([9f67dc2](https://github.com/unit-mesh/autodev-worker/commit/9f67dc2))
+- **github-agent:** add issue creation and reorganize tools ([391c140](https://github.com/unit-mesh/autodev-worker/commit/391c140))
+- **llm:** add file priority-based analysis optimization ([0b4414b](https://github.com/unit-mesh/autodev-worker/commit/0b4414b))
+- **llm:** add file priority-based analysis optimization ([ae0670e](https://github.com/unit-mesh/autodev-worker/commit/ae0670e))
+- **platform:** add multi-platform abstraction layer ([255607a](https://github.com/unit-mesh/autodev-worker/commit/255607a))
+- **tests:** add comprehensive test suite for GitHub Agent functionality ([a20b17e](https://github.com/unit-mesh/autodev-worker/commit/a20b17e))
+- **tools:** implement new MCP tool system with registry ([6e8bf78](https://github.com/unit-mesh/autodev-worker/commit/6e8bf78))
+- **tools:** expand toolset with file system, terminal, code analysis, and planning tools ([a456028](https://github.com/unit-mesh/autodev-worker/commit/a456028))
+
+### 🩹 Fixes
+
+- **github-agent:** fix syntax error in fs-delete-file tool ([dbcba3e](https://github.com/unit-mesh/autodev-worker/commit/dbcba3e))
+- **llm-provider:** correct provider priority order and update model configurations ([fadbf01](https://github.com/unit-mesh/autodev-worker/commit/fadbf01))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.4.0 (2025-06-07)
 
 ### 🚀 Features
