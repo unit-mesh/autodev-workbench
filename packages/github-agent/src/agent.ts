@@ -6,7 +6,7 @@
 import { generateText, CoreMessage } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm/llm-provider";
 import { FunctionParser, ParsedResponse, FunctionCall } from "./agent/function-parser";
-import { GitHubTools } from "./capabilities/tools";
+import { AllEnhancedTools } from "./capabilities/tools";
 import { ToolLike } from "./capabilities/_typing";
 
 // Tool definitions - dynamically extracted from actual MCP tools
@@ -57,8 +57,8 @@ function extractToolDefinitions(): void {
     });
   };
 
-  // Extract definitions from all GitHub tools
-  GitHubTools.forEach(installer => {
+  // Extract definitions from all enhanced tools
+  AllEnhancedTools.forEach(installer => {
     try {
       installer(mockInstaller);
     } catch (error) {
@@ -144,6 +144,7 @@ export class AIAgent {
 
     this.log('AI Agent initialized with LLM provider:', this.llmConfig.providerName);
     this.log('Available tools:', GITHUB_TOOLS.map(t => t.name));
+    this.log('Total enhanced tools loaded:', GITHUB_TOOLS.length);
     this.log('Configuration:', {
       maxToolRounds: this.config.maxToolRounds,
       enableToolChaining: this.config.enableToolChaining,
@@ -166,7 +167,7 @@ export class AIAgent {
     };
 
     // Execute tool installers to register handlers
-    GitHubTools.forEach(installer => {
+    AllEnhancedTools.forEach(installer => {
       try {
         installer(mockInstaller);
       } catch (error) {
@@ -840,19 +841,57 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
   private buildEnhancedSystemPrompt(): string {
     const toolsJson = JSON.stringify(GITHUB_TOOLS, null, 2);
 
-    return `You are an expert AI agent specialized in GitHub issue analysis and code investigation. You have access to powerful tools that can help you provide comprehensive analysis.
+    return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
-## Your Capabilities:
-- Analyze GitHub issues and find related code
-- Search codebases intelligently
-- Fetch and analyze content from URLs
-- Provide actionable insights and recommendations
+## Your Comprehensive Capabilities:
+
+### 🔍 Code Analysis & Search
+- Semantic codebase search using AI-powered analysis
+- Regex-based code search with ripgrep/grep
+- File search by name patterns and extensions
+- Symbol analysis (functions, classes, variables, etc.)
+- Dependency analysis and management
+
+### 📁 File System Operations
+- Read, write, and delete files with safety checks
+- List directories with detailed information
+- File content manipulation and backup creation
+
+### 🖥️ Terminal & Execution
+- Execute terminal commands with security controls
+- Run scripts (npm, Python, shell, etc.)
+- Process automation and workflow execution
+
+### 📋 Project Management & Planning
+- Task planning and dependency management
+- Memory storage for facts, preferences, and learnings
+- Context analysis for project understanding
+- Architecture pattern detection
+
+### 🐙 GitHub Integration
+- Issue analysis and management
+- Repository exploration and code search
+- Smart issue-to-code correlation
+
+### 🌐 Web Content Analysis
+- Fetch and analyze web content
+- Extract information from URLs
+- Convert web content to markdown
 
 ## Tool Usage Guidelines:
-1. **Start with issue analysis**: Use github-get-issue-with-analysis to get comprehensive issue details and initial code analysis
-2. **Enhance with smart search**: Use github-find-code-by-description for deeper code investigation if needed
-3. **Be strategic**: Choose tools that best address the user's specific needs
-4. **Chain tools intelligently**: Use results from one tool to inform parameters for subsequent tools
+
+### 🎯 Strategic Tool Selection
+1. **Understand the request**: Analyze what the user needs (code analysis, file operations, planning, etc.)
+2. **Choose appropriate tools**: Select tools that best address the specific requirements
+3. **Chain intelligently**: Use results from one tool to inform parameters for subsequent tools
+4. **Be comprehensive**: Combine multiple tools for thorough analysis when needed
+
+### 📊 Common Workflows
+- **Code Investigation**: codebase-search → analyze-symbols → grep-search
+- **Project Analysis**: analyze-context → analyze-dependencies → task-planner
+- **File Management**: list-directory → read-file → write-file
+- **GitHub Issues**: github-get-issue-with-analysis → github-find-code-by-description
+- **Development Setup**: analyze-dependencies → execute-script → run-terminal-command
 
 ## CRITICAL: Function Call Format
 You MUST use the exact XML format below to call functions. This is MANDATORY and NON-NEGOTIABLE.
