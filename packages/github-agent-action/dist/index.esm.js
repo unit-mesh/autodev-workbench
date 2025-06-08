@@ -341,26 +341,32 @@ class GitHubActionService {
      * Generate comment body from analysis result
      */
     generateCommentBody(result) {
+        if (!result.analysisResult) {
+            return `## 🤖 Automated Issue Analysis
+
+Analysis completed successfully. Please check the analysis results for detailed information.
+
+---
+*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*`;
+        }
+        // Use the detailed analysis text from the agent
         const sections = [];
         sections.push('## 🤖 Automated Issue Analysis');
         sections.push('');
-        if (result.analysisResult) {
-            sections.push('### Analysis Summary');
-            sections.push('The issue has been automatically analyzed using AI-powered code analysis.');
-            sections.push('');
-            // Add execution time if available
-            if (result.executionTime) {
-                sections.push(`**Analysis completed in**: ${result.executionTime}ms`);
-                sections.push('');
-            }
-            // Add any specific analysis content
-            // This would be enhanced based on the actual analysis result structure
-            sections.push('### Key Findings');
-            sections.push('- Automated analysis has been performed');
-            sections.push('- Relevant code sections have been identified');
-            sections.push('- Recommendations are available for review');
+        // Add the actual analysis content from the agent
+        if (result.analysisResult.text) {
+            sections.push(result.analysisResult.text);
+        }
+        else {
+            sections.push('Analysis completed successfully.');
+        }
+        sections.push('');
+        // Add execution time if available
+        if (result.executionTime) {
+            sections.push(`Analysis completed in: ${result.executionTime}ms`);
             sections.push('');
         }
+        // Add labels if any were applied
         if (result.labelsAdded && result.labelsAdded.length > 0) {
             sections.push('### Labels Applied');
             result.labelsAdded.forEach(label => {
