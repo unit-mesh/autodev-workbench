@@ -113,7 +113,7 @@ export class AIAgent {
     this.config = {
       maxToolRounds: 3,
       enableToolChaining: true,
-      toolTimeout: 30000,
+      toolTimeout: 120000, // Increased from 30s to 120s for better handling of large repositories
       ...config
     };
 
