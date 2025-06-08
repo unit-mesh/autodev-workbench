@@ -9,53 +9,65 @@ import { FunctionParser, ParsedResponse, FunctionCall } from "./agent/function-p
 import { GitHubTools } from "./capabilities/tools";
 import { ToolLike } from "./capabilities/_typing";
 
-// Real tool definitions extracted from MCP tools
-const GITHUB_TOOLS = [
-  {
-    name: "github_get_issues",
-    description: "Get GitHub issues from a repository",
-    parameters: {
+// Tool definitions - dynamically extracted from actual MCP tools
+let GITHUB_TOOLS: Array<{
+  name: string;
+  description: string;
+  parameters: any;
+}> = [];
+
+// Function to extract tool definitions from MCP tools
+function extractToolDefinitions(): void {
+  const toolDefinitions: Array<{ name: string; description: string; parameters: any }> = [];
+
+  // Mock installer that captures tool definitions
+  const mockInstaller = (
+    name: string,
+    description: string,
+    inputSchema: Record<string, any>,
+    handler: Function
+  ) => {
+    // Convert Zod schema to JSON schema format
+    const parameters = {
       type: "object",
-      properties: {
-        owner: { type: "string", description: "Repository owner (username or organization)" },
-        repo: { type: "string", description: "Repository name" },
-        state: { type: "string", enum: ["open", "closed", "all"], description: "State of issues to retrieve" },
-        per_page: { type: "number", description: "Number of issues per page (1-100)" }
-      },
-      required: ["owner", "repo"]
+      properties: {},
+      required: [] as string[]
+    };
+
+    // Extract properties and required fields from Zod schema
+    Object.entries(inputSchema).forEach(([key, zodSchema]: [string, any]) => {
+      if (zodSchema && typeof zodSchema === 'object') {
+        // Basic property definition
+        (parameters.properties as any)[key] = {
+          type: "string", // Default type, could be enhanced
+          description: zodSchema.description || `${key} parameter`
+        };
+
+        // Check if required (simplified check)
+        if (zodSchema._def && !zodSchema._def.optional) {
+          parameters.required.push(key);
+        }
+      }
+    });
+
+    toolDefinitions.push({
+      name,
+      description,
+      parameters
+    });
+  };
+
+  // Extract definitions from all GitHub tools
+  GitHubTools.forEach(installer => {
+    try {
+      installer(mockInstaller);
+    } catch (error) {
+      console.warn(`Failed to extract tool definition:`, error);
     }
-  },
-  {
-    name: "github_analyze_issue",
-    description: "Analyze a specific GitHub issue and find related code in the current workspace",
-    parameters: {
-      type: "object",
-      properties: {
-        owner: { type: "string", description: "Repository owner (username or organization)" },
-        repo: { type: "string", description: "Repository name" },
-        issue_number: { type: "number", description: "Issue number to analyze" },
-        workspace_path: { type: "string", description: "Path to the workspace to analyze" },
-        fetch_urls: { type: "boolean", description: "Whether to fetch content from URLs mentioned in the issue" }
-      },
-      required: ["owner", "repo", "issue_number"]
-    }
-  },
-  {
-    name: "github_smart_search",
-    description: "Intelligently search for code related to GitHub issues using AI-generated keywords",
-    parameters: {
-      type: "object",
-      properties: {
-        owner: { type: "string", description: "Repository owner (username or organization)" },
-        repo: { type: "string", description: "Repository name" },
-        query: { type: "string", description: "Search query - can be an issue description, error message, or feature request" },
-        workspace_path: { type: "string", description: "Path to the workspace to analyze" },
-        search_depth: { type: "string", enum: ["shallow", "medium", "deep"], description: "Search depth" }
-      },
-      required: ["owner", "repo", "query"]
-    }
-  }
-];
+  });
+
+  GITHUB_TOOLS = toolDefinitions;
+}
 
 export interface AgentConfig {
   workspacePath?: string;
@@ -123,6 +135,9 @@ export class AIAgent {
       throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
     }
     this.llmConfig = llmConfig;
+
+    // Extract tool definitions from MCP tools
+    extractToolDefinitions();
 
     // Register real tool handlers
     this.registerToolHandlers();
@@ -447,14 +462,17 @@ export class AIAgent {
     const enhanced = { ...parameters };
 
     // Add workspace_path if not provided and tool supports it
-    if (!enhanced.workspace_path && (toolName === 'github_analyze_issue' || toolName === 'github_smart_search')) {
+    if (!enhanced.workspace_path && (
+      toolName === 'github-get-issue-with-analysis' ||
+      toolName === 'github-find-code-by-description'
+    )) {
       enhanced.workspace_path = context.workspacePath;
     }
 
     // Add context from previous results if relevant
-    if (context.previousResults.length > 0 && toolName === 'github_smart_search') {
+    if (context.previousResults.length > 0 && toolName === 'github-find-code-by-description') {
       const previousAnalysis = context.previousResults
-        .filter(r => r.success && r.functionCall.name === 'github_analyze_issue')
+        .filter(r => r.success && r.functionCall.name === 'github-get-issue-with-analysis')
         .map(r => r.result)
         .filter(Boolean);
 
@@ -515,10 +533,10 @@ export class AIAgent {
 
     // Don't continue if we have comprehensive results
     const hasAnalysisResult = roundResults.some(r =>
-      r.success && r.functionCall.name === 'github_analyze_issue'
+      r.success && r.functionCall.name === 'github-get-issue-with-analysis'
     );
     const hasSearchResult = roundResults.some(r =>
-      r.success && r.functionCall.name === 'github_smart_search'
+      r.success && r.functionCall.name === 'github-find-code-by-description'
     );
 
     if (hasAnalysisResult && hasSearchResult) {
@@ -831,8 +849,8 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
 - Provide actionable insights and recommendations
 
 ## Tool Usage Guidelines:
-1. **Start with issue analysis**: Use github_analyze_issue to get comprehensive issue details and initial code analysis
-2. **Enhance with smart search**: Use github_smart_search for deeper code investigation if needed
+1. **Start with issue analysis**: Use github-get-issue-with-analysis to get comprehensive issue details and initial code analysis
+2. **Enhance with smart search**: Use github-find-code-by-description for deeper code investigation if needed
 3. **Be strategic**: Choose tools that best address the user's specific needs
 4. **Chain tools intelligently**: Use results from one tool to inform parameters for subsequent tools
 
@@ -848,7 +866,7 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 
 **EXAMPLE - Analyze GitHub Issue:**
 <function_calls>
-<invoke name="github_analyze_issue">
+<invoke name="github-get-issue-with-analysis">
 <parameter name="owner">unit-mesh</parameter>
 <parameter name="repo">autodev-workbench</parameter>
 <parameter name="issue_number">81</parameter>
@@ -857,9 +875,9 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 </function_calls>
 
 **FORBIDDEN FORMATS (WILL BE IGNORED):**
-- github_analyze_issue {"owner": "...", "repo": "..."}
-- {"function": "github_analyze_issue", "parameters": {...}}
-- github_analyze_issue(owner="...", repo="...")
+- github-get-issue-with-analysis {"owner": "...", "repo": "..."}
+- {"function": "github-get-issue-with-analysis", "parameters": {...}}
+- github-get-issue-with-analysis(owner="...", repo="...")
 - Any JSON format
 - Any function call syntax without XML tags
 
@@ -869,7 +887,7 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 
 **For issue analysis:**
 <function_calls>
-<invoke name="github_analyze_issue">
+<invoke name="github-get-issue-with-analysis">
 <parameter name="owner">unit-mesh</parameter>
 <parameter name="repo">autodev-workbench</parameter>
 <parameter name="issue_number">81</parameter>
@@ -879,7 +897,7 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 
 **For code search:**
 <function_calls>
-<invoke name="github_smart_search">
+<invoke name="github-find-code-by-description">
 <parameter name="owner">unit-mesh</parameter>
 <parameter name="repo">autodev-workbench</parameter>
 <parameter name="query">authentication error handling</parameter>
