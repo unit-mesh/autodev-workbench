@@ -13,7 +13,7 @@ export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
 export { PromptBuilder, type ToolDefinition } from "./agent/prompt-builder";
 export { FunctionParser, type FunctionCall, type ParsedResponse } from "./agent/function-parser";
 export { ToolExecutor, type ToolResult, type ExecutionContext } from "./agent/tool-executor";
-export { installGitHubFetchUrlContentTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/github-fetch-url-content";
+export { installFetchUrlContentTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/fetch-url-content";
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analyze-issue";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
 export { EnhancedUI } from "./utils/enhanced-ui";
