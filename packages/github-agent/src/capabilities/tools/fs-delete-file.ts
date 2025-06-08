@@ -107,8 +107,8 @@ export const installDeleteFileTool: ToolLike = (installer) => {
                 text: `Error: Directory '${file_path}' is not empty. Set 'recursive' to true to delete recursively.`
               }
             ]
-          ]
-        };
+          };
+        }
       }
 
       // Collect information about what will be deleted
