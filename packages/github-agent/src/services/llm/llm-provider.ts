@@ -12,7 +12,23 @@ export interface LLMProviderConfig {
  * Similar to web package implementation but with multiple provider support
  */
 export function configureLLMProvider(): LLMProviderConfig | null {
-  // Priority order: GLM -> DeepSeek -> OpenAI
+  // Priority order: DeepSeek -> GLM -> OpenAI (DeepSeek prioritized as requested)
+
+  // DeepSeek Provider (Prioritized)
+  if (process.env.DEEPSEEK_TOKEN) {
+    const openai = createOpenAI({
+      compatibility: "compatible",
+      baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
+      apiKey: process.env.DEEPSEEK_TOKEN,
+    });
+
+    return {
+      fullModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+      quickModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+      openai,
+      providerName: "DeepSeek"
+    };
+  }
 
   // GLM Provider (智谱AI)
   if (process.env.GLM_TOKEN) {
@@ -27,22 +43,6 @@ export function configureLLMProvider(): LLMProviderConfig | null {
       quickModel: process.env.LLM_MODEL || "glm-4-air",
       openai,
       providerName: "GLM"
-    };
-  }
-
-  // DeepSeek Provider
-  if (process.env.DEEPSEEK_TOKEN) {
-    const openai = createOpenAI({
-      compatibility: "compatible",
-      baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1",
-      apiKey: process.env.DEEPSEEK_TOKEN,
-    });
-
-    return {
-      fullModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-      quickModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-      openai,
-      providerName: "DeepSeek"
     };
   }
 
