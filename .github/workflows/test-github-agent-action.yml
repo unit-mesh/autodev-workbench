@@ -1,0 +1,90 @@
+name: Test GitHub Agent Action
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:  # 允许手动触发测试
+
+jobs:
+  test-issue-analysis:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          cd packages/github-agent-action
+          npm install
+      
+      - name: Build the action
+        run: |
+          cd packages/github-agent-action
+          npm run build
+      
+      - name: Test GitHub Agent Action
+        uses: ./packages/github-agent-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workspace-path: ${{ github.workspace }}
+          analysis-depth: medium
+          auto-comment: true
+          auto-label: true
+          exclude-labels: 'wontfix,duplicate'
+        env:
+          # 添加 LLM 提供商的 token（可选）
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+
+  manual-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: |
+          cd packages/github-agent-action
+          npm install
+      
+      - name: Build the action
+        run: |
+          cd packages/github-agent-action
+          npm run build
+      
+      - name: Manual Test - Analyze Existing Issue
+        run: |
+          cd packages/github-agent-action
+          # 分析一个现有的 issue（请替换为实际的 issue 编号）
+          node bin/action.js analyze \
+            --owner ${{ github.repository_owner }} \
+            --repo ${{ github.event.repository.name }} \
+            --issue 1 \
+            --depth medium \
+            --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}

@@ -36,6 +36,7 @@
     "test:integration": "jest __tests__/integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:local": "node scripts/test-local.js",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "clean": "rimraf dist node_modules/.cache",

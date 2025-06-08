@@ -9,15 +9,27 @@ const path = require('path');
 const fs = require('fs');
 
 // Load environment variables
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv is optional
+}
 
 // Import the main module
-const { 
-  analyzeIssue, 
-  startWebhookServer, 
-  validateConfig, 
-  getVersion 
-} = require('../dist/index.js');
+let mainModule;
+try {
+  mainModule = require('../dist/index.js');
+} catch (e) {
+  console.error('Failed to load main module. Make sure to run "npm run build" first.');
+  process.exit(1);
+}
+
+const {
+  analyzeIssue,
+  startWebhookServer,
+  validateConfig,
+  getVersion
+} = mainModule;
 
 program
   .name('autodev-github-action')
