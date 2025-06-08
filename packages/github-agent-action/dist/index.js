@@ -1,0 +1,1003 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var core = require('@actions/core');
+var rest = require('@octokit/rest');
+var githubAgent = require('@autodev/github-agent');
+var express = require('express');
+var webhooks = require('@octokit/webhooks');
+var github = require('@actions/github');
+
+function _interopNamespaceDefault(e) {
+    var n = Object.create(null);
+    if (e) {
+        Object.keys(e).forEach(function (k) {
+            if (k !== 'default') {
+                var d = Object.getOwnPropertyDescriptor(e, k);
+                Object.defineProperty(n, k, d.get ? d : {
+                    enumerable: true,
+                    get: function () { return e[k]; }
+                });
+            }
+        });
+    }
+    n.default = e;
+    return Object.freeze(n);
+}
+
+var core__namespace = /*#__PURE__*/_interopNamespaceDefault(core);
+var github__namespace = /*#__PURE__*/_interopNamespaceDefault(github);
+
+class IssueAnalyzer {
+    constructor(context, agentConfig) {
+        this.context = context;
+        // Initialize AI Agent with enhanced configuration
+        const enhancedConfig = {
+            workspacePath: context.workspacePath,
+            githubToken: context.config.githubToken,
+            verbose: true,
+            maxToolRounds: 3,
+            enableToolChaining: true,
+            toolTimeout: 120000,
+            ...agentConfig
+        };
+        this.agent = new githubAgent.AIAgent(enhancedConfig);
+        // Default comment template
+        this.commentTemplate = {
+            header: '## 🤖 Automated Issue Analysis',
+            analysisSection: '### Analysis Results',
+            suggestionsSection: '### Recommendations',
+            footer: '\n---\n*This analysis was generated automatically by AutoDev GitHub Agent*'
+        };
+        // Default label configuration
+        this.labelConfig = {
+            bugLabel: 'bug',
+            featureLabel: 'enhancement',
+            documentationLabel: 'documentation',
+            enhancementLabel: 'enhancement',
+            questionLabel: 'question',
+            analysisCompleteLabel: 'analysis-complete'
+        };
+    }
+    /**
+     * Analyze an issue and generate comprehensive report
+     */
+    async analyzeIssue(options = {}) {
+        const startTime = Date.now();
+        try {
+            console.log(`🔍 Starting analysis for issue #${this.context.issueNumber} in ${this.context.owner}/${this.context.repo}`);
+            // Build analysis prompt based on context
+            const analysisPrompt = this.buildAnalysisPrompt(options);
+            // Execute analysis using AI Agent
+            const agentResponse = await this.agent.processInput(analysisPrompt, {
+                owner: this.context.owner,
+                repo: this.context.repo,
+                issue_number: this.context.issueNumber,
+                workspace_path: this.context.workspacePath,
+                analysis_depth: options.depth || 'medium'
+            });
+            if (!agentResponse.success) {
+                throw new Error(`Analysis failed: ${agentResponse.error}`);
+            }
+            // Generate structured report
+            const report = await this.generateReport(agentResponse);
+            // Determine recommended actions
+            const recommendedLabels = this.determineLabels(report);
+            const result = {
+                success: true,
+                analysisResult: agentResponse.toolResults.find(r => r.success)?.result,
+                labelsAdded: recommendedLabels,
+                executionTime: Date.now() - startTime
+            };
+            // Add comment if configured
+            if (this.context.config.autoComment) {
+                const comment = this.generateComment(report);
+                result.commentAdded = true;
+                console.log('📝 Generated analysis comment:', comment.substring(0, 200) + '...');
+            }
+            console.log(`✅ Analysis completed in ${result.executionTime}ms`);
+            return result;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('❌ Analysis failed:', errorMessage);
+            return {
+                success: false,
+                error: errorMessage,
+                executionTime: Date.now() - startTime
+            };
+        }
+    }
+    /**
+     * Build analysis prompt based on issue context and options
+     */
+    buildAnalysisPrompt(options) {
+        const { depth = 'medium', includeCodeSearch = true, includeSymbolAnalysis = true } = options;
+        let prompt = `Analyze GitHub issue #${this.context.issueNumber} in repository ${this.context.owner}/${this.context.repo}.
+
+Please provide a comprehensive analysis including:
+
+1. **Issue Understanding**: Summarize what the issue is about
+2. **Code Analysis**: Find relevant code files and functions related to this issue
+3. **Root Cause Analysis**: Identify potential causes and areas of concern
+4. **Recommendations**: Provide specific, actionable suggestions for resolution
+5. **Complexity Assessment**: Estimate the complexity and effort required
+
+Analysis Configuration:
+- Depth: ${depth}
+- Include Code Search: ${includeCodeSearch}
+- Include Symbol Analysis: ${includeSymbolAnalysis}
+- Workspace: ${this.context.workspacePath}
+
+Focus on providing practical, actionable insights that will help developers understand and resolve the issue efficiently.`;
+        // Add specific instructions based on depth
+        switch (depth) {
+            case 'shallow':
+                prompt += '\n\nPerform a quick analysis focusing on the most obvious patterns and immediate code references.';
+                break;
+            case 'deep':
+                prompt += '\n\nPerform an in-depth analysis including dependency analysis, architectural patterns, and comprehensive code exploration.';
+                break;
+            default: // medium
+                prompt += '\n\nPerform a balanced analysis covering key code areas and providing meaningful insights without excessive detail.';
+        }
+        return prompt;
+    }
+    /**
+     * Generate structured analysis report
+     */
+    async generateReport(agentResponse) {
+        const report = {
+            issueNumber: this.context.issueNumber,
+            repository: `${this.context.owner}/${this.context.repo}`,
+            analysisTimestamp: new Date().toISOString(),
+            summary: agentResponse.text || 'Analysis completed',
+            codeReferences: [],
+            suggestions: [],
+            relatedIssues: [],
+            estimatedComplexity: 'medium',
+            recommendedLabels: []
+        };
+        // Extract code references from tool results
+        const toolResults = agentResponse.toolResults || [];
+        for (const result of toolResults) {
+            if (result.success && result.result?.content) {
+                // Parse tool results to extract code references
+                // This would be enhanced based on actual tool result structure
+                report.codeReferences.push({
+                    file: result.functionCall?.parameters?.file || 'unknown',
+                    relevance: 0.8,
+                    description: 'Found relevant code section'
+                });
+            }
+        }
+        // Generate suggestions based on analysis
+        report.suggestions = this.extractSuggestions(agentResponse.text);
+        // Estimate complexity
+        report.estimatedComplexity = this.estimateComplexity(report);
+        return report;
+    }
+    /**
+     * Extract actionable suggestions from analysis text
+     */
+    extractSuggestions(analysisText) {
+        const suggestions = [];
+        // Simple pattern matching for common suggestion types
+        if (analysisText.toLowerCase().includes('bug') || analysisText.toLowerCase().includes('error')) {
+            suggestions.push({
+                type: 'fix',
+                priority: 'high',
+                description: 'Investigate and fix the identified bug or error'
+            });
+        }
+        if (analysisText.toLowerCase().includes('enhancement') || analysisText.toLowerCase().includes('improve')) {
+            suggestions.push({
+                type: 'enhancement',
+                priority: 'medium',
+                description: 'Consider implementing the suggested enhancement'
+            });
+        }
+        if (analysisText.toLowerCase().includes('investigate') || analysisText.toLowerCase().includes('unclear')) {
+            suggestions.push({
+                type: 'investigation',
+                priority: 'medium',
+                description: 'Further investigation needed to understand the issue'
+            });
+        }
+        return suggestions;
+    }
+    /**
+     * Estimate issue complexity based on analysis
+     */
+    estimateComplexity(report) {
+        let complexityScore = 0;
+        // Factor in number of code references
+        complexityScore += Math.min(report.codeReferences.length * 0.2, 1);
+        // Factor in number of suggestions
+        complexityScore += Math.min(report.suggestions.length * 0.3, 1);
+        // Factor in suggestion types
+        const hasHighPriority = report.suggestions.some(s => s.priority === 'high');
+        if (hasHighPriority)
+            complexityScore += 0.5;
+        if (complexityScore < 0.3)
+            return 'low';
+        if (complexityScore < 0.7)
+            return 'medium';
+        return 'high';
+    }
+    /**
+     * Determine appropriate labels based on analysis
+     */
+    determineLabels(report) {
+        const labels = [];
+        // Add complexity-based labels
+        if (report.estimatedComplexity === 'high') {
+            labels.push('complex');
+        }
+        // Add suggestion-based labels
+        const hasBugSuggestion = report.suggestions.some(s => s.type === 'fix');
+        const hasEnhancementSuggestion = report.suggestions.some(s => s.type === 'enhancement');
+        if (hasBugSuggestion && this.labelConfig.bugLabel) {
+            labels.push(this.labelConfig.bugLabel);
+        }
+        if (hasEnhancementSuggestion && this.labelConfig.enhancementLabel) {
+            labels.push(this.labelConfig.enhancementLabel);
+        }
+        // Add analysis complete label
+        if (this.labelConfig.analysisCompleteLabel) {
+            labels.push(this.labelConfig.analysisCompleteLabel);
+        }
+        return labels;
+    }
+    /**
+     * Generate comment text for the issue
+     */
+    generateComment(report) {
+        const sections = [];
+        // Header
+        if (this.commentTemplate.header) {
+            sections.push(this.commentTemplate.header);
+        }
+        // Analysis section
+        sections.push(`\n${this.commentTemplate.analysisSection || '### Analysis'}`);
+        sections.push(`\n**Complexity**: ${report.estimatedComplexity}`);
+        sections.push(`**Code References Found**: ${report.codeReferences.length}`);
+        if (report.summary) {
+            sections.push(`\n${report.summary}`);
+        }
+        // Code references
+        if (report.codeReferences.length > 0) {
+            sections.push('\n**Relevant Code Files:**');
+            report.codeReferences.slice(0, 5).forEach(ref => {
+                sections.push(`- \`${ref.file}\`${ref.line ? ` (line ${ref.line})` : ''}: ${ref.description}`);
+            });
+        }
+        // Suggestions section
+        if (report.suggestions.length > 0) {
+            sections.push(`\n${this.commentTemplate.suggestionsSection || '### Recommendations'}`);
+            report.suggestions.forEach((suggestion, index) => {
+                const priority = suggestion.priority === 'high' ? '🔴' : suggestion.priority === 'medium' ? '🟡' : '🟢';
+                sections.push(`${index + 1}. ${priority} **${suggestion.type.toUpperCase()}**: ${suggestion.description}`);
+            });
+        }
+        // Footer
+        if (this.commentTemplate.footer) {
+            sections.push(this.commentTemplate.footer);
+        }
+        return sections.join('\n');
+    }
+    /**
+     * Update comment template
+     */
+    setCommentTemplate(template) {
+        this.commentTemplate = { ...this.commentTemplate, ...template };
+    }
+    /**
+     * Update label configuration
+     */
+    setLabelConfig(config) {
+        this.labelConfig = { ...this.labelConfig, ...config };
+    }
+}
+
+class GitHubActionService {
+    constructor(config) {
+        // Get configuration from GitHub Actions inputs or environment
+        this.config = this.loadConfig(config);
+        // Initialize Octokit with GitHub token
+        this.octokit = new rest.Octokit({
+            auth: this.config.githubToken
+        });
+        console.log('🔧 GitHub Action Service initialized');
+        console.log(`📁 Workspace: ${this.config.workspacePath}`);
+        console.log(`🤖 Auto Comment: ${this.config.autoComment}`);
+        console.log(`🏷️ Auto Label: ${this.config.autoLabel}`);
+    }
+    /**
+     * Load configuration from GitHub Actions inputs or environment
+     */
+    loadConfig(overrides) {
+        const config = {
+            githubToken: this.getInput('github-token') || process.env.GITHUB_TOKEN || '',
+            workspacePath: this.getInput('workspace-path') || process.env.GITHUB_WORKSPACE || process.cwd(),
+            webhookSecret: this.getInput('webhook-secret') || process.env.WEBHOOK_SECRET,
+            autoComment: this.getBooleanInput('auto-comment') ?? true,
+            autoLabel: this.getBooleanInput('auto-label') ?? true,
+            analysisDepth: this.getInput('analysis-depth') || 'medium',
+            triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited'],
+            excludeLabels: this.getInput('exclude-labels')?.split(',').filter(Boolean) || [],
+            includeLabels: this.getInput('include-labels')?.split(',').filter(Boolean) || [],
+            ...overrides
+        };
+        if (!config.githubToken) {
+            throw new Error('GitHub token is required. Set GITHUB_TOKEN environment variable or github-token input.');
+        }
+        return config;
+    }
+    /**
+     * Get input value (works in both GitHub Actions and standalone mode)
+     */
+    getInput(name) {
+        try {
+            return core__namespace.getInput(name);
+        }
+        catch {
+            // Fallback for standalone mode
+            return process.env[name.toUpperCase().replace('-', '_')] || '';
+        }
+    }
+    /**
+     * Get boolean input value
+     */
+    getBooleanInput(name) {
+        const value = this.getInput(name);
+        if (!value)
+            return undefined;
+        return value.toLowerCase() === 'true';
+    }
+    /**
+     * Process an issue with simplified options
+     */
+    async processIssue(options) {
+        const context = {
+            owner: options.owner,
+            repo: options.repo,
+            issueNumber: options.issueNumber,
+            eventType: 'manual',
+            action: options.action || 'analyze',
+            workspacePath: this.config.workspacePath,
+            config: {
+                ...this.config,
+                autoComment: options.autoComment ?? this.config.autoComment,
+                autoLabel: options.autoLabel ?? this.config.autoLabel,
+                analysisDepth: options.depth || this.config.analysisDepth
+            }
+        };
+        return this.processIssueWithContext(context);
+    }
+    /**
+     * Process an issue with full context
+     */
+    async processIssueWithContext(context) {
+        try {
+            console.log(`🔍 Processing issue #${context.issueNumber} in ${context.owner}/${context.repo}`);
+            // Validate issue exists and is accessible
+            await this.validateIssue(context);
+            // Create issue analyzer
+            const analyzer = new IssueAnalyzer(context);
+            // Configure analysis options
+            const analysisOptions = {
+                depth: context.config.analysisDepth,
+                includeCodeSearch: true,
+                includeSymbolAnalysis: true,
+                timeout: 120000
+            };
+            // Perform analysis
+            const result = await analyzer.analyzeIssue(analysisOptions);
+            if (!result.success) {
+                throw new Error(result.error || 'Analysis failed');
+            }
+            // Add comment if configured and analysis was successful
+            if (context.config.autoComment && result.analysisResult) {
+                try {
+                    await this.addAnalysisComment(context, result);
+                    result.commentAdded = true;
+                    console.log(`💬 Added analysis comment to issue #${context.issueNumber}`);
+                }
+                catch (error) {
+                    console.warn('Failed to add comment:', error);
+                    // Don't fail the entire process if comment fails
+                }
+            }
+            // Add labels if configured
+            if (context.config.autoLabel && result.labelsAdded && result.labelsAdded.length > 0) {
+                try {
+                    await this.addLabelsToIssue(context, result.labelsAdded);
+                    console.log(`🏷️ Added labels to issue #${context.issueNumber}: ${result.labelsAdded.join(', ')}`);
+                }
+                catch (error) {
+                    console.warn('Failed to add labels:', error);
+                    // Don't fail the entire process if labeling fails
+                }
+            }
+            // Set GitHub Actions outputs if running in Actions context
+            this.setOutputs(result);
+            return result;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`❌ Failed to process issue #${context.issueNumber}:`, errorMessage);
+            // Set error output for GitHub Actions
+            this.setErrorOutput(errorMessage);
+            return {
+                success: false,
+                error: errorMessage
+            };
+        }
+    }
+    /**
+     * Validate that the issue exists and is accessible
+     */
+    async validateIssue(context) {
+        try {
+            const { data: issue } = await this.octokit.issues.get({
+                owner: context.owner,
+                repo: context.repo,
+                issue_number: context.issueNumber
+            });
+            console.log(`✅ Issue #${context.issueNumber} validated: "${issue.title}"`);
+        }
+        catch (error) {
+            if (error instanceof Error && 'status' in error) {
+                const status = error.status;
+                if (status === 404) {
+                    throw new Error(`Issue #${context.issueNumber} not found in ${context.owner}/${context.repo}`);
+                }
+                else if (status === 403) {
+                    throw new Error(`Access denied to issue #${context.issueNumber} in ${context.owner}/${context.repo}`);
+                }
+            }
+            throw new Error(`Failed to validate issue: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    /**
+     * Add analysis comment to the issue
+     */
+    async addAnalysisComment(context, result) {
+        if (!result.analysisResult) {
+            throw new Error('No analysis result to comment');
+        }
+        // Generate comment body
+        const commentBody = this.generateCommentBody(result);
+        await this.octokit.issues.createComment({
+            owner: context.owner,
+            repo: context.repo,
+            issue_number: context.issueNumber,
+            body: commentBody
+        });
+    }
+    /**
+     * Generate comment body from analysis result
+     */
+    generateCommentBody(result) {
+        const sections = [];
+        sections.push('## 🤖 Automated Issue Analysis');
+        sections.push('');
+        if (result.analysisResult) {
+            sections.push('### Analysis Summary');
+            sections.push('The issue has been automatically analyzed using AI-powered code analysis.');
+            sections.push('');
+            // Add execution time if available
+            if (result.executionTime) {
+                sections.push(`**Analysis completed in**: ${result.executionTime}ms`);
+                sections.push('');
+            }
+            // Add any specific analysis content
+            // This would be enhanced based on the actual analysis result structure
+            sections.push('### Key Findings');
+            sections.push('- Automated analysis has been performed');
+            sections.push('- Relevant code sections have been identified');
+            sections.push('- Recommendations are available for review');
+            sections.push('');
+        }
+        if (result.labelsAdded && result.labelsAdded.length > 0) {
+            sections.push('### Labels Applied');
+            result.labelsAdded.forEach(label => {
+                sections.push(`- \`${label}\``);
+            });
+            sections.push('');
+        }
+        sections.push('---');
+        sections.push('*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*');
+        return sections.join('\n');
+    }
+    /**
+     * Add labels to the issue
+     */
+    async addLabelsToIssue(context, labels) {
+        await this.octokit.issues.addLabels({
+            owner: context.owner,
+            repo: context.repo,
+            issue_number: context.issueNumber,
+            labels
+        });
+    }
+    /**
+     * Set GitHub Actions outputs
+     */
+    setOutputs(result) {
+        try {
+            core__namespace.setOutput('success', result.success.toString());
+            core__namespace.setOutput('comment-added', (result.commentAdded || false).toString());
+            if (result.labelsAdded) {
+                core__namespace.setOutput('labels-added', result.labelsAdded.join(','));
+            }
+            if (result.executionTime) {
+                core__namespace.setOutput('execution-time', result.executionTime.toString());
+            }
+            if (result.error) {
+                core__namespace.setOutput('error', result.error);
+            }
+        }
+        catch {
+            // Ignore errors if not running in GitHub Actions context
+        }
+    }
+    /**
+     * Set error output for GitHub Actions
+     */
+    setErrorOutput(error) {
+        try {
+            core__namespace.setFailed(error);
+            core__namespace.setOutput('success', 'false');
+            core__namespace.setOutput('error', error);
+        }
+        catch {
+            // Ignore errors if not running in GitHub Actions context
+        }
+    }
+    /**
+     * Get current configuration
+     */
+    getConfig() {
+        return { ...this.config };
+    }
+    /**
+     * Update configuration
+     */
+    updateConfig(updates) {
+        this.config = { ...this.config, ...updates };
+    }
+}
+
+class WebhookHandler {
+    constructor(actionService, options = {}) {
+        this.actionService = actionService;
+        this.options = {
+            path: '/webhook',
+            port: 3000,
+            ...options
+        };
+        this.app = express();
+        this.app.use(express.json());
+        // Initialize webhooks with secret if provided
+        this.webhooks = new webhooks.Webhooks({
+            secret: this.options.secret || 'default-secret'
+        });
+        this.setupWebhookHandlers();
+        this.setupRoutes();
+    }
+    /**
+     * Setup webhook event handlers
+     */
+    setupWebhookHandlers() {
+        // Handle issue opened events
+        this.webhooks.on('issues.opened', async ({ payload }) => {
+            console.log(`📝 Issue opened: #${payload.issue.number} in ${payload.repository.full_name}`);
+            try {
+                await this.handleIssueEvent(payload, 'opened');
+                if (this.options.onIssueOpened) {
+                    await this.options.onIssueOpened(payload);
+                }
+            }
+            catch (error) {
+                console.error('Error handling issue opened event:', error);
+            }
+        });
+        // Handle issue edited events
+        this.webhooks.on('issues.edited', async ({ payload }) => {
+            console.log(`✏️ Issue edited: #${payload.issue.number} in ${payload.repository.full_name}`);
+            try {
+                await this.handleIssueEvent(payload, 'edited');
+                if (this.options.onIssueEdited) {
+                    await this.options.onIssueEdited(payload);
+                }
+            }
+            catch (error) {
+                console.error('Error handling issue edited event:', error);
+            }
+        });
+        // Handle issue labeled events
+        this.webhooks.on('issues.labeled', async ({ payload }) => {
+            console.log(`🏷️ Issue labeled: #${payload.issue.number} in ${payload.repository.full_name}`);
+            try {
+                if (this.options.onIssueLabeled) {
+                    await this.options.onIssueLabeled(payload);
+                }
+            }
+            catch (error) {
+                console.error('Error handling issue labeled event:', error);
+            }
+        });
+        // Handle issue assigned events
+        this.webhooks.on('issues.assigned', async ({ payload }) => {
+            console.log(`👤 Issue assigned: #${payload.issue.number} in ${payload.repository.full_name}`);
+            try {
+                if (this.options.onIssueAssigned) {
+                    await this.options.onIssueAssigned(payload);
+                }
+            }
+            catch (error) {
+                console.error('Error handling issue assigned event:', error);
+            }
+        });
+        // Handle webhook errors
+        this.webhooks.onError((error) => {
+            console.error('Webhook error:', error);
+        });
+    }
+    /**
+     * Setup Express routes
+     */
+    setupRoutes() {
+        // Health check endpoint
+        this.app.get('/health', (req, res) => {
+            res.json({
+                status: 'healthy',
+                timestamp: new Date().toISOString(),
+                service: 'github-agent-action-webhook'
+            });
+        });
+        // Webhook endpoint
+        this.app.post(this.options.path, async (req, res) => {
+            try {
+                await this.webhooks.verifyAndReceive({
+                    id: req.headers['x-github-delivery'],
+                    name: req.headers['x-github-event'],
+                    signature: req.headers['x-hub-signature-256'],
+                    payload: JSON.stringify(req.body)
+                });
+                res.status(200).json({ message: 'Webhook processed successfully' });
+            }
+            catch (error) {
+                console.error('Webhook processing error:', error);
+                res.status(400).json({
+                    error: 'Webhook processing failed',
+                    message: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+        });
+        // Manual trigger endpoint for testing
+        this.app.post('/trigger/:owner/:repo/:issueNumber', async (req, res) => {
+            try {
+                const { owner, repo, issueNumber } = req.params;
+                const { action = 'manual', depth = 'medium' } = req.body;
+                console.log(`🔧 Manual trigger for issue #${issueNumber} in ${owner}/${repo}`);
+                const result = await this.actionService.processIssue({
+                    owner,
+                    repo,
+                    issueNumber: parseInt(issueNumber),
+                    action,
+                    depth
+                });
+                res.json({
+                    success: true,
+                    result,
+                    message: `Analysis completed for issue #${issueNumber}`
+                });
+            }
+            catch (error) {
+                console.error('Manual trigger error:', error);
+                res.status(500).json({
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+        });
+        // Status endpoint
+        this.app.get('/status', (req, res) => {
+            res.json({
+                service: 'github-agent-action',
+                version: process.env.npm_package_version || '0.1.0',
+                uptime: process.uptime(),
+                memory: process.memoryUsage(),
+                webhookPath: this.options.path,
+                timestamp: new Date().toISOString()
+            });
+        });
+    }
+    /**
+     * Handle issue events (opened, edited, etc.)
+     */
+    async handleIssueEvent(payload, eventType) {
+        if (!payload.issue || !payload.repository) {
+            console.warn('Invalid payload: missing issue or repository data');
+            return;
+        }
+        // Check if we should process this issue
+        if (!this.shouldProcessIssue(payload, eventType)) {
+            console.log(`⏭️ Skipping issue #${payload.issue.number} - does not meet processing criteria`);
+            return;
+        }
+        const context = {
+            owner: payload.repository.owner.login,
+            repo: payload.repository.name,
+            issueNumber: payload.issue.number,
+            eventType,
+            action: payload.action,
+            workspacePath: process.cwd(), // This could be configured
+            config: this.getActionConfig()
+        };
+        try {
+            console.log(`🚀 Processing issue #${context.issueNumber} in ${context.owner}/${context.repo}`);
+            const result = await this.actionService.processIssueWithContext(context);
+            if (result.success) {
+                console.log(`✅ Successfully processed issue #${context.issueNumber}`);
+                // Log analysis results
+                if (result.analysisResult) {
+                    console.log(`📊 Analysis completed in ${result.executionTime}ms`);
+                }
+                if (result.commentAdded) {
+                    console.log(`💬 Comment added to issue #${context.issueNumber}`);
+                }
+                if (result.labelsAdded && result.labelsAdded.length > 0) {
+                    console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
+                }
+            }
+            else {
+                console.error(`❌ Failed to process issue #${context.issueNumber}: ${result.error}`);
+            }
+        }
+        catch (error) {
+            console.error(`💥 Error processing issue #${context.issueNumber}:`, error);
+        }
+    }
+    /**
+     * Determine if an issue should be processed based on configuration
+     */
+    shouldProcessIssue(payload, eventType) {
+        const config = this.getActionConfig();
+        // Check if event type is in trigger events
+        if (config.triggerEvents && !config.triggerEvents.includes(eventType)) {
+            return false;
+        }
+        // Check exclude labels
+        if (config.excludeLabels && payload.issue) {
+            const issueLabels = payload.issue.labels.map(label => label.name);
+            const hasExcludedLabel = config.excludeLabels.some(label => issueLabels.includes(label));
+            if (hasExcludedLabel) {
+                return false;
+            }
+        }
+        // Check include labels (if specified, issue must have at least one)
+        if (config.includeLabels && config.includeLabels.length > 0 && payload.issue) {
+            const issueLabels = payload.issue.labels.map(label => label.name);
+            const hasIncludedLabel = config.includeLabels.some(label => issueLabels.includes(label));
+            if (!hasIncludedLabel) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
+     * Get action configuration from environment or defaults
+     */
+    getActionConfig() {
+        return {
+            githubToken: process.env.GITHUB_TOKEN || '',
+            workspacePath: process.env.WORKSPACE_PATH || process.cwd(),
+            webhookSecret: process.env.WEBHOOK_SECRET,
+            autoComment: process.env.AUTO_COMMENT === 'true',
+            autoLabel: process.env.AUTO_LABEL === 'true',
+            analysisDepth: process.env.ANALYSIS_DEPTH || 'medium',
+            triggerEvents: process.env.TRIGGER_EVENTS?.split(',') || ['opened', 'edited'],
+            excludeLabels: process.env.EXCLUDE_LABELS?.split(',') || [],
+            includeLabels: process.env.INCLUDE_LABELS?.split(',') || []
+        };
+    }
+    /**
+     * Start the webhook server
+     */
+    async start() {
+        const port = this.options.port || 3000;
+        return new Promise((resolve) => {
+            this.app.listen(port, () => {
+                console.log(`🚀 GitHub Agent Action webhook server started on port ${port}`);
+                console.log(`📡 Webhook endpoint: http://localhost:${port}${this.options.path}`);
+                console.log(`🏥 Health check: http://localhost:${port}/health`);
+                console.log(`📊 Status: http://localhost:${port}/status`);
+                resolve();
+            });
+        });
+    }
+    /**
+     * Get the Express app instance
+     */
+    getApp() {
+        return this.app;
+    }
+    /**
+     * Get webhook instance for advanced configuration
+     */
+    getWebhooks() {
+        return this.webhooks;
+    }
+}
+
+/**
+ * AutoDev GitHub Agent Action
+ *
+ * Automated GitHub issue analysis using AI-powered code analysis.
+ * This package provides both GitHub Actions integration and standalone webhook server capabilities.
+ */
+// Core exports
+/**
+ * Main entry point for GitHub Actions
+ * This function is called when the action runs in a GitHub workflow
+ */
+async function run() {
+    try {
+        console.log('🚀 Starting AutoDev GitHub Agent Action');
+        // Initialize the action service
+        const actionService = new GitHubActionService();
+        // Get context from GitHub Actions
+        const context = github__namespace.context;
+        // Check if this is an issue event
+        if (context.eventName === 'issues') {
+            const payload = context.payload;
+            if (!payload.issue) {
+                throw new Error('No issue found in event payload');
+            }
+            console.log(`📝 Processing issue #${payload.issue.number}: ${payload.issue.title}`);
+            // Process the issue
+            const result = await actionService.processIssue({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issueNumber: payload.issue.number,
+                action: payload.action
+            });
+            if (result.success) {
+                console.log('✅ Issue analysis completed successfully');
+                if (result.commentAdded) {
+                    console.log('💬 Analysis comment added to issue');
+                }
+                if (result.labelsAdded && result.labelsAdded.length > 0) {
+                    console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
+                }
+            }
+            else {
+                throw new Error(result.error || 'Issue analysis failed');
+            }
+        }
+        else {
+            console.log(`ℹ️ Event type '${context.eventName}' is not supported. Only 'issues' events are processed.`);
+        }
+    }
+    catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('❌ Action failed:', errorMessage);
+        core__namespace.setFailed(errorMessage);
+    }
+}
+/**
+ * Create and start a webhook server for standalone operation
+ */
+async function startWebhookServer(options = {}) {
+    console.log('🌐 Starting GitHub Agent Action webhook server');
+    // Initialize action service
+    const actionService = new GitHubActionService({
+        githubToken: options.githubToken || process.env.GITHUB_TOKEN,
+        workspacePath: options.workspacePath || process.cwd(),
+        webhookSecret: options.webhookSecret || process.env.WEBHOOK_SECRET
+    });
+    // Create webhook handler
+    const webhookHandler = new WebhookHandler(actionService, {
+        port: options.port || parseInt(process.env.PORT || '3000'),
+        secret: options.webhookSecret || process.env.WEBHOOK_SECRET || 'default-secret',
+        path: '/webhook'
+    });
+    // Start the server
+    await webhookHandler.start();
+    return webhookHandler;
+}
+/**
+ * Analyze a specific issue (for manual/programmatic use)
+ */
+async function analyzeIssue(options) {
+    console.log(`🔍 Analyzing issue #${options.issueNumber} in ${options.owner}/${options.repo}`);
+    const actionService = new GitHubActionService({
+        githubToken: options.githubToken || process.env.GITHUB_TOKEN,
+        workspacePath: options.workspacePath || process.cwd()
+    });
+    return actionService.processIssue({
+        owner: options.owner,
+        repo: options.repo,
+        issueNumber: options.issueNumber,
+        depth: options.depth,
+        autoComment: options.autoComment,
+        autoLabel: options.autoLabel
+    });
+}
+/**
+ * Utility function to validate configuration
+ */
+function validateConfig() {
+    const errors = [];
+    // Check for required environment variables
+    if (!process.env.GITHUB_TOKEN) {
+        errors.push('GITHUB_TOKEN environment variable is required');
+    }
+    // Check for GitHub Actions context if running in Actions
+    try {
+        const context = github__namespace.context;
+        if (context.eventName && !['issues', 'issue_comment'].includes(context.eventName)) {
+            errors.push(`Event type '${context.eventName}' is not supported`);
+        }
+    }
+    catch {
+        // Not running in GitHub Actions context, which is fine for standalone mode
+    }
+    return {
+        valid: errors.length === 0,
+        errors
+    };
+}
+/**
+ * Get version information
+ */
+function getVersion() {
+    return process.env.npm_package_version || '0.1.0';
+}
+/**
+ * Default export for convenience
+ */
+var index = {
+    run,
+    startWebhookServer,
+    analyzeIssue,
+    validateConfig,
+    getVersion,
+    GitHubActionService,
+    WebhookHandler
+};
+// Auto-run if this is the main module and we're in GitHub Actions context
+if (require.main === module) {
+    // Check if we're in GitHub Actions context
+    if (process.env.GITHUB_ACTIONS === 'true') {
+        run().catch(error => {
+            console.error('Fatal error:', error);
+            process.exit(1);
+        });
+    }
+    else {
+        // Standalone mode - start webhook server
+        const port = parseInt(process.env.PORT || '3000');
+        console.log(`🚀 Starting in standalone mode on port ${port}`);
+        startWebhookServer({ port }).catch(error => {
+            console.error('Failed to start webhook server:', error);
+            process.exit(1);
+        });
+    }
+}
+
+exports.GitHubActionService = GitHubActionService;
+exports.IssueAnalyzer = IssueAnalyzer;
+exports.WebhookHandler = WebhookHandler;
+exports.analyzeIssue = analyzeIssue;
+exports.default = index;
+exports.getVersion = getVersion;
+exports.run = run;
+exports.startWebhookServer = startWebhookServer;
+exports.validateConfig = validateConfig;
+//# sourceMappingURL=index.js.map

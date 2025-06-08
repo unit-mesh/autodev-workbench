@@ -1,0 +1,73 @@
+name: 'AutoDev GitHub Agent Action'
+description: 'Automated GitHub issue analysis using AI-powered code analysis'
+author: 'AutoDev authors'
+
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+    default: ${{ github.token }}
+  
+  workspace-path:
+    description: 'Path to the repository workspace'
+    required: false
+    default: ${{ github.workspace }}
+  
+  analysis-depth:
+    description: 'Depth of analysis (shallow, medium, deep)'
+    required: false
+    default: 'medium'
+  
+  auto-comment:
+    description: 'Automatically add analysis comment to issues'
+    required: false
+    default: 'true'
+  
+  auto-label:
+    description: 'Automatically add labels to issues based on analysis'
+    required: false
+    default: 'true'
+  
+  trigger-events:
+    description: 'Comma-separated list of issue events to trigger analysis'
+    required: false
+    default: 'opened,edited'
+  
+  exclude-labels:
+    description: 'Comma-separated list of labels to exclude from analysis'
+    required: false
+    default: ''
+  
+  include-labels:
+    description: 'Comma-separated list of labels to include for analysis (if empty, all issues are analyzed)'
+    required: false
+    default: ''
+  
+  webhook-secret:
+    description: 'Secret for webhook verification (for standalone server mode)'
+    required: false
+    default: ''
+
+outputs:
+  success:
+    description: 'Whether the analysis was successful'
+  
+  comment-added:
+    description: 'Whether a comment was added to the issue'
+  
+  labels-added:
+    description: 'Comma-separated list of labels that were added'
+  
+  execution-time:
+    description: 'Time taken to complete the analysis (in milliseconds)'
+  
+  error:
+    description: 'Error message if the analysis failed'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

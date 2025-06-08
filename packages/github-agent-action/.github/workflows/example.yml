@@ -1,0 +1,169 @@
+name: GitHub Agent Action Example
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  analyze-issue:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for better analysis
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Analyze Issue
+        uses: ./packages/github-agent-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workspace-path: ${{ github.workspace }}
+          analysis-depth: medium
+          auto-comment: true
+          auto-label: true
+          exclude-labels: 'wontfix,duplicate,invalid'
+        env:
+          # Optional: Add LLM provider tokens for enhanced analysis
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+
+  analyze-complex-issues:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'complex')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Deep Analysis for Complex Issues
+        uses: ./packages/github-agent-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workspace-path: ${{ github.workspace }}
+          analysis-depth: deep
+          auto-comment: true
+          auto-label: true
+          include-labels: 'complex,bug,enhancement'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  quick-triage:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Quick Triage Analysis
+        uses: ./packages/github-agent-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workspace-path: ${{ github.workspace }}
+          analysis-depth: shallow
+          auto-comment: false  # Only add labels for quick triage
+          auto-label: true
+          trigger-events: 'opened'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  # Example of conditional analysis based on issue content
+  security-analysis:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' && 
+      (contains(github.event.issue.title, 'security') || 
+       contains(github.event.issue.body, 'vulnerability') ||
+       contains(github.event.issue.labels.*.name, 'security'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Security-Focused Analysis
+        uses: ./packages/github-agent-action
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          workspace-path: ${{ github.workspace }}
+          analysis-depth: deep
+          auto-comment: true
+          auto-label: true
+          include-labels: 'security,vulnerability'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      
+      - name: Notify Security Team
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🔒 **Security Issue Detected** - This issue has been flagged for security review and analysis has been completed.'
+            });
+
+  # Example of using outputs from the action
+  post-analysis:
+    runs-on: ubuntu-latest
+    needs: analyze-issue
+    if: always()
+    
+    steps:
+      - name: Check Analysis Results
+        run: |
+          echo "Analysis completed"
+          echo "Success: ${{ needs.analyze-issue.outputs.success }}"
+          echo "Comment added: ${{ needs.analyze-issue.outputs.comment-added }}"
+          echo "Labels added: ${{ needs.analyze-issue.outputs.labels-added }}"
+          echo "Execution time: ${{ needs.analyze-issue.outputs.execution-time }}ms"
+          
+          if [ "${{ needs.analyze-issue.outputs.success }}" != "true" ]; then
+            echo "Analysis failed: ${{ needs.analyze-issue.outputs.error }}"
+          fi
