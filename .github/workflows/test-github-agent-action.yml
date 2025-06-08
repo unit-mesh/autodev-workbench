@@ -29,8 +29,13 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install
 
-      - name: Build all packages
-        run: npx nx run-many --target=build --all
+      - name: Build packages in correct order
+        run: |
+          pnpm --filter worker-core build
+          pnpm --filter worker-protobuf build
+          pnpm --filter context-worker build
+          pnpm --filter github-agent build
+          pnpm --filter github-agent-action build
 
       - name: Test GitHub Agent Action
         uses: ./packages/github-agent-action
@@ -70,8 +75,13 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install
 
-      - name: Build all packages
-        run: npx nx run-many --target=build --all
+      - name: Build packages in correct order
+        run: |
+          pnpm --filter worker-core build
+          pnpm --filter worker-protobuf build
+          pnpm --filter context-worker build
+          pnpm --filter github-agent build
+          pnpm --filter github-agent-action build
       
       - name: Manual Test - Analyze Existing Issue
         run: |
