@@ -1,3 +1,30 @@
+## 0.5.0 (2025-06-09)
+
+### 🚀 Features
+
+- add TypeScript configuration for github-agent-action ([4d786d2](https://github.com/unit-mesh/autodev-worker/commit/4d786d2))
+- add github-agent-action package for automated issue analysis ([1c37f25](https://github.com/unit-mesh/autodev-worker/commit/1c37f25))
+- add reopened event trigger for easier testing ([456290b](https://github.com/unit-mesh/autodev-worker/commit/456290b))
+- add reopened event trigger and fix build issues ([dd346e0](https://github.com/unit-mesh/autodev-worker/commit/dd346e0))
+- add github-agent and github-agent-action to CI/CD pipeline ([c5dd5b6](https://github.com/unit-mesh/autodev-worker/commit/c5dd5b6))
+- replace fixed comment templates with LLM-generated content ([5172897](https://github.com/unit-mesh/autodev-worker/commit/5172897))
+
+### 🩹 Fixes
+
+- resolve pnpm installation issue in GitHub Actions workflow ([ab1c6c6](https://github.com/unit-mesh/autodev-worker/commit/ab1c6c6))
+- build workspace dependencies in correct order ([5513a3d](https://github.com/unit-mesh/autodev-worker/commit/5513a3d))
+- use pnpm filter build order matching ci-cd.yml ([c6f3b32](https://github.com/unit-mesh/autodev-worker/commit/c6f3b32))
+- resolve runtime dependency issues for github-agent-action ([15823ed](https://github.com/unit-mesh/autodev-worker/commit/15823ed))
+- add LLM API key inputs to GitHub Action ([9ee2811](https://github.com/unit-mesh/autodev-worker/commit/9ee2811))
+- refactor IssueAnalyzer to directly use github-agent logic ([e69ec9f](https://github.com/unit-mesh/autodev-worker/commit/e69ec9f))
+- use actual agent analysis text in GitHub comments ([9f9ec22](https://github.com/unit-mesh/autodev-worker/commit/9f9ec22))
+- use actual github-agent modules instead of reimplementing analysis ([96c2320](https://github.com/unit-mesh/autodev-worker/commit/96c2320))
+- bump version to 0.1.2 in package.json ([c4f2dad](https://github.com/unit-mesh/autodev-worker/commit/c4f2dad))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.4.3 (2025-06-09)
 
 This was a version bump only, there were no code changes.

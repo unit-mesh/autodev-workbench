@@ -1,6 +1,6 @@
 {
   "name": "@autodev/github-agent",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "AutoDev GitHub Issue Agent MCP Server - Analyze GitHub issues with code context",
   "main": "dist/index.js",
   "bin": {
