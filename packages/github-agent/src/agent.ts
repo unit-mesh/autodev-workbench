@@ -129,7 +129,6 @@ export class AIAgent {
     this.registerToolHandlers();
 
     this.log('AI Agent initialized with LLM provider:', this.llmConfig.providerName);
-    this.log('Available tools:', AUTODEV_REMOTE_TOOLS.map(t => t.name));
     this.log('Total enhanced tools loaded:', AUTODEV_REMOTE_TOOLS.length);
     this.log('Configuration:', {
       maxToolRounds: this.config.maxToolRounds,
@@ -160,8 +159,6 @@ export class AIAgent {
         console.warn(`Failed to register tool:`, error);
       }
     });
-
-    this.log(`Registered ${this.toolHandlers.size} tool handlers:`, Array.from(this.toolHandlers.keys()));
   }
 
   /**
