@@ -7,11 +7,6 @@ const { AIAgent } = require('../dist/agent.js');
 const readline = require('readline');
 const path = require('path');
 
-/**
- * Autonomous AI Agent CLI
- * Interactive command-line interface for the AI Agent
- */
-
 async function main() {
   console.log('🤖 AutoDev AI Agent Starting...\n');
 
@@ -20,7 +15,6 @@ async function main() {
   const config = parseArgs(args);
 
   try {
-    // Initialize AI Agent
     const agent = new AIAgent({
       workspacePath: config.workspacePath || process.cwd(),
       githubToken: process.env.GITHUB_TOKEN,
