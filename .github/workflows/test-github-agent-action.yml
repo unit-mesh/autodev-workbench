@@ -1,4 +1,4 @@
-name: Test GitHub Agent Action
+name: Test GitHub AI Agent
 
 on:
   issues:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # 允许手动触发测试
 
 jobs:
-  test-issue-analysis:
+  test-ai-agent-analysis:
     runs-on: ubuntu-latest
     if: github.event_name == 'issues'
 
@@ -38,20 +38,29 @@ jobs:
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
           pnpm --filter github-agent build
-          pnpm --filter github-agent-action build
 
-      - name: Test GitHub Agent Action
-        uses: ./packages/github-agent-action
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          workspace-path: ${{ github.workspace }}
-          analysis-depth: medium
-          auto-comment: true
-          auto-label: true
-          exclude-labels: 'wontfix,duplicate'
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          deepseek-token: ${{ secrets.DEEPSEEK_TOKEN }}
-          glm-token: ${{ secrets.GLM_TOKEN }}
+      - name: Test GitHub Agent with AI Agent CLI
+        run: |
+          cd packages/github-agent
+          echo "🤖 Testing AI Agent CLI with GitHub issue analysis"
+          echo "📋 Issue: ${{ github.event.issue.number || 'workflow_dispatch' }}"
+          echo "🎯 Repository: ${{ github.repository }}"
+          echo ""
+
+          # Test AI Agent with issue analysis command
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+              --command "Analyze GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }}"
+          else
+            echo "🧪 Testing AI Agent in interactive mode (single command)"
+            node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+              --command "Show available tools and capabilities"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
 
   manual-test:
     runs-on: ubuntu-latest
@@ -82,23 +91,18 @@ jobs:
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
           pnpm --filter github-agent build
-          pnpm --filter github-agent-action build
       
       - name: Manual Test - Analyze Issue #98 (Architecture Request)
         run: |
-          cd packages/github-agent-action
+          cd packages/github-agent
           # 分析 issue #98 - 测试 LLM 增强的架构分析功能
-          echo "🧪 Testing LLM-enhanced analysis on issue #98"
+          echo "🧪 Testing AI Agent with LLM-enhanced analysis on issue #98"
           echo "📋 Issue: [TEST] generate project architecture"
-          echo "🎯 Expected: Smart label suggestions, contextual file analysis"
+          echo "🎯 Expected: Smart analysis, contextual understanding, actionable insights"
           echo ""
 
-          node bin/action.js analyze \
-            --owner unit-mesh \
-            --repo autodev-workbench \
-            --issue 98 \
-            --depth medium \
-            --verbose
+          node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+            --command "Analyze GitHub issue #98 in unit-mesh/autodev-workbench repository. Focus on architecture analysis and provide detailed insights about the project structure and recommendations."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -106,13 +110,18 @@ jobs:
           GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
           VERBOSE_LLM_LOGS: 'true'  # 启用详细的 LLM 日志
 
-      - name: Test LLM Enhancement Demo
+      - name: Test AI Agent Capabilities Demo
         run: |
-          echo "🎭 Running LLM Enhancement Demonstration"
-          node test-llm-analysis.js
+          cd packages/github-agent
+          echo "🎭 Running AI Agent Capabilities Demonstration"
           echo ""
-          echo "🎯 Running Simulated LLM Analysis"
-          node simulate-llm-analysis.js
+          echo "🔧 Testing tool availability and LLM integration"
+          node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+            --command "List all available tools and explain their capabilities"
+          echo ""
+          echo "🎯 Testing code analysis capabilities"
+          node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+            --command "Analyze the codebase structure and identify key components in this repository"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
