@@ -1,6 +1,6 @@
 {
   "name": "@autodev/context-mcp",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Model Context Protocol implementation for AutoDev",
   "main": "dist/index.js",
   "bin": {
