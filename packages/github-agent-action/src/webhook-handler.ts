@@ -37,10 +37,10 @@ export class WebhookHandler {
     // Handle issue opened events
     this.webhooks.on('issues.opened', async ({ payload }) => {
       console.log(`📝 Issue opened: #${payload.issue.number} in ${payload.repository.full_name}`);
-      
+
       try {
         await this.handleIssueEvent(payload as WebhookPayload, 'opened');
-        
+
         if (this.options.onIssueOpened) {
           await this.options.onIssueOpened(payload as WebhookPayload);
         }
@@ -52,10 +52,10 @@ export class WebhookHandler {
     // Handle issue edited events
     this.webhooks.on('issues.edited', async ({ payload }) => {
       console.log(`✏️ Issue edited: #${payload.issue.number} in ${payload.repository.full_name}`);
-      
+
       try {
         await this.handleIssueEvent(payload as WebhookPayload, 'edited');
-        
+
         if (this.options.onIssueEdited) {
           await this.options.onIssueEdited(payload as WebhookPayload);
         }
@@ -67,7 +67,7 @@ export class WebhookHandler {
     // Handle issue labeled events
     this.webhooks.on('issues.labeled', async ({ payload }) => {
       console.log(`🏷️ Issue labeled: #${payload.issue.number} in ${payload.repository.full_name}`);
-      
+
       try {
         if (this.options.onIssueLabeled) {
           await this.options.onIssueLabeled(payload as WebhookPayload);
@@ -80,7 +80,7 @@ export class WebhookHandler {
     // Handle issue assigned events
     this.webhooks.on('issues.assigned', async ({ payload }) => {
       console.log(`👤 Issue assigned: #${payload.issue.number} in ${payload.repository.full_name}`);
-      
+
       try {
         if (this.options.onIssueAssigned) {
           await this.options.onIssueAssigned(payload as WebhookPayload);
@@ -102,8 +102,8 @@ export class WebhookHandler {
   private setupRoutes(): void {
     // Health check endpoint
     this.app.get('/health', (req: Request, res: Response) => {
-      res.json({ 
-        status: 'healthy', 
+      res.json({
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'github-agent-action-webhook'
       });
@@ -122,7 +122,7 @@ export class WebhookHandler {
         res.status(200).json({ message: 'Webhook processed successfully' });
       } catch (error) {
         console.error('Webhook processing error:', error);
-        res.status(400).json({ 
+        res.status(400).json({
           error: 'Webhook processing failed',
           message: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -199,21 +199,21 @@ export class WebhookHandler {
 
     try {
       console.log(`🚀 Processing issue #${context.issueNumber} in ${context.owner}/${context.repo}`);
-      
+
       const result = await this.actionService.processIssueWithContext(context);
-      
+
       if (result.success) {
         console.log(`✅ Successfully processed issue #${context.issueNumber}`);
-        
+
         // Log analysis results
         if (result.analysisResult) {
           console.log(`📊 Analysis completed in ${result.executionTime}ms`);
         }
-        
+
         if (result.commentAdded) {
           console.log(`💬 Comment added to issue #${context.issueNumber}`);
         }
-        
+
         if (result.labelsAdded && result.labelsAdded.length > 0) {
           console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
         }
@@ -230,7 +230,7 @@ export class WebhookHandler {
    */
   private shouldProcessIssue(payload: WebhookPayload, eventType: string): boolean {
     const config = this.getActionConfig();
-    
+
     // Check if event type is in trigger events
     if (config.triggerEvents && !config.triggerEvents.includes(eventType)) {
       return false;
@@ -279,7 +279,7 @@ export class WebhookHandler {
    */
   async start(): Promise<void> {
     const port = this.options.port || 3000;
-    
+
     return new Promise((resolve) => {
       this.app.listen(port, () => {
         console.log(`🚀 GitHub Agent Action webhook server started on port ${port}`);

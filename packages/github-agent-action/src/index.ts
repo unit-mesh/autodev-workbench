@@ -1,6 +1,6 @@
 /**
- * AutoDev GitHub Agent Action
- * 
+ * AutoDev Remote Agent
+ *
  * Automated GitHub issue analysis using AI-powered code analysis.
  * This package provides both GitHub Actions integration and standalone webhook server capabilities.
  */
@@ -51,11 +51,11 @@ export async function run(): Promise<void> {
 
     // Get context from GitHub Actions
     const context = github.context;
-    
+
     // Check if this is an issue event
     if (context.eventName === 'issues') {
       const payload = context.payload;
-      
+
       if (!payload.issue) {
         throw new Error('No issue found in event payload');
       }
@@ -72,25 +72,34 @@ export async function run(): Promise<void> {
 
       if (result.success) {
         console.log('✅ Issue analysis completed successfully');
-        
+
         if (result.commentAdded) {
           console.log('💬 Analysis comment added to issue');
         }
-        
+
         if (result.labelsAdded && result.labelsAdded.length > 0) {
           console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
         }
+
+        // Explicitly exit after successful completion to prevent hanging
+        console.log('🏁 Action completed successfully, exiting...');
+        process.exit(0);
       } else {
         throw new Error(result.error || 'Issue analysis failed');
       }
     } else {
       console.log(`ℹ️ Event type '${context.eventName}' is not supported. Only 'issues' events are processed.`);
+      // Exit gracefully for unsupported events
+      console.log('🏁 Action completed, exiting...');
+      process.exit(0);
     }
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('❌ Action failed:', errorMessage);
     core.setFailed(errorMessage);
+    // Exit with error code for failures
+    process.exit(1);
   }
 }
 
@@ -214,7 +223,7 @@ if (require.main === module) {
     // Standalone mode - start webhook server
     const port = parseInt(process.env.PORT || '3000');
     console.log(`🚀 Starting in standalone mode on port ${port}`);
-    
+
     startWebhookServer({ port }).catch(error => {
       console.error('Failed to start webhook server:', error);
       process.exit(1);

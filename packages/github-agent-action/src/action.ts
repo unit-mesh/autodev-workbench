@@ -20,7 +20,7 @@ export class GitHubActionService {
   constructor(config?: Partial<ActionConfig>) {
     // Get configuration from GitHub Actions inputs or environment
     this.config = this.loadConfig(config);
-    
+
     // Initialize Octokit with GitHub token
     this.octokit = new Octokit({
       auth: this.config.githubToken
@@ -46,6 +46,12 @@ export class GitHubActionService {
       triggerEvents: this.getInput('trigger-events')?.split(',') || ['opened', 'edited', 'reopened'],
       excludeLabels: this.getInput('exclude-labels')?.split(',').filter(Boolean) || [],
       includeLabels: this.getInput('include-labels')?.split(',').filter(Boolean) || [],
+      // File filtering configuration with sensible defaults
+      includeConfigFiles: this.getBooleanInput('include-config-files') ?? true,
+      includeTestFiles: this.getBooleanInput('include-test-files') ?? true,
+      includePatterns: this.getInput('include-patterns')?.split(',').filter(Boolean) || [],
+      excludePatterns: this.getInput('exclude-patterns')?.split(',').filter(Boolean) || [],
+      forceIncludeFiles: this.getInput('force-include-files')?.split(',').filter(Boolean) || [],
       ...overrides
     };
 
@@ -132,7 +138,13 @@ export class GitHubActionService {
         depth: context.config.analysisDepth,
         includeCodeSearch: true,
         includeSymbolAnalysis: true,
-        timeout: 120000
+        timeout: 120000,
+        // File filtering options
+        includeConfigFiles: context.config.includeConfigFiles,
+        includeTestFiles: context.config.includeTestFiles,
+        includePatterns: context.config.includePatterns,
+        excludePatterns: context.config.excludePatterns,
+        forceIncludeFiles: context.config.forceIncludeFiles
       };
 
       // Perform analysis
@@ -252,15 +264,15 @@ export class GitHubActionService {
     try {
       core.setOutput('success', result.success.toString());
       core.setOutput('comment-added', (result.commentAdded || false).toString());
-      
+
       if (result.labelsAdded) {
         core.setOutput('labels-added', result.labelsAdded.join(','));
       }
-      
+
       if (result.executionTime) {
         core.setOutput('execution-time', result.executionTime.toString());
       }
-      
+
       if (result.error) {
         core.setOutput('error', result.error);
       }

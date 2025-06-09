@@ -18,6 +18,12 @@ export interface ActionConfig {
   triggerEvents?: string[];
   excludeLabels?: string[];
   includeLabels?: string[];
+  // File filtering configuration
+  includeConfigFiles?: boolean;
+  includeTestFiles?: boolean;
+  includePatterns?: string[];
+  excludePatterns?: string[];
+  forceIncludeFiles?: string[];
 }
 
 export interface WebhookPayload {
@@ -70,6 +76,35 @@ export interface AnalysisOptions {
   includeSymbolAnalysis?: boolean;
   maxFiles?: number;
   timeout?: number;
+  // File filtering options
+  includeConfigFiles?: boolean;
+  includeTestFiles?: boolean;
+  includePatterns?: string[];
+  excludePatterns?: string[];
+  forceIncludeFiles?: string[];
+}
+
+export interface AnalysisProcessInfo {
+  filesScanned: number;
+  filesAnalyzed: number;
+  filesFiltered: number;
+  filteredFiles: Array<{
+    path: string;
+    reason: string;
+    relevanceScore?: number;
+  }>;
+  analysisSteps: Array<{
+    step: string;
+    status: 'completed' | 'failed' | 'skipped';
+    duration: number;
+    details?: string;
+  }>;
+  llmCalls: Array<{
+    purpose: string;
+    success: boolean;
+    duration: number;
+    error?: string;
+  }>;
 }
 
 export interface ActionResult {
@@ -79,6 +114,7 @@ export interface ActionResult {
   labelsAdded?: string[];
   error?: string;
   executionTime?: number;
+  processInfo?: AnalysisProcessInfo;
 }
 
 
