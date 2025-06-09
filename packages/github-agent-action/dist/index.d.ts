@@ -135,7 +135,16 @@ interface ProcessIssueOptions {
 declare class GitHubActionService {
     private octokit;
     private config;
+    private cleanupHandlers;
     constructor(config?: Partial<ActionConfig>);
+    /**
+     * Add a cleanup handler to be called when the service is destroyed
+     */
+    addCleanupHandler(handler: () => void): void;
+    /**
+     * Clean up resources and connections
+     */
+    cleanup(): void;
     /**
      * Load configuration from GitHub Actions inputs or environment
      */
@@ -194,6 +203,10 @@ declare class IssueAnalyzer {
     private context;
     private labelConfig;
     constructor(context: ActionContext);
+    /**
+     * Clean up resources used by the analyzer
+     */
+    cleanup(): void;
     /**
      * Analyze an issue using the same logic as analyze-issue.js
      */

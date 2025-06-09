@@ -268,6 +268,22 @@ export class ContextAnalyzer {
   }
 
   /**
+   * Clean up resources and timers
+   */
+  cleanup(): void {
+    try {
+      // Clean up cache manager if it has a destroy method
+      if (this.cacheManager && typeof (this.cacheManager as any).destroy === 'function') {
+        (this.cacheManager as any).destroy();
+      }
+
+      console.log('🧹 ContextAnalyzer resources cleaned up');
+    } catch (error) {
+      console.warn('Warning: ContextAnalyzer cleanup failed:', error);
+    }
+  }
+
+  /**
    * Factory method to create analyzer with specific configuration
    */
   static async create(
@@ -285,10 +301,10 @@ export class ContextAnalyzer {
       searchType: config.searchType || 'hybrid',
       llmService: config.llmService
     });
-    
+
     // Ensure initialization is complete
     await analyzer.ensureInitialized();
-    
+
     return analyzer;
   }
 

@@ -24,6 +24,22 @@ class IssueAnalyzer {
         };
     }
     /**
+     * Clean up resources used by the analyzer
+     */
+    cleanup() {
+        try {
+            // Clean up context analyzer resources if it has a cleanup method
+            if (this.contextAnalyzer && typeof this.contextAnalyzer.cleanup === 'function') {
+                this.contextAnalyzer.cleanup();
+            }
+            // Clean up any other resources
+            console.log('🧹 IssueAnalyzer resources cleaned up');
+        }
+        catch (error) {
+            console.warn('Warning: IssueAnalyzer cleanup failed:', error);
+        }
+    }
+    /**
      * Analyze an issue using the same logic as analyze-issue.js
      */
     async analyzeIssue(options = {}) {
@@ -305,6 +321,7 @@ ${analysisResult.text || 'Analysis completed successfully.'}
 
 class GitHubActionService {
     constructor(config) {
+        this.cleanupHandlers = [];
         // Get configuration from GitHub Actions inputs or environment
         this.config = this.loadConfig(config);
         // Initialize Octokit with GitHub token
@@ -315,6 +332,28 @@ class GitHubActionService {
         console.log(`📁 Workspace: ${this.config.workspacePath}`);
         console.log(`🤖 Auto Comment: ${this.config.autoComment}`);
         console.log(`🏷️ Auto Label: ${this.config.autoLabel}`);
+    }
+    /**
+     * Add a cleanup handler to be called when the service is destroyed
+     */
+    addCleanupHandler(handler) {
+        this.cleanupHandlers.push(handler);
+    }
+    /**
+     * Clean up resources and connections
+     */
+    cleanup() {
+        console.log('🧹 Cleaning up GitHub Action Service resources...');
+        // Call all registered cleanup handlers
+        for (const handler of this.cleanupHandlers) {
+            try {
+                handler();
+            }
+            catch (error) {
+                console.warn('Warning: Cleanup handler failed:', error);
+            }
+        }
+        this.cleanupHandlers = [];
     }
     /**
      * Load configuration from GitHub Actions inputs or environment
@@ -401,6 +440,8 @@ class GitHubActionService {
             await this.validateIssue(context);
             // Create issue analyzer
             const analyzer = new IssueAnalyzer(context);
+            // Register analyzer cleanup
+            this.addCleanupHandler(() => analyzer.cleanup());
             // Configure analysis options
             const analysisOptions = {
                 depth: context.config.analysisDepth,
@@ -857,6 +898,13 @@ async function run() {
                 if (result.labelsAdded && result.labelsAdded.length > 0) {
                     console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
                 }
+                // Clean up resources before exiting
+                actionService.cleanup();
+                // Force exit after a short delay to ensure cleanup completes
+                setTimeout(() => {
+                    console.log('🏁 Action completed successfully, exiting...');
+                    process.exit(0);
+                }, 100);
             }
             else {
                 throw new Error(result.error || 'Issue analysis failed');
@@ -864,12 +912,29 @@ async function run() {
         }
         else {
             console.log(`ℹ️ Event type '${context.eventName}' is not supported. Only 'issues' events are processed.`);
+            // Clean up resources before exiting
+            actionService.cleanup();
+            // Force exit after a short delay for unsupported events
+            setTimeout(() => {
+                console.log('🏁 Action completed (no processing needed), exiting...');
+                process.exit(0);
+            }, 100);
         }
     }
     catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error('❌ Action failed:', errorMessage);
         core.setFailed(errorMessage);
+        // Try to cleanup even on error
+        try {
+            const actionService = new GitHubActionService();
+            actionService.cleanup();
+        }
+        catch (cleanupError) {
+            console.warn('Warning: Cleanup failed during error handling:', cleanupError);
+        }
+        // Explicitly exit with error code
+        process.exit(1);
     }
 }
 /**
@@ -902,14 +967,24 @@ async function analyzeIssue(options) {
         githubToken: options.githubToken || process.env.GITHUB_TOKEN,
         workspacePath: options.workspacePath || process.cwd()
     });
-    return actionService.processIssue({
-        owner: options.owner,
-        repo: options.repo,
-        issueNumber: options.issueNumber,
-        depth: options.depth,
-        autoComment: options.autoComment,
-        autoLabel: options.autoLabel
-    });
+    try {
+        const result = await actionService.processIssue({
+            owner: options.owner,
+            repo: options.repo,
+            issueNumber: options.issueNumber,
+            depth: options.depth,
+            autoComment: options.autoComment,
+            autoLabel: options.autoLabel
+        });
+        // Clean up resources before returning
+        actionService.cleanup();
+        return result;
+    }
+    catch (error) {
+        // Clean up resources even on error
+        actionService.cleanup();
+        throw error;
+    }
 }
 /**
  * Utility function to validate configuration

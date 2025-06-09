@@ -16,11 +16,12 @@ export interface ProcessIssueOptions {
 export class GitHubActionService {
   private octokit: Octokit;
   private config: ActionConfig;
+  private cleanupHandlers: (() => void)[] = [];
 
   constructor(config?: Partial<ActionConfig>) {
     // Get configuration from GitHub Actions inputs or environment
     this.config = this.loadConfig(config);
-    
+
     // Initialize Octokit with GitHub token
     this.octokit = new Octokit({
       auth: this.config.githubToken
@@ -30,6 +31,31 @@ export class GitHubActionService {
     console.log(`📁 Workspace: ${this.config.workspacePath}`);
     console.log(`🤖 Auto Comment: ${this.config.autoComment}`);
     console.log(`🏷️ Auto Label: ${this.config.autoLabel}`);
+  }
+
+  /**
+   * Add a cleanup handler to be called when the service is destroyed
+   */
+  addCleanupHandler(handler: () => void): void {
+    this.cleanupHandlers.push(handler);
+  }
+
+  /**
+   * Clean up resources and connections
+   */
+  cleanup(): void {
+    console.log('🧹 Cleaning up GitHub Action Service resources...');
+
+    // Call all registered cleanup handlers
+    for (const handler of this.cleanupHandlers) {
+      try {
+        handler();
+      } catch (error) {
+        console.warn('Warning: Cleanup handler failed:', error);
+      }
+    }
+
+    this.cleanupHandlers = [];
   }
 
   /**
@@ -126,6 +152,9 @@ export class GitHubActionService {
 
       // Create issue analyzer
       const analyzer = new IssueAnalyzer(context);
+
+      // Register analyzer cleanup
+      this.addCleanupHandler(() => analyzer.cleanup());
 
       // Configure analysis options
       const analysisOptions: AnalysisOptions = {
