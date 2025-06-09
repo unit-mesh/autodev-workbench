@@ -52,11 +52,11 @@ jobs:
           set -e
           trap 'echo "❌ Process interrupted or timed out"; exit 1' INT TERM
 
-          # Test AI Agent with issue analysis command
+          # Test AI Agent with issue analysis and comment posting
           if [ "${{ github.event_name }}" = "issues" ]; then
-            echo "🔍 Analyzing GitHub issue #${{ github.event.issue.number }}"
+            echo "🔍 Analyzing GitHub issue #${{ github.event.issue.number }} and posting results"
             timeout 480s node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
-              --command "Analyze GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }}" || {
+              --command "Analyze GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }} and post the analysis results as a comment to the issue. Focus on providing detailed insights and actionable recommendations." || {
               echo "⚠️ Analysis timed out or failed, but continuing..."
               exit 0
             }
@@ -122,7 +122,7 @@ jobs:
           trap 'echo "❌ Analysis interrupted or timed out"; exit 1' INT TERM
 
           timeout 420s node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
-            --command "Analyze GitHub issue #98 in unit-mesh/autodev-workbench repository. Focus on architecture analysis and provide detailed insights about the project structure and recommendations." || {
+            --command "Analyze GitHub issue #98 in unit-mesh/autodev-workbench repository and post the analysis results as a comment to the issue. Focus on architecture analysis and provide detailed insights about the project structure and recommendations." || {
             echo "⚠️ Issue #98 analysis timed out or failed, but continuing..."
             exit 0
           }
