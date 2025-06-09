@@ -168,26 +168,102 @@ export const installListDirectoryTool: ToolLike = (installer) => {
         }
       });
 
-      const result = {
-        directory_path: directory_path,
-        full_path: resolvedPath,
-        total_items: files.length,
-        directories: files.filter(f => f.type === "directory").length,
-        files: files.filter(f => f.type === "file").length,
-        symlinks: files.filter(f => f.type === "symlink").length,
-        recursive: recursive,
-        max_depth: recursive ? max_depth : 0,
-        include_hidden: include_hidden,
-        file_types_filter: file_types || null,
-        sort_by: sort_by,
-        items: files
+      // Format output similar to Linux ls -la
+      const formatFileSize = (size?: number): string => {
+        if (!size) return "     -";
+        if (size < 1024) return `${size.toString().padStart(6)}`;
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1).padStart(5)}K`;
+        if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1).padStart(5)}M`;
+        return `${(size / (1024 * 1024 * 1024)).toFixed(1).padStart(5)}G`;
       };
+
+      const formatPermissions = (mode?: string): string => {
+        if (!mode) return "----------";
+        const octal = parseInt(mode, 8);
+        const type = files.find(f => f.permissions === mode)?.type;
+        let result = type === "directory" ? "d" : type === "symlink" ? "l" : "-";
+
+        // Owner permissions
+        result += (octal & 0o400) ? "r" : "-";
+        result += (octal & 0o200) ? "w" : "-";
+        result += (octal & 0o100) ? "x" : "-";
+
+        // Group permissions
+        result += (octal & 0o040) ? "r" : "-";
+        result += (octal & 0o020) ? "w" : "-";
+        result += (octal & 0o010) ? "x" : "-";
+
+        // Other permissions
+        result += (octal & 0o004) ? "r" : "-";
+        result += (octal & 0o002) ? "w" : "-";
+        result += (octal & 0o001) ? "x" : "-";
+
+        return result;
+      };
+
+      const formatDate = (dateStr?: string): string => {
+        if (!dateStr) return "                ";
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 180) {
+          // Recent files: show month, day, time
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit'
+          }) + ' ' + date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+        } else {
+          // Older files: show month, day, year
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+          });
+        }
+      };
+
+      // Build the output string
+      let output = `Directory: ${resolvedPath}\n`;
+      output += `Total: ${files.length} items (${files.filter(f => f.type === "directory").length} dirs, ${files.filter(f => f.type === "file").length} files`;
+      if (files.filter(f => f.type === "symlink").length > 0) {
+        output += `, ${files.filter(f => f.type === "symlink").length} symlinks`;
+      }
+      output += `)\n\n`;
+
+      if (include_stats) {
+        // Header similar to ls -la
+        output += "Permissions  Size   Modified         Name\n";
+        output += "----------  ------  ---------------  ----\n";
+
+        for (const file of files) {
+          const permissions = formatPermissions(file.permissions);
+          const size = formatFileSize(file.size);
+          const modified = formatDate(file.modified);
+          const name = file.type === "directory" ? `${file.name}/` : file.name;
+          const indent = "  ".repeat(file.depth);
+
+          output += `${permissions}  ${size}  ${modified}  ${indent}${name}\n`;
+        }
+      } else {
+        // Simple format without stats
+        for (const file of files) {
+          const name = file.type === "directory" ? `${file.name}/` : file.name;
+          const indent = "  ".repeat(file.depth);
+          output += `${indent}${name}\n`;
+        }
+      }
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2)
+            text: output
           }
         ]
       };
