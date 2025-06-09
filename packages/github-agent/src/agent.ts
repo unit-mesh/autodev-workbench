@@ -197,7 +197,7 @@ export class AIAgent {
    * Process input with multi-round tool chaining capability
    */
   private async processInputWithToolChaining(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
-    let allToolResults: ToolResult[] = [];
+    const allToolResults: ToolResult[] = [];
     let currentRound = 1;
     let lastLLMResponse = '';
 
