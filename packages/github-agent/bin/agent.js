@@ -21,6 +21,9 @@ async function main() {
       verbose: config.verbose
     });
 
+    // Set global reference for cleanup
+    globalAgent = agent;
+
     const llmInfo = agent.getLLMInfo();
     console.log(`🧠 LLM Provider: ${llmInfo.provider} (${llmInfo.model})`);
     console.log(`🔧 Available Tools: ${agent.getAvailableTools().join(', ')}`);
@@ -41,15 +44,19 @@ async function main() {
 
   } catch (error) {
     console.error('❌ Failed to start AI Agent:', error.message);
-    
+
     if (error.message.includes('LLM provider')) {
       console.log('\n💡 Please set one of the following environment variables:');
       console.log('   - GLM_TOKEN (for 智谱AI)');
       console.log('   - DEEPSEEK_TOKEN (for DeepSeek)');
       console.log('   - OPENAI_API_KEY (for OpenAI)');
     }
-    
-    process.exit(1);
+
+    if (globalAgent) {
+      await cleanupAndExit(globalAgent, 1);
+    } else {
+      process.exit(1);
+    }
   }
 }
 
@@ -111,14 +118,55 @@ function parseArgs(args) {
  */
 async function processSingleCommand(agent, command) {
   console.log(`🎯 Processing command: ${command}\n`);
-  
-  const response = await agent.processInput(command);
-  const formattedResponse = AIAgent.formatResponse(response);
-  
-  console.log(formattedResponse);
-  
-  if (!response.success) {
-    process.exit(1);
+
+  try {
+    const response = await agent.processInput(command);
+    const formattedResponse = AIAgent.formatResponse(response);
+
+    console.log(formattedResponse);
+
+    if (!response.success) {
+      console.error('❌ Command execution failed');
+      await cleanupAndExit(agent, 1);
+      return;
+    }
+
+    console.log('\n✅ Command completed successfully');
+    await cleanupAndExit(agent, 0);
+
+  } catch (error) {
+    console.error('❌ Error processing command:', error.message);
+    await cleanupAndExit(agent, 1);
+  }
+}
+
+/**
+ * Clean up resources and exit gracefully
+ */
+async function cleanupAndExit(agent, exitCode) {
+  try {
+    console.log('🧹 Cleaning up resources...');
+
+    // Clean up agent resources
+    if (agent && typeof agent.cleanup === 'function') {
+      await agent.cleanup();
+    }
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+
+    console.log('✅ Cleanup completed');
+
+    // Use setImmediate to ensure all async operations complete
+    setImmediate(() => {
+      process.exit(exitCode);
+    });
+
+  } catch (error) {
+    console.warn('⚠️ Warning during cleanup:', error.message);
+    process.exit(exitCode);
   }
 }
 
@@ -260,19 +308,59 @@ Just type your request in natural language!
 `);
 }
 
-// Handle uncaught errors
-process.on('uncaughtException', (error) => {
+// Global agent reference for cleanup
+let globalAgent = null;
+
+// Handle uncaught errors with cleanup
+process.on('uncaughtException', async (error) => {
   console.error('❌ Uncaught Exception:', error.message);
+  if (globalAgent) {
+    try {
+      await globalAgent.cleanup();
+    } catch (cleanupError) {
+      console.warn('⚠️ Error during emergency cleanup:', cleanupError.message);
+    }
+  }
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', async (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  if (globalAgent) {
+    try {
+      await globalAgent.cleanup();
+    } catch (cleanupError) {
+      console.warn('⚠️ Error during emergency cleanup:', cleanupError.message);
+    }
+  }
   process.exit(1);
+});
+
+// Handle graceful shutdown signals
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+  if (globalAgent) {
+    await cleanupAndExit(globalAgent, 0);
+  } else {
+    process.exit(0);
+  }
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+  if (globalAgent) {
+    await cleanupAndExit(globalAgent, 0);
+  } else {
+    process.exit(0);
+  }
 });
 
 // Start the agent
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('❌ Failed to start AI Agent:', error);
-  process.exit(1);
+  if (globalAgent) {
+    await cleanupAndExit(globalAgent, 1);
+  } else {
+    process.exit(1);
+  }
 });
