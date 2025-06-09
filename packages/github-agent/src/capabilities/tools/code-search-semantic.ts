@@ -1,6 +1,6 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { ContextAnalyzer } from "../../services/core/context-analyzer";
+import { ContextAnalyzer } from "../../services/core";
 
 export const installCodebaseSearchTool: ToolLike = (installer) => {
   installer("codebase-search", "Semantic search across the codebase using AI-powered analysis", {
@@ -92,8 +92,8 @@ export const installCodebaseSearchTool: ToolLike = (installer) => {
             type: symbol.type,
             location: symbol.location,
             description: symbol.description,
-            file_path: symbol.location.split(':')[0],
-            line_number: parseInt(symbol.location.split(':')[1]) || null,
+            file_path: symbol.location?.file.split(':')[0],
+            line_number: symbol.location?.line,
             why_relevant: `This ${symbol.type.toLowerCase()} appears to be semantically related to your search query.`
           })) : [],
           relevant_apis: include_apis ? searchResults.apis.slice(0, Math.min(maxApis, Math.floor(max_results / 3))).map(api => ({
