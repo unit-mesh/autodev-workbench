@@ -1,24 +1,17 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/rest';
-import { AIAgent } from '@autodev/github-agent';
+import { GitHubService, ContextAnalyzer, AnalysisReportGenerator, fetchUrlsFromIssue } from '@autodev/github-agent';
 import express from 'express';
 import { Webhooks } from '@octokit/webhooks';
 import * as github from '@actions/github';
 
 class IssueAnalyzer {
-    constructor(context, agentConfig) {
+    constructor(context) {
         this.context = context;
-        // Initialize AI Agent with enhanced configuration matching github-agent behavior
-        const enhancedConfig = {
-            workspacePath: context.workspacePath,
-            githubToken: context.config.githubToken,
-            verbose: true,
-            maxToolRounds: 3,
-            enableToolChaining: true,
-            toolTimeout: 120000,
-            ...agentConfig
-        };
-        this.agent = new AIAgent(enhancedConfig);
+        // Initialize services using the same pattern as analyze-issue.js
+        this.githubService = new GitHubService(context.config.githubToken);
+        this.contextAnalyzer = new ContextAnalyzer(context.workspacePath);
+        this.reportGenerator = new AnalysisReportGenerator(context.config.githubToken);
         // Default comment template
         this.commentTemplate = {
             header: '## 🤖 Automated Issue Analysis',
@@ -37,38 +30,52 @@ class IssueAnalyzer {
         };
     }
     /**
-     * Analyze an issue using the same logic as github-agent
+     * Analyze an issue using the same logic as analyze-issue.js
      */
     async analyzeIssue(options = {}) {
         const startTime = Date.now();
         try {
             console.log(`🔍 Starting analysis for issue #${this.context.issueNumber} in ${this.context.owner}/${this.context.repo}`);
-            // Use the same prompt format as the original github-agent
-            const analysisPrompt = `Analyze GitHub issue #${this.context.issueNumber} in repository ${this.context.owner}/${this.context.repo}. Please provide a comprehensive analysis including code search, root cause analysis, and actionable recommendations.`;
-            // Execute analysis using AI Agent with the same context format as github-agent
-            const agentResponse = await this.agent.processInput(analysisPrompt, {
-                owner: this.context.owner,
-                repo: this.context.repo,
-                issue_number: this.context.issueNumber,
-                workspace_path: this.context.workspacePath,
-                analysis_depth: options.depth || 'medium'
-            });
-            if (!agentResponse.success) {
-                throw new Error(`Analysis failed: ${agentResponse.error}`);
+            // Step 1: Get the issue (same as analyze-issue.js line 327)
+            const issue = await this.githubService.getIssue(this.context.owner, this.context.repo, this.context.issueNumber);
+            console.log(`📋 Issue: "${issue.title}"`);
+            // Step 2: Fetch URL content if enabled (same as analyze-issue.js line 360)
+            let urlContent = [];
+            if (options.includeCodeSearch !== false && issue.body) {
+                try {
+                    urlContent = await fetchUrlsFromIssue(issue.body, 10000);
+                    console.log(`🔗 Fetched content from ${urlContent.length} URLs`);
+                }
+                catch (error) {
+                    console.warn('URL fetching failed:', error);
+                }
             }
-            // Use the agent's response directly instead of generating our own report
+            // Step 3: Enhance issue with URL content (same as analyze-issue.js line 384)
+            const enhancedIssue = {
+                ...issue,
+                urlContent: urlContent
+            };
+            // Step 4: Perform the analysis (same as analyze-issue.js line 391)
+            const analysisResult = await this.contextAnalyzer.analyzeIssue(enhancedIssue);
+            // Step 5: Generate comprehensive report (same as analyze-issue.js line 408)
+            const { report } = await this.reportGenerator.generateAndUploadReport(this.context.owner, this.context.repo, this.context.issueNumber, analysisResult, {
+                uploadToGitHub: false, // We'll handle comment separately
+                language: 'en',
+                includeFileContent: options.includeCodeSearch !== false,
+                maxFiles: 10
+            });
+            // Use the generated report as our analysis result
             const result = {
                 success: true,
                 analysisResult: {
-                    text: agentResponse.text,
-                    toolResults: agentResponse.toolResults,
-                    totalRounds: agentResponse.totalRounds,
-                    executionTime: agentResponse.executionTime
+                    text: report, // This is the detailed analysis text
+                    analysisResult: analysisResult,
+                    executionTime: Date.now() - startTime
                 },
                 executionTime: Date.now() - startTime
             };
-            // Generate labels based on the agent's analysis
-            const recommendedLabels = this.extractLabelsFromAnalysis(agentResponse.text);
+            // Generate labels based on the analysis
+            const recommendedLabels = this.extractLabelsFromAnalysis(report);
             result.labelsAdded = recommendedLabels;
             console.log(`✅ Analysis completed in ${result.executionTime}ms`);
             return result;

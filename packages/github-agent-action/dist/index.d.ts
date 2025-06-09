@@ -1,7 +1,6 @@
-import { AgentConfig } from '@autodev/github-agent';
-export { CodeContext, GitHubAgentImplementation, GitHubConfig, GitHubIssue, IssueAnalysisResult } from '@autodev/github-agent';
 import express from 'express';
 import { Webhooks } from '@octokit/webhooks';
+export { CodeContext, GitHubAgentImplementation, GitHubConfig, GitHubIssue, IssueAnalysisResult } from '@autodev/github-agent';
 
 interface ActionConfig {
     githubToken: string;
@@ -198,13 +197,15 @@ declare class GitHubActionService {
 }
 
 declare class IssueAnalyzer {
-    private agent;
+    private githubService;
+    private contextAnalyzer;
+    private reportGenerator;
     private context;
     private commentTemplate;
     private labelConfig;
-    constructor(context: ActionContext, agentConfig?: AgentConfig);
+    constructor(context: ActionContext);
     /**
-     * Analyze an issue using the same logic as github-agent
+     * Analyze an issue using the same logic as analyze-issue.js
      */
     analyzeIssue(options?: AnalysisOptions): Promise<ActionResult>;
     /**
