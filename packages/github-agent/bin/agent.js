@@ -28,12 +28,7 @@ async function main() {
     console.log(`🧠 LLM Provider: ${llmInfo.provider} (${llmInfo.model})`);
     console.log(`🔧 Available Tools: ${agent.getAvailableTools().join(', ')}`);
     console.log(`📁 Workspace: ${config.workspacePath || process.cwd()}`);
-    console.log('\n' + '='.repeat(60));
-    console.log('💬 AI Agent is ready! Type your requests or "help" for commands.');
-    console.log('   Type "exit" or "quit" to stop the agent.');
-    console.log('='.repeat(60) + '\n');
 
-    // Handle single command mode
     if (config.command) {
       await processSingleCommand(agent, config.command);
       return;
