@@ -81,12 +81,7 @@ export interface ActionResult {
   executionTime?: number;
 }
 
-export interface CommentTemplate {
-  header?: string;
-  analysisSection?: string;
-  suggestionsSection?: string;
-  footer?: string;
-}
+
 
 export interface LabelConfig {
   bugLabel?: string;

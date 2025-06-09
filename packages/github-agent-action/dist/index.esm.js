@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import { Octokit } from '@octokit/rest';
-import { GitHubService, ContextAnalyzer, AnalysisReportGenerator, fetchUrlsFromIssue } from '@autodev/github-agent';
+import { GitHubService, ContextAnalyzer, AnalysisReportGenerator, LLMService, fetchUrlsFromIssue } from '@autodev/github-agent';
 import express from 'express';
 import { Webhooks } from '@octokit/webhooks';
 import * as github from '@actions/github';
@@ -12,13 +12,7 @@ class IssueAnalyzer {
         this.githubService = new GitHubService(context.config.githubToken);
         this.contextAnalyzer = new ContextAnalyzer(context.workspacePath);
         this.reportGenerator = new AnalysisReportGenerator(context.config.githubToken);
-        // Default comment template
-        this.commentTemplate = {
-            header: '## 🤖 Automated Issue Analysis',
-            analysisSection: '### Analysis Results',
-            suggestionsSection: '### Recommendations',
-            footer: '\n---\n*This analysis was generated automatically by AutoDev GitHub Agent*'
-        };
+        this.llmService = new LLMService();
         // Default label configuration
         this.labelConfig = {
             bugLabel: 'bug',
@@ -122,30 +116,184 @@ class IssueAnalyzer {
         return [...new Set(labels)];
     }
     /**
-     * Generate comment text for the issue using agent's response directly
+     * Generate comment text for the issue using LLM (similar to agent.ts approach)
      */
-    generateComment(analysisResult) {
-        if (!analysisResult || !analysisResult.text) {
-            return `${this.commentTemplate.header}
+    async generateComment(analysisResult) {
+        if (!analysisResult || !analysisResult.analysisResult) {
+            return `## 🤖 Automated Issue Analysis
 
 Analysis completed successfully. Please check the analysis results for detailed information.
 
-${this.commentTemplate.footer}`;
+---
+*This analysis was generated automatically by AutoDev GitHub Agent*`;
         }
-        // Use the agent's response directly as it already contains comprehensive analysis
-        return `${this.commentTemplate.header}
+        // Try to generate enhanced comment using LLM
+        try {
+            if (this.llmService.isAvailable()) {
+                const comment = await this.generateEnhancedComment(analysisResult);
+                return comment;
+            }
+            else {
+                console.log('LLM service not available, using enhanced formatting');
+                return this.generateEnhancedFormattedComment(analysisResult);
+            }
+        }
+        catch (error) {
+            console.warn('Failed to generate enhanced comment, falling back to basic format:', error);
+            // Fallback to using the report text directly
+            return `## 🤖 Automated Issue Analysis
 
-${analysisResult.text}
+${analysisResult.text || 'Analysis completed successfully.'}
 
-Analysis completed in: ${analysisResult.executionTime || 'N/A'}ms
+**Analysis completed in:** ${analysisResult.executionTime || 'N/A'}ms
 
-${this.commentTemplate.footer}`;
+---
+*This analysis was generated automatically by AutoDev GitHub Agent*`;
+        }
     }
     /**
-     * Update comment template
+     * Generate enhanced comment using LLM
      */
-    setCommentTemplate(template) {
-        this.commentTemplate = { ...this.commentTemplate, ...template };
+    async generateEnhancedComment(analysisResult) {
+        const issue = analysisResult.analysisResult?.issue;
+        const analysis = analysisResult.analysisResult;
+        if (!issue || !analysis) {
+            throw new Error('Missing issue or analysis data for LLM comment generation');
+        }
+        try {
+            // Create a mock issue for the LLM service
+            const mockIssue = {
+                ...issue,
+                number: this.context.issueNumber,
+                state: 'open',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                html_url: `https://github.com/${this.context.owner}/${this.context.repo}/issues/${this.context.issueNumber}`,
+                labels: issue.labels || []
+            };
+            // Use the existing LLM service to generate analysis report
+            const llmReport = await this.llmService.generateAnalysisReport(mockIssue, analysis);
+            // Format the LLM report as a GitHub comment
+            const comment = this.formatLLMReportAsComment(llmReport, analysisResult);
+            return comment;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.warn('LLM service failed:', errorMessage);
+            throw new Error(`LLM comment generation failed: ${errorMessage}`);
+        }
+    }
+    /**
+     * Generate enhanced formatted comment without LLM
+     */
+    generateEnhancedFormattedComment(analysisResult) {
+        const analysis = analysisResult.analysisResult;
+        const sections = [];
+        // Header
+        sections.push('## 🤖 Automated Issue Analysis');
+        sections.push('');
+        // Summary
+        if (analysis?.summary) {
+            sections.push('### 📋 Summary');
+            sections.push(analysis.summary);
+            sections.push('');
+        }
+        // Files analyzed
+        if (analysis?.relatedCode?.files && analysis.relatedCode.files.length > 0) {
+            sections.push('### 📁 Relevant Files');
+            const topFiles = analysis.relatedCode.files.slice(0, 5);
+            topFiles.forEach((file) => {
+                sections.push(`- \`${file.path}\``);
+            });
+            if (analysis.relatedCode.files.length > 5) {
+                sections.push(`- ... and ${analysis.relatedCode.files.length - 5} more files`);
+            }
+            sections.push('');
+        }
+        // Suggestions
+        if (analysis?.suggestions && analysis.suggestions.length > 0) {
+            sections.push('### 💡 Recommendations');
+            analysis.suggestions.forEach((suggestion, index) => {
+                const desc = suggestion.description || suggestion;
+                sections.push(`${index + 1}. ${desc}`);
+            });
+            sections.push('');
+        }
+        // Original report content if available
+        if (analysisResult.text) {
+            sections.push('### 📊 Detailed Analysis');
+            sections.push(analysisResult.text);
+            sections.push('');
+        }
+        // Execution info
+        if (analysisResult.executionTime) {
+            sections.push(`**Analysis completed in:** ${analysisResult.executionTime}ms`);
+            sections.push('');
+        }
+        // Footer
+        sections.push('---');
+        sections.push('*This analysis was generated automatically by [AutoDev GitHub Agent](https://github.com/unit-mesh/autodev-worker)*');
+        return sections.join('\n');
+    }
+    /**
+     * Format LLM analysis report as a GitHub comment
+     */
+    formatLLMReportAsComment(llmReport, analysisResult) {
+        const sections = [];
+        // Header
+        sections.push('## 🤖 Automated Issue Analysis');
+        sections.push('');
+        // Summary
+        if (llmReport.summary) {
+            sections.push('### 📋 Summary');
+            sections.push(llmReport.summary);
+            sections.push('');
+        }
+        // Current Issues
+        if (llmReport.current_issues && llmReport.current_issues.length > 0) {
+            sections.push('### 🔍 Issues Identified');
+            llmReport.current_issues.forEach((issue) => {
+                sections.push(`- ${issue}`);
+            });
+            sections.push('');
+        }
+        // Recommendations
+        if (llmReport.recommendations && llmReport.recommendations.length > 0) {
+            sections.push('### 💡 Recommendations');
+            llmReport.recommendations.forEach((rec, index) => {
+                sections.push(`${index + 1}. ${rec}`);
+            });
+            sections.push('');
+        }
+        // Detailed Plan
+        if (llmReport.detailed_plan && llmReport.detailed_plan.steps && llmReport.detailed_plan.steps.length > 0) {
+            sections.push('### 📝 Implementation Plan');
+            llmReport.detailed_plan.steps.forEach((step, index) => {
+                sections.push(`#### ${index + 1}. ${step.title}`);
+                if (step.description) {
+                    sections.push(step.description);
+                }
+                if (step.files_to_modify && step.files_to_modify.length > 0) {
+                    sections.push(`**Files to modify:** ${step.files_to_modify.join(', ')}`);
+                }
+                if (step.changes_needed && step.changes_needed.length > 0) {
+                    sections.push('**Changes needed:**');
+                    step.changes_needed.forEach((change) => {
+                        sections.push(`- ${change}`);
+                    });
+                }
+                sections.push('');
+            });
+        }
+        // Execution info
+        if (analysisResult.executionTime) {
+            sections.push(`**Analysis completed in:** ${analysisResult.executionTime}ms`);
+            sections.push('');
+        }
+        // Footer
+        sections.push('---');
+        sections.push('*This analysis was generated automatically by [AutoDev GitHub Agent](https://github.com/unit-mesh/autodev-worker)*');
+        return sections.join('\n');
     }
     /**
      * Update label configuration
@@ -335,55 +483,16 @@ class GitHubActionService {
         if (!result.analysisResult) {
             throw new Error('No analysis result to comment');
         }
-        // Generate comment body
-        const commentBody = this.generateCommentBody(result);
+        // Create analyzer to generate LLM-powered comment
+        const analyzer = new IssueAnalyzer(context);
+        // Generate comment body using LLM
+        const commentBody = await analyzer.generateComment(result);
         await this.octokit.issues.createComment({
             owner: context.owner,
             repo: context.repo,
             issue_number: context.issueNumber,
             body: commentBody
         });
-    }
-    /**
-     * Generate comment body from analysis result
-     */
-    generateCommentBody(result) {
-        if (!result.analysisResult) {
-            return `## 🤖 Automated Issue Analysis
-
-Analysis completed successfully. Please check the analysis results for detailed information.
-
----
-*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*`;
-        }
-        // Use the detailed analysis text from the agent
-        const sections = [];
-        sections.push('## 🤖 Automated Issue Analysis');
-        sections.push('');
-        // Add the actual analysis content from the agent
-        if (result.analysisResult.text) {
-            sections.push(result.analysisResult.text);
-        }
-        else {
-            sections.push('Analysis completed successfully.');
-        }
-        sections.push('');
-        // Add execution time if available
-        if (result.executionTime) {
-            sections.push(`Analysis completed in: ${result.executionTime}ms`);
-            sections.push('');
-        }
-        // Add labels if any were applied
-        if (result.labelsAdded && result.labelsAdded.length > 0) {
-            sections.push('### Labels Applied');
-            result.labelsAdded.forEach(label => {
-                sections.push(`- \`${label}\``);
-            });
-            sections.push('');
-        }
-        sections.push('---');
-        sections.push('*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*');
-        return sections.join('\n');
     }
     /**
      * Add labels to the issue

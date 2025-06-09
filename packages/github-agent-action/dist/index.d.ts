@@ -71,12 +71,6 @@ interface ActionResult {
     error?: string;
     executionTime?: number;
 }
-interface CommentTemplate {
-    header?: string;
-    analysisSection?: string;
-    suggestionsSection?: string;
-    footer?: string;
-}
 interface LabelConfig {
     bugLabel?: string;
     featureLabel?: string;
@@ -171,10 +165,6 @@ declare class GitHubActionService {
      */
     private addAnalysisComment;
     /**
-     * Generate comment body from analysis result
-     */
-    private generateCommentBody;
-    /**
      * Add labels to the issue
      */
     private addLabelsToIssue;
@@ -200,8 +190,8 @@ declare class IssueAnalyzer {
     private githubService;
     private contextAnalyzer;
     private reportGenerator;
+    private llmService;
     private context;
-    private commentTemplate;
     private labelConfig;
     constructor(context: ActionContext);
     /**
@@ -213,13 +203,21 @@ declare class IssueAnalyzer {
      */
     private extractLabelsFromAnalysis;
     /**
-     * Generate comment text for the issue using agent's response directly
+     * Generate comment text for the issue using LLM (similar to agent.ts approach)
      */
-    generateComment(analysisResult: any): string;
+    generateComment(analysisResult: any): Promise<string>;
     /**
-     * Update comment template
+     * Generate enhanced comment using LLM
      */
-    setCommentTemplate(template: Partial<CommentTemplate>): void;
+    private generateEnhancedComment;
+    /**
+     * Generate enhanced formatted comment without LLM
+     */
+    private generateEnhancedFormattedComment;
+    /**
+     * Format LLM analysis report as a GitHub comment
+     */
+    private formatLLMReportAsComment;
     /**
      * Update label configuration
      */
@@ -325,4 +323,4 @@ declare const _default: {
 };
 
 export { GitHubActionService, IssueAnalyzer, WebhookHandler, analyzeIssue, _default as default, getVersion, run, startWebhookServer, validateConfig };
-export type { ActionConfig, ActionContext, ActionResult, AnalysisOptions, AnalysisReport, CommentTemplate, LabelConfig, ProcessIssueOptions, WebhookHandlerOptions, WebhookPayload };
+export type { ActionConfig, ActionContext, ActionResult, AnalysisOptions, AnalysisReport, LabelConfig, ProcessIssueOptions, WebhookHandlerOptions, WebhookPayload };

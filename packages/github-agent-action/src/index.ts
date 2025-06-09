@@ -20,7 +20,6 @@ export type {
   AnalysisReport,
   WebhookPayload,
   WebhookHandlerOptions,
-  CommentTemplate,
   LabelConfig
 } from './types';
 

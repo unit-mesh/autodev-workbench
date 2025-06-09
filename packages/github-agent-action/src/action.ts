@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
 import { Octokit } from '@octokit/rest';
 import { ActionContext, ActionConfig, ActionResult, AnalysisOptions } from './types';
 import { IssueAnalyzer } from './issue-analyzer';
@@ -218,8 +217,11 @@ export class GitHubActionService {
       throw new Error('No analysis result to comment');
     }
 
-    // Generate comment body
-    const commentBody = this.generateCommentBody(result);
+    // Create analyzer to generate LLM-powered comment
+    const analyzer = new IssueAnalyzer(context);
+
+    // Generate comment body using LLM
+    const commentBody = await analyzer.generateComment(result);
 
     await this.octokit.issues.createComment({
       owner: context.owner,
@@ -229,54 +231,7 @@ export class GitHubActionService {
     });
   }
 
-  /**
-   * Generate comment body from analysis result
-   */
-  private generateCommentBody(result: ActionResult): string {
-    if (!result.analysisResult) {
-      return `## 🤖 Automated Issue Analysis
 
-Analysis completed successfully. Please check the analysis results for detailed information.
-
----
-*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*`;
-    }
-
-    // Use the detailed analysis text from the agent
-    const sections: string[] = [];
-
-    sections.push('## 🤖 Automated Issue Analysis');
-    sections.push('');
-
-    // Add the actual analysis content from the agent
-    if (result.analysisResult.text) {
-      sections.push(result.analysisResult.text);
-    } else {
-      sections.push('Analysis completed successfully.');
-    }
-
-    sections.push('');
-
-    // Add execution time if available
-    if (result.executionTime) {
-      sections.push(`Analysis completed in: ${result.executionTime}ms`);
-      sections.push('');
-    }
-
-    // Add labels if any were applied
-    if (result.labelsAdded && result.labelsAdded.length > 0) {
-      sections.push('### Labels Applied');
-      result.labelsAdded.forEach(label => {
-        sections.push(`- \`${label}\``);
-      });
-      sections.push('');
-    }
-
-    sections.push('---');
-    sections.push('*This analysis was generated automatically by [AutoDev GitHub Agent Action](https://github.com/unit-mesh/autodev-worker)*');
-
-    return sections.join('\n');
-  }
 
   /**
    * Add labels to the issue
