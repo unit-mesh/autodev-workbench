@@ -1,31 +1,21 @@
-/**
- * Autonomous AI Agent
- * A true AI Agent that can call LLM to generate and execute MCP Tool calls
- */
-
 import { generateText, CoreMessage } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm/llm-provider";
-import { FunctionParser, ParsedResponse, FunctionCall } from "./agent/function-parser";
+import { FunctionParser, FunctionCall } from "./agent/function-parser";
 import { AllEnhancedTools } from "./capabilities/tools";
-import { ToolLike } from "./capabilities/_typing";
 
-// Tool definitions - dynamically extracted from actual MCP tools
 let GITHUB_TOOLS: Array<{
   name: string;
   description: string;
   parameters: any;
 }> = [];
 
-// Function to extract tool definitions from MCP tools
 function extractToolDefinitions(): void {
   const toolDefinitions: Array<{ name: string; description: string; parameters: any }> = [];
 
-  // Mock installer that captures tool definitions
   const mockInstaller = (
     name: string,
     description: string,
-    inputSchema: Record<string, any>,
-    handler: Function
+    inputSchema: Record<string, any>
   ) => {
     // Convert Zod schema to JSON schema format
     const parameters = {
