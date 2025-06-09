@@ -41,23 +41,6 @@ export class IssueAnalyzer {
   }
 
   /**
-   * Clean up resources used by the analyzer
-   */
-  cleanup(): void {
-    try {
-      // Clean up context analyzer resources if it has a cleanup method
-      if (this.contextAnalyzer && typeof (this.contextAnalyzer as any).cleanup === 'function') {
-        (this.contextAnalyzer as any).cleanup();
-      }
-
-      // Clean up any other resources
-      console.log('🧹 IssueAnalyzer resources cleaned up');
-    } catch (error) {
-      console.warn('Warning: IssueAnalyzer cleanup failed:', error);
-    }
-  }
-
-  /**
    * Analyze an issue using the same logic as analyze-issue.js
    */
   async analyzeIssue(options: AnalysisOptions = {}): Promise<ActionResult> {

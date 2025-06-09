@@ -51,11 +51,11 @@ export async function run(): Promise<void> {
 
     // Get context from GitHub Actions
     const context = github.context;
-
+    
     // Check if this is an issue event
     if (context.eventName === 'issues') {
       const payload = context.payload;
-
+      
       if (!payload.issue) {
         throw new Error('No issue found in event payload');
       }
@@ -72,52 +72,25 @@ export async function run(): Promise<void> {
 
       if (result.success) {
         console.log('✅ Issue analysis completed successfully');
-
+        
         if (result.commentAdded) {
           console.log('💬 Analysis comment added to issue');
         }
-
+        
         if (result.labelsAdded && result.labelsAdded.length > 0) {
           console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
         }
-
-        // Clean up resources before exiting
-        actionService.cleanup();
-
-        // Force exit after a short delay to ensure cleanup completes
-        setTimeout(() => {
-          console.log('🏁 Action completed successfully, exiting...');
-          process.exit(0);
-        }, 100);
       } else {
         throw new Error(result.error || 'Issue analysis failed');
       }
     } else {
       console.log(`ℹ️ Event type '${context.eventName}' is not supported. Only 'issues' events are processed.`);
-      // Clean up resources before exiting
-      actionService.cleanup();
-      // Force exit after a short delay for unsupported events
-      setTimeout(() => {
-        console.log('🏁 Action completed (no processing needed), exiting...');
-        process.exit(0);
-      }, 100);
     }
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('❌ Action failed:', errorMessage);
     core.setFailed(errorMessage);
-
-    // Try to cleanup even on error
-    try {
-      const actionService = new GitHubActionService();
-      actionService.cleanup();
-    } catch (cleanupError) {
-      console.warn('Warning: Cleanup failed during error handling:', cleanupError);
-    }
-
-    // Explicitly exit with error code
-    process.exit(1);
   }
 }
 
@@ -172,25 +145,14 @@ export async function analyzeIssue(options: {
     workspacePath: options.workspacePath || process.cwd()
   });
 
-  try {
-    const result = await actionService.processIssue({
-      owner: options.owner,
-      repo: options.repo,
-      issueNumber: options.issueNumber,
-      depth: options.depth,
-      autoComment: options.autoComment,
-      autoLabel: options.autoLabel
-    });
-
-    // Clean up resources before returning
-    actionService.cleanup();
-
-    return result;
-  } catch (error) {
-    // Clean up resources even on error
-    actionService.cleanup();
-    throw error;
-  }
+  return actionService.processIssue({
+    owner: options.owner,
+    repo: options.repo,
+    issueNumber: options.issueNumber,
+    depth: options.depth,
+    autoComment: options.autoComment,
+    autoLabel: options.autoLabel
+  });
 }
 
 /**
@@ -252,7 +214,7 @@ if (require.main === module) {
     // Standalone mode - start webhook server
     const port = parseInt(process.env.PORT || '3000');
     console.log(`🚀 Starting in standalone mode on port ${port}`);
-
+    
     startWebhookServer({ port }).catch(error => {
       console.error('Failed to start webhook server:', error);
       process.exit(1);

@@ -68,22 +68,18 @@ program
 
       if (result.success) {
         console.log('✅ Analysis completed successfully');
-
+        
         if (result.commentAdded) {
           console.log('💬 Comment added to issue');
         }
-
+        
         if (result.labelsAdded && result.labelsAdded.length > 0) {
           console.log(`🏷️ Labels added: ${result.labelsAdded.join(', ')}`);
         }
-
+        
         if (result.executionTime) {
           console.log(`⏱️ Execution time: ${result.executionTime}ms`);
         }
-
-        // Explicitly exit with success code
-        console.log('🏁 CLI analysis completed, exiting...');
-        process.exit(0);
       } else {
         console.error('❌ Analysis failed:', result.error);
         process.exit(1);
