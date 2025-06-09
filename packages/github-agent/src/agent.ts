@@ -109,7 +109,7 @@ export class AIAgent {
 
   constructor(config: AgentConfig = {}) {
     this.config = {
-      maxToolRounds: 3,
+      maxToolRounds: 5, // Increased from 3 to 5 for more comprehensive analysis
       enableToolChaining: true,
       toolTimeout: 120000, // Increased from 30s to 120s for better handling of large repositories
       ...config
@@ -263,8 +263,8 @@ export class AIAgent {
 
       allToolResults.push(...roundResults);
 
-      // Check if we should continue
-      const shouldContinue = this.shouldContinueToolChain(roundResults, currentRound);
+      // Check if we should continue (pass all results for comprehensive analysis)
+      const shouldContinue = this.shouldContinueToolChain(roundResults, currentRound, allToolResults);
       if (!shouldContinue) {
         this.log(`Round ${currentRound}: Stopping tool chain based on results`);
         break;
@@ -502,9 +502,10 @@ export class AIAgent {
     return enhanced;
   }
 
-  private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number): boolean {
+  private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number, allResults?: ToolResult[]): boolean {
     // Don't continue if we've reached max rounds
     if (currentRound >= this.config.maxToolRounds!) {
+      this.log(`Round ${currentRound}: Reached max rounds (${this.config.maxToolRounds}), stopping chain`);
       return false;
     }
 
@@ -515,20 +516,85 @@ export class AIAgent {
       return false;
     }
 
-    // Don't continue if we have comprehensive results
-    const hasAnalysisResult = roundResults.some(r =>
-      r.success && r.functionCall.name === 'github-get-issue-with-analysis'
-    );
-    const hasSearchResult = roundResults.some(r =>
-      r.success && r.functionCall.name === 'github-find-code-by-description'
-    );
+    // For comprehensive analysis, we want to encourage deeper investigation
+    // Only stop if we have truly comprehensive coverage
 
-    if (hasAnalysisResult && hasSearchResult) {
-      this.log(`Round ${currentRound}: Have both analysis and search results, stopping chain`);
+    // Check what types of analysis we've done so far
+    const allPreviousResults = allResults || [];
+    const toolTypes = this.categorizeToolResults(allPreviousResults);
+
+    // For documentation/architecture tasks, we need more comprehensive analysis
+    const hasIssueAnalysis = toolTypes.issueAnalysis > 0;
+    const hasCodeExploration = toolTypes.codeExploration > 0;
+    const hasStructureAnalysis = toolTypes.structureAnalysis > 0;
+    const hasContentAnalysis = toolTypes.contentAnalysis > 0;
+
+    // Continue if we're missing key analysis types for comprehensive understanding
+    if (!hasIssueAnalysis) {
+      this.log(`Round ${currentRound}: Missing issue analysis, continuing chain`);
+      return true;
+    }
+
+    if (!hasCodeExploration && currentRound < 3) {
+      this.log(`Round ${currentRound}: Missing code exploration, continuing chain`);
+      return true;
+    }
+
+    if (!hasStructureAnalysis && currentRound < 3) {
+      this.log(`Round ${currentRound}: Missing structure analysis, continuing chain`);
+      return true;
+    }
+
+    // If we have basic coverage but it's still early rounds, continue for depth
+    if (currentRound < 2) {
+      this.log(`Round ${currentRound}: Early round, continuing for deeper analysis`);
+      return true;
+    }
+
+    // Stop if we have comprehensive coverage
+    if (hasIssueAnalysis && hasCodeExploration && hasStructureAnalysis) {
+      this.log(`Round ${currentRound}: Have comprehensive analysis coverage, stopping chain`);
       return false;
     }
 
     return true;
+  }
+
+
+
+  /**
+   * Categorize tool results by analysis type
+   */
+  private categorizeToolResults(results: ToolResult[]): {
+    issueAnalysis: number;
+    codeExploration: number;
+    structureAnalysis: number;
+    contentAnalysis: number;
+  } {
+    const categories = {
+      issueAnalysis: 0,
+      codeExploration: 0,
+      structureAnalysis: 0,
+      contentAnalysis: 0
+    };
+
+    results.forEach(result => {
+      if (!result.success) return;
+
+      const toolName = result.functionCall.name;
+
+      if (toolName.includes('issue') || toolName.includes('github-get-issue')) {
+        categories.issueAnalysis++;
+      } else if (toolName.includes('find-code') || toolName.includes('codebase-search') || toolName.includes('grep-search')) {
+        categories.codeExploration++;
+      } else if (toolName.includes('list-directory') || toolName.includes('analyze-dependencies') || toolName.includes('analyze-symbols')) {
+        categories.structureAnalysis++;
+      } else if (toolName.includes('read-file') || toolName.includes('extract-webpage')) {
+        categories.contentAnalysis++;
+      }
+    });
+
+    return categories;
   }
 
   private buildMessagesForRound(
@@ -573,19 +639,96 @@ export class AIAgent {
     round: number
   ): string {
     if (round === 1) {
-      return context ?
+      const basePrompt = context ?
         `Context: ${JSON.stringify(context, null, 2)}\n\nUser Request: ${userInput}` :
         userInput;
+
+      return `${basePrompt}
+
+## Analysis Approach:
+To provide a comprehensive response, consider using multiple tools to gather complete information:
+
+1. **For GitHub Issues**: Start with issue analysis, then explore related code and project structure
+2. **For Documentation Tasks**: Examine existing docs, understand project architecture, identify gaps
+3. **For Planning Tasks**: Gather context about current state, requirements, and implementation patterns
+
+Take a thorough, multi-step approach to ensure your analysis and recommendations are well-informed and actionable.`;
     }
 
-    // For subsequent rounds, include previous results
+    // For subsequent rounds, include previous results and encourage deeper analysis
     const previousSummary = this.summarizePreviousResults(previousResults);
+    const analysisGaps = this.identifyAnalysisGaps(previousResults, userInput);
+
     return `Original Request: ${userInput}
 
 Previous Tool Results Summary:
 ${previousSummary}
 
-Based on the previous results, determine if you need to call additional tools to provide a more comprehensive analysis. If the previous results are sufficient, provide your final analysis without calling more tools.`;
+## Analysis Progress Assessment:
+${analysisGaps}
+
+## Next Steps Guidance:
+Based on the previous results, determine what additional analysis would strengthen your response:
+
+- **If gaps remain**: Use targeted tools to fill missing information
+- **If context is shallow**: Dive deeper into specific areas (code structure, existing docs, implementation patterns)
+- **If ready for synthesis**: Provide comprehensive final analysis with actionable recommendations
+
+Remember: Thorough investigation leads to better recommendations. Only conclude when you have sufficient depth of understanding.`;
+  }
+
+  /**
+   * Identify gaps in analysis based on previous results and user request
+   */
+  private identifyAnalysisGaps(previousResults: ToolResult[], userInput: string): string {
+    const categories = this.categorizeToolResults(previousResults);
+    const gaps: string[] = [];
+
+    // Determine request type
+    const isDocumentationTask = userInput.toLowerCase().includes('document') ||
+                               userInput.toLowerCase().includes('architecture') ||
+                               userInput.toLowerCase().includes('plan');
+    const isIssueAnalysis = userInput.toLowerCase().includes('issue') ||
+                           userInput.toLowerCase().includes('github.com');
+
+    // Check for missing analysis types
+    if (categories.issueAnalysis === 0 && isIssueAnalysis) {
+      gaps.push("❌ Missing: Issue details and context analysis");
+    }
+
+    if (categories.structureAnalysis === 0 && isDocumentationTask) {
+      gaps.push("❌ Missing: Project structure and architecture analysis");
+    }
+
+    if (categories.codeExploration === 0 && (isDocumentationTask || isIssueAnalysis)) {
+      gaps.push("❌ Missing: Codebase exploration and pattern analysis");
+    }
+
+    if (categories.contentAnalysis === 0 && isDocumentationTask) {
+      gaps.push("❌ Missing: Existing documentation and content analysis");
+    }
+
+    // Identify what we have
+    const completed: string[] = [];
+    if (categories.issueAnalysis > 0) completed.push("✅ Issue analysis completed");
+    if (categories.structureAnalysis > 0) completed.push("✅ Structure analysis completed");
+    if (categories.codeExploration > 0) completed.push("✅ Code exploration completed");
+    if (categories.contentAnalysis > 0) completed.push("✅ Content analysis completed");
+
+    const result = [];
+    if (completed.length > 0) {
+      result.push("**Completed Analysis:**");
+      result.push(...completed);
+    }
+
+    if (gaps.length > 0) {
+      result.push("**Analysis Gaps:**");
+      result.push(...gaps);
+    } else {
+      result.push("**Analysis Status:** ✅ Comprehensive coverage achieved");
+    }
+
+    return result.join('\n');
   }
 
   private summarizePreviousResults(results: ToolResult[]): string {
@@ -826,6 +969,30 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
 
     return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
+## Core Principles for Analysis and Planning:
+
+1. **THOROUGH INVESTIGATION**: When analyzing issues or planning tasks, always gather comprehensive information before providing recommendations. Use multiple tools to build a complete understanding.
+
+2. **PROGRESSIVE INFORMATION GATHERING**: Start with high-level analysis, then dive deeper into specific areas. Each tool call should build upon previous results to create a more complete picture.
+
+3. **CONTEXTUAL UNDERSTANDING**: For documentation tasks, architecture analysis, or code planning:
+   - First understand the project structure and purpose
+   - Identify existing documentation and gaps
+   - Explore the codebase to understand architectural patterns
+   - Consider the target audience and use cases
+
+4. **COMPREHENSIVE PLANNING**: When asked to create plans or documentation:
+   - Gather information about current state
+   - Identify specific requirements and constraints
+   - Provide detailed, actionable steps
+   - Include concrete examples and templates where helpful
+
+## Tool Usage Strategy:
+
+- **For Architecture Tasks**: Examine project structure, identify key components, understand data flow
+- **For Documentation**: Review existing docs, understand gaps, analyze code structure
+- **For Planning**: Gather context first, then create detailed, step-by-step plans
+
 In this environment you have access to a set of tools you can use to answer the user's question.
 
 If the USER's task is general or you already know the answer, just respond without calling tools.
@@ -870,19 +1037,39 @@ String and scalar parameters should be specified as is, while lists and objects 
 - Successful tools: ${successfulTools.join(', ') || 'None'}
 - Failed tools: ${failedTools.join(', ') || 'None'}
 
-## Guidelines for This Round:
-1. **Review previous results**: Consider what information you already have
-2. **Identify gaps**: Determine what additional analysis would be valuable
-3. **Avoid redundancy**: Don't repeat successful tool calls unless necessary
-4. **Be strategic**: Only call tools that will add meaningful value
-5. **Consider completion**: If you have sufficient information, provide your final analysis instead of calling more tools
+## Deep Analysis Guidelines for This Round:
 
-## Decision Framework:
-- If previous results provide comprehensive coverage → Provide final analysis
-- If specific areas need deeper investigation → Call targeted tools
-- If previous tools failed → Try alternative approaches or tools
+### 1. Information Completeness Assessment:
+- **For Documentation/Architecture Tasks**: Have you explored the project structure, existing docs, and key code components?
+- **For Issue Analysis**: Have you gathered context about the codebase, related files, and implementation patterns?
+- **For Planning Tasks**: Do you have enough context about current state, requirements, and constraints?
 
-You have the same tools available as before. Use them wisely to build upon previous results.`;
+### 2. Progressive Investigation Strategy:
+- **If Round 1**: Focus on broad understanding (issue details, project overview, structure)
+- **If Round 2**: Dive deeper into specific areas (code analysis, existing documentation, patterns)
+- **If Round 3**: Fill remaining gaps and synthesize comprehensive insights
+
+### 3. Tool Selection Priorities:
+- **High Priority**: Tools that provide missing critical context
+- **Medium Priority**: Tools that add depth to existing understanding
+- **Low Priority**: Tools that provide supplementary information
+
+### 4. Completion Criteria:
+Only provide final analysis when you have:
+- ✅ Comprehensive understanding of the problem/request
+- ✅ Sufficient context about the codebase/project
+- ✅ Clear actionable recommendations or detailed plans
+- ✅ Addressed all aspects of the user's request
+
+### 5. Strategic Tool Usage:
+- Use github-find-code-by-description to understand implementation patterns
+- Use list-directory and read-file to explore project structure
+- Use codebase-search to find relevant code examples
+- Use analyze-dependencies to understand architectural relationships
+
+**Remember**: Thorough analysis leads to better recommendations. Don't rush to conclusions without sufficient investigation.
+
+You have the same tools available as before. Use them strategically to build comprehensive understanding.`;
   }
 
   /**
