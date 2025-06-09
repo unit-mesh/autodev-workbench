@@ -84,16 +84,35 @@ jobs:
           pnpm --filter github-agent build
           pnpm --filter github-agent-action build
       
-      - name: Manual Test - Analyze Existing Issue
+      - name: Manual Test - Analyze Issue #98 (Architecture Request)
         run: |
           cd packages/github-agent-action
-          # 分析一个现有的 issue（请替换为实际的 issue 编号）
+          # 分析 issue #98 - 测试 LLM 增强的架构分析功能
+          echo "🧪 Testing LLM-enhanced analysis on issue #98"
+          echo "📋 Issue: [TEST] generate project architecture"
+          echo "🎯 Expected: Smart label suggestions, contextual file analysis"
+          echo ""
+
           node bin/action.js analyze \
-            --owner ${{ github.repository_owner }} \
-            --repo ${{ github.event.repository.name }} \
-            --issue 1 \
+            --owner unit-mesh \
+            --repo autodev-workbench \
+            --issue 98 \
             --depth medium \
             --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+          VERBOSE_LLM_LOGS: 'true'  # 启用详细的 LLM 日志
+
+      - name: Test LLM Enhancement Demo
+        run: |
+          echo "🎭 Running LLM Enhancement Demonstration"
+          node test-llm-analysis.js
+          echo ""
+          echo "🎯 Running Simulated LLM Analysis"
+          node simulate-llm-analysis.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
