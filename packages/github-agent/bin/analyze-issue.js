@@ -1,19 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * GitHub Issue Analysis CLI Tool
- * 
- * A command-line tool to analyze GitHub issues and generate detailed reports
- * with code context and suggestions.
- * 
- * @author AutoDev Team
- * @version 0.1.0
- */
-
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const http = require('http');
 
 // Load environment variables from .env file
 require('dotenv').config({ path: path.join(__dirname, '../.env') });

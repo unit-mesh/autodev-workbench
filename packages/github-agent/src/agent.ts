@@ -1,9 +1,9 @@
 import { generateText, CoreMessage } from "ai";
-import { configureLLMProvider, LLMProviderConfig } from "./services/llm/llm-provider";
+import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser, FunctionCall } from "./agent/function-parser";
 import { AllEnhancedTools } from "./capabilities/tools";
 
-let GITHUB_TOOLS: Array<{
+let AUTODEV_REMOTE_TOOLS: Array<{
   name: string;
   description: string;
   parameters: any;
@@ -17,19 +17,16 @@ function extractToolDefinitions(): void {
     description: string,
     inputSchema: Record<string, any>
   ) => {
-    // Convert Zod schema to JSON schema format
     const parameters = {
       type: "object",
       properties: {},
       required: [] as string[]
     };
 
-    // Extract properties and required fields from Zod schema
     Object.entries(inputSchema).forEach(([key, zodSchema]: [string, any]) => {
       if (zodSchema && typeof zodSchema === 'object') {
-        // Basic property definition
         (parameters.properties as any)[key] = {
-          type: "string", // Default type, could be enhanced
+          type: "string",
           description: zodSchema.description || `${key} parameter`
         };
 
@@ -47,7 +44,6 @@ function extractToolDefinitions(): void {
     });
   };
 
-  // Extract definitions from all enhanced tools
   AllEnhancedTools.forEach(installer => {
     try {
       installer(mockInstaller);
@@ -56,7 +52,7 @@ function extractToolDefinitions(): void {
     }
   });
 
-  GITHUB_TOOLS = toolDefinitions;
+  AUTODEV_REMOTE_TOOLS = toolDefinitions;
 }
 
 export interface AgentConfig {
@@ -133,8 +129,8 @@ export class AIAgent {
     this.registerToolHandlers();
 
     this.log('AI Agent initialized with LLM provider:', this.llmConfig.providerName);
-    this.log('Available tools:', GITHUB_TOOLS.map(t => t.name));
-    this.log('Total enhanced tools loaded:', GITHUB_TOOLS.length);
+    this.log('Available tools:', AUTODEV_REMOTE_TOOLS.map(t => t.name));
+    this.log('Total enhanced tools loaded:', AUTODEV_REMOTE_TOOLS.length);
     this.log('Configuration:', {
       maxToolRounds: this.config.maxToolRounds,
       enableToolChaining: this.config.enableToolChaining,
@@ -829,7 +825,7 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
   }
 
   private buildEnhancedSystemPrompt(): string {
-    const toolsJson = JSON.stringify(GITHUB_TOOLS, null, 2);
+    const toolsJson = JSON.stringify(AUTODEV_REMOTE_TOOLS, null, 2);
 
     return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
@@ -936,7 +932,7 @@ You MUST use the exact XML format below to call functions. This is MANDATORY and
 
 ## Available Tools:
 <functions>
-${GITHUB_TOOLS.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
+${AUTODEV_REMOTE_TOOLS.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
 </functions>
 
 ## Important Notes:
@@ -1029,7 +1025,7 @@ You have the same tools available as before. Use them wisely to build upon previ
    * Get available tools
    */
   getAvailableTools(): string[] {
-    return GITHUB_TOOLS.map(tool => tool.name);
+    return AUTODEV_REMOTE_TOOLS.map(tool => tool.name);
   }
 
   /**
