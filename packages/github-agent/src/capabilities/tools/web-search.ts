@@ -4,7 +4,7 @@ import * as https from "https";
 import { URL } from "url";
 
 export const installWebSearchTool: ToolLike = (installer) => {
-  installer("web-search", "Search the web for information when LLM is uncertain about knowledge. Supports Google Custom Search and Bing Search APIs.", {
+  installer("web-search", "Search the web for information when you are uncertain about something or some knowledge.", {
     query: z.string().describe("Search query to find information"),
     num_results: z.number().optional().default(5).describe("Number of search results to return (1-10)"),
     search_engine: z.enum(["google", "bing", "auto"]).optional().default("auto").describe("Search engine to use. 'auto' will try Google first, then Bing"),
