@@ -35,7 +35,11 @@ export class FunctionParser {
 
       // Extract function_calls blocks directly from response
       const functionCallsRegex = /<function_calls>([\s\S]*?)<\/function_calls>/g;
-      const matches = [...response.matchAll(functionCallsRegex)];
+      const matches: RegExpExecArray[] = [];
+      let match;
+      while ((match = functionCallsRegex.exec(response)) !== null) {
+        matches.push(match);
+      }
 
       if (matches.length === 0) {
         // Try fallback JSON format parsing
@@ -71,10 +75,14 @@ export class FunctionParser {
    */
   private static parseFunctionCallsBlock(blockContent: string): FunctionCall[] {
     const functionCalls: FunctionCall[] = [];
-    
+
     // Extract invoke blocks
     const invokeRegex = /<invoke\s+name="([^"]+)">([\s\S]*?)<\/invoke>/g;
-    const matches = [...blockContent.matchAll(invokeRegex)];
+    const matches: RegExpExecArray[] = [];
+    let match;
+    while ((match = invokeRegex.exec(blockContent)) !== null) {
+      matches.push(match);
+    }
 
     for (const match of matches) {
       const functionName = match[1];
@@ -100,10 +108,14 @@ export class FunctionParser {
    */
   private static parseParameters(parametersContent: string): Record<string, any> {
     const parameters: Record<string, any> = {};
-    
+
     // Extract parameter blocks
     const parameterRegex = /<parameter\s+name="([^"]+)">([\s\S]*?)<\/parameter>/g;
-    const matches = [...parametersContent.matchAll(parameterRegex)];
+    const matches: RegExpExecArray[] = [];
+    let match;
+    while ((match = parameterRegex.exec(parametersContent)) !== null) {
+      matches.push(match);
+    }
 
     for (const match of matches) {
       const paramName = match[1];
@@ -259,7 +271,11 @@ export class FunctionParser {
       for (const block of codeBlocks) {
         // Check if this code block contains function_calls
         const functionCallsRegex = /<function_calls>([\s\S]*?)<\/function_calls>/g;
-        const matches = [...block.code.matchAll(functionCallsRegex)];
+        const matches: RegExpExecArray[] = [];
+        let match;
+        while ((match = functionCallsRegex.exec(block.code)) !== null) {
+          matches.push(match);
+        }
 
         if (matches.length > 0) {
           // Parse function calls from this block
