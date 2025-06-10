@@ -3,21 +3,18 @@ import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
 
-// Import SymbolAnalyser and related types from context-worker
 import {
   SymbolAnalyser,
   CodeCollector,
-  SymbolAnalysisResult,
   SymbolInfo,
-  ILanguageServiceProvider,
   LanguageServiceProvider,
   SymbolKind
 } from "@autodev/context-worker";
 
 export const installSymbolSearchTool: ToolLike = (installer) => {
-  installer("search-symbols", "Search for specific symbols in a file using SymbolAnalyser", {
-    file_path: z.string().describe("Path to the file to analyze"),
-    symbols: z.array(z.string()).describe("Array of symbol names to search for"),
+  installer("search-keywords", "Search for specific programming language symbols (classes, functions, methods, variables, interfaces, etc.) in a source code file using advanced AST-based SymbolAnalyser. This tool finds code structure elements, not text keywords.", {
+    file_path: z.string().describe("Path to the source code file to analyze for programming symbols"),
+    symbols: z.array(z.string()).describe("Array of programming symbol names to search for (e.g., class names, function names, method names, variable names, interface names)"),
   }, async ({
     file_path,
     symbols,
@@ -56,7 +53,7 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
         };
       }
 
-      console.log('🔧 Initializing SymbolAnalyser for symbol search...');
+      console.log('🔧 Initializing SymbolAnalyser for programming symbol search...');
 
       // Initialize SymbolAnalyser
       const languageService = new LanguageServiceProvider();
@@ -74,7 +71,7 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
 
       // Perform symbol analysis
       const symbolAnalysisResult = await symbolAnalyser.analyze(codeCollector);
-      console.log(`📊 SymbolAnalyser found ${symbolAnalysisResult.symbols.length} symbols`);
+      console.log(`📊 SymbolAnalyser found ${symbolAnalysisResult.symbols.length} programming symbols`);
 
       // Filter symbols based on the requested symbol names
       const matchedSymbols: SymbolInfo[] = [];
@@ -84,14 +81,14 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
         // Check if symbol name matches any of the requested symbols (case-insensitive)
         if (symbolsLowerCase.includes(symbol.name.toLowerCase()) ||
             symbolsLowerCase.some(searchSymbol =>
-              symbol.name.toLowerCase().includes(searchSymbol) ||
-              symbol.qualifiedName.toLowerCase().includes(searchSymbol)
+                symbol.name.toLowerCase().includes(searchSymbol) ||
+                symbol.qualifiedName.toLowerCase().includes(searchSymbol)
             )) {
           matchedSymbols.push(symbol);
         }
       }
 
-      console.log(`🎯 Found ${matchedSymbols.length} matching symbols out of ${symbolAnalysisResult.symbols.length} total symbols`);
+      console.log(`🎯 Found ${matchedSymbols.length} matching programming symbols out of ${symbolAnalysisResult.symbols.length} total symbols`);
 
       // Helper function to convert SymbolKind to string
       const getSymbolTypeName = (kind: number): string => {
@@ -104,9 +101,9 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
           [SymbolKind.Interface]: 'interface',
           [SymbolKind.Function]: 'function',
           [SymbolKind.Variable]: 'variable',
-          [SymbolKind.Constant]: 'variable',
-          [SymbolKind.EnumMember]: 'property',
-          [SymbolKind.Struct]: 'class',
+          [SymbolKind.Constant]: 'constant',
+          [SymbolKind.EnumMember]: 'enum_member',
+          [SymbolKind.Struct]: 'struct',
           [SymbolKind.Import]: 'import'
         };
         return kindMap[kind] || 'unknown';
@@ -124,15 +121,19 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
           line: lineNumber,
           declaration: declarationLine,
           file_path: path.relative(workspacePath, symbolInfo.filePath),
-          qualified_name: symbolInfo.qualifiedName
+          qualified_name: symbolInfo.qualifiedName,
+          symbol_kind: symbolInfo.kind
         };
       }).sort((a, b) => a.line - b.line);
 
       const summary = {
+        description: "AST-based programming symbol search results",
         searched_for: symbols,
         found_count: results.length,
         total_symbols_in_file: symbolAnalysisResult.symbols.length,
         file_path: path.relative(workspacePath, resolvedPath),
+        language: language,
+        symbol_types_found: [...new Set(results.map(r => r.type))],
         results: results
       };
 
@@ -145,12 +146,12 @@ export const installSymbolSearchTool: ToolLike = (installer) => {
         ]
       };
     } catch (error: any) {
-      console.error('Error in symbol search:', error);
+      console.error('Error in programming symbol search:', error);
       return {
         content: [
           {
             type: "text",
-            text: `Error searching symbols in '${file_path}': ${error.message}`
+            text: `Error searching programming symbols in '${file_path}': ${error.message}`
           }
         ]
       };
