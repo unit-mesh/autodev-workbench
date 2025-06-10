@@ -35,7 +35,7 @@ export const FileSystemTools = [
 
 // Code Analysis Tools
 export const CodeAnalysisTools = [
-    installFileSearchTool,
+    // installFileSearchTool,
     installSymbolAnalysisTool,
     installDependencyAnalysisTool,
     installContextAnalysisTool,
@@ -70,7 +70,7 @@ export const WebTools = [
 ] as const;
 
 // All Tools
-export const AllTools = [
+export const AllEnhancedTools = [
     ...FileSystemTools,
     ...CodeAnalysisTools,
     ...PlanningTools,
