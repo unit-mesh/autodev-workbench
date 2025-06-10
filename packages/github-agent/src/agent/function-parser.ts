@@ -143,44 +143,6 @@ export class FunctionParser {
   }
 
   /**
-   * Validate function call against available tools
-   */
-  static validateFunctionCall(
-    functionCall: FunctionCall, 
-    availableTools: string[]
-  ): { isValid: boolean; error?: string } {
-    if (!availableTools.includes(functionCall.name)) {
-      return {
-        isValid: false,
-        error: `Unknown function: ${functionCall.name}. Available functions: ${availableTools.join(', ')}`
-      };
-    }
-
-    return { isValid: true };
-  }
-
-  /**
-   * Format function call for debugging
-   */
-  static formatFunctionCall(functionCall: FunctionCall): string {
-    return `${functionCall.name}(${JSON.stringify(functionCall.parameters, null, 2)})`;
-  }
-
-  /**
-   * Extract text content without function calls
-   */
-  static extractTextOnly(response: string): string {
-    return response.replace(/<function_calls>[\s\S]*?<\/function_calls>/g, '').trim();
-  }
-
-  /**
-   * Check if response contains function calls
-   */
-  static hasFunctionCalls(response: string): boolean {
-    return /<function_calls>[\s\S]*?<\/function_calls>/.test(response);
-  }
-
-  /**
    * Parse JSON format function calls (fallback for models that don't follow XML)
    * Looks for patterns like:
    * function_name

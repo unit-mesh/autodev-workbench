@@ -573,8 +573,6 @@ export class AIAgent {
     return true;
   }
 
-
-
   /**
    * Categorize tool results by analysis type
    */
