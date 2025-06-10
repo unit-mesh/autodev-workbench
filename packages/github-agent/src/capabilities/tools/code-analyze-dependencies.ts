@@ -227,12 +227,9 @@ export const installDependencyAnalysisTool: ToolLike = (installer) => {
   }
 
   // Helper function to analyze import statements
-  async function analyzeImportStatements(workspacePath: string, extensions: string[], maxDepth: number, excludeDirs: string[] | unknown) {
+  async function analyzeImportStatements(workspacePath: string, extensions: string[], maxDepth: number, excludeDirs: string[]) {
     const imports: any = {};
     const fileImports: any[] = [];
-    
-    // Ensure excludeDirs is an array of strings
-    const safeExcludeDirs = Array.isArray(excludeDirs) ? excludeDirs.filter((dir): dir is string => typeof dir === 'string') : [];
 
     function scanDirectory(dirPath: string, currentDepth: number = 0) {
       if (currentDepth > maxDepth) return;
@@ -245,7 +242,7 @@ export const installDependencyAnalysisTool: ToolLike = (installer) => {
           const relativePath = path.relative(workspacePath, entryPath);
           
           // Skip excluded directories
-          if (safeExcludeDirs.some(exclude => relativePath.includes(exclude))) continue;
+          if (excludeDirs.some(exclude => relativePath.includes(exclude))) continue;
 
           const stats = fs.statSync(entryPath);
           
@@ -345,15 +342,15 @@ export const installDependencyAnalysisTool: ToolLike = (installer) => {
   }
 
   // Helper function to create dependency graph
-  function createDependencyGraph(packageDeps: { all_dependencies?: Record<string, Record<string, string>> }, importDeps: { imports_by_module?: Record<string, any> }) {
-    const packageModules = new Set<string>();
+  function createDependencyGraph(packageDeps: any, importDeps: any) {
+    const packageModules = new Set();
     
     // Collect all package dependencies
-    Object.values(packageDeps.all_dependencies || {}).forEach((deps) => {
+    Object.values(packageDeps.all_dependencies || {}).forEach((deps: any) => {
       Object.keys(deps).forEach(dep => packageModules.add(dep));
     });
 
-    const importModules = new Set<string>(Object.keys(importDeps.imports_by_module || {}));
+    const importModules = new Set(Object.keys(importDeps.imports_by_module || {}));
     
     // Find unused dependencies (in package.json but not imported)
     const unusedDeps = [...packageModules].filter(dep => !importModules.has(dep));
