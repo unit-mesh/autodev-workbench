@@ -1,8 +1,8 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import { regexSearchFiles } from "@autodev/worker-core";
 
 export const installGrepSearchTool: ToolLike = (installer) => {
   installer("grep-search", "Search for patterns in code using regex with ripgrep or grep", {
@@ -13,7 +13,7 @@ export const installGrepSearchTool: ToolLike = (installer) => {
     case_sensitive: z.boolean().optional().describe("Case sensitive search (default: false)"),
     whole_word: z.boolean().optional().describe("Match whole words only (default: false)"),
     max_results: z.number().optional().describe("Maximum number of results to return (default: 100)"),
-    context_lines: z.number().optional().describe("Number of context lines to show around matches (default: 2)"),
+    context_lines: z.number().optional().describe("Number of context lines to show around matches (default: 4)"),
     use_ripgrep: z.boolean().optional().describe("Use ripgrep if available (faster, default: true)")
   }, async ({ 
     pattern, 
@@ -23,7 +23,7 @@ export const installGrepSearchTool: ToolLike = (installer) => {
     case_sensitive = false,
     whole_word = false,
     max_results = 100,
-    context_lines = 2,
+    context_lines = 4,
     use_ripgrep = true
   }: { 
     pattern: string; 
@@ -69,193 +69,68 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Check if ripgrep is available
-      let hasRipgrep = false;
-      if (use_ripgrep) {
-        try {
-          await new Promise((resolve, reject) => {
-            const rg = spawn('rg', ['--version'], { stdio: 'pipe' });
-            rg.on('close', (code) => {
-              if (code === 0) {
-                hasRipgrep = true;
-              }
-              resolve(code);
-            });
-            rg.on('error', () => resolve(1));
-          });
-        } catch (error) {
-          hasRipgrep = false;
-        }
+      // Prepare file pattern for ripgrep
+      let filePattern: string | undefined;
+      if (file_types && file_types.length > 0) {
+        filePattern = `*.{${file_types.map(ext => ext.replace(/^\./, '')).join(',')}}`;
       }
 
-      const toolUsed = hasRipgrep && use_ripgrep ? 'ripgrep' : 'grep';
-      let command: string;
-      let args: string[] = [];
-
-      if (hasRipgrep && use_ripgrep) {
-        // Use ripgrep
-        command = 'rg';
-        
-        // Basic ripgrep arguments
-        args.push('--json'); // JSON output for easier parsing
-        args.push('--with-filename');
-        args.push('--line-number');
-        args.push(`--context=${context_lines}`);
-        args.push(`--max-count=${max_results}`);
-        
-        // Case sensitivity
-        if (!case_sensitive) {
-          args.push('--ignore-case');
-        }
-        
-        // Whole word matching
-        if (whole_word) {
-          args.push('--word-regexp');
-        }
-        
-        // File type filters
-        if (file_types && file_types.length > 0) {
-          file_types.forEach(ext => {
-            args.push('--type-add');
-            args.push(`custom:*.${ext.replace(/^\./, '')}`);
-          });
-          args.push('--type=custom');
-        }
-        
-        // Exclude patterns
-        exclude_patterns.forEach(pattern => {
-          args.push('--glob');
-          args.push(`!${pattern}`);
-        });
-        
-        args.push(pattern);
-        args.push(resolvedSearchDir);
-      } else {
-        // Use grep
-        command = 'grep';
-        
-        args.push('-r'); // recursive
-        args.push('-n'); // line numbers
-        args.push(`-C${context_lines}`); // context lines
-        
-        if (!case_sensitive) {
-          args.push('-i');
-        }
-        
-        if (whole_word) {
-          args.push('-w');
-        }
-        
-        // Exclude patterns
-        exclude_patterns.forEach(pattern => {
-          args.push('--exclude-dir=' + pattern);
-        });
-        
-        // File type filters (basic implementation)
-        if (file_types && file_types.length > 0) {
-          const includePattern = file_types.map(ext => `*.${ext.replace(/^\./, '')}`).join(' ');
-          args.push('--include=' + includePattern);
-        }
-        
-        args.push(pattern);
-        args.push(resolvedSearchDir);
+      // Adjust pattern for case sensitivity and whole word matching
+      let searchPattern = pattern;
+      if (whole_word) {
+        searchPattern = `\\b${pattern}\\b`;
+      }
+      if (!case_sensitive) {
+        searchPattern = `(?i)${searchPattern}`;
       }
 
-      // Execute search
-      const result = await new Promise<{
-        stdout: string;
-        stderr: string;
-        exit_code: number;
-        execution_time: number;
-      }>((resolve, reject) => {
-        const startTime = Date.now();
-        
-        const childProcess = spawn(command, args, { 
-          cwd: resolvedSearchDir,
-          stdio: 'pipe'
-        });
+      // Execute search using ripgrep
+      const startTime = Date.now();
+      let searchResults: string;
 
-        let stdout = '';
-        let stderr = '';
-
-        childProcess.stdout.on('data', (data) => {
-          stdout += data.toString();
-        });
-
-        childProcess.stderr.on('data', (data) => {
-          stderr += data.toString();
-        });
-
-        childProcess.on('close', (code) => {
-          const executionTime = Date.now() - startTime;
-          resolve({
-            stdout: stdout,
-            stderr: stderr,
-            exit_code: code || 0,
-            execution_time: executionTime
-          });
-        });
-
-        childProcess.on('error', (error) => {
-          reject(error);
-        });
-      });
-
-      // Parse results
-      let matches: any[] = [];
-      
-      if (hasRipgrep && use_ripgrep && result.stdout) {
-        // Parse ripgrep JSON output
-        const lines = result.stdout.trim().split('\n');
-        for (const line of lines) {
-          try {
-            const json = JSON.parse(line);
-            if (json.type === 'match') {
-              matches.push({
-                file: path.relative(workspacePath, json.data.path.text),
-                line_number: json.data.line_number,
-                line_content: json.data.lines.text.trim(),
-                match_start: json.data.submatches[0]?.start || 0,
-                match_end: json.data.submatches[0]?.end || 0,
-                match_text: json.data.submatches[0]?.match?.text || ''
-              });
+      try {
+        searchResults = await regexSearchFiles(
+          workspacePath,
+          resolvedSearchDir,
+          searchPattern,
+          false, // includeNodeModules
+          filePattern
+        );
+      } catch (error: any) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error executing ripgrep search: ${error.message}`
             }
-          } catch (parseError) {
-            // Skip invalid JSON lines
-          }
-        }
-      } else if (result.stdout) {
-        // Parse grep output
-        const lines = result.stdout.split('\n');
-        let currentFile = '';
-        
-        for (const line of lines) {
-          if (line.includes(':')) {
-            const parts = line.split(':');
-            if (parts.length >= 3) {
-              const filePath = parts[0];
-              const lineNumber = parseInt(parts[1]);
-              const content = parts.slice(2).join(':');
-              
-              if (!isNaN(lineNumber)) {
-                matches.push({
-                  file: path.relative(workspacePath, filePath),
-                  line_number: lineNumber,
-                  line_content: content.trim(),
-                  match_text: content.trim() // Simplified for grep
-                });
-              }
-            }
-          }
-        }
+          ]
+        };
       }
 
-      // Limit results
-      matches = matches.slice(0, max_results);
+      const executionTime = Date.now() - startTime;
 
-      // Group by file
+      // Check if we have results
+      if (!searchResults || searchResults === "No results found") {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "No matches found for the given pattern."
+            }
+          ]
+        };
+      }
+
+      // Format results according to the specified format
+      const formattedResults = formatRipgrepResults(searchResults, context_lines);
+
+      // Parse for structured data (optional, for backward compatibility)
+      const matches = parseRipgrepForMatches(searchResults, workspacePath);
+      const limitedMatches = matches.slice(0, max_results);
+
+      // Group by file for structured data
       const fileGroups: Record<string, any[]> = {};
-      matches.forEach(match => {
+      limitedMatches.forEach(match => {
         if (!fileGroups[match.file]) {
           fileGroups[match.file] = [];
         }
@@ -274,21 +149,22 @@ export const installGrepSearchTool: ToolLike = (installer) => {
           max_results: max_results,
           context_lines: context_lines
         },
-        tool_used: toolUsed,
-        execution_time_ms: result.execution_time,
-        total_matches: matches.length,
+        tool_used: "ripgrep",
+        execution_time_ms: executionTime,
+        total_matches: limitedMatches.length,
         files_with_matches: Object.keys(fileGroups).length,
+        formatted_results: formattedResults,
         matches_by_file: fileGroups,
-        all_matches: matches,
-        success: result.exit_code === 0 || result.exit_code === 1, // grep returns 1 when no matches found
-        error: result.stderr || null
+        all_matches: limitedMatches,
+        success: true,
+        error: null
       };
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(searchResult, null, 2)
+            text: formattedResults + "\n\n" + JSON.stringify(searchResult, null, 2)
           }
         ]
       };
@@ -304,3 +180,90 @@ export const installGrepSearchTool: ToolLike = (installer) => {
     }
   });
 };
+
+/**
+ * Format ripgrep results according to the specified format:
+ * ## filepath: xxx
+ * --- before 4 lines ---
+ * result line
+ * --- after 4 lines----
+ */
+function formatRipgrepResults(searchResults: string, contextLines: number): string {
+  const lines = searchResults.split('\n');
+  let formattedOutput = '';
+  let currentFile = '';
+  let inFileSection = false;
+
+  for (const line of lines) {
+    // Check if this is a file header (starts with # and contains a file path)
+    if (line.startsWith('# ')) {
+      currentFile = line.substring(2).trim();
+      formattedOutput += `## filepath: ${currentFile}\n`;
+      inFileSection = true;
+      continue;
+    }
+
+    // Skip empty lines between files
+    if (!line.trim() && !inFileSection) {
+      continue;
+    }
+
+    // Process content lines (format: "linenum | content")
+    if (inFileSection && line.includes(' | ')) {
+      const parts = line.split(' | ');
+      if (parts.length >= 2) {
+        const lineNum = parts[0].trim();
+        const content = parts.slice(1).join(' | ');
+
+        // Check if this is a separator line
+        if (line.includes('----')) {
+          formattedOutput += `--- context lines (${contextLines} before/after) ---\n\n`;
+          inFileSection = false;
+          continue;
+        }
+
+        formattedOutput += `${content}\n`;
+      }
+    }
+  }
+
+  return formattedOutput.trim();
+}
+
+/**
+ * Parse ripgrep results to extract structured match data
+ */
+function parseRipgrepForMatches(searchResults: string, workspacePath: string): any[] {
+  const matches: any[] = [];
+  const lines = searchResults.split('\n');
+  let currentFile = '';
+
+  for (const line of lines) {
+    // Check if this is a file header
+    if (line.startsWith('# ')) {
+      currentFile = line.substring(2).trim();
+      continue;
+    }
+
+    // Process content lines that contain matches
+    if (currentFile && line.includes(' | ') && !line.includes('----')) {
+      const parts = line.split(' | ');
+      if (parts.length >= 2) {
+        const lineNumStr = parts[0].trim();
+        const content = parts.slice(1).join(' | ');
+        const lineNum = parseInt(lineNumStr);
+
+        if (!isNaN(lineNum)) {
+          matches.push({
+            file: currentFile,
+            line_number: lineNum,
+            line_content: content.trim(),
+            match_text: content.trim()
+          });
+        }
+      }
+    }
+  }
+
+  return matches;
+}
