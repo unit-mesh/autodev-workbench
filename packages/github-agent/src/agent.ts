@@ -64,6 +64,13 @@ export interface AgentConfig {
   enableToolChaining?: boolean;
   toolTimeout?: number;
   autoUploadToIssue?: boolean;
+  githubContext?: {
+    owner: string;
+    repo: string;
+    issueNumber: number;
+    eventType?: string;
+    action?: string;
+  };
 }
 
 export interface ToolResult {

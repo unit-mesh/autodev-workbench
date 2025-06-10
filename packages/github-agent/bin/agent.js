@@ -14,12 +14,16 @@ async function main() {
   const args = process.argv.slice(2);
   const config = parseArgs(args);
 
+  // Extract GitHub context from environment variables if available
+  const githubContext = extractGitHubContextFromEnv();
+
   try {
     const agent = new AIAgent({
       workspacePath: config.workspacePath || process.cwd(),
       githubToken: process.env.GITHUB_TOKEN,
       verbose: config.verbose,
-      autoUploadToIssue: config.autoUpload || false
+      autoUploadToIssue: config.autoUpload || false,
+      githubContext: githubContext
     });
 
     // Set global reference for cleanup
@@ -53,6 +57,73 @@ async function main() {
     } else {
       process.exit(1);
     }
+  }
+}
+
+/**
+ * Extract GitHub context from environment variables (GitHub Actions)
+ */
+function extractGitHubContextFromEnv() {
+  // Check if we're running in GitHub Actions
+  if (!process.env.GITHUB_ACTIONS) {
+    return null;
+  }
+
+  try {
+    const repository = process.env.GITHUB_REPOSITORY; // format: "owner/repo"
+    const eventName = process.env.GITHUB_EVENT_NAME;
+    const eventPath = process.env.GITHUB_EVENT_PATH;
+
+    if (!repository || !eventName || !eventPath) {
+      console.log('⚠️ GitHub Actions environment detected but missing required variables');
+      return null;
+    }
+
+    // Parse repository
+    const [owner, repo] = repository.split('/');
+    if (!owner || !repo) {
+      console.log('⚠️ Invalid GITHUB_REPOSITORY format:', repository);
+      return null;
+    }
+
+    // Read event data
+    const fs = require('fs');
+    let eventData = {};
+    try {
+      const eventContent = fs.readFileSync(eventPath, 'utf8');
+      eventData = JSON.parse(eventContent);
+    } catch (error) {
+      console.log('⚠️ Failed to read GitHub event data:', error.message);
+      return null;
+    }
+
+    // Extract issue number for issue events
+    let issueNumber = null;
+    if (eventName === 'issues' && eventData.issue) {
+      issueNumber = eventData.issue.number;
+    } else if (eventName === 'issue_comment' && eventData.issue) {
+      issueNumber = eventData.issue.number;
+    }
+
+    if (issueNumber) {
+      const context = {
+        owner,
+        repo,
+        issueNumber,
+        eventType: eventName,
+        action: eventData.action
+      };
+
+      console.log('📋 GitHub context detected:', context);
+      return context;
+    } else {
+      console.log('⚠️ No issue number found in GitHub event data');
+      return null;
+    }
+
+  } catch (error) {
+    console.log('⚠️ Failed to extract GitHub context:', error.message);
+    return null;
   }
 }
 
