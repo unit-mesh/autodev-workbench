@@ -3,7 +3,7 @@ import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
 
-export const installContextAnalysisTool: ToolLike = (installer) => {
+export const installAnalysisBasiContextTool: ToolLike = (installer) => {
   installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning", {
     workspace_path: z.string().optional().describe("Path to analyze (defaults to current directory)"),
     analysis_scope: z.enum(["basic", "full"]).optional().describe("Analysis scope: basic (essential info only) or full (detailed analysis)")

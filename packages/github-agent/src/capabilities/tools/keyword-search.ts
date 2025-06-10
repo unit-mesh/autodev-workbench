@@ -11,7 +11,7 @@ import {
   SymbolKind
 } from "@autodev/context-worker";
 
-export const installSymbolSearchTool: ToolLike = (installer) => {
+export const installKeywordSearchTool: ToolLike = (installer) => {
   installer("search-keywords", "Search for specific programming language symbols (classes, functions, methods, variables, interfaces, etc.) in a source code file using advanced AST-based SymbolAnalyser. This tool finds code structure elements, not text keywords.", {
     file_path: z.string().describe("Path to the source code file to analyze for programming symbols"),
     symbols: z.array(z.string()).describe("Array of programming symbol names to search for (e.g., class names, function names, method names, variable names, interface names)"),
