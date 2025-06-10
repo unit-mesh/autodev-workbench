@@ -98,7 +98,7 @@ autodev-analyze-issue --owner microsoft --repo vscode --issue 12345
 
 ### Available Tools
 
-The GitHub Agent provides six comprehensive MCP tools:
+The GitHub Agent provides seven comprehensive MCP tools:
 
 #### 1. `github_get_issues`
 
@@ -237,6 +237,28 @@ Fetch and convert web page content to markdown for analysis, with support for ex
 }
 ```
 
+#### 7. `web-search`
+
+Search the web for information when the LLM is uncertain about specific knowledge. Supports Google Custom Search and Bing Search APIs with automatic fallback.
+
+**Parameters:**
+- `query` (string): Search query to find information
+- `num_results` (optional): Number of search results to return (1-10, default: 5)
+- `search_engine` (optional): Search engine to use - "google", "bing", or "auto" (default: "auto")
+- `language` (optional): Language for search results (e.g., "en", "zh-CN", default: "en")
+- `safe_search` (optional): Enable safe search filtering (default: true)
+
+**Example:**
+```json
+{
+  "query": "TypeScript 5.0 new features",
+  "num_results": 8,
+  "search_engine": "google",
+  "language": "en",
+  "safe_search": true
+}
+```
+
 ## 🚀 Advanced Capabilities
 
 ### AI-Powered Analysis
@@ -255,6 +277,12 @@ Fetch and convert web page content to markdown for analysis, with support for ex
 - **🌐 Automatic URL fetching**: Extracts and processes URLs from GitHub issues
 - **📄 HTML to Markdown conversion**: Uses Cheerio and TurndownService for clean content extraction
 - **🧹 Content cleaning**: Removes scripts, styles, and navigation elements for focused analysis
+
+### Web Search Capabilities
+- **🔍 Multi-engine search**: Supports Google Custom Search and Bing Search APIs with automatic fallback
+- **🌍 Multi-language support**: Search in different languages (English, Chinese, etc.)
+- **🛡️ Safe search filtering**: Optional content filtering for appropriate results
+- **⚡ Smart error handling**: Graceful fallback and detailed error messages with configuration guidance
 
 ## 💡 Usage Examples
 
@@ -298,6 +326,19 @@ Fetch and convert web page content to markdown for analysis, with support for ex
 }
 ```
 
+### Web Search for Knowledge Verification
+```json
+{
+  "tool": "web-search",
+  "arguments": {
+    "query": "React Server Components best practices 2024",
+    "num_results": 5,
+    "search_engine": "auto",
+    "language": "en"
+  }
+}
+```
+
 ## Integration with AI Assistants
 
 This MCP server can be integrated with AI assistants that support the Model Context Protocol, such as:
@@ -318,7 +359,10 @@ Add to your Claude Desktop MCP configuration:
       "args": ["@autodev/github-agent@latest"],
       "env": {
         "GITHUB_TOKEN": "your_github_token_here",
-        "GLM_TOKEN": "your_glm_token_here"
+        "GLM_TOKEN": "your_glm_token_here",
+        "GOOGLE_SEARCH_API_KEY": "your_google_search_api_key",
+        "GOOGLE_SEARCH_ENGINE_ID": "your_google_search_engine_id",
+        "BING_SEARCH_API_KEY": "your_bing_search_api_key"
       }
     }
   }
@@ -438,6 +482,8 @@ Contributions are welcome! Please read the contributing guidelines and submit pu
 - Verify LLM configuration for AI-powered features
 - Check workspace path accessibility for code analysis
 - Monitor timeout settings for web content fetching
+- Configure web search API keys for search functionality (Google Custom Search or Bing Search)
+- Check API quota limits if search requests fail
 
 ## 🆘 Support
 

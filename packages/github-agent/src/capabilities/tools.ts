@@ -23,6 +23,7 @@ import {installGitHubCreateNewIssueTool} from "./tools/github-issue-create";
 
 // web search
 import {installExtractWebpageAsMarkdownTool} from "./tools/web-fetch-content";
+import {installWebSearchTool} from "./tools/web-search";
 
 // File System Tools
 export const FileSystemTools = [
@@ -57,6 +58,7 @@ export const GitHubTools = [
 // Web Tools
 export const WebTools = [
     installExtractWebpageAsMarkdownTool,
+    installWebSearchTool,
 ] as const;
 
 // All Tools
