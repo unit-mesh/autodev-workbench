@@ -1,7 +1,7 @@
-import { generateText, CoreMessage } from "ai";
-import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
-import { FunctionParser, FunctionCall } from "./agent/function-parser";
-import { AutoDevRemoteAgentTools } from "./capabilities/tools";
+import {CoreMessage, generateText} from "ai";
+import {configureLLMProvider, LLMProviderConfig} from "./services/llm";
+import {FunctionCall, FunctionParser} from "./agent/function-parser";
+import {AutoDevRemoteAgentTools} from "./capabilities/tools";
 
 let AUTODEV_REMOTE_TOOLS: Array<{
   name: string;
@@ -1317,21 +1317,7 @@ String and scalar parameters should be specified as is, while lists and objects 
       output.push('\n❌ Error: ' + response.error);
     }
 
-    const formattedResponse = output.join('\n');
-
-    if (options?.autoUpload && response.githubContext && options.githubToken) {
-      // Note: This is async but we can't await in a static method
-      // The upload will happen in the background
-      console.log('Uploading response to GitHub...');
-      AIAgent.uploadResponseToGitHub(response, formattedResponse, options.githubToken)
-        .catch(error => {
-          console.warn('⚠️ Failed to upload response to GitHub:', error.message);
-        });
-    } else {
-      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(options)}, text: ${formattedResponse}`);
-    }
-
-    return formattedResponse;
+    return output.join('\n');
   }
 
   /**

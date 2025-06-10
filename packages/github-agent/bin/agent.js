@@ -199,7 +199,18 @@ async function processSingleCommand(agent, command, config) {
       githubToken: process.env.GITHUB_TOKEN
     });
 
-    console.log(formattedResponse);
+
+    if (config?.autoUpload && response.githubContext && config.githubToken) {
+      // Note: This is async but we can't await in a static method
+      // The upload will happen in the background
+      console.log('Uploading response to GitHub...');
+      AIAgent.uploadResponseToGitHub(response, formattedResponse, config.githubToken)
+          .catch(error => {
+            console.warn('⚠️ Failed to upload response to GitHub:', error.message);
+          });
+    } else {
+      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(options)}, text: ${formattedResponse}`);
+    }
 
     if (!response.success) {
       console.error('❌ Command execution failed');
