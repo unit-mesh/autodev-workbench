@@ -194,7 +194,7 @@ async function processSingleCommand(agent, command, config) {
 
   try {
     const response = await agent.processInput(command);
-    console.log('try uploading response to GitHub...');
+    console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${config.githubToken.substring(1, 5)}`);
 
     if (config?.autoUpload && response.githubContext && config.githubToken) {
       // Note: This is async but we can't await in a static method
