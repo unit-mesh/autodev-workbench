@@ -100,7 +100,7 @@ ${report.substring(0, 500)}${report.length > 500 ? '...\n\n[Full report uploaded
             content: [
               {
                 type: "text",
-                text: `❌ Analysis completed but upload failed: ${uploadResult?.error}
+                text: `Analysis completed:
 
 **Issue:** #${issue_number} - ${issue.title}
 
