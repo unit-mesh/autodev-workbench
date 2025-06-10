@@ -4,81 +4,46 @@ import * as fs from "fs";
 import * as path from "path";
 
 export const installContextAnalysisTool: ToolLike = (installer) => {
-  installer("analyze-context", "Analyze project context, structure, and provide intelligent insights for planning", {
-    analysis_type: z.enum(["project", "codebase", "workflow", "architecture", "all"]).optional().describe("Type of context analysis (default: all)"),
+  installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning", {
     workspace_path: z.string().optional().describe("Path to analyze (defaults to current directory)"),
-    include_git_info: z.boolean().optional().describe("Include Git repository information (default: true)"),
-    include_dependencies: z.boolean().optional().describe("Include dependency analysis (default: true)"),
-    include_structure: z.boolean().optional().describe("Include project structure analysis (default: true)"),
-    max_depth: z.number().optional().describe("Maximum directory depth to analyze (default: 3)"),
-    exclude_dirs: z.array(z.string()).optional().describe("Directories to exclude from analysis")
+    analysis_scope: z.enum(["basic", "full"]).optional().describe("Analysis scope: basic (essential info only) or full (detailed analysis)")
   }, async ({
-    analysis_type = "all",
     workspace_path,
-    include_git_info = true,
-    include_dependencies = true,
-    include_structure = true,
-    max_depth = 3,
-    exclude_dirs = ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt']
+    analysis_scope = "basic"
   }: {
-    analysis_type?: "project" | "codebase" | "workflow" | "architecture" | "all";
     workspace_path?: string;
-    include_git_info?: boolean;
-    include_dependencies?: boolean;
-    include_structure?: boolean;
-    max_depth?: number;
-    exclude_dirs?: string[] | string;
+    analysis_scope?: "basic" | "full";
   }) => {
     try {
       // Resolve workspace path
       const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
       const resolvedWorkspace = path.resolve(workspacePath);
 
-      // Handle exclude_dirs parameter - convert string to array if needed
-      let processedExcludeDirs: string[];
-      if (typeof exclude_dirs === 'string') {
-        // Split comma-separated string into array
-        processedExcludeDirs = exclude_dirs.split(',').map(dir => dir.trim()).filter(dir => dir.length > 0);
-      } else {
-        processedExcludeDirs = exclude_dirs || ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'];
-      }
+      // Set analysis parameters based on scope
+      const isFullAnalysis = analysis_scope === "full";
+      const maxDepth = isFullAnalysis ? 3 : 2;
+      const excludeDirs = ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'];
 
       const result: any = {
         analysis: {
           workspace_path: workspacePath,
           resolved_path: resolvedWorkspace,
-          analysis_type: analysis_type,
+          analysis_scope: analysis_scope,
           timestamp: new Date().toISOString()
         }
       };
 
-      // Project analysis
-      if (analysis_type === "project" || analysis_type === "all") {
-        result.project_info = await analyzeProjectInfo(resolvedWorkspace);
-      }
+      // Always include basic project info
+      result.project_info = await analyzeProjectInfo(resolvedWorkspace);
 
-      // Codebase analysis
-      if (analysis_type === "codebase" || analysis_type === "all") {
-        result.codebase_analysis = await analyzeCodebase(resolvedWorkspace, max_depth, processedExcludeDirs);
-      }
+      // Always include basic codebase analysis
+      result.codebase_analysis = await analyzeCodebase(resolvedWorkspace, maxDepth, excludeDirs);
 
-      // Workflow analysis
-      if (analysis_type === "workflow" || analysis_type === "all") {
+      // Include additional analysis for full scope
+      if (isFullAnalysis) {
         result.workflow_analysis = await analyzeWorkflow(resolvedWorkspace);
-      }
-
-      // Architecture analysis
-      if (analysis_type === "architecture" || analysis_type === "all") {
-        result.architecture_analysis = await analyzeArchitecture(resolvedWorkspace, include_structure);
-      }
-
-      // Git information
-      if (include_git_info) {
+        result.architecture_analysis = await analyzeArchitecture(resolvedWorkspace, true);
         result.git_info = await analyzeGitRepository(resolvedWorkspace);
-      }
-
-      // Dependencies
-      if (include_dependencies) {
         result.dependencies_summary = await analyzeDependenciesSummary(resolvedWorkspace);
       }
 

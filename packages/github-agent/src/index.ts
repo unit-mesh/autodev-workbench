@@ -23,5 +23,7 @@ export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/git
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-upload";
 // Tool collections
 export  * from "./capabilities/tools";
+// Individual tool exports
+export * from "./capabilities/tools/index";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
 export { EnhancedUI } from "./utils/enhanced-ui";
