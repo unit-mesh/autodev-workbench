@@ -6,7 +6,7 @@ import { regexSearchFiles } from "@autodev/worker-core";
 
 export const installGrepSearchTool: ToolLike = (installer) => {
   installer("grep-search", "Search for patterns in code using regex with ripgrep", {
-    search_path: z.string().describe("Path to search in (relative to workspace)"),
+    search_path: z.string().describe("Directory path to search within the workspace (relative path). Use \".\" for current directory if no specific path is provided."),
     pattern: z.string().describe("Regex pattern to search for")
   }, async ({
     search_path,

@@ -10,7 +10,7 @@ import {installDeleteFileTool} from "./tools/fs-delete-file";
 import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
 import {installExecuteScriptTool} from "./tools/terminal-execute-script";
 
-import {installGitHubAnalyzeIssueAndPostResultsTool} from "./tools/github-analysis-upload";
+import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-upload";
 import {installSymbolSearchTool} from "./tools/code-analyze-symbols";
 import {installContextAnalysisTool} from "./tools/planning-context-analyzer";
 import {installGrepSearchTool} from "./tools/code-search-regex";
@@ -52,7 +52,7 @@ export const GitHubTools = [
     installGitHubAddIssueCommentTool,
     installGitHubListRepositoryIssuesTool,
     installGitHubFindCodeByDescriptionTool,
-    installGitHubAnalyzeIssueAndPostResultsTool,
+    installGitHubAnalyzeIssueTool,
 ] as const;
 
 // Web Tools
@@ -65,9 +65,6 @@ export const AutoDevRemoteAgentTools = [
     ...FileSystemTools,
     ...CodeAnalysisTools,
     ...TerminalTools,
-    ...GitHubTools.filter(tool => {
-        tool.name !== installGitHubAnalyzeIssueAndPostResultsTool.name &&
-        tool.name !== installGitHubAddIssueCommentTool.name
-    }),
+    ...GitHubTools,
     ...WebTools,
 ] as const;

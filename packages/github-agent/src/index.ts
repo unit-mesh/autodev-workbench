@@ -20,7 +20,7 @@ export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/gith
 export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-search-smart";
-export { installGitHubAnalyzeIssueAndPostResultsTool } from "./capabilities/tools/github-analysis-upload";
+export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-upload";
 // Tool collections
 export  * from "./capabilities/tools";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";

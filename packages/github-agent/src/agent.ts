@@ -1326,7 +1326,6 @@ String and scalar parameters should be specified as is, while lists and objects 
     const { owner, repo, issueNumber } = response.githubContext;
 
     try {
-      // Import GitHubService dynamically to avoid circular dependencies
       const { GitHubService } = await import('./services/github/github-service');
       const githubService = new GitHubService(githubToken);
 
