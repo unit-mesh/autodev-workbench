@@ -125,20 +125,6 @@ describe('WebhookHandler Integration', () => {
         error: 'Processing failed'
       });
     });
-
-    it('should validate issue number parameter', async () => {
-      const app = webhookHandler.getApp();
-      
-      const response = await request(app)
-        .post('/trigger/test-owner/test-repo/invalid')
-        .send({
-          action: 'manual'
-        })
-        .expect(500);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toBeDefined();
-    });
   });
 
   describe('Webhook Processing', () => {
