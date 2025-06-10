@@ -5,43 +5,20 @@ import * as path from "path";
 import { regexSearchFiles } from "@autodev/worker-core";
 
 export const installGrepSearchTool: ToolLike = (installer) => {
-  installer("grep-search", "Search for patterns in code using regex with ripgrep or grep", {
-    pattern: z.string().describe("Regex pattern to search for"),
-    search_path: z.string().optional().describe("Path to search in (relative to workspace, default: current directory)"),
-    file_types: z.array(z.string()).optional().describe("File extensions to include (e.g., ['js', 'ts', 'py'])"),
-    exclude_patterns: z.array(z.string()).optional().describe("Patterns to exclude (e.g., ['node_modules', '.git'])"),
-    case_sensitive: z.boolean().optional().describe("Case sensitive search (default: false)"),
-    whole_word: z.boolean().optional().describe("Match whole words only (default: false)"),
-    max_results: z.number().optional().describe("Maximum number of results to return (default: 100)"),
-    context_lines: z.number().optional().describe("Number of context lines to show around matches (default: 4)"),
-    use_ripgrep: z.boolean().optional().describe("Use ripgrep if available (faster, default: true)")
-  }, async ({ 
-    pattern, 
+  installer("grep-search", "Search for patterns in code using regex with ripgrep", {
+    search_path: z.string().describe("Path to search in (relative to workspace)"),
+    pattern: z.string().describe("Regex pattern to search for")
+  }, async ({
     search_path,
-    file_types,
-    exclude_patterns = ['node_modules', '.git', 'dist', 'build', 'coverage'],
-    case_sensitive = false,
-    whole_word = false,
-    max_results = 100,
-    context_lines = 4,
-    use_ripgrep = true
-  }: { 
-    pattern: string; 
-    search_path?: string;
-    file_types?: string[];
-    exclude_patterns?: string[];
-    case_sensitive?: boolean;
-    whole_word?: boolean;
-    max_results?: number;
-    context_lines?: number;
-    use_ripgrep?: boolean;
+    pattern
+  }: {
+    search_path: string;
+    pattern: string;
   }) => {
     try {
       // Resolve search path
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
-      const searchDir = search_path 
-        ? (path.isAbsolute(search_path) ? search_path : path.join(workspacePath, search_path))
-        : workspacePath;
+      const searchDir = path.isAbsolute(search_path) ? search_path : path.join(workspacePath, search_path);
 
       // Security check - ensure search path is within workspace
       const resolvedSearchDir = path.resolve(searchDir);
@@ -69,32 +46,16 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Prepare file pattern for ripgrep
-      let filePattern: string | undefined;
-      if (file_types && file_types.length > 0) {
-        filePattern = `*.{${file_types.map(ext => ext.replace(/^\./, '')).join(',')}}`;
-      }
-
-      // Adjust pattern for case sensitivity and whole word matching
-      let searchPattern = pattern;
-      if (whole_word) {
-        searchPattern = `\\b${pattern}\\b`;
-      }
-      if (!case_sensitive) {
-        searchPattern = `(?i)${searchPattern}`;
-      }
-
       // Execute search using ripgrep
-      const startTime = Date.now();
       let searchResults: string;
 
       try {
         searchResults = await regexSearchFiles(
           workspacePath,
           resolvedSearchDir,
-          searchPattern,
+          pattern,
           false, // includeNodeModules
-          filePattern
+          undefined // filePattern
         );
       } catch (error: any) {
         return {
@@ -106,8 +67,6 @@ export const installGrepSearchTool: ToolLike = (installer) => {
           ]
         };
       }
-
-      const executionTime = Date.now() - startTime;
 
       // Check if we have results
       if (!searchResults || searchResults === "No results found") {
@@ -122,49 +81,13 @@ export const installGrepSearchTool: ToolLike = (installer) => {
       }
 
       // Format results according to the specified format
-      const formattedResults = formatRipgrepResults(searchResults, context_lines);
-
-      // Parse for structured data (optional, for backward compatibility)
-      const matches = parseRipgrepForMatches(searchResults, workspacePath);
-      const limitedMatches = matches.slice(0, max_results);
-
-      // Group by file for structured data
-      const fileGroups: Record<string, any[]> = {};
-      limitedMatches.forEach(match => {
-        if (!fileGroups[match.file]) {
-          fileGroups[match.file] = [];
-        }
-        fileGroups[match.file].push(match);
-      });
-
-      const searchResult = {
-        query: {
-          pattern: pattern,
-          search_path: search_path || ".",
-          resolved_search_path: resolvedSearchDir,
-          case_sensitive: case_sensitive,
-          whole_word: whole_word,
-          file_types: file_types || null,
-          exclude_patterns: exclude_patterns,
-          max_results: max_results,
-          context_lines: context_lines
-        },
-        tool_used: "ripgrep",
-        execution_time_ms: executionTime,
-        total_matches: limitedMatches.length,
-        files_with_matches: Object.keys(fileGroups).length,
-        formatted_results: formattedResults,
-        matches_by_file: fileGroups,
-        all_matches: limitedMatches,
-        success: true,
-        error: null
-      };
+      const formattedResults = formatRipgrepResults(searchResults);
 
       return {
         content: [
           {
             type: "text",
-            text: formattedResults + "\n\n" + JSON.stringify(searchResult, null, 2)
+            text: formattedResults
           }
         ]
       };
@@ -188,7 +111,7 @@ export const installGrepSearchTool: ToolLike = (installer) => {
  * result line
  * --- after 4 lines----
  */
-function formatRipgrepResults(searchResults: string, contextLines: number): string {
+function formatRipgrepResults(searchResults: string): string {
   const lines = searchResults.split('\n');
   let formattedOutput = '';
   let currentFile = '';
@@ -217,7 +140,7 @@ function formatRipgrepResults(searchResults: string, contextLines: number): stri
 
         // Check if this is a separator line
         if (line.includes('----')) {
-          formattedOutput += `--- context lines (${contextLines} before/after) ---\n\n`;
+          formattedOutput += `--- before 4 lines ---, result line, --- after 4 lines----\n\n`;
           inFileSection = false;
           continue;
         }
@@ -230,40 +153,4 @@ function formatRipgrepResults(searchResults: string, contextLines: number): stri
   return formattedOutput.trim();
 }
 
-/**
- * Parse ripgrep results to extract structured match data
- */
-function parseRipgrepForMatches(searchResults: string, workspacePath: string): any[] {
-  const matches: any[] = [];
-  const lines = searchResults.split('\n');
-  let currentFile = '';
 
-  for (const line of lines) {
-    // Check if this is a file header
-    if (line.startsWith('# ')) {
-      currentFile = line.substring(2).trim();
-      continue;
-    }
-
-    // Process content lines that contain matches
-    if (currentFile && line.includes(' | ') && !line.includes('----')) {
-      const parts = line.split(' | ');
-      if (parts.length >= 2) {
-        const lineNumStr = parts[0].trim();
-        const content = parts.slice(1).join(' | ');
-        const lineNum = parseInt(lineNumStr);
-
-        if (!isNaN(lineNum)) {
-          matches.push({
-            file: currentFile,
-            line_number: lineNum,
-            line_content: content.trim(),
-            match_text: content.trim()
-          });
-        }
-      }
-    }
-  }
-
-  return matches;
-}

@@ -46,7 +46,7 @@ describe('installGrepSearchTool', () => {
     it('should install with correct name and description', () => {
       expect(mockInstaller).toHaveBeenCalledWith(
         'grep-search',
-        'Search for patterns in code using regex with ripgrep or grep',
+        'Search for patterns in code using regex with ripgrep',
         expect.any(Object),
         expect.any(Function)
       );
@@ -54,16 +54,11 @@ describe('installGrepSearchTool', () => {
 
     it('should have correct parameter schema', () => {
       const schema = mockInstaller.mock.calls[0][2];
-      
-      expect(schema).toHaveProperty('pattern');
+
       expect(schema).toHaveProperty('search_path');
-      expect(schema).toHaveProperty('file_types');
-      expect(schema).toHaveProperty('exclude_patterns');
-      expect(schema).toHaveProperty('case_sensitive');
-      expect(schema).toHaveProperty('whole_word');
-      expect(schema).toHaveProperty('max_results');
-      expect(schema).toHaveProperty('context_lines');
-      expect(schema).toHaveProperty('use_ripgrep');
+      expect(schema).toHaveProperty('pattern');
+      // Only these two parameters should exist now
+      expect(Object.keys(schema)).toHaveLength(2);
     });
   });
 
@@ -91,9 +86,8 @@ describe('installGrepSearchTool', () => {
 ----`);
 
       const result = await grepSearchTool({
-        pattern: 'console.log',
         search_path: '.',
-        context_lines: 4
+        pattern: 'console.log'
       });
 
       expect(result).toHaveProperty('content');
@@ -106,8 +100,8 @@ describe('installGrepSearchTool', () => {
       mockRegexSearchFiles.mockResolvedValue('No results found');
 
       const result = await grepSearchTool({
-        pattern: 'nonexistent',
-        search_path: '.'
+        search_path: '.',
+        pattern: 'nonexistent'
       });
 
       expect(result).toHaveProperty('content');
@@ -118,8 +112,8 @@ describe('installGrepSearchTool', () => {
       mockRegexSearchFiles.mockRejectedValue(new Error('Ripgrep not found'));
 
       const result = await grepSearchTool({
-        pattern: 'test',
-        search_path: '.'
+        search_path: '.',
+        pattern: 'test'
       });
 
       expect(result).toHaveProperty('content');
@@ -134,8 +128,8 @@ describe('installGrepSearchTool', () => {
       });
 
       const result = await grepSearchTool({
-        pattern: 'test',
-        search_path: '../../../etc/passwd'
+        search_path: '../../../etc/passwd',
+        pattern: 'test'
       });
 
       expect(result).toHaveProperty('content');
@@ -150,8 +144,8 @@ describe('installGrepSearchTool', () => {
       });
 
       const result = await grepSearchTool({
-        pattern: 'test',
-        search_path: './nonexistent-directory'
+        search_path: './nonexistent-directory',
+        pattern: 'test'
       });
 
       expect(result).toHaveProperty('content');
@@ -193,9 +187,8 @@ describe('installGrepSearchTool', () => {
       mockRegexSearchFiles.mockResolvedValue(mockSearchResults);
 
       const result = await grepSearchTool({
-        pattern: 'console.log',
         search_path: '.',
-        context_lines: 4
+        pattern: 'console.log'
       });
 
       expect(result.content[0].text).toContain('## filepath: src/test.ts');
