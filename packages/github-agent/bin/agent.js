@@ -18,7 +18,8 @@ async function main() {
     const agent = new AIAgent({
       workspacePath: config.workspacePath || process.cwd(),
       githubToken: process.env.GITHUB_TOKEN,
-      verbose: config.verbose
+      verbose: config.verbose,
+      autoUploadToIssue: config.autoUpload || false
     });
 
     // Set global reference for cleanup
@@ -62,7 +63,8 @@ function parseArgs(args) {
   const config = {
     verbose: false,
     workspacePath: null,
-    command: null
+    command: null,
+    autoUpload: false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -88,6 +90,11 @@ function parseArgs(args) {
           config.command = args[i + 1];
           i++;
         }
+        break;
+
+      case '--auto-upload':
+      case '-u':
+        config.autoUpload = true;
         break;
       
       case '--help':
@@ -116,7 +123,10 @@ async function processSingleCommand(agent, command) {
 
   try {
     const response = await agent.processInput(command);
-    const formattedResponse = AIAgent.formatResponse(response);
+    const formattedResponse = AIAgent.formatResponse(response, {
+      autoUpload: config.autoUpload,
+      githubToken: process.env.GITHUB_TOKEN
+    });
 
     console.log(formattedResponse);
 
@@ -216,8 +226,11 @@ async function startInteractiveMode(agent) {
       console.log('\n🤔 Thinking...\n');
       
       const response = await agent.processInput(trimmedInput);
-      const formattedResponse = AIAgent.formatResponse(response);
-      
+      const formattedResponse = AIAgent.formatResponse(response, {
+        autoUpload: config.autoUpload,
+        githubToken: process.env.GITHUB_TOKEN
+      });
+
       console.log(formattedResponse);
     } catch (error) {
       console.error('❌ Error:', error.message);
@@ -247,6 +260,7 @@ OPTIONS:
   -v, --verbose           Enable verbose logging
   -w, --workspace PATH    Set workspace path (default: current directory)
   -c, --command TEXT      Execute single command and exit
+  -u, --auto-upload       Automatically upload analysis results to GitHub issues
   -h, --help              Show this help message
 
 EXAMPLES:
@@ -258,6 +272,9 @@ EXAMPLES:
   
   # With options
   autodev-ai-agent --verbose --workspace /path/to/project
+
+  # Auto-upload results to GitHub issue
+  autodev-ai-agent --auto-upload "Analyze GitHub issue #123 in owner/repo"
 
 ENVIRONMENT VARIABLES:
   GITHUB_TOKEN           GitHub personal access token

@@ -63,6 +63,7 @@ export interface AgentConfig {
   maxToolRounds?: number;
   enableToolChaining?: boolean;
   toolTimeout?: number;
+  autoUploadToIssue?: boolean;
 }
 
 export interface ToolResult {
@@ -81,6 +82,11 @@ export interface AgentResponse {
   error?: string;
   totalRounds?: number;
   executionTime?: number;
+  githubContext?: {
+    owner: string;
+    repo: string;
+    issueNumber: number;
+  };
 }
 
 export interface ToolExecutionContext {
@@ -112,6 +118,7 @@ export class AIAgent {
       maxToolRounds: 5, // Increased from 3 to 5 for more comprehensive analysis
       enableToolChaining: true,
       toolTimeout: 120000, // Increased from 30s to 120s for better handling of large repositories
+      autoUploadToIssue: config.autoUploadToIssue || false,
       ...config
     };
 
@@ -287,12 +294,15 @@ export class AIAgent {
     const executionTime = Date.now() - startTime;
     this.updateExecutionStats(true, executionTime);
 
+    const githubContext = this.extractGitHubContext(userInput, allToolResults);
+
     return {
       text: finalResponse,
       toolResults: allToolResults,
       success: true,
       totalRounds: currentRound - 1,
-      executionTime
+      executionTime,
+      githubContext
     };
   }
 
@@ -349,12 +359,15 @@ export class AIAgent {
         const executionTime = Date.now() - startTime;
         this.updateExecutionStats(true, executionTime);
 
+        const githubContext = this.extractGitHubContext(userInput, toolResults);
+
         return {
           text: finalResponse,
           toolResults,
           success: true,
           totalRounds: 1,
-          executionTime
+          executionTime,
+          githubContext
         };
       }
     } else {
@@ -1173,9 +1186,42 @@ String and scalar parameters should be specified as is, while lists and objects 
   }
 
   /**
-   * Format agent response for display with enhanced information
+   * Extract GitHub context from user input and tool results
    */
-  static formatResponse(response: AgentResponse): string {
+  private extractGitHubContext(userInput: string, toolResults: ToolResult[]): { owner: string; repo: string; issueNumber: number } | undefined {
+    // First, try to extract from user input
+    const inputMatch = userInput.match(/(?:github\.com\/|^|\s)([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(?:\/issues\/|#)(\d+)/i);
+    if (inputMatch) {
+      return {
+        owner: inputMatch[1],
+        repo: inputMatch[2],
+        issueNumber: parseInt(inputMatch[3])
+      };
+    }
+
+    // Try to extract from tool results
+    for (const result of toolResults) {
+      if (result.success && result.functionCall.name.includes('github')) {
+        const params = result.functionCall.parameters;
+        if (params.owner && params.repo && (params.issue_number || params.issueNumber)) {
+          return {
+            owner: params.owner,
+            repo: params.repo,
+            issueNumber: params.issue_number || params.issueNumber
+          };
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Format agent response for display with enhanced information
+   * @param response - The agent response to format
+   * @param options - Optional formatting options
+   */
+  static formatResponse(response: AgentResponse, options?: { autoUpload?: boolean; githubToken?: string }): string {
     const output: string[] = [];
 
     // Add execution summary if available
@@ -1256,7 +1302,55 @@ String and scalar parameters should be specified as is, while lists and objects 
       output.push('\n❌ Error: ' + response.error);
     }
 
-    return output.join('\n');
+    const formattedResponse = output.join('\n');
+
+    // Handle auto-upload to GitHub issue if enabled and context is available
+    if (options?.autoUpload && response.githubContext && options.githubToken) {
+      // Note: This is async but we can't await in a static method
+      // The upload will happen in the background
+      AIAgent.uploadResponseToGitHub(response, formattedResponse, options.githubToken)
+        .catch(error => {
+          console.warn('⚠️ Failed to upload response to GitHub:', error.message);
+        });
+    }
+
+    return formattedResponse;
+  }
+
+  /**
+   * Upload agent response to GitHub issue as a comment
+   */
+  static async uploadResponseToGitHub(response: AgentResponse, formattedResponse: string, githubToken: string): Promise<void> {
+    if (!response.githubContext) {
+      throw new Error('No GitHub context available for upload');
+    }
+
+    const { owner, repo, issueNumber } = response.githubContext;
+
+    try {
+      // Import GitHubService dynamically to avoid circular dependencies
+      const { GitHubService } = await import('./services/github/github-service');
+      const githubService = new GitHubService(githubToken);
+
+      // Create a formatted comment body
+      const commentBody = `## 🤖 AI Agent Analysis Results
+
+${formattedResponse}
+
+---
+*This analysis was generated automatically by AutoDev AI Agent*
+*Execution time: ${response.executionTime}ms | Rounds: ${response.totalRounds || 1}*`;
+
+      // Upload the comment
+      const commentResult = await githubService.addIssueComment(owner, repo, issueNumber, commentBody);
+
+      console.log(`✅ Analysis results uploaded to GitHub issue #${issueNumber}`);
+      console.log(`📝 Comment URL: ${commentResult.html_url}`);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to upload to GitHub: ${errorMessage}`);
+    }
   }
 
   /**
