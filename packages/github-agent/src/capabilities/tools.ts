@@ -1,89 +1,80 @@
-import { ToolLike } from "./_typing";
-
 // File System Tools
-import { installListDirectoryTool } from "./tools/fs-list-directory";
-import { installReadFileTool } from "./tools/fs-read-file";
-import { installWriteFileTool } from "./tools/fs-write-file";
-import { installDeleteFileTool } from "./tools/fs-delete-file";
-
-// Code Analysis Tools
-import { installFileSearchTool } from "./tools/file-search";
-import { installSymbolAnalysisTool } from "./tools/analyze-symbols";
-import { installDependencyAnalysisTool } from "./tools/analyze-dependencies";
-import { installContextAnalysisTool } from "./tools/analyze-context";
-import { installCodebaseSearchTool } from "./tools/codebase-search";
-import { installGrepSearchTool } from "./tools/grep-search";
+import {installListDirectoryTool} from "./tools/fs-list-directory";
+import {installReadFileTool} from "./tools/fs-read-file";
+import {installWriteFileTool} from "./tools/fs-write-file";
+import {installDeleteFileTool} from "./tools/fs-delete-file";
 
 // Planning & Memory Tools
-import { installTaskPlannerTool } from "./tools/task-planner";
-import { installMemoryStoreTool } from "./tools/memory-store";
+import {installMemoryStoreTool} from "./tools/memory-store";
 
 // Terminal Tools
-import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
-import { installExecuteScriptTool } from "./tools/terminal-execute-script";
+import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
+import {installExecuteScriptTool} from "./tools/terminal-execute-script";
 
-// GitHub Tools
-import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-get-issue-with-analysis";
-import { installGitHubCreateNewIssueTool } from "./tools/github-create-new-issue";
-import { installGitHubAddIssueCommentTool } from "./tools/github-add-issue-comment";
-import { installGitHubListRepositoryIssuesTool } from "./tools/github-list-repository-issues";
-import { installGitHubFindCodeByDescriptionTool } from "./tools/github-find-code-by-description";
-import { installGitHubAnalyzeIssueAndPostResultsTool } from "./tools/github-analysis-upload";
-
-// Web Tools
-import { installExtractWebpageAsMarkdownTool } from "./tools/extract-webpage-as-markdown";
+import {installGitHubAnalyzeIssueAndPostResultsTool} from "./tools/github-analysis-upload";
+import {installSymbolAnalysisTool} from "./tools/code-analyze-symbols";
+import {installFileSearchTool} from "./tools/code-search-filename";
+import {installContextAnalysisTool} from "./tools/planning-context-analyzer";
+import {installGrepSearchTool} from "./tools/code-search-regex";
+import {installDependencyAnalysisTool} from "./tools/code-analyze-dependencies";
+import {installGitHubGetIssueWithAnalysisTool} from "./tools/github-issue-get";
+import {installGitHubAddIssueCommentTool} from "./tools/github-issue-comment";
+import {installGitHubListRepositoryIssuesTool} from "./tools/github-list-repository-issues";
+import {installGitHubFindCodeByDescriptionTool} from "./tools/github-search-smart";
+import {installGitHubCreateNewIssueTool} from "./tools/github-issue-create";
+import {installExtractWebpageAsMarkdownTool} from "./tools/web-fetch-content";
+import {installCodebaseSearchTool} from "./tools/code-search-semantic";
 
 // File System Tools
 export const FileSystemTools = [
-  installListDirectoryTool,
-  installReadFileTool,
-  installWriteFileTool,
-  installDeleteFileTool,
+    installListDirectoryTool,
+    installReadFileTool,
+    installWriteFileTool,
+    installDeleteFileTool,
 ] as const;
 
 // Code Analysis Tools
 export const CodeAnalysisTools = [
-  installFileSearchTool,
-  installSymbolAnalysisTool,
-  installDependencyAnalysisTool,
-  installContextAnalysisTool,
-  installCodebaseSearchTool,
-  installGrepSearchTool,
+    installFileSearchTool,
+    installSymbolAnalysisTool,
+    installDependencyAnalysisTool,
+    installContextAnalysisTool,
+    // installCodebaseSearchTool,
+    installGrepSearchTool,
 ] as const;
 
 // Planning & Memory Tools
 export const PlanningTools = [
-  installTaskPlannerTool,
-  installMemoryStoreTool,
+    installMemoryStoreTool,
 ] as const;
 
 // Terminal Tools
 export const TerminalTools = [
-  installRunTerminalCommandTool,
-  installExecuteScriptTool,
+    installRunTerminalCommandTool,
+    installExecuteScriptTool,
 ] as const;
 
 // GitHub Tools
 export const GitHubTools = [
-  installGitHubGetIssueWithAnalysisTool,
-  installGitHubCreateNewIssueTool,
-  installGitHubAddIssueCommentTool,
-  installGitHubListRepositoryIssuesTool,
-  installGitHubFindCodeByDescriptionTool,
-  installGitHubAnalyzeIssueAndPostResultsTool,
+    installGitHubGetIssueWithAnalysisTool,
+    installGitHubCreateNewIssueTool,
+    installGitHubAddIssueCommentTool,
+    installGitHubListRepositoryIssuesTool,
+    installGitHubFindCodeByDescriptionTool,
+    installGitHubAnalyzeIssueAndPostResultsTool,
 ] as const;
 
 // Web Tools
 export const WebTools = [
-  installExtractWebpageAsMarkdownTool,
+    installExtractWebpageAsMarkdownTool,
 ] as const;
 
 // All Tools
 export const AllTools = [
-  ...FileSystemTools,
-  ...CodeAnalysisTools,
-  ...PlanningTools,
-  ...TerminalTools,
-  ...GitHubTools,
-  ...WebTools,
+    ...FileSystemTools,
+    ...CodeAnalysisTools,
+    ...PlanningTools,
+    ...TerminalTools,
+    ...GitHubTools,
+    ...WebTools,
 ] as const;

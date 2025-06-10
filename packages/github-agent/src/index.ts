@@ -22,6 +22,6 @@ export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-is
 export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-search-smart";
 export { installGitHubAnalyzeIssueAndPostResultsTool } from "./capabilities/tools/github-analysis-upload";
 // Tool collections
-export { GitHubTools, GitHubIssueTools, GitHubAnalysisTools, WebContentTools } from "./capabilities/tools";
+export  * from "./capabilities/tools";
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
 export { EnhancedUI } from "./utils/enhanced-ui";
