@@ -33,7 +33,6 @@ export const installGitHubAddIssueCommentTool: ToolLike = (installer) => {
       }
 
       const githubService = new GitHubService(githubToken);
-      
       const commentData = await githubService.addIssueComment(owner, repo, issue_number, body);
 
       const result = {

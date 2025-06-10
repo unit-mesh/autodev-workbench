@@ -3,7 +3,7 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
-const { AIAgent } = require('../dist/agent.js');
+const { AIAgent, GitHubService } = require('../dist/agent.js');
 const readline = require('readline');
 const path = require('path');
 
@@ -140,13 +140,13 @@ function parseArgs(args) {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     switch (arg) {
       case '--verbose':
       case '-v':
         config.verbose = true;
         break;
-      
+
       case '--workspace':
       case '-w':
         if (i + 1 < args.length) {
@@ -154,7 +154,7 @@ function parseArgs(args) {
           i++;
         }
         break;
-      
+
       case '--command':
       case '-c':
         if (i + 1 < args.length) {
@@ -167,13 +167,13 @@ function parseArgs(args) {
       case '-u':
         config.autoUpload = true;
         break;
-      
+
       case '--help':
       case '-h':
         showHelp();
         process.exit(0);
         break;
-      
+
       default:
         // If no flag, treat as command
         if (!arg.startsWith('-') && !config.command) {
@@ -204,10 +204,12 @@ async function processSingleCommand(agent, command, config) {
       // Note: This is async but we can't await in a static method
       // The upload will happen in the background
       console.log('Uploading response to GitHub...');
-      AIAgent.uploadResponseToGitHub(response, formattedResponse, config.githubToken)
-          .catch(error => {
-            console.warn('⚠️ Failed to upload response to GitHub:', error.message);
-          });
+      const githubService = new GitHubService(config.githubToken);
+      const commentData = await githubService.addIssueComment(
+          response.githubContext.owner,
+          response.githubContext.repo,
+          response.githubContext.issueNumber, formattedResponse
+      );
     } else {
       console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(options)}, text: ${formattedResponse}`);
     }
@@ -271,7 +273,7 @@ async function startInteractiveMode(agent, config) {
 
   rl.on('line', async (input) => {
     const trimmedInput = input.trim();
-    
+
     if (!trimmedInput) {
       rl.prompt();
       return;
@@ -306,7 +308,7 @@ async function startInteractiveMode(agent, config) {
     // Process user input
     try {
       console.log('\n🤔 Thinking...\n');
-      
+
       const response = await agent.processInput(trimmedInput);
       const formattedResponse = AIAgent.formatResponse(response, {
         autoUpload: config.autoUpload,
@@ -377,7 +379,7 @@ The agent can help you:
  */
 function showInteractiveHelp(agent) {
   const llmInfo = agent.getLLMInfo();
-  
+
   console.log(`
 🤖 AI Agent Interactive Commands:
 
