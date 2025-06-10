@@ -4,21 +4,24 @@ import {installReadFileTool} from "./tools/fs-read-file";
 import {installWriteFileTool} from "./tools/fs-write-file";
 import {installDeleteFileTool} from "./tools/fs-delete-file";
 
-// Planning & Memory Tools
-
 // Terminal Tools
 import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
 import {installExecuteScriptTool} from "./tools/terminal-execute-script";
 
-import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-upload";
-import {installSymbolSearchTool} from "./tools/code-analyze-symbols";
+// context engine
 import {installContextAnalysisTool} from "./tools/planning-context-analyzer";
 import {installGrepSearchTool} from "./tools/code-search-regex";
+import {installSymbolSearchTool} from "./tools/code-analyze-symbols";
+
+// git related
+import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-upload";
 import {installGitHubGetIssueWithAnalysisTool} from "./tools/github-issue-get";
 import {installGitHubAddIssueCommentTool} from "./tools/github-issue-comment";
 import {installGitHubListRepositoryIssuesTool} from "./tools/github-list-repository-issues";
 import {installGitHubFindCodeByDescriptionTool} from "./tools/github-search-smart";
 import {installGitHubCreateNewIssueTool} from "./tools/github-issue-create";
+
+// web search
 import {installExtractWebpageAsMarkdownTool} from "./tools/web-fetch-content";
 
 // File System Tools
@@ -29,11 +32,7 @@ export const FileSystemTools = [
     installDeleteFileTool,
 ] as const;
 
-// Code Analysis Tools
 export const CodeAnalysisTools = [
-    // installFileSearchTool,
-    // installDependencyAnalysisTool,
-    // installCodebaseSearchTool,
     installContextAnalysisTool,
     installSymbolSearchTool,
     installGrepSearchTool,
