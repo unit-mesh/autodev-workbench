@@ -66,6 +66,6 @@ export const AutoDevRemoteAgentTools = [
     ...FileSystemTools,
     ...CodeAnalysisTools,
     ...TerminalTools,
-    ...GitHubTools,
+    ...GitHubTools.filter(it => it.name !== installGitHubAddIssueCommentTool.name),
     ...WebTools,
 ] as const;
