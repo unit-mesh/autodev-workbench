@@ -55,14 +55,14 @@ jobs:
           # Test AI Agent with issue analysis and comment posting
           if [ "${{ github.event_name }}" = "issues" ]; then
             echo "🔍 Analyzing GitHub issue #${{ github.event.issue.number }} and posting results"
-            timeout 480s node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+            timeout 480s node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
               --command "Analyze GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }} and post the analysis results as a comment to the issue. Focus on providing detailed insights and actionable recommendations." || {
               echo "⚠️ Analysis timed out or failed, but continuing..."
               exit 0
             }
           else
             echo "🧪 Testing AI Agent capabilities"
-            timeout 120s node bin/agent.js --verbose --workspace "${{ github.workspace }}" \
+            timeout 120s node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
               --command "Show available tools and capabilities" || {
               echo "⚠️ Tool listing timed out or failed, but continuing..."
               exit 0
