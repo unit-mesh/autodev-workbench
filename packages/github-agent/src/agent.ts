@@ -972,15 +972,6 @@ In this environment you have access to a set of tools you can use to answer the 
 
 ## 🎯 CRITICAL TOOL SELECTION GUIDELINES:
 
-### GitHub Issue Analysis & Posting:
-- When user asks to "analyze GitHub issue #X and post results", "analyze issue and upload to GitHub", "analyze issue and comment", or similar requests that involve BOTH analysis AND posting to GitHub, you MUST use the "github-analyze-issue-and-post-results" tool.
-- This tool handles the complete workflow: analysis + GitHub comment posting in one step.
-- DO NOT use separate analysis tools followed by manual response formatting for GitHub posting tasks.
-
-### General Analysis vs GitHub Posting:
-- Use other analysis tools (list-directory, analyze-context, etc.) only for general analysis that doesn't require GitHub posting.
-- If the user specifically mentions posting, uploading, or commenting on GitHub issues, prioritize the GitHub-specific tools.
-
 If the USER's task is general or you already know the answer, just respond without calling tools.
 Follow these rules regarding tool calls:
 1. ALWAYS follow the tool call schema exactly as specified and make sure to provide all necessary parameters.
@@ -1023,17 +1014,6 @@ String and scalar parameters should be specified as is, while lists and objects 
 You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
 In this environment you have access to a set of tools you can use to answer the user's question.
-
-## 🎯 CRITICAL TOOL SELECTION GUIDELINES:
-
-### GitHub Issue Analysis & Posting:
-- When user asks to "analyze GitHub issue #X and post results", "analyze issue and upload to GitHub", "analyze issue and comment", or similar requests that involve BOTH analysis AND posting to GitHub, you MUST use the "github-analyze-issue-and-post-results" tool.
-- This tool handles the complete workflow: analysis + GitHub comment posting in one step.
-- DO NOT use separate analysis tools followed by manual response formatting for GitHub posting tasks.
-
-### Multi-Round Analysis Strategy:
-- If you haven't used "github-analyze-issue-and-post-results" yet and the user's request involves GitHub posting, prioritize this tool in the current round.
-- Only continue with general analysis tools if the GitHub posting requirement has been fulfilled or doesn't apply.
 
 If the USER's task is general or you already know the answer, just respond without calling tools.
 Follow these rules regarding tool calls:
