@@ -292,45 +292,14 @@ export class ContextAnalyzer {
     return analyzer;
   }
 
-  /**
-   * Get analysis strategy information
-   */
-  getAnalysisInfo(): {
-    strategy: string;
-    cacheStats?: any;
-  } {
-    return {
-      strategy: this.analysisStrategy?.name || 'not-initialized',
-    };
-  }
-
-  /**
-   * Clear all caches
-   */
-  async clearCache(): Promise<void> {
-    if (this.cacheManager) {
-      await this.cacheManager.clear();
-    }
-    console.log('🧹 All caches cleared');
-  }
-
-  /**
-   * Scan workspace for relevant files using the optimized listFiles function
-   */
   private async scanWorkspaceFiles(): Promise<string[]> {
     try {
-      // Use the optimized listFiles function from worker-core
-      // It uses ripgrep for fast file scanning and respects .gitignore
       const [allFiles] = await listFiles(this.workspacePath, true, 10000);
-
-      // Filter to only include relevant files for code analysis
       const relevantFiles = allFiles.filter(file => {
-        // Remove directories (they end with /)
         if (file.endsWith('/')) {
           return false;
         }
 
-        // Convert to relative path for consistency
         const relativePath = file.startsWith(this.workspacePath)
           ? file.substring(this.workspacePath.length + 1)
           : file;
