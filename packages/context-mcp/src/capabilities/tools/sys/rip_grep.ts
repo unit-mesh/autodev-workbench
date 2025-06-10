@@ -182,9 +182,18 @@ function buildRipGrepCommand(args: any): string {
 /**
  * Process the output based on whether colors are requested
  */
-function processOutput(output: string, useColors?: boolean): string {
+function processOutput(output: string, useColors?: boolean, maxChars: number = 1000): string {
 	if (!output) return output;
-	return useColors ? output : stripAnsiEscapeCodes(output);
+
+	let processedOutput = useColors ? output : stripAnsiEscapeCodes(output);
+
+	// Limit output to maxChars characters
+	if (processedOutput.length > maxChars) {
+		processedOutput = processedOutput.substring(0, maxChars) +
+			"\n\n[Output truncated - results exceed character limit. Use a more specific search pattern.]";
+	}
+
+	return processedOutput;
 }
 
 /**

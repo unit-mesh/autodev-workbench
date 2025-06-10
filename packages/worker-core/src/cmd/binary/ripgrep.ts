@@ -131,6 +131,7 @@ interface SearchLineResult {
 // Constants
 const MAX_RESULTS = 300
 const MAX_LINE_LENGTH = 500
+const MAX_OUTPUT_CHARS = 1000 // Maximum characters in final output
 
 /**
  * Truncates a line if it exceeds the maximum length
@@ -318,21 +319,63 @@ function formatResults(fileResults: SearchFileResult[], cwd: string): string {
 		}
 	})
 
+	let charCount = output.length
+	let truncated = false
+
 	for (const [filePath, fileResults] of Object.entries(groupedResults)) {
-		// Replace toPosix() with proper path formatting
-		output += `# ${path.normalize(filePath)}\n`
+		// Check if adding this file would exceed the character limit
+		const fileHeader = `# ${path.normalize(filePath)}\n`
+		if (charCount + fileHeader.length > MAX_OUTPUT_CHARS) {
+			truncated = true
+			break
+		}
 
-		fileResults.forEach((result) => {
+		output += fileHeader
+		charCount += fileHeader.length
+
+		for (const result of fileResults) {
 			if (result.lines.length > 0) {
-				result.lines.forEach((line) => {
+				for (const line of result.lines) {
 					const lineNumber = String(line.line).padStart(3, " ")
-					output += `${lineNumber} | ${line.text.trimEnd()}\n`
-				})
-				output += "----\n"
-			}
-		})
+					const lineOutput = `${lineNumber} | ${line.text.trimEnd()}\n`
 
-		output += "\n"
+					// Check if adding this line would exceed the limit
+					if (charCount + lineOutput.length > MAX_OUTPUT_CHARS) {
+						truncated = true
+						break
+					}
+
+					output += lineOutput
+					charCount += lineOutput.length
+				}
+
+				if (truncated) break
+
+				const separator = "----\n"
+				if (charCount + separator.length > MAX_OUTPUT_CHARS) {
+					truncated = true
+					break
+				}
+
+				output += separator
+				charCount += separator.length
+			}
+		}
+
+		if (truncated) break
+
+		const newline = "\n"
+		if (charCount + newline.length > MAX_OUTPUT_CHARS) {
+			truncated = true
+			break
+		}
+
+		output += newline
+		charCount += newline.length
+	}
+
+	if (truncated) {
+		output += "\n[Output truncated - results exceed character limit. Use a more specific search pattern.]\n"
 	}
 
 	return output.trim()
