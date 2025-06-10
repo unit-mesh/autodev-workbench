@@ -76,6 +76,11 @@ jobs:
           DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
           GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=4096"
+          # GitHub Actions context variables
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
 
   manual-test:
     runs-on: ubuntu-latest
@@ -135,6 +140,11 @@ jobs:
           GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
           VERBOSE_LLM_LOGS: 'true'  # 启用详细的 LLM 日志
           NODE_OPTIONS: "--max-old-space-size=4096"
+          # GitHub Actions context variables
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
 
       - name: Test AI Agent Capabilities Demo
         run: |
@@ -153,3 +163,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
           GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+          # GitHub Actions context variables
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}

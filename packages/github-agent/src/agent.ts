@@ -1194,7 +1194,17 @@ String and scalar parameters should be specified as is, while lists and objects 
    * Extract GitHub context from user input and tool results
    */
   private extractGitHubContext(userInput: string, toolResults: ToolResult[]): { owner: string; repo: string; issueNumber: number } | undefined {
-    // First, try to extract from user input
+    // First, try to use GitHub context from configuration (from GitHub Actions environment)
+    if (this.config.githubContext) {
+      this.log('Using GitHub context from configuration:', this.config.githubContext);
+      return {
+        owner: this.config.githubContext.owner,
+        repo: this.config.githubContext.repo,
+        issueNumber: this.config.githubContext.issueNumber
+      };
+    }
+
+    // Second, try to extract from user input
     const inputMatch = userInput.match(/(?:github\.com\/|^|\s)([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(?:\/issues\/|#)(\d+)/i);
     if (inputMatch) {
       return {
@@ -1204,7 +1214,7 @@ String and scalar parameters should be specified as is, while lists and objects 
       };
     }
 
-    // Try to extract from tool results
+    // Finally, try to extract from tool results
     for (const result of toolResults) {
       if (result.success && result.functionCall.name.includes('github')) {
         const params = result.functionCall.parameters;
