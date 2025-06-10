@@ -194,12 +194,13 @@ async function processSingleCommand(agent, command, config) {
 
   try {
     const response = await agent.processInput(command);
-    console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${config.githubToken.substring(1, 5)}`);
+    const githubToken = process.env.GITHUB_TOKEN;
+    console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${githubToken ? githubToken.substring(0, 4) + '...' : 'undefined'}`);
 
-    if (config?.autoUpload && response.githubContext && config.githubToken) {
+    if (config?.autoUpload && response.githubContext && githubToken) {
       // Note: This is async but we can't await in a static method
       // The upload will happen in the background
-      const githubService = new GitHubService(config.githubToken);
+      const githubService = new GitHubService(githubToken);
       const commentData = await githubService.addIssueComment(
           response.githubContext.owner,
           response.githubContext.repo,
