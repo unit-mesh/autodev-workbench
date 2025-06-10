@@ -1332,14 +1332,8 @@ String and scalar parameters should be specified as is, while lists and objects 
       const { GitHubService } = await import('./services/github/github-service');
       const githubService = new GitHubService(githubToken);
 
-      // Create a formatted comment body
-      const commentBody = `## 🤖 AI Agent Analysis Results
-
-${formattedResponse}
-
----
-*This analysis was generated automatically by AutoDev AI Agent*
-*Execution time: ${response.executionTime}ms | Rounds: ${response.totalRounds || 1}*`;
+      // Create a clean, GitHub-friendly comment body
+      const commentBody = AIAgent.createGitHubComment(response);
 
       // Upload the comment
       const commentResult = await githubService.addIssueComment(owner, repo, issueNumber, commentBody);
@@ -1351,6 +1345,45 @@ ${formattedResponse}
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to upload to GitHub: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Create a clean, GitHub-friendly comment from agent response
+   */
+  private static createGitHubComment(response: AgentResponse): string {
+    const sections: string[] = [];
+
+    // Header
+    sections.push('## 🤖 AI Agent Analysis Results');
+    sections.push('');
+
+    // Main analysis text (clean version without tool details)
+    if (response.text) {
+      sections.push(response.text);
+      sections.push('');
+    }
+
+    // Summary of tools executed
+    if (response.toolResults.length > 0) {
+      const successful = response.toolResults.filter(r => r.success).length;
+      const total = response.toolResults.length;
+
+      sections.push('### 🔧 Analysis Summary');
+      sections.push(`- **Tools executed:** ${total} (${successful} successful)`);
+      sections.push(`- **Analysis rounds:** ${response.totalRounds || 1}`);
+      sections.push(`- **Execution time:** ${response.executionTime}ms`);
+
+      // List the tools that were used
+      const toolNames = [...new Set(response.toolResults.map(r => r.functionCall.name))];
+      sections.push(`- **Tools used:** ${toolNames.join(', ')}`);
+      sections.push('');
+    }
+
+    // Footer
+    sections.push('---');
+    sections.push('*This analysis was generated automatically by [AutoDev AI Agent](https://github.com/unit-mesh/autodev-worker)*');
+
+    return sections.join('\n');
   }
 
   /**
