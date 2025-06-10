@@ -210,8 +210,9 @@ async function processSingleCommand(agent, command, config) {
           response.githubContext.repo,
           response.githubContext.issueNumber, formattedResponse
       );
+      console.log(`Comment added: ${commentData.html_url}`);
     } else {
-      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(options)}, text: ${formattedResponse}`);
+      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(config)}, text: ${formattedResponse}`);
     }
 
     if (!response.success) {
