@@ -219,7 +219,6 @@ async function startInteractiveMode(agent) {
       const formattedResponse = AIAgent.formatResponse(response);
       
       console.log(formattedResponse);
-      
     } catch (error) {
       console.error('❌ Error:', error.message);
     }

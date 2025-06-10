@@ -7,7 +7,7 @@ import { AnalysisReportGenerator } from "../../services/reporting/analysis-repor
 export const installGitHubAnalyzeIssueAndPostResultsTool: ToolLike = (installer) => {
   installer(
     "github-analyze-issue-and-post-results",
-    "Perform comprehensive analysis of a GitHub issue to find related code, then automatically post a detailed analysis report as a comment",
+    "🎯 PRIMARY TOOL for GitHub issue analysis and comment posting. Use this tool when the user asks to 'analyze GitHub issue and post results', 'analyze issue and upload to GitHub', 'analyze issue and comment', or similar requests that involve both analysis AND posting results to GitHub. This tool performs comprehensive analysis of a GitHub issue to find related code, then automatically posts a detailed analysis report as a comment to the issue.",
     {
       owner: z.string().describe("Repository owner (username or organization)"),
       repo: z.string().describe("Repository name"),
@@ -16,7 +16,7 @@ export const installGitHubAnalyzeIssueAndPostResultsTool: ToolLike = (installer)
       language: z.enum(['en', 'zh']).optional().describe("Language for the report (en or zh, defaults to en)"),
       include_file_content: z.boolean().optional().describe("Whether to include file content in the report (defaults to false)"),
       max_files: z.number().optional().describe("Maximum number of files to include in the report (defaults to 10)"),
-    }, 
+    },
     async ({ 
       owner, 
       repo, 
