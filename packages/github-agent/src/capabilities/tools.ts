@@ -61,7 +61,7 @@ export const WebTools = [
 ] as const;
 
 // All Tools
-export const AllEnhancedTools = [
+export const AutoDevRemoteAgentTools = [
     ...FileSystemTools,
     ...CodeAnalysisTools,
     ...TerminalTools,

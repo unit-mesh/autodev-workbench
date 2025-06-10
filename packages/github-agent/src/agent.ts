@@ -1,7 +1,7 @@
 import { generateText, CoreMessage } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser, FunctionCall } from "./agent/function-parser";
-import { AllEnhancedTools } from "./capabilities/tools";
+import { AutoDevRemoteAgentTools } from "./capabilities/tools";
 
 let AUTODEV_REMOTE_TOOLS: Array<{
   name: string;
@@ -44,7 +44,7 @@ function extractToolDefinitions(): void {
     });
   };
 
-  AllEnhancedTools.forEach(installer => {
+  AutoDevRemoteAgentTools.forEach(installer => {
     try {
       installer(mockInstaller);
     } catch (error) {
@@ -159,7 +159,7 @@ export class AIAgent {
     };
 
     // Execute tool installers to register handlers
-    AllEnhancedTools.forEach(installer => {
+    AutoDevRemoteAgentTools.forEach(installer => {
       try {
         installer(mockInstaller);
       } catch (error) {
