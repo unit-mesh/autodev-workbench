@@ -31,12 +31,12 @@ async function main() {
     console.log(`📁 Workspace: ${config.workspacePath || process.cwd()}`);
 
     if (config.command) {
-      await processSingleCommand(agent, config.command);
+      await processSingleCommand(agent, config.command, config);
       return;
     }
 
     // Start interactive mode
-    await startInteractiveMode(agent);
+    await startInteractiveMode(agent, config);
 
   } catch (error) {
     console.error('❌ Failed to start AI Agent:', error.message);
@@ -118,7 +118,7 @@ function parseArgs(args) {
 /**
  * Process a single command and exit
  */
-async function processSingleCommand(agent, command) {
+async function processSingleCommand(agent, command, config) {
   console.log(`🎯 Processing command: ${command}\n`);
 
   try {
@@ -178,7 +178,7 @@ async function cleanupAndExit(agent, exitCode) {
 /**
  * Start interactive mode
  */
-async function startInteractiveMode(agent) {
+async function startInteractiveMode(agent, config) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
