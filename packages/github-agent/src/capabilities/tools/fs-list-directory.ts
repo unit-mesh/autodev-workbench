@@ -8,24 +8,17 @@ export const installListDirectoryTool: ToolLike = (installer) => {
     directory_path: z.string().describe("Path to the directory to list (relative to workspace or absolute)"),
     recursive: z.boolean().optional().describe("List files recursively (default: false)"),
     max_depth: z.number().optional().describe("Maximum recursion depth (default: 3)"),
-    include_hidden: z.boolean().optional().describe("Include hidden files and directories (default: false)"),
-    file_types: z.array(z.string()).optional().describe("Filter by file extensions (e.g., ['.js', '.ts', '.py'])"),
-    sort_by: z.enum(["name", "size", "modified", "type"]).optional().describe("Sort results by (default: name)"),
     include_stats: z.boolean().optional().describe("Include detailed file statistics (default: true)")
   }, async ({ 
     directory_path, 
     recursive = false,
     max_depth = 3,
-    include_hidden = false,
-    file_types,
-    sort_by = "name",
     include_stats = true
   }: { 
     directory_path: string; 
     recursive?: boolean;
     max_depth?: number;
     include_hidden?: boolean;
-    file_types?: string[];
     sort_by?: "name" | "size" | "modified" | "type";
     include_stats?: boolean;
   }) => {
@@ -88,6 +81,7 @@ export const installListDirectoryTool: ToolLike = (installer) => {
 
       const files: FileInfo[] = [];
 
+      // eslint-disable-next-line no-inner-declarations
       function listDirectory(dirPath: string, currentDepth: number = 0): void {
         if (recursive && currentDepth > max_depth) return;
 
@@ -95,9 +89,6 @@ export const installListDirectoryTool: ToolLike = (installer) => {
           const entries = fs.readdirSync(dirPath);
           
           for (const entry of entries) {
-            // Skip hidden files if not requested
-            if (!include_hidden && entry.startsWith('.')) continue;
-
             const entryPath = path.join(dirPath, entry);
             const relativePath = path.relative(resolvedWorkspace, entryPath);
             
@@ -106,12 +97,6 @@ export const installListDirectoryTool: ToolLike = (installer) => {
               const isSymlink = entryStats.isSymbolicLink();
               const isDirectory = isSymlink ? fs.statSync(entryPath).isDirectory() : entryStats.isDirectory();
               const isFile = !isDirectory && !isSymlink;
-
-              // Filter by file types if specified
-              if (file_types && file_types.length > 0 && isFile) {
-                const ext = path.extname(entry).toLowerCase();
-                if (!file_types.some(type => type.toLowerCase() === ext)) continue;
-              }
 
               const fileInfo: FileInfo = {
                 name: entry,
@@ -148,25 +133,6 @@ export const installListDirectoryTool: ToolLike = (installer) => {
       }
 
       listDirectory(resolvedPath);
-
-      // Sort files
-      files.sort((a, b) => {
-        switch (sort_by) {
-          case "size":
-            return (b.size || 0) - (a.size || 0);
-          case "modified":
-            return new Date(b.modified || 0).getTime() - new Date(a.modified || 0).getTime();
-          case "type":
-            if (a.type !== b.type) {
-              const typeOrder = { directory: 0, file: 1, symlink: 2 };
-              return typeOrder[a.type] - typeOrder[b.type];
-            }
-            return a.name.localeCompare(b.name);
-          case "name":
-          default:
-            return a.name.localeCompare(b.name);
-        }
-      });
 
       // Format output similar to Linux ls -la
       const formatFileSize = (size?: number): string => {
