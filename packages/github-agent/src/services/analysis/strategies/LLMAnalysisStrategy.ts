@@ -309,21 +309,26 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
   /**
    * Apply advanced priority-based filtering using FilePriorityManager
+   * Ensures we always return some files, even if none pass strict filtering
    */
   private applyAdvancedPriorityFiltering(
-    candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
-    issue: GitHubIssue,
-    keywords: SearchKeywords & { priorities?: any[] }
+      candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
+      issue: GitHubIssue,
+      keywords: SearchKeywords & { priorities?: any[] }
   ): Array<{ path: string; relevanceScore: number; content?: string; priorityScore?: number; reason?: string }> {
     console.log('🎯 Applying advanced priority-based filtering...');
 
-    // Calculate priority scores for each file using the new manager
+    if (candidateFiles.length === 0) {
+      console.log('⚠️ No candidate files to filter');
+      return [];
+    }
+
     const prioritizedFiles = candidateFiles.map(file => {
       const priorityResult = this.priorityManager.calculatePriority(
-        file.path,
-        issue,
-        keywords,
-        keywords.priorities
+          file.path,
+          issue,
+          keywords,
+          keywords.priorities
       );
 
       return {
@@ -333,46 +338,83 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       };
     });
 
+    // Sort by priority score (descending) then by relevance score
+    const sortedByPriority = prioritizedFiles.sort((a, b) => {
+      const priorityDiff = (b.priorityScore || 0) - (a.priorityScore || 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return b.relevanceScore - a.relevanceScore;
+    });
+
     // Filter out files that should be skipped from LLM analysis
-    const filteredFiles = prioritizedFiles.filter(file => {
+    const filteredFiles = sortedByPriority.filter(file => {
       const shouldSkip = this.priorityManager.shouldSkipLLMAnalysis(file.path, file.priorityScore || 0, issue);
 
       if (shouldSkip) {
-        console.log(`⏭️  Skipping file (advanced filter): ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'})`);
+        console.log(`⏭️ Skipping file (advanced filter): ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'})`);
         return false;
       }
 
       return true;
     });
 
-    // Sort by priority score (descending) then by relevance score
-    const sortedFiles = filteredFiles.sort((a, b) => {
-      const priorityDiff = (b.priorityScore || 0) - (a.priorityScore || 0);
-      if (priorityDiff !== 0) return priorityDiff;
-      return b.relevanceScore - a.relevanceScore;
-    });
+    // Fallback strategy: if no files pass filtering, provide top files with informative comments
+    let finalFiles = filteredFiles;
 
-    console.log(`🎯 Advanced priority filtering: ${candidateFiles.length} → ${sortedFiles.length} files`);
+    if (finalFiles.length === 0) {
+      console.log('⚠️ No files passed advanced filtering, falling back to top priority files with informative comments');
+
+      // Take top 3-5 files from sorted priority list
+      const fallbackFiles = sortedByPriority.slice(0, Math.min(5, sortedByPriority.length));
+
+      finalFiles = fallbackFiles.map(file => ({
+        ...file,
+        content: `// This file may not be directly related to the issue, but was included for context. If you have interest in this file, use the read-file command to read its full content.`,
+        reason: `May not be directly related (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}). Use read-file command for full content.`
+      }));
+
+      console.log(`📋 Providing ${finalFiles.length} fallback files with informative comments`);
+    } else if (finalFiles.length < 3 && sortedByPriority.length > finalFiles.length) {
+      console.log('⚡ Few files passed filtering, adding additional files with comments for context');
+
+      // Add a few more files from the remaining ones with explanatory comments
+      const remainingFiles = sortedByPriority.filter(f => !finalFiles.includes(f));
+      const additionalFiles = remainingFiles.slice(0, Math.min(3, remainingFiles.length));
+
+      const commentedAdditionalFiles = additionalFiles.map(file => ({
+        ...file,
+        content: `// This file may be peripherally related to the issue.If you have interest in this file, use the read-file command to read its full content.`,
+        reason: `Additional context (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}). Use read-file command if interested.`
+      }));
+
+      finalFiles = [...finalFiles, ...commentedAdditionalFiles];
+      console.log(`📋 Added ${additionalFiles.length} additional files with explanatory comments`);
+    }
+
+    console.log(`🎯 Advanced priority filtering: ${candidateFiles.length} → ${filteredFiles.length} → ${finalFiles.length} files (with fallbacks)`);
 
     // Log top priority files with detailed reasons
-    const topFiles = sortedFiles.slice(0, 5);
-    topFiles.forEach(file => {
-      if (file.priorityScore && file.priorityScore > 0) {
-        console.log(`   📁 ${file.path} (priority: ${file.priorityScore.toFixed(1)}, relevance: ${file.relevanceScore.toFixed(2)}) - ${file.reason}`);
-      }
+    const topFiles = finalFiles.slice(0, 5);
+    topFiles.forEach((file, index) => {
+      const isOriginal = !file.content?.startsWith('//');
+      const status = isOriginal ? '✅' : '📋';
+      console.log(`   ${status} ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}, relevance: ${file.relevanceScore.toFixed(2)}) - ${file.reason}`);
     });
 
     // Log priority statistics for debugging
     if (candidateFiles.length > 0) {
       const stats = this.priorityManager.getPriorityStats(
-        candidateFiles.map(f => f.path),
-        issue,
-        keywords
+          candidateFiles.map(f => f.path),
+          issue,
+          keywords
       );
       console.log(`📊 Priority stats: ${stats.highPriorityFiles}/${stats.totalFiles} high-priority files, avg score: ${stats.averageScore.toFixed(2)}`);
+
+      if (finalFiles.some(f => f.content?.startsWith('//'))) {
+        console.log(`💡 Some files include explanatory comments. Use read-file command to access original content.`);
+      }
     }
 
-    return sortedFiles;
+    return finalFiles;
   }
 
   /**
