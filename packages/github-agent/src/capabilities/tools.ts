@@ -65,6 +65,6 @@ export const AllEnhancedTools = [
     ...FileSystemTools,
     ...CodeAnalysisTools,
     ...TerminalTools,
-    ...GitHubTools,
+    ...GitHubTools.filter(tool => tool.name !== installGitHubAnalyzeIssueAndPostResultsTool.name),
     ...WebTools,
 ] as const;
