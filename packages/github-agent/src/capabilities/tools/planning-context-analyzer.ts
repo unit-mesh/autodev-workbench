@@ -12,7 +12,7 @@ export const installContextAnalysisTool: ToolLike = (installer) => {
     include_structure: z.boolean().optional().describe("Include project structure analysis (default: true)"),
     max_depth: z.number().optional().describe("Maximum directory depth to analyze (default: 3)"),
     exclude_dirs: z.array(z.string()).optional().describe("Directories to exclude from analysis")
-  }, async ({ 
+  }, async ({
     analysis_type = "all",
     workspace_path,
     include_git_info = true,
@@ -20,19 +20,28 @@ export const installContextAnalysisTool: ToolLike = (installer) => {
     include_structure = true,
     max_depth = 3,
     exclude_dirs = ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt']
-  }: { 
+  }: {
     analysis_type?: "project" | "codebase" | "workflow" | "architecture" | "all";
     workspace_path?: string;
     include_git_info?: boolean;
     include_dependencies?: boolean;
     include_structure?: boolean;
     max_depth?: number;
-    exclude_dirs?: string[];
+    exclude_dirs?: string[] | string;
   }) => {
     try {
       // Resolve workspace path
       const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
       const resolvedWorkspace = path.resolve(workspacePath);
+
+      // Handle exclude_dirs parameter - convert string to array if needed
+      let processedExcludeDirs: string[];
+      if (typeof exclude_dirs === 'string') {
+        // Split comma-separated string into array
+        processedExcludeDirs = exclude_dirs.split(',').map(dir => dir.trim()).filter(dir => dir.length > 0);
+      } else {
+        processedExcludeDirs = exclude_dirs || ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'];
+      }
 
       const result: any = {
         analysis: {
@@ -50,7 +59,7 @@ export const installContextAnalysisTool: ToolLike = (installer) => {
 
       // Codebase analysis
       if (analysis_type === "codebase" || analysis_type === "all") {
-        result.codebase_analysis = await analyzeCodebase(resolvedWorkspace, max_depth, exclude_dirs);
+        result.codebase_analysis = await analyzeCodebase(resolvedWorkspace, max_depth, processedExcludeDirs);
       }
 
       // Workflow analysis

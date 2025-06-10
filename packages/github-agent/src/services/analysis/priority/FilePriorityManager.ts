@@ -103,18 +103,19 @@ export class FilePriorityManager {
   /**
    * Get files that should be skipped from LLM analysis
    */
-  shouldSkipLLMAnalysis(filePath: string, priorityScore: number): boolean {
+  shouldSkipLLMAnalysis(filePath: string, priorityScore: number, issue?: GitHubIssue): boolean {
     // Skip files with very low priority scores
     if (priorityScore < 3) return true;
+
+    // For documentation-related issues, don't skip documentation files
+    const isDocumentationIssue = issue && this.isDocumentationIssue(issue);
 
     // Skip certain file types that are unlikely to be relevant
     const skipPatterns = [
       /\.test\.(ts|js|tsx|jsx)$/,
       /\.spec\.(ts|js|tsx|jsx)$/,
-      /\.(md|txt|json|yaml|yml)$/,
       /\/tests?\//,
       /\/examples?\//,
-      /\/docs?\//,
       /\/coverage\//,
       /\/node_modules\//,
       /\/dist\//,
@@ -122,7 +123,31 @@ export class FilePriorityManager {
       /\.(log|tmp|cache)$/
     ];
 
+    // Only skip documentation files if it's NOT a documentation issue
+    if (!isDocumentationIssue) {
+      skipPatterns.push(
+        /\.(md|txt|json|yaml|yml)$/,
+        /\/docs?\//
+      );
+    }
+
     return skipPatterns.some(pattern => pattern.test(filePath));
+  }
+
+  /**
+   * Check if the issue is related to documentation
+   */
+  private isDocumentationIssue(issue: GitHubIssue): boolean {
+    const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+    const docKeywords = [
+      'docs', 'documentation', 'readme', 'guide', 'tutorial',
+      'architecture', 'diagram', 'document', 'manual'
+    ];
+
+    const hasDocKeywords = docKeywords.some(keyword => text.includes(keyword));
+    const hasDocLabels = issue.labels.some(label => label.name.toLowerCase().includes('documentation'));
+
+    return hasDocKeywords || hasDocLabels;
   }
 
   private initializeCategories(): void {

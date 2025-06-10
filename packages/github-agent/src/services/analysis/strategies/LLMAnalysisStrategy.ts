@@ -256,7 +256,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     // First pass: Score files based on file paths only (no I/O)
     for (const file of context.filteredFiles) {
       const score = this.calculateFilePathScore(file, keywords);
-      if (score > 0.3) { // Higher threshold for path-only scoring
+      if (score > 0.2) { // Lower threshold to include more documentation files
         fileScores.set(file, score);
       }
     }
@@ -285,7 +285,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
           const contentScore = this.calculateContentScore(content, keywords);
           const finalScore = pathScore + contentScore;
 
-          if (finalScore > 0.5) { // Only include files with decent combined score
+          if (finalScore > 0.3) { // Lower threshold to include more documentation files
             candidates.push({
               path: file,
               content: content.substring(0, 4000), // Limit content size for LLM analysis
@@ -335,7 +335,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
     // Filter out files that should be skipped from LLM analysis
     const filteredFiles = prioritizedFiles.filter(file => {
-      const shouldSkip = this.priorityManager.shouldSkipLLMAnalysis(file.path, file.priorityScore || 0);
+      const shouldSkip = this.priorityManager.shouldSkipLLMAnalysis(file.path, file.priorityScore || 0, issue);
 
       if (shouldSkip) {
         console.log(`⏭️  Skipping file (advanced filter): ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'})`);
@@ -380,7 +380,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
    */
   private calculateBasicRelevance(
     file: { path: string; content?: string; relevanceScore?: number },
-    keywords: SearchKeywords,
+    keywords: SearchKeywords & { priorities?: any[] },
     issue: GitHubIssue
   ): number {
     let score = 0;
@@ -495,11 +495,25 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     return [...new Set(matches.filter(m => m.length > 2))].slice(0, 10);
   }
 
-  private calculateFilePathScore(filePath: string, keywords: SearchKeywords): number {
+  private calculateFilePathScore(filePath: string, keywords: SearchKeywords & { priorities?: any[] }): number {
     let score = 0;
     const fileName = path.basename(filePath).toLowerCase();
     const dirName = path.dirname(filePath).toLowerCase();
     const fullPath = filePath.toLowerCase();
+
+    // LLM-generated priorities get highest weight (if available)
+    if (keywords.priorities && Array.isArray(keywords.priorities)) {
+      for (const priority of keywords.priorities) {
+        const pattern = priority.pattern.toLowerCase();
+        const priorityScore = priority.score || 1;
+
+        // Check if file matches the priority pattern
+        if (fileName.includes(pattern) || dirName.includes(pattern) || fullPath.includes(pattern)) {
+          // Scale the LLM priority score to our scoring system
+          score += Math.min(priorityScore * 0.5, 5); // Cap at 5 points for LLM priorities
+        }
+      }
+    }
 
     // Primary keywords get highest weight
     for (const keyword of keywords.primary) {
@@ -561,7 +575,8 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     const importantDirPatterns = [
       /\/(src|lib|core|api|routes|controllers|services|components|utils|helpers|models|types|interfaces)\//,
       /\/(test|tests|spec|specs)\//,
-      /\/(config|configs|settings)\//
+      /\/(config|configs|settings)\//,
+      /\/(docs|documentation|doc)\//
     ];
 
     if (codeFilePatterns.some(pattern => pattern.test(filePath))) {
