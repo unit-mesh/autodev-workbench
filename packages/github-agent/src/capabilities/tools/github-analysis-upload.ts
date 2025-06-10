@@ -66,7 +66,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
           issue_number,
           analysisResult,
           {
-            uploadToGitHub: true,
+            uploadToGitHub: false,
             language,
             includeFileContent: include_file_content,
             maxFiles: max_files

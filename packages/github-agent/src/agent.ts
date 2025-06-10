@@ -1319,14 +1319,16 @@ String and scalar parameters should be specified as is, while lists and objects 
 
     const formattedResponse = output.join('\n');
 
-    // Handle auto-upload to GitHub issue if enabled and context is available
     if (options?.autoUpload && response.githubContext && options.githubToken) {
       // Note: This is async but we can't await in a static method
       // The upload will happen in the background
+      console.log('Uploading response to GitHub...');
       AIAgent.uploadResponseToGitHub(response, formattedResponse, options.githubToken)
         .catch(error => {
           console.warn('⚠️ Failed to upload response to GitHub:', error.message);
         });
+    } else {
+      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(options)}, text: ${formattedResponse}`);
     }
 
     return formattedResponse;
