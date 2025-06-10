@@ -1,4 +1,4 @@
-# AutoDev GitHub Backend Agent
+# AutoDev GitHub Remote AI Agent
 
 A comprehensive Model Context Protocol (MCP) server that provides advanced GitHub issue analysis capabilities with intelligent code context integration. This server can fetch GitHub issues, analyze them with AI-powered insights, and provide relevant code context from your local workspace using the AutoDev ecosystem.
 

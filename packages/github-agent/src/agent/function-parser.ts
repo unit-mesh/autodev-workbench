@@ -27,7 +27,13 @@ export class FunctionParser {
     };
 
     try {
-      // Extract function_calls blocks
+      // First, try to extract function calls from markdown code blocks
+      const markdownResult = this.extractFromMarkdownBlocks(response);
+      if (markdownResult.functionCalls.length > 0) {
+        return markdownResult;
+      }
+
+      // Extract function_calls blocks directly from response
       const functionCallsRegex = /<function_calls>([\s\S]*?)<\/function_calls>/g;
       const matches = [...response.matchAll(functionCallsRegex)];
 
@@ -232,5 +238,80 @@ export class FunctionParser {
    */
   private static looksLikeJSON(str: string): boolean {
     return str.startsWith('{') && str.endsWith('}');
+  }
+
+  /**
+   * Extract function calls from markdown code blocks
+   * Handles cases where LLM wraps function calls in ```xml or ``` blocks
+   */
+  private static extractFromMarkdownBlocks(response: string): ParsedResponse {
+    const result: ParsedResponse = {
+      text: response,
+      functionCalls: [],
+      hasError: false
+    };
+
+    try {
+      // Extract markdown code blocks that might contain function calls
+      const codeBlocks = this.extractMarkdownCodeBlocks(response);
+      let modifiedText = response;
+
+      for (const block of codeBlocks) {
+        // Check if this code block contains function_calls
+        const functionCallsRegex = /<function_calls>([\s\S]*?)<\/function_calls>/g;
+        const matches = [...block.code.matchAll(functionCallsRegex)];
+
+        if (matches.length > 0) {
+          // Parse function calls from this block
+          for (const match of matches) {
+            const blockContent = match[1];
+            const functionCalls = this.parseFunctionCallsBlock(blockContent);
+            result.functionCalls.push(...functionCalls);
+          }
+
+          // Remove the entire markdown code block from text
+          modifiedText = modifiedText.replace(block.fullMatch, '').trim();
+        }
+      }
+
+      result.text = modifiedText;
+    } catch (error) {
+      result.hasError = true;
+      result.error = error instanceof Error ? error.message : String(error);
+    }
+
+    return result;
+  }
+
+  /**
+   * Extract markdown code blocks from text
+   */
+  private static extractMarkdownCodeBlocks(text: string): Array<{
+    language: string;
+    code: string;
+    fullMatch: string;
+  }> {
+    const blocks: Array<{ language: string; code: string; fullMatch: string }> = [];
+
+    // Match markdown code blocks with optional language identifier
+    const codeBlockRegex = /```(\w+)?\s*\n?([\s\S]*?)```/g;
+    let match;
+
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      const language = match[1] || 'plaintext';
+      const code = match[2].trim();
+      const fullMatch = match[0];
+
+      // Only consider blocks that might contain XML/function calls
+      if (language === 'xml' || language === 'plaintext' || !match[1] || code.includes('<function_calls>')) {
+        blocks.push({
+          language,
+          code,
+          fullMatch
+        });
+      }
+    }
+
+    return blocks;
   }
 }
