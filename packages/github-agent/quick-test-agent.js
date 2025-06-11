@@ -46,7 +46,7 @@ async function quickTest() {
     
     // Simple test
     console.log('\n🧪 Running simple test...');
-    const response = await agent.processInput(
+    const response = await agent.start(
       'Analyze GitHub issue #81 in unit-mesh/autodev-workbench about database connection problems',
       {
         githubContext: {

@@ -43,15 +43,16 @@ interface AgentConfig {
 ## Usage Examples
 
 ### Basic Usage
+
 ```javascript
 const agent = new AIAgent({
-  workspacePath: '/path/to/project',
-  githubToken: process.env.GITHUB_TOKEN,
-  verbose: true
+    workspacePath: '/path/to/project',
+    githubToken: process.env.GITHUB_TOKEN,
+    verbose: true
 });
 
-const response = await agent.processInput(
-  'Analyze GitHub issue #81 in unit-mesh/autodev-workbench'
+const response = await agent.start(
+    'Analyze GitHub issue #81 in unit-mesh/autodev-workbench'
 );
 ```
 

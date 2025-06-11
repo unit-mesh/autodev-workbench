@@ -131,7 +131,7 @@ export class AIAgent {
   /**
    * Process user input and generate response with enhanced tool chaining
    */
-  async processInput(userInput: string, context?: any): Promise<AgentResponse> {
+  async start(userInput: string, context?: any): Promise<AgentResponse> {
     const startTime = Date.now();
 
     try {

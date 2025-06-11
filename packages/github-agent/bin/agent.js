@@ -295,7 +295,7 @@ async function processSingleCommand(agent, command, config) {
   console.log(`🎯 Processing command: ${finalCommand}\n`);
 
   try {
-    const response = await agent.processInput(finalCommand);
+    const response = await agent.start(finalCommand);
     const githubToken = process.env.GITHUB_TOKEN;
     console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${githubToken ? githubToken.substring(0, 4) + '...' : 'undefined'}`);
 
@@ -409,7 +409,7 @@ async function startInteractiveMode(agent, config) {
     try {
       console.log('\n🤔 Thinking...\n');
 
-      const response = await agent.processInput(trimmedInput);
+      const response = await agent.start(trimmedInput);
       const formattedResponse = AIAgent.formatResponse(response, {
         autoUpload: config.autoUpload,
         githubToken: process.env.GITHUB_TOKEN
