@@ -12,7 +12,7 @@ export { AnalysisReportGenerator, AnalysisFormatter } from "./services/reporting
 export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
 export { PromptBuilder, type ToolDefinition } from "./agent/prompt-builder";
 export { FunctionParser, type FunctionCall, type ParsedResponse } from "./agent/function-parser";
-export { ToolExecutor, type ToolResult, type ExecutionContext } from "./agent/tool-executor";
+export { ToolExecutor, type ToolResult, type ToolExecutionContext } from "./agent/tool-executor";
 // Tool exports (human-friendly naming)
 export { installExtractWebpageAsMarkdownTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, urlToMarkdown, extractTitle } from "./capabilities/tools/web-fetch-content";
 export { installGitHubListRepositoryIssuesTool } from "./capabilities/tools/github-list-repository-issues";

@@ -4,6 +4,8 @@ import {FunctionCall, FunctionParser} from "./agent/function-parser";
 import {AutoDevRemoteAgentTools} from "./capabilities/tools";
 import {PromptBuilder, ToolDefinition} from "./agent/prompt-builder";
 import {ResponseGenerator} from "./agent/response-generator";
+import {ToolExecutor} from "./agent/tool-executor";
+import {ToolExecutionContext, ToolResult} from "./agent/tool-types";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -25,15 +27,6 @@ export interface AgentConfig {
   };
 }
 
-export interface ToolResult {
-  success: boolean;
-  result?: any;
-  error?: string;
-  functionCall: FunctionCall;
-  executionTime?: number;
-  round?: number;
-}
-
 export interface AgentResponse {
   text: string;
   toolResults: ToolResult[];
@@ -48,31 +41,13 @@ export interface AgentResponse {
   };
 }
 
-export interface ToolExecutionContext {
-  round: number;
-  previousResults: ToolResult[];
-  userInput: string;
-  workspacePath: string;
-}
-
 export class AIAgent {
   private llmConfig: LLMProviderConfig;
   private conversationHistory: CoreMessage[] = [];
   private config: AgentConfig;
-  private toolHandlers: Map<string, Function> = new Map();
   private promptBuilder: PromptBuilder = new PromptBuilder();
   private responseGenerator: ResponseGenerator;
-  private executionStats: {
-    totalCalls: number;
-    successfulCalls: number;
-    failedCalls: number;
-    averageExecutionTime: number;
-  } = {
-    totalCalls: 0,
-    successfulCalls: 0,
-    failedCalls: 0,
-    averageExecutionTime: 0
-  };
+  private toolExecutor: ToolExecutor;
 
   constructor(config: AgentConfig = {}) {
     this.config = {
@@ -90,6 +65,10 @@ export class AIAgent {
     }
     this.llmConfig = llmConfig;
     this.responseGenerator = new ResponseGenerator(this.llmConfig);
+    this.toolExecutor = new ToolExecutor({
+      timeout: this.config.toolTimeout,
+      verbose: this.config.verbose
+    });
 
     // Extract tool definitions from MCP tools using PromptBuilder
     AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
@@ -118,7 +97,7 @@ export class AIAgent {
       inputSchema: Record<string, any>,
       handler: Function
     ) => {
-      this.toolHandlers.set(name, handler);
+      this.toolExecutor.registerTool(name, handler);
     };
 
     // Execute tool installers to register handlers
@@ -139,7 +118,6 @@ export class AIAgent {
 
     try {
       this.log('Processing user input:', userInput);
-      this.executionStats.totalCalls++;
 
       if (this.config.enableToolChaining) {
         return await this.processInputWithToolChaining(userInput, startTime, context);
@@ -150,7 +128,6 @@ export class AIAgent {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.log('Error processing input:', errorMessage);
-      this.executionStats.failedCalls++;
 
       return {
         text: '',
@@ -219,17 +196,12 @@ export class AIAgent {
 
       // Execute function calls for this round
       this.log(`Round ${currentRound}: Executing ${parsedResponse.functionCalls.length} function calls`);
-      const roundResults = await this.executeToolsWithContext({
+      const roundResults = await this.toolExecutor.executeToolsWithContext({
         round: currentRound,
         previousResults: allToolResults,
         userInput,
         workspacePath: this.config.workspacePath || process.cwd()
       }, parsedResponse.functionCalls);
-
-      // Add round info to results
-      roundResults.forEach(result => {
-        result.round = currentRound;
-      });
 
       allToolResults.push(...roundResults);
 
@@ -255,7 +227,6 @@ export class AIAgent {
     this.updateConversationHistory(userInput, finalResponse);
 
     const executionTime = Date.now() - startTime;
-    this.updateExecutionStats(true, executionTime);
 
     const githubContext = this.extractGitHubContext(userInput, allToolResults);
 
@@ -290,7 +261,6 @@ export class AIAgent {
     });
 
     if (parsedResponse.hasError) {
-      this.executionStats.failedCalls++;
       return {
         text: llmResponse,
         toolResults: [],
@@ -305,7 +275,7 @@ export class AIAgent {
     let toolResults: ToolResult[] = [];
     if (parsedResponse.functionCalls.length > 0) {
       this.log('Function calls detected:', parsedResponse.functionCalls.map(fc => fc.name));
-      toolResults = await this.executeToolsWithContext({
+      toolResults = await this.toolExecutor.executeToolsWithContext({
         round: 1,
         previousResults: [],
         userInput,
@@ -314,14 +284,17 @@ export class AIAgent {
 
       // If we have tool results, send them back to LLM for final analysis
       if (toolResults.length > 0) {
-        const finalResponse = await this.generateFinalResponse(userInput, parsedResponse.text, toolResults);
+        const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
+          userInput,
+          parsedResponse.text,
+          toolResults,
+          1
+        );
 
         // Update conversation history with final response
         this.updateConversationHistory(userInput, finalResponse);
 
         const executionTime = Date.now() - startTime;
-        this.updateExecutionStats(true, executionTime);
-
         const githubContext = this.extractGitHubContext(userInput, toolResults);
 
         return {
@@ -341,7 +314,6 @@ export class AIAgent {
     this.updateConversationHistory(userInput, llmResponse);
 
     const executionTime = Date.now() - startTime;
-    this.updateExecutionStats(true, executionTime);
 
     return {
       text: parsedResponse.text,
@@ -353,131 +325,8 @@ export class AIAgent {
   }
 
   /**
-   * Execute tools with enhanced context and error handling
-   */
-  private async executeToolsWithContext(context: ToolExecutionContext, functionCalls: FunctionCall[]): Promise<ToolResult[]> {
-    const results: ToolResult[] = [];
-
-    for (const functionCall of functionCalls) {
-      const startTime = Date.now();
-      const { name, parameters } = functionCall;
-
-      try {
-        const handler = this.toolHandlers.get(name);
-        if (!handler) {
-          results.push({
-            success: false,
-            error: `Tool '${name}' not found. Available tools: ${Array.from(this.toolHandlers.keys()).join(', ')}`,
-            functionCall,
-            executionTime: Date.now() - startTime,
-            round: context.round
-          });
-          continue;
-        }
-
-        this.log(`Round ${context.round}: Executing tool: ${name} with parameters:`, parameters);
-
-        // Enhance parameters with context
-        const enhancedParameters = this.enhanceToolParameters(parameters, context, name);
-
-        // Execute with timeout
-        const result = await this.executeWithTimeout(handler, enhancedParameters, this.config.toolTimeout!);
-
-        const executionTime = Date.now() - startTime;
-        this.log(`Round ${context.round}: Tool ${name} completed successfully in ${executionTime}ms`);
-
-        results.push({
-          success: true,
-          result,
-          functionCall,
-          executionTime,
-          round: context.round
-        });
-
-      } catch (error) {
-        const executionTime = Date.now() - startTime;
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.log(`Round ${context.round}: Tool ${name} failed after ${executionTime}ms:`, errorMessage);
-
-        // Try to provide helpful error context
-        const enhancedError = this.enhanceErrorMessage(errorMessage, name, context);
-
-        results.push({
-          success: false,
-          error: enhancedError,
-          functionCall,
-          executionTime,
-          round: context.round
-        });
-      }
-    }
-
-    return results;
-  }
-
-  /**
    * Helper methods for enhanced functionality
    */
-  private enhanceToolParameters(parameters: Record<string, any>, context: ToolExecutionContext, toolName: string): Record<string, any> {
-    const enhanced = { ...parameters };
-
-    // Add workspace_path if not provided and tool supports it
-    if (!enhanced.workspace_path && (
-      toolName === 'github-get-issue-with-analysis' ||
-      toolName === 'github-find-code-by-description'
-    )) {
-      enhanced.workspace_path = context.workspacePath;
-    }
-
-    // Add context from previous results if relevant
-    if (context.previousResults.length > 0 && toolName === 'github-find-code-by-description') {
-      const previousAnalysis = context.previousResults
-        .filter(r => r.success && r.functionCall.name === 'github-get-issue-with-analysis')
-        .map(r => r.result)
-        .filter(Boolean);
-
-      if (previousAnalysis.length > 0) {
-        enhanced.context_from_previous_analysis = previousAnalysis;
-      }
-    }
-
-    return enhanced;
-  }
-
-  private async executeWithTimeout<T>(handler: Function, parameters: any, timeout: number): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error(`Tool execution timed out after ${timeout}ms`));
-      }, timeout);
-
-      handler(parameters)
-        .then((result: T) => {
-          clearTimeout(timeoutId);
-          resolve(result);
-        })
-        .catch((error: any) => {
-          clearTimeout(timeoutId);
-          reject(error);
-        });
-    });
-  }
-
-  private enhanceErrorMessage(error: string, toolName: string, context: ToolExecutionContext): string {
-    let enhanced = `Tool '${toolName}' failed: ${error}`;
-
-    if (error.includes('GITHUB_TOKEN')) {
-      enhanced += '\n💡 Tip: Make sure GITHUB_TOKEN environment variable is set with a valid GitHub personal access token.';
-    } else if (error.includes('workspace') || error.includes('path')) {
-      enhanced += `\n💡 Tip: Check if the workspace path '${context.workspacePath}' exists and is accessible.`;
-    } else if (error.includes('timeout')) {
-      enhanced += '\n💡 Tip: The operation timed out. Try reducing the scope or increasing the timeout.';
-    } else if (context.round > 1) {
-      enhanced += `\n💡 Context: This error occurred in round ${context.round} after ${context.previousResults.length} previous tool executions.`;
-    }
-
-    return enhanced;
-  }
-
   private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number, allResults?: ToolResult[]): boolean {
     // Don't continue if we've reached max rounds
     if (currentRound >= this.config.maxToolRounds!) {
@@ -535,6 +384,7 @@ export class AIAgent {
 
     return true;
   }
+
   /**
    * Categorize tool results by analysis type
    */
@@ -571,63 +421,6 @@ export class AIAgent {
   }
 
   /**
-   * Generate final response by sending tool results back to LLM
-   */
-  private async generateFinalResponse(
-    userInput: string,
-    initialResponse: string,
-    toolResults: ToolResult[]
-  ): Promise<string> {
-    // Extract successful tool results
-    const successfulResults = toolResults
-      .filter(result => result.success)
-      .map(result => {
-        if (result.result?.content && Array.isArray(result.result.content)) {
-          const textContent = result.result.content
-            .filter((item: any) => item.type === 'text')
-            .map((item: any) => item.text)
-            .join('\n');
-          return `Tool ${result.functionCall.name} results:\n${textContent}`;
-        }
-        return `Tool ${result.functionCall.name} completed successfully`;
-      })
-      .join('\n\n');
-
-    // Build final prompt for LLM
-    const finalPrompt = `Based on the user's request and the tool execution results, provide a comprehensive analysis and answer.
-
-User Request: ${userInput}
-
-Tool Execution Results:
-${successfulResults}
-
-Please analyze the results and provide a helpful, detailed response to the user's request. Focus on:
-1. Summarizing the key findings from the tool results
-2. Answering the user's specific question
-3. Providing actionable insights or recommendations
-4. Highlighting any important issues or patterns found
-
-Your response should be clear, well-structured, and directly address the user's needs.`;
-
-    try {
-      const { text } = await generateText({
-        model: this.llmConfig.openai(this.llmConfig.fullModel),
-        messages: [
-          { role: "system", content: "You are an expert GitHub issue analyst. Provide clear, actionable analysis based on the tool results." },
-          { role: "user", content: finalPrompt }
-        ],
-        temperature: 0.3,
-        maxTokens: 2000
-      });
-
-      return text;
-    } catch (error) {
-      this.log('Error generating final response:', error);
-      return `${initialResponse}\n\n## Tool Results:\n${successfulResults}`;
-    }
-  }
-
-  /**
    * Call LLM with messages
    */
   private async callLLM(messages: CoreMessage[]): Promise<string> {
@@ -657,22 +450,6 @@ Your response should be clear, well-structured, and directly address the user's 
   }
 
   /**
-   * Update execution statistics
-   */
-  private updateExecutionStats(success: boolean, executionTime: number): void {
-    if (success) {
-      this.executionStats.successfulCalls++;
-    } else {
-      this.executionStats.failedCalls++;
-    }
-
-    // Update average execution time
-    const totalCalls = this.executionStats.successfulCalls + this.executionStats.failedCalls;
-    this.executionStats.averageExecutionTime =
-      (this.executionStats.averageExecutionTime * (totalCalls - 1) + executionTime) / totalCalls;
-  }
-
-  /**
    * Clear conversation history
    */
   clearHistory(): void {
@@ -684,7 +461,7 @@ Your response should be clear, well-structured, and directly address the user's 
    * Get available tools
    */
   getAvailableTools(): string[] {
-    return AUTODEV_REMOTE_TOOLS.map(tool => tool.name);
+    return this.toolExecutor.getAvailableTools();
   }
 
   /**
@@ -700,8 +477,8 @@ Your response should be clear, well-structured, and directly address the user's 
   /**
    * Get execution statistics
    */
-  getExecutionStats(): typeof this.executionStats {
-    return { ...this.executionStats };
+  getExecutionStats() {
+    return this.toolExecutor.getExecutionStats();
   }
 
   /**
@@ -859,16 +636,8 @@ Your response should be clear, well-structured, and directly address the user's 
       // Clear conversation history to free memory
       this.conversationHistory = [];
 
-      // Clear tool handlers
-      this.toolHandlers.clear();
-
-      // Reset execution stats
-      this.executionStats = {
-        totalCalls: 0,
-        successfulCalls: 0,
-        failedCalls: 0,
-        averageExecutionTime: 0
-      };
+      // Reset tool executor stats
+      this.toolExecutor.resetExecutionStats();
 
       this.log('AI Agent cleanup completed');
     } catch (error) {
