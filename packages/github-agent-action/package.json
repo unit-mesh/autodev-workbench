@@ -1,6 +1,6 @@
 {
   "name": "@autodev/github-agent-action",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "AutoDev GitHub Agent Action - Automated issue analysis for GitHub repositories",
   "main": "dist/index.js",
   "bin": {

@@ -1,3 +1,17 @@
+## 0.5.2 (2025-06-11)
+
+### 🚀 Features
+
+- **terminal:** enhance terminal command execution security - Add command whitelist, dangerous chars check, symlink check, env filtering, and improved process management ([1de04e5](https://github.com/unit-mesh/autodev-worker/commit/1de04e5))
+
+### 🩹 Fixes
+
+- **tools/terminal-run-command:** robust process management, cross-platform test compatibility, and eliminate kill ESRCH error\n\n- Allow absolute path for whitelisted commands (e.g., node)\n- Remove dangerous chars that block valid node -e code\n- Use childProcess.kill and event cleanup to avoid kill ESRCH\n- Make tests fully cross-platform and stable\n- All security and functional tests pass ([83a4dfe](https://github.com/unit-mesh/autodev-worker/commit/83a4dfe))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.5.1 (2025-06-11)
 
 ### 🚀 Features

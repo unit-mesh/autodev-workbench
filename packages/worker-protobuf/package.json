@@ -1,6 +1,6 @@
 {
   "name": "@autodev/worker-protobuf",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Model Context Protocol implementation",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
