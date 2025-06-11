@@ -6,6 +6,8 @@ import {PromptBuilder, ToolDefinition} from "./agent/prompt-builder";
 import {ResponseGenerator} from "./agent/response-generator";
 import {ToolExecutor} from "./agent/tool-executor";
 import {ToolExecutionContext, ToolResult} from "./agent/tool-types";
+import {GitHubContextManager} from "./agent/github-context-manager";
+import {GitHubConfig} from "./agent/github-types";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -48,6 +50,7 @@ export class AIAgent {
   private promptBuilder: PromptBuilder = new PromptBuilder();
   private responseGenerator: ResponseGenerator;
   private toolExecutor: ToolExecutor;
+  private githubManager: GitHubContextManager;
 
   constructor(config: AgentConfig = {}) {
     this.config = {
@@ -68,6 +71,13 @@ export class AIAgent {
     this.toolExecutor = new ToolExecutor({
       timeout: this.config.toolTimeout,
       verbose: this.config.verbose
+    });
+
+    // Initialize GitHub manager
+    this.githubManager = new GitHubContextManager({
+      token: this.config.githubToken,
+      context: this.config.githubContext,
+      autoUploadToIssue: this.config.autoUploadToIssue
     });
 
     // Extract tool definitions from MCP tools using PromptBuilder
@@ -228,7 +238,19 @@ export class AIAgent {
 
     const executionTime = Date.now() - startTime;
 
-    const githubContext = this.extractGitHubContext(userInput, allToolResults);
+    // Extract GitHub context
+    const githubContext = this.githubManager.extractContext(userInput, allToolResults);
+
+    // Auto-upload to GitHub issue if enabled
+    if (this.githubManager.isAutoUploadEnabled() && githubContext) {
+      await this.githubManager.uploadToIssue({
+        token: this.config.githubToken!,
+        owner: githubContext.owner,
+        repo: githubContext.repo,
+        issueNumber: githubContext.issueNumber,
+        content: finalResponse
+      });
+    }
 
     return {
       text: finalResponse,
@@ -493,6 +515,16 @@ export class AIAgent {
    */
   updateConfig(newConfig: Partial<AgentConfig>): void {
     this.config = { ...this.config, ...newConfig };
+    
+    // Update GitHub manager config if needed
+    if (newConfig.githubToken || newConfig.githubContext || newConfig.autoUploadToIssue !== undefined) {
+      this.githubManager.updateConfig({
+        token: newConfig.githubToken,
+        context: newConfig.githubContext,
+        autoUploadToIssue: newConfig.autoUploadToIssue
+      });
+    }
+
     this.log('Configuration updated:', newConfig);
   }
 
