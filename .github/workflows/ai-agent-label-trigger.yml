@@ -216,23 +216,3 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
-
-      - name: Add Newcomer Welcome Comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              issue_number: ${{ github.event.issue.number }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `👋 **Welcome Contributors!** 
-
-This issue has been marked as beginner-friendly. Our AI agent is analyzing the issue and will provide detailed guidance shortly.
-
-**For new contributors:**
-- 📚 Check our [Contributing Guide](../blob/master/CONTRIBUTING.md) if available
-- 💬 Feel free to ask questions in the comments
-- 🤝 Don't hesitate to request help or clarification
-
-The AI analysis will include step-by-step guidance and learning resources to help you get started!`
-            });
