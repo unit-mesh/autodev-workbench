@@ -1,6 +1,6 @@
 /**
  * LLM Analysis Strategy
- * 
+ *
  * Implements analysis using Large Language Models for intelligent code analysis.
  * Uses the Strategy Pattern to provide LLM-powered analysis capabilities.
  */
@@ -57,7 +57,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       // Store priorities for later use in file filtering
       if (llmAnalysis.file_priorities) {
         (keywords as any).priorities = llmAnalysis.file_priorities;
-        console.log('📊 File priorities from LLM:', llmAnalysis.file_priorities);
+        console.log('📊 File priorities from LLM:', JSON.stringify(llmAnalysis.file_priorities));
       }
 
       return keywords;
@@ -226,11 +226,11 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   calculateConfidence(result: AnalysisResult): number {
     // LLM-based analysis typically has higher confidence
     const baseConfidence = super.calculateConfidence(result);
-    
+
     // Boost confidence for LLM analysis if we have reasons
     const hasReasons = result.files.some(f => f.reason);
     const reasonBonus = hasReasons ? 0.2 : 0;
-    
+
     return Math.min(baseConfidence + reasonBonus, 1);
   }
 
@@ -707,7 +707,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   private extractHttpMethod(symbol: any): string | null {
     const text = `${symbol.name} ${symbol.qualifiedName}`.toLowerCase();
     const methods = ['get', 'post', 'put', 'delete', 'patch', 'head', 'options'];
-    
+
     for (const method of methods) {
       if (text.includes(method)) {
         return method.toUpperCase();
