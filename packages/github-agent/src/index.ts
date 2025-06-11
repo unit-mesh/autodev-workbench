@@ -9,7 +9,7 @@ export { ContextAnalyzer, FileLoader } from "./services/core";
 export {
 	LLMService, configureLLMProvider, hasLLMProvider, getLLMProviderStatus, type LLMProviderConfig
 } from "./services/llm";
-export { AnalysisReportGenerator, AnalysisFormatter } from "./services/reporting";
+export { AnalysisReportGenerator } from "./services/reporting";
 // AI Agent exports
 export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
 export { PromptBuilder } from "./agent/prompt-builder";
