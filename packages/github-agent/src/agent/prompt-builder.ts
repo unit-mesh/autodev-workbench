@@ -459,13 +459,14 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
             items: PromptBuilder.zodToJsonSchema(zodType._def?.type),
             description
           };
-        case 'ZodObject':
+        case 'ZodObject': {
           const properties: Record<string, any> = {};
           const shape = zodType._def?.shape?.() || {};
           for (const [key, value] of Object.entries(shape)) {
             properties[key] = PromptBuilder.zodToJsonSchema(value);
           }
           return { type: 'object', properties, description };
+        }
         case 'ZodEnum':
           return {
             type: 'string',
