@@ -642,9 +642,10 @@ Your response should be clear, well-structured, and directly address the user's 
     const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
 
-    const comprehensivePrompt = `Based on the user's request and the multi-round tool execution results, provide a comprehensive analysis and answer.
+    const comprehensivePrompt = `Based on the user's request and the results from multiple tool executions across ${totalRounds} rounds, provide a comprehensive, high-confidence analysis.
 
-User Request: ${userInput}
+User Request:
+${userInput}
 
 Execution Summary:
 ${executionSummary}
@@ -655,14 +656,21 @@ ${toolResultsSummary}
 ${failedResults.length > 0 ? `Failed Tools:
 ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 
-` : ''}Please provide a comprehensive response that:
-1. Directly answers the user's question based on all available information
-2. Synthesizes insights from multiple tool executions
-3. Highlights the most important findings and patterns
-4. Provides actionable recommendations
-5. Notes any limitations or areas that need further investigation
+` : ''}Please generate a well-structured, detailed final response that:
 
-Your response should be well-structured, clear, and demonstrate the value of the multi-step analysis process.`;
+1. **Directly answers the user's question** using all available information across tools and rounds.
+2. **Synthesizes insights** from the tools that returned successful results (${successfulResults.length} in total), especially where **consensus was observed** across multiple tool executions.
+3. **Cites key results explicitly** (e.g., function name, tool name, or file path) to enhance traceability and confidence. Prefer formulations like:
+   - "Tool \`${r.functionCall.name}\` successfully retrieved data from \`${r.filePath ?? 'N/A'}\`"
+   - "Across ${totalRounds} rounds, X consistently indicated Y..."
+4. **Highlights high-confidence findings** based on:
+   - Repeated confirmation across tools
+   - Low error rate
+   - Converging results from different tool types
+5. **Includes actionable recommendations** for next steps or code changes, clearly derived from the tools' output.
+6. **Clearly state any known limitations, edge cases, or missing information**, especially where tool execution failed or returned uncertain results.
+
+Be precise, transparent about assumptions, and emphasize where the multi-step analysis improves reliability or coverage.`;
 
     try {
       const { text } = await generateText({
