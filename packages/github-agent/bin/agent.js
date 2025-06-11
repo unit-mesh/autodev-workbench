@@ -3,7 +3,8 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
-const { AIAgent, GitHubService } = require('../dist/agent.js');
+const { AIAgent } = require('../dist/agent.js');
+const { GitHubService } = require('../dist/index.js');
 const readline = require('readline');
 const path = require('path');
 
