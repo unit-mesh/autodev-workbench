@@ -6,7 +6,6 @@ import {installDeleteFileTool} from "./tools/fs-delete-file";
 
 // Terminal Tools
 import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
-import {installExecuteScriptTool} from "./tools/terminal-execute-script";
 
 // context engine
 import {installAnalysisBasiContextTool} from "./tools/planning-context-analyzer";
@@ -42,7 +41,6 @@ export const CodeAnalysisTools = [
 // Terminal Tools
 export const TerminalTools = [
     installRunTerminalCommandTool,
-    installExecuteScriptTool,
 ] as const;
 
 // GitHub Tools

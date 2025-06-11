@@ -11,5 +11,4 @@ export { installDeleteFileTool } from "./fs-delete-file";
 export { installListDirectoryTool } from "./fs-list-directory";
 export { installReadFileTool } from "./fs-read-file";
 export { installWriteFileTool } from "./fs-write-file";
-export { installExecuteScriptTool } from "./terminal-execute-script";
 export { installRunTerminalCommandTool } from "./terminal-run-command";
