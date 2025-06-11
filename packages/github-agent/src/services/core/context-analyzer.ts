@@ -14,6 +14,9 @@ import { IAnalysisStrategy, AnalysisContext } from "../analysis/interfaces/IAnal
 import { ICacheManager, DefaultCacheKeyGenerator } from "../analysis/interfaces/ICacheManager";
 import { AnalyzerFactory, AnalyzerConfig } from "../analysis/factories/AnalyzerFactory";
 
+// Import URL fetching capabilities
+import { fetchUrlsFromIssue, extractUrlsFromText } from "../../capabilities/tools/web-fetch-content";
+
 /**
  * Simplified Context Analyzer - Clean Facade Pattern Implementation
  * 
@@ -171,25 +174,22 @@ export class ContextAnalyzer {
   async analyzeIssue(issue: GitHubIssue & { urlContent?: any[] }): Promise<IssueAnalysisResult> {
     if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
       console.log(`🎯 Analyzing issue #${issue.number}: ${issue.title}`);
-
-      // Log URL content if available
-      if (issue.urlContent && issue.urlContent.length > 0) {
-        const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
-        console.log(`📄 Using content from ${successfulUrls.length} URLs for enhanced analysis`);
-      }
     }
 
-    // Step 1: Find relevant code using strategy pattern
-    const relatedCode = await this.findRelevantCode(issue);
+    // Step 1: Detect and fetch URL content if not already provided
+    const enhancedIssue = await this.enhanceIssueWithUrlContent(issue);
 
-    // Step 2: Generate suggestions and summary (delegated to strategies)
+    // Step 2: Find relevant code using strategy pattern
+    const relatedCode = await this.findRelevantCode(enhancedIssue);
+
+    // Step 3: Generate suggestions and summary (delegated to strategies)
     const [suggestions, summary] = await Promise.all([
-      this.generateSuggestions(issue, relatedCode),
-      this.generateSummary(issue, relatedCode)
+      this.generateSuggestions(enhancedIssue, relatedCode),
+      this.generateSummary(enhancedIssue, relatedCode)
     ]);
 
     const result: IssueAnalysisResult = {
-      issue,
+      issue: enhancedIssue,
       relatedCode,
       suggestions,
       summary,
@@ -202,9 +202,66 @@ export class ContextAnalyzer {
   }
 
   /**
+   * Enhance issue with URL content by detecting and fetching URLs from issue body
+   */
+  private async enhanceIssueWithUrlContent(issue: GitHubIssue & { urlContent?: any[] }): Promise<GitHubIssue & { urlContent?: any[] }> {
+    // If URL content is already provided, use it
+    if (issue.urlContent && issue.urlContent.length > 0) {
+      if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
+        const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
+        console.log(`📄 Using pre-fetched content from ${successfulUrls.length} URLs for enhanced analysis`);
+      }
+      return issue;
+    }
+
+    // Check if issue body contains URLs
+    if (!issue.body) {
+      if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
+        console.log(`📄 No issue body content to analyze for URLs`);
+      }
+      return issue;
+    }
+
+    // Extract URLs from issue content
+    const extractedUrls = extractUrlsFromText(issue.body);
+    if (extractedUrls.length === 0) {
+      if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
+        console.log(`📄 No URLs found in issue content`);
+      }
+      return issue;
+    }
+
+    if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
+      console.log(`🔗 Found ${extractedUrls.length} URLs in issue content: ${extractedUrls.join(', ')}`);
+    }
+
+    // Fetch URL content
+    try {
+      const urlContent = await fetchUrlsFromIssue(issue.body, 10000); // 10 second timeout
+
+      if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
+        const successfulUrls = urlContent.filter(u => u.status === 'success');
+        const failedUrls = urlContent.filter(u => u.status === 'error');
+        console.log(`📄 Successfully fetched content from ${successfulUrls.length} URLs`);
+        if (failedUrls.length > 0) {
+          console.log(`⚠️ Failed to fetch content from ${failedUrls.length} URLs`);
+        }
+      }
+
+      return {
+        ...issue,
+        urlContent
+      };
+    } catch (error) {
+      console.warn(`⚠️ URL content fetching failed for issue #${issue.number}:`, error);
+      return issue;
+    }
+  }
+
+  /**
    * Generate suggestions - simplified, can be enhanced with strategy pattern
    */
-  private async generateSuggestions(issue: GitHubIssue, codeContext: CodeContext): Promise<Array<{
+  private async generateSuggestions(issue: GitHubIssue & { urlContent?: any[] }, codeContext: CodeContext): Promise<Array<{
     type: 'file' | 'function' | 'api' | 'symbol';
     description: string;
     location?: string;
@@ -243,7 +300,7 @@ export class ContextAnalyzer {
   /**
    * Generate summary - simplified, can be enhanced with strategy pattern
    */
-  private async generateSummary(issue: GitHubIssue, codeContext: CodeContext): Promise<string> {
+  private async generateSummary(issue: GitHubIssue & { urlContent?: any[] }, codeContext: CodeContext): Promise<string> {
     const fileCount = codeContext.files.length;
     const symbolCount = codeContext.symbols.length;
     const apiCount = codeContext.apis.length;
@@ -251,6 +308,29 @@ export class ContextAnalyzer {
     let summary = `## Issue Analysis: #${issue.number} - "${issue.title}"\n\n`;
     summary += `**Status**: ${issue.state}\n`;
     summary += `**Created**: ${new Date(issue.created_at).toLocaleDateString()}\n\n`;
+
+    // Add URL content information if available
+    if (issue.urlContent && issue.urlContent.length > 0) {
+      const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
+      const failedUrls = issue.urlContent.filter(u => u.status === 'error');
+
+      summary += `### URL Content Analysis\n`;
+      summary += `- **${successfulUrls.length}** URLs successfully fetched\n`;
+      if (failedUrls.length > 0) {
+        summary += `- **${failedUrls.length}** URLs failed to fetch\n`;
+      }
+
+      if (successfulUrls.length > 0) {
+        summary += `\n**Successfully Analyzed URLs:**\n`;
+        successfulUrls.slice(0, 3).forEach((urlData, index) => {
+          summary += `${index + 1}. [${urlData.title || 'Untitled'}](${urlData.url}) (${urlData.content_length || 0} chars)\n`;
+        });
+        if (successfulUrls.length > 3) {
+          summary += `... and ${successfulUrls.length - 3} more URLs\n`;
+        }
+      }
+      summary += `\n`;
+    }
 
     summary += `### Code Analysis Results\n`;
     summary += `- **${fileCount}** relevant files found\n`;
