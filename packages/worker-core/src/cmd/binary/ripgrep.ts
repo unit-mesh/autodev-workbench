@@ -289,13 +289,6 @@ export async function regexSearchFiles(
 		}
 	})
 
-	// console.log(results)
-
-	// Filter results using RooIgnoreController if provided
-	// const filteredResults = rooIgnoreController
-	// 	? results.filter((result) => rooIgnoreController.validateAccess(result.file))
-	// 	: results
-
 	return formatResults(results, cwd)
 }
 

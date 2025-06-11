@@ -80,14 +80,11 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Format results according to the specified format
-      const formattedResults = formatRipgrepResults(searchResults);
-
       return {
         content: [
           {
             type: "text",
-            text: formattedResults
+            text: searchResults
           }
         ]
       };
@@ -103,54 +100,3 @@ export const installGrepSearchTool: ToolLike = (installer) => {
     }
   });
 };
-
-/**
- * Format ripgrep results according to the specified format:
- * ## filepath: xxx
- * --- before 4 lines ---
- * result line
- * --- after 4 lines----
- */
-function formatRipgrepResults(searchResults: string): string {
-  const lines = searchResults.split('\n');
-  let formattedOutput = '';
-  let currentFile = '';
-  let inFileSection = false;
-
-  for (const line of lines) {
-    // Check if this is a file header (starts with # and contains a file path)
-    if (line.startsWith('# ')) {
-      currentFile = line.substring(2).trim();
-      formattedOutput += `## filepath: ${currentFile}\n`;
-      inFileSection = true;
-      continue;
-    }
-
-    // Skip empty lines between files
-    if (!line.trim() && !inFileSection) {
-      continue;
-    }
-
-    // Process content lines (format: "linenum | content")
-    if (inFileSection && line.includes(' | ')) {
-      const parts = line.split(' | ');
-      if (parts.length >= 2) {
-        const lineNum = parts[0].trim();
-        const content = parts.slice(1).join(' | ');
-
-        // Check if this is a separator line
-        if (line.includes('----')) {
-          formattedOutput += `--- before 4 lines ---, result line, --- after 4 lines----\n\n`;
-          inFileSection = false;
-          continue;
-        }
-
-        formattedOutput += `${content}\n`;
-      }
-    }
-  }
-
-  return formattedOutput.trim();
-}
-
-
