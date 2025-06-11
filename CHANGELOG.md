@@ -1,3 +1,35 @@
+## 0.5.1 (2025-06-11)
+
+### 🚀 Features
+
+- **LLMAnalysisStrategy:** enhance advanced filtering with fallback strategy and informative comments ([e93c5ff](https://github.com/unit-mesh/autodev-worker/commit/e93c5ff))
+- **agent:** add function calling capabilities ([8b72501](https://github.com/unit-mesh/autodev-worker/commit/8b72501))
+- **agent:** add function calling capabilities ([a81e026](https://github.com/unit-mesh/autodev-worker/commit/a81e026))
+- **agent:** implement label-triggered analysis workflow for GitHub issues ([ff6f0f9](https://github.com/unit-mesh/autodev-worker/commit/ff6f0f9))
+- **agent:** enhance issue analysis by fetching and analyzing URL content from issue body ([9c5bbee](https://github.com/unit-mesh/autodev-worker/commit/9c5bbee))
+- **github-agent:** enhance tool chaining for comprehensive analysis ([01d9ca0](https://github.com/unit-mesh/autodev-worker/commit/01d9ca0))
+- **github-agent:** support markdown-wrapped function calls ([86d2307](https://github.com/unit-mesh/autodev-worker/commit/86d2307))
+- **github-agent:** disable file search and rename tools export ([0ae9fba](https://github.com/unit-mesh/autodev-worker/commit/0ae9fba))
+- **github-agent:** disable file search and rename tools export ([41b6607](https://github.com/unit-mesh/autodev-worker/commit/41b6607))
+- **github-agent:** enhance GitHub issue analysis tool description and guidelines ([372bbfd](https://github.com/unit-mesh/autodev-worker/commit/372bbfd))
+- **github-agent:** add auto-upload option for GitHub issue analysis results ([5867c2a](https://github.com/unit-mesh/autodev-worker/commit/5867c2a))
+- **github-agent:** refactor comment generation for GitHub analysis results ([670ba86](https://github.com/unit-mesh/autodev-worker/commit/670ba86))
+- **github-agent:** simplify context analysis tool and add centralized exports ([f092e91](https://github.com/unit-mesh/autodev-worker/commit/f092e91))
+- **github-agent:** add WebSearch tool with multi-engine support and error handling ([eabd383](https://github.com/unit-mesh/autodev-worker/commit/eabd383))
+- **quick-test-agent:** add quick test script for agent functionality validation ([8ced431](https://github.com/unit-mesh/autodev-worker/commit/8ced431))
+- **rip-grep:** implement output truncation for results exceeding character limit ([8255638](https://github.com/unit-mesh/autodev-worker/commit/8255638))
+
+### 🩹 Fixes
+
+- improve GitHub agent LLM analysis strategy for documentation issues ([#98](https://github.com/unit-mesh/autodev-worker/issues/98))
+- **github-agent:** exclude GitHub analyze issue tool from tool imports ([ccafd84](https://github.com/unit-mesh/autodev-worker/commit/ccafd84))
+- **github-agent:** exclude GitHub analyze issue tool from tool imports ([5e92ad3](https://github.com/unit-mesh/autodev-worker/commit/5e92ad3))
+- **github-agent:** improve console logging ([8682b6b](https://github.com/unit-mesh/autodev-worker/commit/8682b6b))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.5.0 (2025-06-09)
 
 ### 🚀 Features
