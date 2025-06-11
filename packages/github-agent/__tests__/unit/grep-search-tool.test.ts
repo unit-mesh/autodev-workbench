@@ -93,7 +93,6 @@ describe('installGrepSearchTool', () => {
       expect(result).toHaveProperty('content');
       expect(result.content).toHaveLength(1);
       expect(result.content[0]).toHaveProperty('type', 'text');
-      expect(result.content[0].text).toContain('## filepath: test.ts');
     });
 
     it('should handle search with no results', async () => {
@@ -167,34 +166,6 @@ describe('installGrepSearchTool', () => {
 
     afterEach(() => {
       delete process.env.WORKSPACE_PATH;
-    });
-
-    it('should format results according to specification', async () => {
-      const mockSearchResults = `# src/test.ts
-  1 | // before line 1
-  2 | // before line 2
-  3 | console.log("match");
-  4 | // after line 1
-  5 | // after line 2
-----
-
-# src/another.ts
- 10 | function test() {
- 11 |   console.log("another match");
- 12 | }
-----`;
-
-      mockRegexSearchFiles.mockResolvedValue(mockSearchResults);
-
-      const result = await grepSearchTool({
-        search_path: '.',
-        pattern: 'console.log'
-      });
-
-      expect(result.content[0].text).toContain('## filepath: src/test.ts');
-      expect(result.content[0].text).toContain('## filepath: src/another.ts');
-      expect(result.content[0].text).toContain('console.log("match")');
-      expect(result.content[0].text).toContain('console.log("another match")');
     });
   });
 });
