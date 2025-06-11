@@ -62,6 +62,65 @@ async function main() {
 }
 
 /**
+ * Generate label-specific analysis command
+ */
+function generateLabelSpecificCommand(githubContext) {
+  if (githubContext?.eventContext?.type !== 'labeled') {
+    return null;
+  }
+
+  const { owner, repo, issueNumber, eventContext } = githubContext;
+  const { labelName, allLabels } = eventContext;
+  const repository = `${owner}/${repo}`;
+  const basePrompt = `Issue #${issueNumber} in ${repository}`;
+
+  // Define label-specific analysis strategies
+  const labelStrategies = {
+    // Technical analysis labels
+    'bug': `${basePrompt} has been labeled as a bug. Perform comprehensive bug analysis: 1) Examine related code to identify the root cause, 2) Trace the bug's impact across the system, 3) Provide step-by-step debugging guidance, 4) Suggest specific code fixes with examples, 5) Recommend testing strategies to prevent regression.`,
+
+    'enhancement': `${basePrompt} has been labeled as an enhancement. Analyze this feature request: 1) Evaluate technical feasibility and complexity, 2) Identify affected components and dependencies, 3) Suggest implementation approach with code examples, 4) Estimate development effort and potential risks, 5) Recommend testing and rollout strategies.`,
+
+    'performance': `${basePrompt} has been labeled as a performance issue. Conduct performance analysis: 1) Identify performance bottlenecks in related code, 2) Analyze algorithmic complexity and resource usage, 3) Suggest optimization strategies with code examples, 4) Provide benchmarking recommendations, 5) Consider scalability implications.`,
+
+    'security': `${basePrompt} has been labeled as a security issue. Perform security audit: 1) Identify potential vulnerabilities in related code, 2) Analyze security implications and attack vectors, 3) Suggest security best practices and fixes, 4) Provide remediation steps with priority levels, 5) Recommend security testing approaches.`,
+
+    'refactor': `${basePrompt} has been labeled for refactoring. Analyze refactoring needs: 1) Identify code smells and technical debt, 2) Suggest refactoring strategies and patterns, 3) Provide step-by-step refactoring plan, 4) Estimate impact on existing functionality, 5) Recommend testing strategies during refactoring.`,
+
+    // Workflow and priority labels
+    'critical': `${basePrompt} is marked as critical. Provide urgent analysis: 1) Assess immediate impact and business risks, 2) Identify quick mitigation strategies, 3) Provide emergency fix suggestions with code examples, 4) Outline long-term solution approach, 5) Recommend monitoring and alerting improvements.`,
+
+    'needs-analysis': `${basePrompt} needs detailed analysis. Provide comprehensive technical analysis: 1) Deep dive into the issue context and requirements, 2) Examine all related code components and dependencies, 3) Provide detailed technical insights and trade-offs, 4) Suggest multiple solution approaches with pros/cons, 5) Recommend implementation roadmap.`,
+
+    'help-wanted': `${basePrompt} is seeking community help. Create newcomer-friendly analysis: 1) Explain the issue in simple, accessible terms, 2) Identify good starting points for new contributors, 3) Provide learning resources and documentation links, 4) Suggest incremental contribution steps, 5) Highlight mentoring opportunities.`,
+
+    'good-first-issue': `${basePrompt} is marked as good for first-time contributors. Create beginner-friendly guidance: 1) Explain the issue simply with clear context, 2) Provide step-by-step implementation hints, 3) Suggest relevant learning resources and tutorials, 4) Identify potential mentoring points and code review focus areas, 5) Recommend testing approaches for beginners.`,
+
+    // Domain-specific labels
+    'frontend': `${basePrompt} has been labeled as frontend-related. Provide frontend-focused analysis: 1) Examine UI/UX implications and user experience, 2) Analyze frontend code architecture and patterns, 3) Suggest modern frontend best practices, 4) Consider accessibility and performance implications, 5) Recommend testing strategies for frontend changes.`,
+
+    'backend': `${basePrompt} has been labeled as backend-related. Provide backend-focused analysis: 1) Analyze server-side architecture and data flow, 2) Examine API design and database implications, 3) Consider scalability and performance factors, 4) Suggest backend best practices and patterns, 5) Recommend monitoring and logging strategies.`,
+
+    'api': `${basePrompt} has been labeled as API-related. Provide API-focused analysis: 1) Analyze API design and RESTful principles, 2) Examine request/response patterns and data structures, 3) Consider versioning and backward compatibility, 4) Suggest API documentation improvements, 5) Recommend testing and validation strategies.`,
+
+    'database': `${basePrompt} has been labeled as database-related. Provide database-focused analysis: 1) Analyze database schema and query patterns, 2) Examine data relationships and constraints, 3) Consider performance and indexing strategies, 4) Suggest migration and backup considerations, 5) Recommend monitoring and optimization approaches.`
+  };
+
+  // Check for label combinations that might need special handling
+  const hasMultipleImportantLabels = allLabels.filter(label =>
+    ['critical', 'security', 'performance', 'breaking-change'].includes(label)
+  ).length > 1;
+
+  if (hasMultipleImportantLabels) {
+    return `${basePrompt} has been labeled with "${labelName}" and has multiple high-priority labels: [${allLabels.join(', ')}]. Provide comprehensive analysis considering all these aspects: 1) Analyze the issue from multiple perspectives based on all labels, 2) Identify potential conflicts or synergies between different concerns, 3) Prioritize recommendations based on label importance, 4) Suggest coordinated approach addressing all labeled concerns, 5) Provide implementation roadmap considering all constraints.`;
+  }
+
+  // Return label-specific strategy or default
+  return labelStrategies[labelName] ||
+    `${basePrompt} has been labeled with "${labelName}". Analyze this issue in the context of this label: 1) Explain why this label is relevant to the issue, 2) Provide insights specific to this label's domain, 3) Suggest appropriate next steps and solutions, 4) Consider related issues or patterns, 5) Recommend best practices for this type of issue.`;
+}
+
+/**
  * Extract GitHub context from environment variables (GitHub Actions)
  */
 function extractGitHubContextFromEnv() {
@@ -100,10 +159,38 @@ function extractGitHubContextFromEnv() {
 
     // Extract issue number for issue events
     let issueNumber = null;
+    let eventContext = null;
     if (eventName === 'issues' && eventData.issue) {
       issueNumber = eventData.issue.number;
+
+      // Add context based on the specific action
+      switch (eventData.action) {
+        case 'labeled':
+          eventContext = {
+            type: 'labeled',
+            labelName: eventData.label?.name,
+            labelColor: eventData.label?.color,
+            allLabels: eventData.issue.labels?.map(l => l.name) || []
+          };
+          break;
+        case 'assigned':
+          eventContext = {
+            type: 'assigned',
+            assignee: eventData.assignee?.login,
+            allAssignees: eventData.issue.assignees?.map(a => a.login) || []
+          };
+          break;
+        default:
+          eventContext = {
+            type: eventData.action || 'unknown'
+          };
+      }
     } else if (eventName === 'issue_comment' && eventData.issue) {
       issueNumber = eventData.issue.number;
+      eventContext = {
+        type: 'comment',
+        commentAuthor: eventData.comment?.user?.login
+      };
     }
 
     if (issueNumber) {
@@ -112,7 +199,8 @@ function extractGitHubContextFromEnv() {
         repo,
         issueNumber,
         eventType: eventName,
-        action: eventData.action
+        action: eventData.action,
+        eventContext
       };
 
       console.log('📋 GitHub context detected:', context);
@@ -191,10 +279,23 @@ function parseArgs(args) {
  * Process a single command and exit
  */
 async function processSingleCommand(agent, command, config) {
-  console.log(`🎯 Processing command: ${command}\n`);
+  // Check if we have GitHub context and should generate a smart command
+  const githubContext = extractGitHubContextFromEnv();
+  let finalCommand = command;
+
+  // Generate label-specific command if this is a labeled event
+  if (githubContext?.eventContext?.type === 'labeled') {
+    const smartCommand = generateLabelSpecificCommand(githubContext);
+    if (smartCommand) {
+      finalCommand = smartCommand;
+      console.log(`🏷️ Generated label-specific command for "${githubContext.eventContext.labelName}" label`);
+    }
+  }
+
+  console.log(`🎯 Processing command: ${finalCommand}\n`);
 
   try {
-    const response = await agent.processInput(command);
+    const response = await agent.processInput(finalCommand);
     const githubToken = process.env.GITHUB_TOKEN;
     console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${githubToken ? githubToken.substring(0, 4) + '...' : 'undefined'}`);
 

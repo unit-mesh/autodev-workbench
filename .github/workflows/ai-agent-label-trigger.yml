@@ -1,0 +1,238 @@
+name: AI Agent - Label Triggered Analysis
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  label-triggered-analysis:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'labeled'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install workspace dependencies
+        run: pnpm install
+
+      - name: Build packages in correct order
+        run: |
+          pnpm --filter worker-core build
+          pnpm --filter worker-protobuf build
+          pnpm --filter context-worker build
+          pnpm --filter github-agent build
+
+      - name: Label-Specific AI Analysis
+        timeout-minutes: 10
+        run: |
+          cd packages/github-agent
+          
+          LABEL_NAME="${{ github.event.label.name }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          REPOSITORY="${{ github.repository }}"
+          
+          echo "🏷️ Label '$LABEL_NAME' added to issue #$ISSUE_NUMBER"
+          echo "🎯 Repository: $REPOSITORY"
+          echo "📋 Issue Title: ${{ github.event.issue.title }}"
+          echo ""
+          
+          # Set timeout and error handling
+          set -e
+          trap 'echo "❌ Label analysis interrupted or timed out"; exit 1' INT TERM
+          
+          # The agent.js will automatically detect the labeled event and generate appropriate analysis
+          timeout 480s node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
+            --command "Smart analysis triggered by label" || {
+            echo "⚠️ Label-triggered analysis timed out or failed, but continuing..."
+            exit 0
+          }
+          
+          echo "✅ Label-triggered analysis completed successfully"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          # GitHub Actions context variables
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+  # Special handling for critical labels
+  critical-label-analysis:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' && 
+      github.event.action == 'labeled' &&
+      (github.event.label.name == 'critical' || 
+       github.event.label.name == 'security' || 
+       github.event.label.name == 'breaking-change')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install workspace dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: |
+          pnpm --filter worker-core build
+          pnpm --filter worker-protobuf build
+          pnpm --filter context-worker build
+          pnpm --filter github-agent build
+
+      - name: Critical Issue Deep Analysis
+        timeout-minutes: 15
+        run: |
+          cd packages/github-agent
+          
+          LABEL_NAME="${{ github.event.label.name }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          
+          echo "🚨 CRITICAL: Issue #$ISSUE_NUMBER labeled with '$LABEL_NAME'"
+          echo "🔍 Performing deep analysis for critical issue..."
+          
+          # Extended timeout for critical issues
+          timeout 720s node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
+            --command "CRITICAL ANALYSIS: Issue #$ISSUE_NUMBER has been marked as $LABEL_NAME. Perform comprehensive deep analysis with maximum detail and urgency." || {
+            echo "⚠️ Critical analysis timed out or failed"
+            exit 1
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GLM_TOKEN: ${{ secrets.GLM_TOKEN }}
+          NODE_OPTIONS: "--max-old-space-size=6144"
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      - name: Notify Team for Critical Issues
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labelName = '${{ github.event.label.name }}';
+            const issueNumber = ${{ github.event.issue.number }};
+            
+            let notificationMessage = '';
+            if (labelName === 'critical') {
+              notificationMessage = '🚨 **CRITICAL ISSUE ALERT** - This issue requires immediate attention from the development team.';
+            } else if (labelName === 'security') {
+              notificationMessage = '🔒 **SECURITY ALERT** - This issue has security implications and needs urgent review.';
+            } else if (labelName === 'breaking-change') {
+              notificationMessage = '💥 **BREAKING CHANGE ALERT** - This issue involves breaking changes that need careful coordination.';
+            }
+            
+            if (notificationMessage) {
+              await github.rest.issues.createComment({
+                issue_number: issueNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `${notificationMessage}\n\nAI analysis has been triggered and will be posted shortly.`
+              });
+            }
+
+  # Special handling for newcomer-friendly labels
+  newcomer-friendly-analysis:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' && 
+      github.event.action == 'labeled' &&
+      (github.event.label.name == 'good-first-issue' || 
+       github.event.label.name == 'help-wanted' ||
+       github.event.label.name == 'beginner-friendly')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install workspace dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: |
+          pnpm --filter worker-core build
+          pnpm --filter worker-protobuf build
+          pnpm --filter context-worker build
+          pnpm --filter github-agent build
+
+      - name: Newcomer-Friendly Analysis
+        run: |
+          cd packages/github-agent
+          
+          echo "👋 Generating newcomer-friendly analysis for issue #${{ github.event.issue.number }}"
+          
+          # The smart command generation will handle newcomer-specific analysis
+          node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
+            --command "Newcomer guidance analysis"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_TOKEN: ${{ secrets.DEEPSEEK_TOKEN }}
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      - name: Add Newcomer Welcome Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: ${{ github.event.issue.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `👋 **Welcome Contributors!** 
+
+This issue has been marked as beginner-friendly. Our AI agent is analyzing the issue and will provide detailed guidance shortly.
+
+**For new contributors:**
+- 📚 Check our [Contributing Guide](../blob/master/CONTRIBUTING.md) if available
+- 💬 Feel free to ask questions in the comments
+- 🤝 Don't hesitate to request help or clarification
+
+The AI analysis will include step-by-step guidance and learning resources to help you get started!`
+            });
