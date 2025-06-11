@@ -1,6 +1,6 @@
-import { IssueAnalysisResult } from "../../types/index";
-import { LLMService } from "../llm/llm-service";
-import { GitHubService } from "../github/github-service";
+import { LLMService } from "../llm";
+import { GitHubService } from "../github";
+import { IssueAnalysisResult } from "../../types";
 
 interface AnalysisReportOptions {
   uploadToGitHub?: boolean;
@@ -145,54 +145,6 @@ export class AnalysisReportGenerator {
     }
 
     // Footer
-    sections.push('');
-    sections.push('---');
-    sections.push('');
-    sections.push('Powered by [AutoDev Remote AI Agent](https://github.com/unit-mesh/autodev-workbench)');
-
-    return sections.join('\n');
-  }
-
-  /**
-   * Generate analysis report in Chinese format (as shown in user examples)
-   */
-  async generateChineseReport(
-    analysisResult: IssueAnalysisResult,
-    _options: { uploadToGitHub?: boolean } = {}
-  ): Promise<string> {
-    const llmReport = await this.llmService.generateAnalysisReport(
-      analysisResult.issue,
-      analysisResult
-    );
-
-    const sections = [];
-
-    sections.push('# 分析和优化计划');
-    sections.push('基于我对代码的分析，我发现了以下问题和改进机会：');
-
-    sections.push('## 当前问题：');
-    if (llmReport.current_issues) {
-      llmReport.current_issues.forEach((issue: string) => {
-        sections.push(`- ${issue}`);
-      });
-    }
-
-    sections.push('## 优化计划：');
-    if (llmReport.detailed_plan && llmReport.detailed_plan.steps) {
-      llmReport.detailed_plan.steps.forEach((step: any, index: number) => {
-        sections.push(`### ${index + 1}. ${step.title}`);
-        if (step.files_to_modify && step.files_to_modify.length > 0) {
-          sections.push(`- 修改文件：${step.files_to_modify.join(', ')}`);
-        }
-        if (step.changes_needed && step.changes_needed.length > 0) {
-          sections.push(`- 需要的更改：`);
-          step.changes_needed.forEach((change: string) => {
-            sections.push(`\t- ${change}`);
-          });
-        }
-      });
-    }
-
     sections.push('');
     sections.push('---');
     sections.push('');

@@ -1,5 +1,5 @@
-import { GitHubConfig, GitHubContext, GitHubIssueContext, GitHubIssueUploadOptions } from './github-types';
-import { ToolResult } from './tool-types';
+import { GitHubConfig, GitHubIssueContext, GitHubIssueUploadOptions } from './github-types';
+import { ToolResult } from './tool-definition';
 
 export class GitHubContextManager {
   private config: GitHubConfig;
@@ -113,4 +113,4 @@ export class GitHubContextManager {
   isAutoUploadEnabled(): boolean {
     return Boolean(this.config.autoUploadToIssue && this.config.token);
   }
-} 
+}

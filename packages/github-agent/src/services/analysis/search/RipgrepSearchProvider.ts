@@ -1,6 +1,6 @@
 /**
  * Ripgrep Search Provider
- * 
+ *
  * Implements search using ripgrep for fast text searching.
  * Uses the Strategy Pattern to provide high-performance search capabilities.
  */
@@ -18,8 +18,8 @@ import { regexSearchFiles } from "@autodev/worker-core";
 import * as path from 'path';
 
 export class RipgrepSearchProvider extends BaseSearchProvider {
-  readonly name = 'ripgrep';
-  
+  name = 'ripgrep';
+
   private workspacePath: string;
 
   constructor(workspacePath: string) {
@@ -44,7 +44,7 @@ export class RipgrepSearchProvider extends BaseSearchProvider {
       return await this.searchWithRipgrep(pattern, options);
     } catch (error) {
       console.warn(`Ripgrep search failed for pattern "${pattern}":`, error);
-      
+
       // Return empty result on failure
       return this.createSearchResult(pattern, [], Date.now() - startTime);
     }
@@ -86,23 +86,23 @@ export class RipgrepSearchProvider extends BaseSearchProvider {
   ): Promise<SearchResult[]> {
     // Ripgrep can handle multiple patterns efficiently
     const results: SearchResult[] = [];
-    
+
     // Process patterns in parallel batches to avoid overwhelming the system
     const batchSize = 5;
     for (let i = 0; i < patterns.length; i += batchSize) {
       const batch = patterns.slice(i, i + batchSize);
-      
-      const batchPromises = batch.map(pattern => 
+
+      const batchPromises = batch.map(pattern =>
         this.search(pattern, files, options).catch(error => {
           console.warn(`Search failed for pattern "${pattern}":`, error);
           return this.createSearchResult(pattern, [], 0);
         })
       );
-      
+
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
     }
-    
+
     return results;
   }
 
@@ -181,7 +181,7 @@ export class RipgrepSearchProvider extends BaseSearchProvider {
 
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          
+
           if (regex.test(line)) {
             matches.push({
               line: i + 1,
@@ -192,7 +192,7 @@ export class RipgrepSearchProvider extends BaseSearchProvider {
                 after: this.getContextLines(lines, i, options.contextLines || 2)
               } : undefined
             });
-            
+
             totalMatches++;
             if (totalMatches >= (options.maxResults || 100)) break;
           }

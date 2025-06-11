@@ -1,6 +1,6 @@
 /**
  * Search Provider Interface
- * 
+ *
  * Defines the contract for different search implementations using the Strategy Pattern.
  * Supports ripgrep, file system search, and other search backends.
  */
@@ -58,7 +58,7 @@ export interface ISearchProvider {
   /**
    * Unique identifier for this search provider
    */
-  readonly name: string;
+  name: string;
 
   /**
    * Search for a pattern in the given files
@@ -112,7 +112,7 @@ export interface SearchCapabilities {
  * Base search provider with common functionality
  */
 export abstract class BaseSearchProvider implements ISearchProvider {
-  abstract readonly name: string;
+  abstract name: string;
 
   abstract search(
     pattern: string,
@@ -127,7 +127,7 @@ export abstract class BaseSearchProvider implements ISearchProvider {
   ): Promise<SearchResult[]> {
     // Default implementation: search patterns sequentially
     const results: SearchResult[] = [];
-    
+
     for (const pattern of patterns) {
       try {
         const result = await this.search(pattern, files, options);
@@ -136,7 +136,7 @@ export abstract class BaseSearchProvider implements ISearchProvider {
         console.warn(`Search failed for pattern "${pattern}":`, error);
       }
     }
-    
+
     return results;
   }
 
@@ -198,14 +198,14 @@ export abstract class BaseSearchProvider implements ISearchProvider {
    */
   protected calculateSearchScore(matches: SearchMatch[]): number {
     if (matches.length === 0) return 0;
-    
+
     // Score based on number of matches and their quality
     let score = matches.length;
-    
+
     // Bonus for exact matches
     const exactMatches = matches.filter(m => m.isMatch).length;
     score += exactMatches * 0.5;
-    
+
     // Normalize to 0-1 range
     return Math.min(score / 10, 1);
   }
@@ -227,7 +227,7 @@ export abstract class BaseSearchProvider implements ISearchProvider {
     results?: string
   ): SearchResult {
     const totalMatches = fileMatches.reduce((sum, fm) => sum + fm.matches.length, 0);
-    
+
     return {
       keyword,
       results: results || `Found ${totalMatches} matches in ${fileMatches.length} files`,

@@ -1,6 +1,6 @@
 import { generateText, CoreMessage } from "ai";
 import { GitHubIssue } from "../../types/index";
-import { IssueAnalysisResult } from "../../types/index";
+import { IssueAnalysisResult } from "../../types";
 import * as fs from "fs";
 import * as path from "path";
 import { configureLLMProvider, LLMProviderConfig } from "./llm-provider";
@@ -207,9 +207,9 @@ Respond only with valid JSON:`;
       if (!jsonMatch) {
         throw new Error("No JSON found in response");
       }
-      
+
       const parsed = JSON.parse(jsonMatch[0]);
-      
+
       // Validate and normalize the response
       return {
         primary_keywords: Array.isArray(parsed.primary_keywords) ? parsed.primary_keywords.slice(0, 10) : [],

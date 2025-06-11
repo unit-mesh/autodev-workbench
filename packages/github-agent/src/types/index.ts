@@ -70,7 +70,7 @@ export interface CodeContext {
 }
 
 export interface IssueAnalysisResult {
-  issue: GitHubIssue | PlatformIssue;
+  issue: GitHubIssue;
   relatedCode: CodeContext;
   suggestions: Array<{
     type: 'file' | 'function' | 'api' | 'symbol';

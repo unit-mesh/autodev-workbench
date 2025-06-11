@@ -1,18 +1,18 @@
 /**
  * Memory Cache Manager
- * 
+ *
  * Implements in-memory caching using the Strategy Pattern.
  * Provides fast access with automatic cleanup and TTL support.
  */
 
-import { 
-  ICacheManager, 
-  IFileCacheManager, 
-  CacheEntry, 
-  CacheOptions, 
+import {
+  ICacheManager,
+  IFileCacheManager,
+  CacheEntry,
+  CacheOptions,
   CacheStats,
   CacheConfig,
-  DEFAULT_CACHE_CONFIG 
+  DEFAULT_CACHE_CONFIG
 } from "../interfaces/ICacheManager";
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,12 +20,12 @@ import * as path from 'path';
 export class MemoryCacheManager implements ICacheManager {
   private cache = new Map<string, CacheEntry<any>>();
   private stats = { hits: 0, misses: 0 };
-  private config: CacheConfig;
+  protected config: CacheConfig;
   private cleanupTimer?: NodeJS.Timeout;
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = { ...DEFAULT_CACHE_CONFIG, ...config };
-    
+
     if (this.config.cleanupInterval) {
       this.startCleanupTimer();
     }
@@ -33,7 +33,7 @@ export class MemoryCacheManager implements ICacheManager {
 
   async get<T>(key: string): Promise<T | null> {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.misses++;
       return null;
@@ -69,12 +69,12 @@ export class MemoryCacheManager implements ICacheManager {
   async has(key: string): Promise<boolean> {
     const entry = this.cache.get(key);
     if (!entry) return false;
-    
+
     if (this.isExpired(entry)) {
       this.cache.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -127,7 +127,7 @@ export class MemoryCacheManager implements ICacheManager {
 
   async keys(pattern?: string): Promise<string[]> {
     const allKeys = Array.from(this.cache.keys());
-    
+
     if (!pattern) {
       return allKeys;
     }
@@ -188,13 +188,13 @@ export class FileMemoryCacheManager extends MemoryCacheManager implements IFileC
     try {
       const stats = await fs.promises.stat(fullPath);
       const cachedStats = this.fileStats.get(fullPath);
-      
+
       if (cachedStats && stats.mtime.getTime() !== cachedStats.mtime.getTime()) {
         // File has been modified, invalidate cache
         await this.delete(cacheKey);
         this.fileStats.delete(fullPath);
       }
-      
+
       this.fileStats.set(fullPath, stats);
     } catch (error) {
       // File doesn't exist or can't be accessed
@@ -203,7 +203,7 @@ export class FileMemoryCacheManager extends MemoryCacheManager implements IFileC
 
     // Try to get from cache
     let content = await this.get<string>(cacheKey);
-    
+
     if (content === null) {
       // Load from disk
       try {
@@ -220,7 +220,7 @@ export class FileMemoryCacheManager extends MemoryCacheManager implements IFileC
   async cacheFileContent(filePath: string, content: string): Promise<void> {
     const fullPath = path.isAbsolute(filePath) ? filePath : path.join(this.workspacePath, filePath);
     const cacheKey = `file:${fullPath}`;
-    
+
     await this.set(cacheKey, content, {
       ttl: this.config.fileCacheTTL,
       tags: ['file-content']
@@ -229,11 +229,11 @@ export class FileMemoryCacheManager extends MemoryCacheManager implements IFileC
 
   async invalidateModifiedFiles(): Promise<number> {
     let invalidated = 0;
-    
+
     for (const [fullPath, cachedStats] of this.fileStats.entries()) {
       try {
         const currentStats = await fs.promises.stat(fullPath);
-        
+
         if (currentStats.mtime.getTime() !== cachedStats.mtime.getTime()) {
           const cacheKey = `file:${fullPath}`;
           await this.delete(cacheKey);
