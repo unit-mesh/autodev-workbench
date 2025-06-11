@@ -661,8 +661,6 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 1. **Directly answers the user's question** using all available information across tools and rounds.
 2. **Synthesizes insights** from the tools that returned successful results (${successfulResults.length} in total), especially where **consensus was observed** across multiple tool executions.
 3. **Cites key results explicitly** (e.g., function name, tool name, or file path) to enhance traceability and confidence. Prefer formulations like:
-   - "Tool \`${r.functionCall.name}\` successfully retrieved data from \`${r.filePath ?? 'N/A'}\`"
-   - "Across ${totalRounds} rounds, X consistently indicated Y..."
 4. **Highlights high-confidence findings** based on:
    - Repeated confirmation across tools
    - Low error rate
