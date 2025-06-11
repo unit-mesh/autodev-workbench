@@ -25,29 +25,13 @@ export default defineConfig([
     plugins: [
       resolve({
         preferBuiltins: true,
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-        modulesOnly: true,
       }),
       commonjs(),
       json(),
       typescript({
         tsconfig: "./tsconfig.json",
         exclude: ["**/__tests__/**", "**/*.test.ts"],
-        compilerOptions: {
-          moduleResolution: "node",
-          declaration: true,
-          declarationDir: "./dist/types",
-        },
       }),
-    ],
-    external: [
-      '@autodev/worker-core',
-      '@modelcontextprotocol/sdk',
-      '@ast-grep/lang-typescript',
-      '@ast-grep/napi',
-      'express',
-      'protobufjs',
-      'zod'
     ],
   },
   {
