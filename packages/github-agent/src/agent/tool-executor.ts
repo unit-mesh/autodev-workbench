@@ -8,6 +8,10 @@ import { FunctionCall, ToolExecutionContext, ToolExecutionOptions, ToolResult } 
 
 export type { ToolResult, ToolExecutionContext, ToolExecutionOptions };
 
+// Define tool handler function type
+export type ToolHandler = (parameters: Record<string, any>) => Promise<any>;
+
+// Enhanced execution statistics interface
 interface DetailedExecutionStats {
   totalCalls: number;
   successfulCalls: number;
@@ -40,7 +44,7 @@ interface CacheEntry {
 }
 
 export class ToolExecutor {
-  private toolHandlers: Map<string, Function> = new Map();
+  private toolHandlers: Map<string, ToolHandler> = new Map();
   private options: ToolExecutionOptions & {
     enableParallelExecution?: boolean;
     maxConcurrency?: number;
@@ -95,14 +99,14 @@ export class ToolExecutor {
   /**
    * Register a tool handler
    */
-  registerTool(name: string, handler: Function): void {
+  registerTool(name: string, handler: ToolHandler): void {
     this.toolHandlers.set(name, handler);
   }
 
   /**
    * Register multiple tool handlers
    */
-  registerTools(handlers: Map<string, Function>): void {
+  registerTools(handlers: Map<string, ToolHandler>): void {
     handlers.forEach((handler, name) => {
       this.registerTool(name, handler);
     });
@@ -322,8 +326,8 @@ export class ToolExecutor {
    * Execute with performance monitoring
    */
   private async executeWithPerformanceMonitoring<T>(
-    handler: Function,
-    parameters: any,
+    handler: ToolHandler,
+    parameters: Record<string, any>,
     toolName: string
   ): Promise<T> {
     const startTime = Date.now();
@@ -346,7 +350,7 @@ export class ToolExecutor {
         this.log(`⚡ Fast execution: ${toolName} took ${executionTime}ms`);
       }
 
-      return result as T;
+      return result as T
     } catch (error) {
       clearTimeout(performanceTimer);
       throw error;
@@ -544,7 +548,7 @@ export class ToolExecutor {
     this.cache.clear();
   }
 
-  private async executeWithTimeout<T>(handler: Function, parameters: any, timeout: number): Promise<T> {
+  private async executeWithTimeout<T>(handler: ToolHandler, parameters: Record<string, any>, timeout: number): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Tool execution timed out after ${timeout}ms`));

@@ -4,7 +4,7 @@ import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
 import { PromptBuilder } from "./agent/prompt-builder";
 import { ResponseGenerator } from "./agent/response-generator";
-import { ToolExecutor } from "./agent/tool-executor";
+import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
 
@@ -104,7 +104,7 @@ export class AIAgent {
       name: string,
       description: string,
       inputSchema: Record<string, any>,
-      handler: Function
+      handler: ToolHandler
     ) => {
       this.toolExecutor.registerTool(name, handler);
     };
