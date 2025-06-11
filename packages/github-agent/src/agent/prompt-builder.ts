@@ -5,28 +5,7 @@
 
 import { CoreMessage } from "ai";
 import { ToolLike } from "../capabilities/_typing";
-
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  parameters: {
-    type: "object";
-    properties: Record<string, any>;
-    required: string[];
-  };
-}
-
-export interface ToolResult {
-  success: boolean;
-  result?: any;
-  error?: string;
-  functionCall: {
-    name: string;
-    parameters: Record<string, any>;
-  };
-  executionTime?: number;
-  round?: number;
-}
+import { ToolDefinition, ToolResult } from "./tool-definition";
 
 export class PromptBuilder {
   private tools: ToolDefinition[] = [];

@@ -3,8 +3,7 @@
  * Executes MCP tool calls safely and manages results
  */
 
-import { FunctionCall } from "./function-parser";
-import { ToolExecutionContext, ToolExecutionOptions, ToolResult } from "./tool-types";
+import { FunctionCall, ToolExecutionContext, ToolExecutionOptions, ToolResult } from "./tool-definition";
 
 export type { ToolResult, ToolExecutionContext, ToolExecutionOptions };
 
@@ -232,9 +231,9 @@ export class ToolExecutor {
 
     for (const result of results) {
       const { functionCall, success, result: toolResult, error } = result;
-      
+
       output.push(`\n🔧 Tool: ${functionCall.name}`);
-      
+
       if (success && toolResult) {
         // Extract text content from MCP tool result format
         if (toolResult.content && Array.isArray(toolResult.content)) {
@@ -242,7 +241,7 @@ export class ToolExecutor {
             .filter((item: any) => item.type === 'text')
             .map((item: any) => item.text)
             .join('\n');
-          
+
           if (textContent) {
             output.push(`✅ Result:\n${textContent}`);
           } else {
@@ -282,7 +281,7 @@ export class ToolExecutor {
     const failures = results.filter(result => !result.success);
     if (failures.length === 0) return '';
 
-    return `${failures.length} tool(s) failed:\n` + 
+    return `${failures.length} tool(s) failed:\n` +
            failures.map(f => `- ${f.functionCall.name}: ${f.error}`).join('\n');
   }
 }

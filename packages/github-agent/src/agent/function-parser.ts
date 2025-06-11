@@ -1,20 +1,9 @@
+import { FunctionCall, ParsedResponse } from "./tool-definition";
+
 /**
  * Function Call Parser for AI Agent
  * Parses LLM responses containing function calls in XML format
  */
-
-export interface FunctionCall {
-  name: string;
-  parameters: Record<string, any>;
-}
-
-export interface ParsedResponse {
-  text: string;
-  functionCalls: FunctionCall[];
-  hasError: boolean;
-  error?: string;
-}
-
 export class FunctionParser {
   /**
    * Parse LLM response for function calls
@@ -87,7 +76,7 @@ export class FunctionParser {
     for (const match of matches) {
       const functionName = match[1];
       const parametersContent = match[2];
-      
+
       try {
         const parameters = this.parseParameters(parametersContent);
         functionCalls.push({
@@ -120,7 +109,7 @@ export class FunctionParser {
     for (const match of matches) {
       const paramName = match[1];
       const paramValue = match[2].trim();
-      
+
       // Try to parse as JSON first, fallback to string
       try {
         // Check if it looks like JSON (starts with { or [)

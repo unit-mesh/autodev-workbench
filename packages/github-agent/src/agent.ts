@@ -1,13 +1,12 @@
-import {CoreMessage, generateText} from "ai";
-import {configureLLMProvider, LLMProviderConfig} from "./services/llm";
-import {FunctionCall, FunctionParser} from "./agent/function-parser";
-import {AutoDevRemoteAgentTools} from "./capabilities/tools";
-import {PromptBuilder, ToolDefinition} from "./agent/prompt-builder";
-import {ResponseGenerator} from "./agent/response-generator";
-import {ToolExecutor} from "./agent/tool-executor";
-import {ToolExecutionContext, ToolResult} from "./agent/tool-types";
-import {GitHubContextManager} from "./agent/github-context-manager";
-import {GitHubConfig} from "./agent/github-types";
+import { CoreMessage, generateText } from "ai";
+import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
+import { FunctionParser } from "./agent/function-parser";
+import { AutoDevRemoteAgentTools } from "./capabilities/tools";
+import { PromptBuilder } from "./agent/prompt-builder";
+import { ResponseGenerator } from "./agent/response-generator";
+import { ToolExecutor } from "./agent/tool-executor";
+import { GitHubContextManager } from "./agent/github-context-manager";
+import { ToolDefinition, ToolResult } from "./agent/tool-definition";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -510,13 +509,8 @@ export class AIAgent {
     return { ...this.config };
   }
 
-  /**
-   * Update agent configuration
-   */
   updateConfig(newConfig: Partial<AgentConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
-    // Update GitHub manager config if needed
     if (newConfig.githubToken || newConfig.githubContext || newConfig.autoUploadToIssue !== undefined) {
       this.githubManager.updateConfig({
         token: newConfig.githubToken,

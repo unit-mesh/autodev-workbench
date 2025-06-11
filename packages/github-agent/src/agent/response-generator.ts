@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { LLMProviderConfig } from "../services/llm";
-import { ToolResult } from "../agent";
+import { ToolResult } from "./tool-definition";
 
 export class ResponseGenerator {
   private llmConfig: LLMProviderConfig;
@@ -138,4 +138,4 @@ ${failed.map(r => `- ❌ ${r.functionCall.name} (Round ${r.round}): ${r.error}`)
 
 **Note:** This is a fallback response due to an error in generating the comprehensive analysis.`;
   }
-} 
+}
