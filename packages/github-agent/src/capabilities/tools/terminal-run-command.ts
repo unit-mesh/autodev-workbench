@@ -1,7 +1,21 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { spawn, exec } from "child_process";
+import { spawn, exec, ChildProcess } from "child_process";
 import * as path from "path";
+import * as fs from "fs/promises";
+
+// 允许的命令白名单
+const ALLOWED_COMMANDS = [
+  'ls', 'cat', 'grep', 'find', 'echo', 'pwd',
+  'git', 'npm', 'yarn', 'pnpm', 'node', 'python',
+  'mkdir', 'touch', 'cp', 'mv', 'tar', 'zip', 'unzip'
+];
+
+// 危险字符列表
+const DANGEROUS_CHARS = [';', '|', '&', '>', '<', '`', '$', '(', ')', '{', '}', '[', ']'];
+
+// 允许的环境变量
+const ALLOWED_ENV_VARS = ['PATH', 'HOME', 'USER', 'LANG', 'LC_ALL', 'NODE_ENV'];
 
 export const installRunTerminalCommandTool: ToolLike = (installer) => {
   installer("run-terminal-command", "Execute a terminal command with safety checks and output capture", {
@@ -33,35 +47,42 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
     dry_run?: boolean;
   }) => {
     try {
-      // Security checks - block dangerous commands
-      const dangerousCommands = [
-        'rm', 'rmdir', 'del', 'format', 'fdisk',
-        'sudo', 'su', 'chmod', 'chown',
-        'curl', 'wget', 'nc', 'netcat',
-        'dd', 'mkfs', 'mount', 'umount'
-      ];
-
+      // 1. 命令白名单检查
       const baseCommand = command.split(' ')[0].toLowerCase();
-      if (dangerousCommands.includes(baseCommand)) {
+      if (!ALLOWED_COMMANDS.includes(baseCommand)) {
         return {
           content: [
             {
               type: "text",
-              text: `Error: Command '${baseCommand}' is not allowed for security reasons.`
+              text: `Error: Command '${baseCommand}' is not in the allowed commands list.`
             }
           ]
         };
       }
 
-      // Resolve working directory
+      // 2. 参数安全检查
+      const allArgs = [command, ...args].join(' ');
+      if (DANGEROUS_CHARS.some(char => allArgs.includes(char))) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: Command contains dangerous characters.`
+            }
+          ]
+        };
+      }
+
+      // 3. 工作目录检查
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const workingDir = working_directory 
         ? (path.isAbsolute(working_directory) ? working_directory : path.join(workspacePath, working_directory))
         : workspacePath;
 
-      // Security check - ensure working directory is within workspace
       const resolvedWorkingDir = path.resolve(workingDir);
       const resolvedWorkspace = path.resolve(workspacePath);
+
+      // 检查工作目录是否在工作空间内
       if (!resolvedWorkingDir.startsWith(resolvedWorkspace)) {
         return {
           content: [
@@ -72,6 +93,38 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
           ]
         };
       }
+
+      // 检查工作目录是否包含符号链接
+      try {
+        const realPath = await fs.realpath(resolvedWorkingDir);
+        if (realPath !== resolvedWorkingDir) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: Working directory contains symbolic links.`
+              }
+            ]
+          };
+        }
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: Invalid working directory.`
+            }
+          ]
+        };
+      }
+
+      // 4. 环境变量过滤
+      const filteredEnv = {
+        ...process.env,
+        ...Object.fromEntries(
+          Object.entries(environment).filter(([key]) => ALLOWED_ENV_VARS.includes(key))
+        )
+      };
 
       const fullCommand = args.length > 0 ? `${command} ${args.join(' ')}` : command;
       
@@ -102,7 +155,7 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
         };
       }
 
-      // Execute command
+      // 5. 改进的命令执行和进程管理
       const result = await new Promise<{
         stdout: string;
         stderr: string;
@@ -112,68 +165,75 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
       }>((resolve, reject) => {
         const startTime = Date.now();
         let timedOut = false;
+        let childProcess: ChildProcess;
 
-        // Set up environment
-        const env = {
-          ...process.env,
-          ...environment
+        const killProcess = () => {
+          if (!childProcess) return;
+          try {
+            process.kill(childProcess.pid, 'SIGTERM');
+            setTimeout(() => {
+              if (!childProcess.killed) {
+                process.kill(childProcess.pid, 'SIGKILL');
+              }
+            }, 5000);
+          } catch (error) {
+            console.error('Error killing process:', error);
+          }
         };
 
-        const childProcess = shell 
-          ? exec(fullCommand, { 
-              cwd: resolvedWorkingDir, 
-              env: env,
-              timeout: timeout 
-            })
-          : spawn(command, args, { 
-              cwd: resolvedWorkingDir, 
-              env: env,
-              stdio: capture_output ? 'pipe' : 'inherit'
+        try {
+          childProcess = shell 
+            ? exec(fullCommand, { 
+                cwd: resolvedWorkingDir, 
+                env: filteredEnv,
+                timeout: timeout 
+              })
+            : spawn(command, args, { 
+                cwd: resolvedWorkingDir, 
+                env: filteredEnv,
+                stdio: capture_output ? 'pipe' : 'inherit'
+              });
+
+          let stdout = '';
+          let stderr = '';
+
+          if (capture_output && childProcess.stdout && childProcess.stderr) {
+            childProcess.stdout.on('data', (data) => {
+              stdout += data.toString();
             });
 
-        let stdout = '';
-        let stderr = '';
+            childProcess.stderr.on('data', (data) => {
+              stderr += data.toString();
+            });
+          }
 
-        if (capture_output && childProcess.stdout && childProcess.stderr) {
-          childProcess.stdout.on('data', (data) => {
-            stdout += data.toString();
+          // 设置超时
+          const timeoutId = setTimeout(() => {
+            timedOut = true;
+            killProcess();
+          }, timeout);
+
+          childProcess.on('close', (code) => {
+            clearTimeout(timeoutId);
+            const executionTime = Date.now() - startTime;
+            
+            resolve({
+              stdout: stdout,
+              stderr: stderr,
+              exit_code: code || 0,
+              execution_time: executionTime,
+              timed_out: timedOut
+            });
           });
 
-          childProcess.stderr.on('data', (data) => {
-            stderr += data.toString();
+          childProcess.on('error', (error) => {
+            clearTimeout(timeoutId);
+            reject(error);
           });
-        }
 
-        // Set timeout
-        const timeoutId = setTimeout(() => {
-          timedOut = true;
-          childProcess.kill('SIGTERM');
-          
-          // Force kill after 5 seconds
-          setTimeout(() => {
-            if (!childProcess.killed) {
-              childProcess.kill('SIGKILL');
-            }
-          }, 5000);
-        }, timeout);
-
-        childProcess.on('close', (code) => {
-          clearTimeout(timeoutId);
-          const executionTime = Date.now() - startTime;
-          
-          resolve({
-            stdout: stdout,
-            stderr: stderr,
-            exit_code: code || 0,
-            execution_time: executionTime,
-            timed_out: timedOut
-          });
-        });
-
-        childProcess.on('error', (error) => {
-          clearTimeout(timeoutId);
+        } catch (error) {
           reject(error);
-        });
+        }
       });
 
       const response = {
