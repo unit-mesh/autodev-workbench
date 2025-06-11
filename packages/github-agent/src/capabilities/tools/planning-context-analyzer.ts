@@ -1,7 +1,128 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import * as fs from "fs";
+import * as fs from "fs/promises";
 import * as path from "path";
+
+// 类型定义
+interface ProjectInfo {
+  name: string;
+  type: string;
+  version: string;
+  description: string;
+  project_files: ProjectFile[];
+  has_readme: boolean;
+  has_license: boolean;
+  has_changelog: boolean;
+}
+
+interface ProjectFile {
+  name: string;
+  size: number;
+  modified: string;
+}
+
+interface CodebaseAnalysis {
+  total_files: number;
+  total_size: number;
+  by_extension: Record<string, { count: number; size: number }>;
+  by_directory: Record<string, { count: number; size: number }>;
+  largest_files: FileInfo[];
+  code_files: number;
+  code_ratio: number;
+  average_file_size: number;
+  most_common_extensions: [string, { count: number; size: number }][];
+}
+
+interface FileInfo {
+  path: string;
+  size: number;
+  extension: string;
+  modified: string;
+}
+
+interface WorkflowAnalysis {
+  cicd_platforms: string[];
+  workflow_files: WorkflowFile[];
+  npm_scripts: string[];
+  has_docker: boolean;
+  has_makefile: boolean;
+  automation_score: number;
+}
+
+interface WorkflowFile {
+  type: string;
+  path: string;
+  size?: number;
+  modified?: string;
+  files?: number;
+}
+
+interface ArchitectureAnalysis {
+  patterns: {
+    monorepo: boolean;
+    microservices: boolean;
+    mvc: boolean;
+    component_based: boolean;
+    layered: boolean;
+  };
+  directory_structure: string[];
+  complexity_score: number;
+  detailed_structure?: any;
+}
+
+interface GitAnalysis {
+  is_git_repo: boolean;
+  has_gitignore?: boolean;
+  has_git_hooks?: boolean;
+  note?: string;
+}
+
+interface DependenciesAnalysis {
+  has_dependencies: boolean;
+  production_deps?: number;
+  dev_deps?: number;
+  peer_deps?: number;
+  total_deps?: number;
+  error?: string;
+}
+
+interface AnalysisResult {
+  analysis: {
+    workspace_path: string;
+    resolved_path: string;
+    analysis_scope: string;
+    timestamp: string;
+  };
+  project_info: ProjectInfo;
+  codebase_analysis: CodebaseAnalysis;
+  workflow_analysis?: WorkflowAnalysis;
+  architecture_analysis?: ArchitectureAnalysis;
+  git_info?: GitAnalysis;
+  dependencies_summary?: DependenciesAnalysis;
+  insights: string[];
+  recommendations: string[];
+}
+
+// 配置
+const config = {
+  excludeDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'],
+  codeExtensions: ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h'],
+  workflowFiles: [
+    '.github/workflows',
+    '.gitlab-ci.yml',
+    'Jenkinsfile',
+    'azure-pipelines.yml',
+    'bitbucket-pipelines.yml',
+    'Dockerfile',
+    'docker-compose.yml',
+    'Makefile',
+    'package.json'
+  ],
+  commonDirs: ['src', 'lib', 'components', 'services', 'controllers', 'models', 'views', 'api', 'packages']
+};
+
+// 缓存
+const cache = new Map<string, any>();
 
 export const installAnalysisBasiContextTool: ToolLike = (installer) => {
   installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning", {
@@ -19,37 +140,63 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
       const resolvedWorkspace = path.resolve(workspacePath);
 
-      // Set analysis parameters based on scope
+      // Set analysis parameters
       const isFullAnalysis = analysis_scope === "full";
       const maxDepth = isFullAnalysis ? 3 : 2;
-      const excludeDirs = ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'];
 
-      const result: any = {
+      // 使用缓存
+      const cacheKey = `${resolvedWorkspace}-${analysis_scope}`;
+      if (cache.has(cacheKey)) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(cache.get(cacheKey), null, 2)
+            }
+          ]
+        };
+      }
+
+      // 并行执行分析任务
+      const [projectInfo, codebaseAnalysis] = await Promise.all([
+        analyzeProjectInfo(resolvedWorkspace),
+        analyzeCodebase(resolvedWorkspace, maxDepth)
+      ]);
+
+      const result: AnalysisResult = {
         analysis: {
           workspace_path: workspacePath,
           resolved_path: resolvedWorkspace,
           analysis_scope: analysis_scope,
           timestamp: new Date().toISOString()
-        }
+        },
+        project_info: projectInfo,
+        codebase_analysis: codebaseAnalysis,
+        insights: [],
+        recommendations: []
       };
 
-      // Always include basic project info
-      result.project_info = await analyzeProjectInfo(resolvedWorkspace);
-
-      // Always include basic codebase analysis
-      result.codebase_analysis = await analyzeCodebase(resolvedWorkspace, maxDepth, excludeDirs);
-
-      // Include additional analysis for full scope
+      // 全量分析时执行额外任务
       if (isFullAnalysis) {
-        result.workflow_analysis = await analyzeWorkflow(resolvedWorkspace);
-        result.architecture_analysis = await analyzeArchitecture(resolvedWorkspace, true);
-        result.git_info = await analyzeGitRepository(resolvedWorkspace);
-        result.dependencies_summary = await analyzeDependenciesSummary(resolvedWorkspace);
+        const [workflowAnalysis, architectureAnalysis, gitInfo, dependenciesSummary] = await Promise.all([
+          analyzeWorkflow(resolvedWorkspace),
+          analyzeArchitecture(resolvedWorkspace, true),
+          analyzeGitRepository(resolvedWorkspace),
+          analyzeDependenciesSummary(resolvedWorkspace)
+        ]);
+
+        result.workflow_analysis = workflowAnalysis;
+        result.architecture_analysis = architectureAnalysis;
+        result.git_info = gitInfo;
+        result.dependencies_summary = dependenciesSummary;
       }
 
-      // Generate insights and recommendations
+      // 生成洞察和建议
       result.insights = generateInsights(result);
       result.recommendations = generateContextRecommendations(result);
+
+      // 缓存结果
+      cache.set(cacheKey, result);
 
       return {
         content: [
@@ -60,6 +207,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
         ]
       };
     } catch (error: any) {
+      console.error('Error in analysis:', error);
       return {
         content: [
           {
@@ -71,40 +219,37 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     }
   });
 
-  // Helper function to analyze project information
-  async function analyzeProjectInfo(workspacePath: string) {
+  // 异步项目信息分析
+  async function analyzeProjectInfo(workspacePath: string): Promise<ProjectInfo> {
     const projectFiles = [
       'package.json', 'requirements.txt', 'Cargo.toml', 'go.mod', 'pom.xml',
       'README.md', 'README.rst', 'LICENSE', 'CHANGELOG.md'
     ];
 
-    const foundFiles: any[] = [];
+    const foundFiles: ProjectFile[] = [];
     let projectType = 'unknown';
     let projectName = path.basename(workspacePath);
     let projectVersion = 'unknown';
     let projectDescription = '';
 
     for (const file of projectFiles) {
-      const filePath = path.join(workspacePath, file);
-      if (fs.existsSync(filePath)) {
-        const stats = fs.statSync(filePath);
+      try {
+        const filePath = path.join(workspacePath, file);
+        const stats = await fs.stat(filePath);
+        
         foundFiles.push({
           name: file,
           size: stats.size,
           modified: stats.mtime.toISOString()
         });
 
-        // Extract project information
         if (file === 'package.json') {
-          try {
-            const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            projectType = 'Node.js/JavaScript';
-            projectName = packageJson.name || projectName;
-            projectVersion = packageJson.version || projectVersion;
-            projectDescription = packageJson.description || projectDescription;
-          } catch (error) {
-            console.warn('Could not parse package.json');
-          }
+          const content = await fs.readFile(filePath, 'utf8');
+          const packageJson = JSON.parse(content);
+          projectType = 'Node.js/JavaScript';
+          projectName = packageJson.name || projectName;
+          projectVersion = packageJson.version || projectVersion;
+          projectDescription = packageJson.description || projectDescription;
         } else if (file === 'requirements.txt' || file === 'setup.py') {
           projectType = 'Python';
         } else if (file === 'Cargo.toml') {
@@ -114,6 +259,9 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
         } else if (file === 'pom.xml') {
           projectType = 'Java/Maven';
         }
+      } catch (error) {
+        // 文件不存在，继续下一个
+        continue;
       }
     }
 
@@ -129,8 +277,8 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     };
   }
 
-  // Helper function to analyze codebase
-  async function analyzeCodebase(workspacePath: string, maxDepth: number, excludeDirs: string[]) {
+  // 异步代码库分析
+  async function analyzeCodebase(workspacePath: string, maxDepth: number): Promise<CodebaseAnalysis> {
     const fileStats: any = {
       total_files: 0,
       total_size: 0,
@@ -139,25 +287,24 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       largest_files: []
     };
 
-    const allFiles: any[] = [];
+    const allFiles: FileInfo[] = [];
 
-    function scanDirectory(dirPath: string, currentDepth: number = 0) {
+    async function scanDirectory(dirPath: string, currentDepth: number = 0) {
       if (currentDepth > maxDepth) return;
 
       try {
-        const entries = fs.readdirSync(dirPath);
+        const entries = await fs.readdir(dirPath);
         
         for (const entry of entries) {
           const entryPath = path.join(dirPath, entry);
           const relativePath = path.relative(workspacePath, entryPath);
           
-          // Skip excluded directories
-          if (excludeDirs.some(exclude => relativePath.includes(exclude))) continue;
+          if (config.excludeDirs.some(exclude => relativePath.includes(exclude))) continue;
 
-          const stats = fs.statSync(entryPath);
+          const stats = await fs.stat(entryPath);
           
           if (stats.isDirectory()) {
-            scanDirectory(entryPath, currentDepth + 1);
+            await scanDirectory(entryPath, currentDepth + 1);
           } else if (stats.isFile()) {
             fileStats.total_files++;
             fileStats.total_size += stats.size;
@@ -189,16 +336,13 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       }
     }
 
-    scanDirectory(workspacePath);
+    await scanDirectory(workspacePath);
 
-    // Find largest files
     fileStats.largest_files = allFiles
       .sort((a, b) => b.size - a.size)
       .slice(0, 10);
 
-    // Calculate code vs non-code ratio
-    const codeExtensions = ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h'];
-    const codeFiles = allFiles.filter(f => codeExtensions.includes(f.extension));
+    const codeFiles = allFiles.filter(f => config.codeExtensions.includes(f.extension));
     
     return {
       ...fileStats,
@@ -211,47 +355,28 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     };
   }
 
-  // Helper function to analyze workflow
-  async function analyzeWorkflow(workspacePath: string) {
-    const workflowFiles = [
-      '.github/workflows',
-      '.gitlab-ci.yml',
-      'Jenkinsfile',
-      'azure-pipelines.yml',
-      'bitbucket-pipelines.yml',
-      'Dockerfile',
-      'docker-compose.yml',
-      'Makefile',
-      'package.json' // for npm scripts
-    ];
-
-    const foundWorkflows: any[] = [];
+  // 异步工作流分析
+  async function analyzeWorkflow(workspacePath: string): Promise<WorkflowAnalysis> {
+    const foundWorkflows: WorkflowFile[] = [];
     const cicdPlatforms: string[] = [];
 
-    for (const workflow of workflowFiles) {
-      const workflowPath = path.join(workspacePath, workflow);
-      
-      if (fs.existsSync(workflowPath)) {
-        const stats = fs.statSync(workflowPath);
+    for (const workflow of config.workflowFiles) {
+      try {
+        const workflowPath = path.join(workspacePath, workflow);
+        const stats = await fs.stat(workflowPath);
         
         if (stats.isDirectory()) {
-          // GitHub Actions
-          try {
-            const files = fs.readdirSync(workflowPath);
-            const yamlFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
-            if (yamlFiles.length > 0) {
-              foundWorkflows.push({
-                type: 'GitHub Actions',
-                path: workflow,
-                files: yamlFiles.length
-              });
-              cicdPlatforms.push('GitHub Actions');
-            }
-          } catch (error) {
-            console.warn(`Could not read workflow directory: ${workflow}`);
+          const files = await fs.readdir(workflowPath);
+          const yamlFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
+          if (yamlFiles.length > 0) {
+            foundWorkflows.push({
+              type: 'GitHub Actions',
+              path: workflow,
+              files: yamlFiles.length
+            });
+            cicdPlatforms.push('GitHub Actions');
           }
         } else {
-          // Single workflow files
           foundWorkflows.push({
             type: getWorkflowType(workflow),
             path: workflow,
@@ -264,19 +389,20 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
             cicdPlatforms.push(type);
           }
         }
+      } catch (error) {
+        // 文件不存在，继续下一个
+        continue;
       }
     }
 
-    // Check for npm scripts
     let npmScripts: string[] = [];
-    const packageJsonPath = path.join(workspacePath, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        npmScripts = Object.keys(packageJson.scripts || {});
-      } catch (error) {
-        console.warn('Could not parse package.json for scripts');
-      }
+    try {
+      const packageJsonPath = path.join(workspacePath, 'package.json');
+      const content = await fs.readFile(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(content);
+      npmScripts = Object.keys(packageJson.scripts || {});
+    } catch (error) {
+      // package.json不存在或解析失败
     }
 
     return {
@@ -289,9 +415,9 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     };
   }
 
-  // Helper function to analyze architecture
-  async function analyzeArchitecture(workspacePath: string, includeStructure: boolean) {
-    const architecturePatterns: any = {
+  // 异步架构分析
+  async function analyzeArchitecture(workspacePath: string, includeStructure: boolean): Promise<ArchitectureAnalysis> {
+    const architecturePatterns = {
       monorepo: false,
       microservices: false,
       mvc: false,
@@ -299,30 +425,27 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       layered: false
     };
 
-    // Check for monorepo patterns
-    const packageJsonPath = path.join(workspacePath, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-      try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        if (packageJson.workspaces || fs.existsSync(path.join(workspacePath, 'lerna.json'))) {
-          architecturePatterns.monorepo = true;
-        }
-      } catch (error) {
-        console.warn('Could not analyze package.json for monorepo patterns');
+    try {
+      const packageJsonPath = path.join(workspacePath, 'package.json');
+      const content = await fs.readFile(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(content);
+      if (packageJson.workspaces || await fs.access(path.join(workspacePath, 'lerna.json')).then(() => true).catch(() => false)) {
+        architecturePatterns.monorepo = true;
       }
+    } catch (error) {
+      // package.json不存在或解析失败
     }
 
-    // Check for common directory patterns
-    const commonDirs = ['src', 'lib', 'components', 'services', 'controllers', 'models', 'views', 'api', 'packages'];
     const foundDirs: string[] = [];
-
-    for (const dir of commonDirs) {
-      if (fs.existsSync(path.join(workspacePath, dir))) {
+    for (const dir of config.commonDirs) {
+      try {
+        await fs.access(path.join(workspacePath, dir));
         foundDirs.push(dir);
+      } catch (error) {
+        // 目录不存在
       }
     }
 
-    // Detect patterns based on directory structure
     if (foundDirs.includes('components')) {
       architecturePatterns.component_based = true;
     }
@@ -336,46 +459,42 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       architecturePatterns.layered = true;
     }
 
-    const result: any = {
+    const result: ArchitectureAnalysis = {
       patterns: architecturePatterns,
       directory_structure: foundDirs,
       complexity_score: calculateComplexityScore(foundDirs, architecturePatterns)
     };
 
     if (includeStructure) {
-      result.detailed_structure = getDetailedStructure(workspacePath, 2);
+      result.detailed_structure = await getDetailedStructure(workspacePath, 2);
     }
 
     return result;
   }
 
-  // Helper function to analyze Git repository
-  async function analyzeGitRepository(workspacePath: string) {
+  // 异步Git仓库分析
+  async function analyzeGitRepository(workspacePath: string): Promise<GitAnalysis> {
     const gitPath = path.join(workspacePath, '.git');
     
-    if (!fs.existsSync(gitPath)) {
+    try {
+      await fs.access(gitPath);
+      return {
+        is_git_repo: true,
+        has_gitignore: await fs.access(path.join(workspacePath, '.gitignore')).then(() => true).catch(() => false),
+        has_git_hooks: await fs.access(path.join(gitPath, 'hooks')).then(() => true).catch(() => false),
+        note: "Full Git analysis requires git command execution"
+      };
+    } catch (error) {
       return { is_git_repo: false };
     }
-
-    // Basic Git info (would need git commands for full analysis)
-    return {
-      is_git_repo: true,
-      has_gitignore: fs.existsSync(path.join(workspacePath, '.gitignore')),
-      has_git_hooks: fs.existsSync(path.join(gitPath, 'hooks')),
-      note: "Full Git analysis requires git command execution"
-    };
   }
 
-  // Helper function to analyze dependencies summary
-  async function analyzeDependenciesSummary(workspacePath: string) {
-    const packageJsonPath = path.join(workspacePath, 'package.json');
-    
-    if (!fs.existsSync(packageJsonPath)) {
-      return { has_dependencies: false };
-    }
-
+  // 异步依赖分析
+  async function analyzeDependenciesSummary(workspacePath: string): Promise<DependenciesAnalysis> {
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      const packageJsonPath = path.join(workspacePath, 'package.json');
+      const content = await fs.readFile(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(content);
       
       return {
         has_dependencies: true,
@@ -393,7 +512,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     }
   }
 
-  // Helper functions
+  // 辅助函数
   function getWorkflowType(filename: string): string {
     if (filename.includes('github')) return 'GitHub Actions';
     if (filename.includes('gitlab')) return 'GitLab CI';
@@ -405,11 +524,11 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     return 'Unknown';
   }
 
-  function calculateAutomationScore(workflows: any[], scripts: string[]): number {
+  function calculateAutomationScore(workflows: WorkflowFile[], scripts: string[]): number {
     let score = 0;
-    score += workflows.length * 20; // 20 points per workflow file
-    score += scripts.length * 5; // 5 points per npm script
-    return Math.min(score, 100); // Cap at 100
+    score += workflows.length * 20;
+    score += scripts.length * 5;
+    return Math.min(score, 100);
   }
 
   function calculateComplexityScore(dirs: string[], patterns: any): number {
@@ -418,25 +537,24 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     return Math.min(score, 100);
   }
 
-  function getDetailedStructure(workspacePath: string, maxDepth: number) {
-    // Simplified structure analysis
+  async function getDetailedStructure(workspacePath: string, maxDepth: number) {
     const structure: any = {};
     
-    function buildStructure(dirPath: string, currentDepth: number = 0): any {
+    async function buildStructure(dirPath: string, currentDepth: number = 0): Promise<any> {
       if (currentDepth > maxDepth) return null;
       
       try {
-        const entries = fs.readdirSync(dirPath);
+        const entries = await fs.readdir(dirPath);
         const result: any = {};
         
         for (const entry of entries) {
           if (entry.startsWith('.')) continue;
           
           const entryPath = path.join(dirPath, entry);
-          const stats = fs.statSync(entryPath);
+          const stats = await fs.stat(entryPath);
           
           if (stats.isDirectory()) {
-            const subStructure = buildStructure(entryPath, currentDepth + 1);
+            const subStructure = await buildStructure(entryPath, currentDepth + 1);
             if (subStructure) {
               result[entry] = subStructure;
             }
@@ -454,7 +572,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     return buildStructure(workspacePath);
   }
 
-  function generateInsights(result: any): string[] {
+  function generateInsights(result: AnalysisResult): string[] {
     const insights: string[] = [];
     
     if (result.project_info?.type !== 'unknown') {
@@ -476,7 +594,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
     return insights;
   }
 
-  function generateContextRecommendations(result: any): string[] {
+  function generateContextRecommendations(result: AnalysisResult): string[] {
     const recommendations: string[] = [];
     
     if (!result.project_info?.has_readme) {
