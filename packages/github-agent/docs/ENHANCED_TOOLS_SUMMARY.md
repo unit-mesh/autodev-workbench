@@ -99,7 +99,7 @@ await agent.processInput("task-planner create task for implementing user login")
 await agent.processInput("analyze-dependencies to check auth libraries");
 
 // 3. Execute setup scripts
-await agent.processInput("execute-script npm install for new dependencies");
+await agent.processInput("run-terminal-command npm install for new dependencies");
 ```
 
 ### File Management Workflow
