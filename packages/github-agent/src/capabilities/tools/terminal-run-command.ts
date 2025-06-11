@@ -12,7 +12,7 @@ const ALLOWED_COMMANDS = [
 ];
 
 // 危险字符列表
-const DANGEROUS_CHARS = [';', '|', '&', '>', '<', '`', '$', '(', ')', '{', '}', '[', ']'];
+const DANGEROUS_CHARS = [';', '|', '&', '>', '<', '`', '$', '[', ']'];
 
 // 允许的环境变量
 const ALLOWED_ENV_VARS = ['PATH', 'HOME', 'USER', 'LANG', 'LC_ALL', 'NODE_ENV'];
@@ -49,7 +49,8 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
     try {
       // 1. 命令白名单检查
       const baseCommand = command.split(' ')[0].toLowerCase();
-      if (!ALLOWED_COMMANDS.includes(baseCommand)) {
+      const baseName = path.basename(baseCommand);
+      if (!ALLOWED_COMMANDS.includes(baseCommand) && !ALLOWED_COMMANDS.includes(baseName)) {
         return {
           content: [
             {
@@ -170,13 +171,29 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
         const killProcess = () => {
           if (!childProcess) return;
           try {
-            process.kill(childProcess.pid, 'SIGTERM');
-            setTimeout(() => {
-              if (!childProcess.killed) {
-                process.kill(childProcess.pid, 'SIGKILL');
+            // 检查进程是否还存在
+            if (childProcess.killed) return;
+            
+            childProcess.kill('SIGTERM');
+            
+            // 设置一个更短的超时时间
+            const forceKillTimeout = setTimeout(() => {
+              if (childProcess && !childProcess.killed) {
+                try {
+                  childProcess.kill('SIGKILL');
+                } catch (error) {
+                  // 忽略任何错误
+                }
               }
-            }, 5000);
+            }, 1000);
+            
+            // 确保清理超时
+            childProcess.on('exit', () => {
+              clearTimeout(forceKillTimeout);
+            });
           } catch (error) {
+            // 忽略 ESRCH 错误（进程不存在）
+            if (error instanceof Error && error.message.includes('ESRCH')) return;
             console.error('Error killing process:', error);
           }
         };
