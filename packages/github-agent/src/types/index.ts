@@ -1,12 +1,9 @@
-// Re-export platform types for unified interface
+import { PlatformConfig, PlatformIssue, PlatformType } from "../services/platform";
 export type {
-  PlatformType,
-  PlatformIssue,
   PlatformRepository,
   PlatformComment,
   PlatformUser,
   PlatformLabel,
-  PlatformConfig,
   IssueQueryOptions,
   IssueState,
   IPlatformService
