@@ -9,7 +9,7 @@ import { installStrReplaceEditorTool } from "./tools/str-replace-editor";
 
 // Terminal Tools
 import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
-import { installReadTerminalTool, installWriteProcessTool, installKillProcessTool } from "./tools/terminal-interaction";
+import { installKillProcessTool, installReadTerminalTool, installWriteProcessTool } from "./tools/terminal-interaction";
 
 // Process Management Tools
 import { installLaunchProcessTool, installListProcessesTool, installReadProcessTool } from "./tools/process-management";
@@ -21,34 +21,28 @@ import { installLaunchProcessTool, installListProcessesTool, installReadProcessT
 // - installReadProcessTool: Read output from specific process
 // - installWriteProcessTool: Send input to interactive processes
 // - installKillProcessTool: Terminate processes by ID
-
 // Terminal Interaction Tools
 // TODO: Implement advanced terminal capabilities
 // - installReadTerminalTool: Read current terminal output/selected text
 // - installTerminalSessionTool: Manage persistent terminal sessions
-
 // Diagnostic Tools
 // TODO: Implement development environment diagnostics
 // - installDiagnosticsTool: Get IDE errors, warnings, type issues
 // - installHealthCheckTool: System and environment health monitoring
-
 // Codebase Intelligence Tools
 // TODO: Implement semantic code understanding
 // - installCodebaseRetrievalTool: AI-powered code search and context
 // - installSymbolAnalysisTool: Deep symbol relationship analysis
 // - installDependencyMapTool: Project dependency visualization
-
 // Visualization Tools
 // TODO: Implement rich content rendering
 // - installRenderMermaidTool: Generate interactive diagrams
 // - installOpenBrowserTool: Launch URLs in browser
 // - installMarkdownRenderTool: Rich markdown preview
-
 // Memory Management Tools
 // TODO: Implement persistent context
 // - installRememberTool: Store long-term memories across sessions
 // - installContextManagerTool: Manage conversation context
-
 // Code Analysis Tools
 import { installAnalysisBasicContextTool } from "./tools/context-analyzer";
 import { installGrepSearchTool } from "./tools/code-search-regex";
@@ -65,10 +59,6 @@ import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
 // Web Tools
 import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
 import { installWebSearchTool } from "./tools/web-search";
-
-// Enhanced Tools - New Implementations
-import { installSemanticCodeSearchTool } from "./tools/semantic-code-search";
-import { installIntelligentAgentTool } from "./tools/intelligent-agent";
 import { installProjectMemoryTool } from "./tools/project-memory";
 
 // Tool Categories
@@ -87,7 +77,6 @@ export const CodeAnalysisTools = [
   installAnalysisBasicContextTool,
   installSearchKeywordsTool,
   installGrepSearchTool,
-  installSemanticCodeSearchTool,
 ] as const;
 
 export const TerminalTools = [
@@ -120,12 +109,9 @@ export const WebTools = [
   installWebSearchTool,
 ] as const;
 
-// New Enhanced Tools Category
-// export const EnhancedIntelligenceTools = [
-//   installIntelligentAgentTool,
-//   installProjectMemoryTool,
-//   installSemanticCodeSearchTool,
-// ] as const;
+export const EnhancedIntelligenceTools = [
+  installProjectMemoryTool,
+] as const;
 
 // Tool Collections
 export const CoreTools = [
@@ -138,7 +124,7 @@ export const CoreTools = [
 export const AdvancedTools = [
   ...TerminalInteractionTools,
   ...ProcessManagementTools,
-  // ...EnhancedIntelligenceTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 export const IntegrationTools = [
@@ -151,14 +137,14 @@ export const AutoDevRemoteAgentTools = [
   ...CoreTools,
   ...GitHubTools.filter(tool => tool !== installGitHubAddIssueCommentTool),
   ...WebTools,
-  // ...EnhancedIntelligenceTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 // All Tools (including comment tool for full agent)
 export const AllTools = [
   ...CoreTools,
   ...IntegrationTools,
-  // ...EnhancedIntelligenceTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 // Enhanced Tools (with advanced capabilities)
