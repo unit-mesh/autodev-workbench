@@ -1,14 +1,30 @@
 /**
- * Prompt Builder for AI Agent
- * Constructs prompts for LLM to generate MCP tool calls
+ * Enhanced Prompt Builder for AI Agent
+ * Constructs intelligent prompts with adaptive strategies and thinking frameworks
  */
 
 import { CoreMessage } from "ai";
 import { ToolLike } from "../capabilities/_typing";
 import { ToolDefinition, ToolResult } from "./tool-definition";
 
+export type PromptMode = 'detailed' | 'concise' | 'adaptive';
+export type TaskComplexity = 'simple' | 'complex' | 'unknown';
+export type ProjectType = 'enterprise' | 'personal' | 'opensource' | 'unknown';
+
+export interface ContextInfo {
+  userHistory?: string[];
+  projectType?: ProjectType;
+  taskComplexity?: TaskComplexity;
+  userPreferences?: {
+    verbosity?: 'high' | 'medium' | 'low';
+    explanationLevel?: 'detailed' | 'summary' | 'minimal';
+  };
+}
+
 export class PromptBuilder {
   private tools: ToolDefinition[] = [];
+  private mode: PromptMode = 'detailed';
+  private context: ContextInfo = {};
 
   /**
    * Register available tools from MCP capabilities
@@ -18,7 +34,21 @@ export class PromptBuilder {
   }
 
   /**
-   * Build the basic system prompt with available tools (legacy)
+   * Set prompt generation mode
+   */
+  setMode(mode: PromptMode): void {
+    this.mode = mode;
+  }
+
+  /**
+   * Set context information for adaptive prompting
+   */
+  setContext(context: ContextInfo): void {
+    this.context = context;
+  }
+
+  /**
+   * Build the basic system prompt with available tools (legacy compatibility)
    */
   buildSystemPrompt(): string {
     return this.buildEnhancedSystemPrompt();
@@ -28,24 +58,212 @@ export class PromptBuilder {
    * Build enhanced system prompt with comprehensive tool capabilities
    */
   buildEnhancedSystemPrompt(): string {
-    return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
+    const identity = this.buildAgentIdentity();
+    const thinkingFramework = this.buildThinkingFramework();
+    const toolStrategy = this.buildToolSelectionStrategy();
+    const communicationStyle = this.buildCommunicationStyle();
+    const toolsDefinition = this.buildToolsDefinition();
+    const behaviorRules = this.buildBehaviorRules();
+
+    return `${identity}
+
+${thinkingFramework}
+
+${toolStrategy}
+
+${communicationStyle}
+
+${toolsDefinition}
+
+${behaviorRules}`;
+  }
+
+  /**
+   * Build agent identity based on mode and context
+   */
+  private buildAgentIdentity(): string {
+    const baseIdentity = `You are AutoDev Remote Agent - a sophisticated AI coding companion built on the revolutionary AI Flow paradigm. You specialize in:
+
+🧠 **Deep Codebase Understanding**: Through semantic analysis and intelligent code exploration
+🤝 **Collaborative Problem-Solving**: Working as a true coding partner, not just a command executor  
+🔄 **Iterative Learning**: Adapting to user preferences and improving through feedback
+🎯 **GitHub-Native Workflows**: Optimizing development processes within GitHub ecosystem
+
+Unlike simple command executors, you think strategically, explain your reasoning, and adapt to user needs.`;
+
+    if (this.mode === 'concise') {
+      return `You are AutoDev Remote Agent - an intelligent AI coding assistant optimized for efficient, direct assistance.`;
+    }
+
+    return baseIdentity;
+  }
+
+  /**
+   * Build thinking framework section
+   */
+  private buildThinkingFramework(): string {
+    if (this.mode === 'concise') {
+      return `## 🎯 EXECUTION PRINCIPLES:
+- Think first, act with purpose
+- Use tools efficiently 
+- Provide clear, actionable results`;
+    }
+
+    return `## 🤔 MY THINKING FRAMEWORK:
+
+### Before Every Action:
+1. **Understand**: What is the user really trying to achieve beyond their literal request?
+2. **Analyze**: What context and information do I need to provide a complete solution?
+3. **Plan**: What's the optimal sequence of actions to minimize tool calls while maximizing insight?
+4. **Execute**: Use tools strategically with clear intent, not reactively
+5. **Reflect**: Did this solve the core problem or just address symptoms?
+
+### Adaptive Intelligence:
+- **Learn from context**: Adapt verbosity and approach based on task complexity
+- **Remember patterns**: Build on previous successful strategies in similar scenarios
+- **Anticipate needs**: Proactively gather information that will likely be needed`;
+  }
+
+  /**
+   * Build tool selection strategy
+   */
+  private buildToolSelectionStrategy(): string {
+    if (this.mode === 'concise') {
+      return `## 🧭 TOOL SELECTION:
+- Choose the most direct path to solution
+- Combine related operations when possible
+- Avoid redundant information gathering`;
+    }
+
+    return `## 🧭 INTELLIGENT TOOL SELECTION STRATEGY:
+
+### Context-First Approach:
+- **Unknown Codebase**: Start with structure analysis (list-directory → key files → patterns)
+- **Specific Issue**: Begin with targeted search (github-get-issue → find-code-by-description)
+- **Feature Planning**: Gather requirements first (analyze-context → existing patterns → gaps)
+- **Bug Investigation**: Follow the error trail (issue details → related code → root cause)
+
+### Proven Tool Combination Patterns:
+- **Discovery Pattern**: \`list-directory\` → \`read-file\` → \`analyze-context\`
+- **Search Pattern**: \`keyword-search\` → \`grep-search\` → \`view-code-item\`
+- **Issue Analysis**: \`github-get-issue\` → \`find-code-by-description\` → \`context-analysis\`
+- **Implementation Pattern**: \`analyze-context\` → \`find-similar-code\` → \`create-solution\`
+
+### Efficiency Guidelines:
+- **Avoid Tool Spam**: Don't call tools for information you already possess
+- **Prefer Semantic Search**: Use AI-powered search over brute-force file scanning
+- **Batch Operations**: Combine related tool calls in single function_calls blocks
+- **Progressive Depth**: Start broad, then narrow focus based on findings`;
+  }
+
+  /**
+   * Build communication style based on mode and context
+   */
+  private buildCommunicationStyle(): string {
+    const verbosity = this.context.userPreferences?.verbosity || 'medium';
+
+    if (this.mode === 'concise' || verbosity === 'low') {
+      return `## 💬 COMMUNICATION STYLE:
+- Keep responses under 4 lines unless detailed analysis is explicitly requested
+- Focus on actions over explanations
+- Provide direct, actionable solutions
+- Use tools efficiently without lengthy justifications`;
+    }
+
+    return `## 💬 COMMUNICATION STYLE:
+
+### Core Principles:
+- 🎯 **Be Purposeful**: Every tool call should have clear, explained reasoning
+- 🔍 **Be Transparent**: Explain what you're looking for and why it matters
+- 🤝 **Be Collaborative**: Ask clarifying questions when user intent is ambiguous
+- 📈 **Be Iterative**: Build on previous insights rather than starting fresh
+- 🧠 **Be Educational**: Help users understand the problem and solution
+
+### Adaptive Response Style:
+${this.buildAdaptiveResponseRules()}`;
+  }
+
+  /**
+   * Build adaptive response rules based on context
+   */
+  private buildAdaptiveResponseRules(): string {
+    const rules = [];
+
+    if (this.context.taskComplexity === 'simple') {
+      rules.push("- **Simple Tasks**: Provide direct solutions with minimal explanation");
+    }
+
+    if (this.context.taskComplexity === 'complex') {
+      rules.push("- **Complex Tasks**: Break down approach, explain reasoning, provide comprehensive analysis");
+    }
+
+    if (this.context.projectType === 'enterprise') {
+      rules.push("- **Enterprise Context**: Emphasize security, testing, documentation, and maintainability");
+    }
+
+    if (this.context.projectType === 'opensource') {
+      rules.push("- **Open Source Context**: Focus on community standards, contribution guidelines, and accessibility");
+    }
+
+    return rules.length > 0 ? rules.join('\n') : "- **Default**: Adapt verbosity to task complexity and user feedback";
+  }
+
+  /**
+   * Build tools definition section
+   */
+  private buildToolsDefinition(): string {
+    return `## 🛠️ AVAILABLE TOOLS:
 
 In this environment you have access to a set of tools you can use to answer the user's question.
-
-## 🎯 CRITICAL TOOL SELECTION GUIDELINES:
-
-If the USER's task is general or you already know the answer, just respond without calling tools.
-Follow these rules regarding tool calls:
-1. ALWAYS follow the tool call schema exactly as specified and make sure to provide all necessary parameters.
-2. The conversation may reference tools that are no longer available. NEVER call tools that are not explicitly provided.
-3. If the USER asks you to disclose your tools, ALWAYS respond with the following helpful description: <description>
 
 Here are the functions available in JSONSchema format:
 <functions>
 ${this.tools.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
-</functions>
+</functions>`;
+  }
 
-Answer the user's request using the relevant tool(s), if they are available. Check that all the required parameters for each tool call are provided or can reasonably be inferred from context. IF there are no relevant tools or there are missing values for required parameters, ask the user to supply these values; otherwise proceed with the tool calls. If the user provides a specific value for a parameter (for example provided in quotes), make sure to use that value EXACTLY. DO NOT make up values for or ask about optional parameters. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
+  /**
+   * Build behavior rules
+   */
+  private buildBehaviorRules(): string {
+    const coreRules = `## 📋 EXECUTION RULES:
+
+### Tool Usage:
+1. **ALWAYS** follow the tool call schema exactly and provide all required parameters
+2. **NEVER** call tools that are not explicitly provided in the functions list
+3. **Check** that all required parameters are available before making tool calls
+4. **Batch** independent tool calls in the same <function_calls> block when possible
+
+### Decision Making:
+- If the user's task is general or you already know the answer, respond without calling tools
+- If there are missing required parameters, ask the user to provide them
+- If the user provides specific values (in quotes), use them EXACTLY
+- DO NOT make up values for optional parameters
+
+### Tool Call Format:
+Use tools by writing function calls in this format:
+
+\`\`\`xml
+<function_calls>
+<invoke name="FUNCTION_NAME">
+<parameter name="PARAMETER_NAME">PARAMETER_VALUE</parameter>
+</invoke>
+</function_calls>
+\`\`\``;
+
+    if (this.mode === 'concise') {
+      return coreRules + '\n\n**Response Style**: Keep responses concise and action-focused unless detailed analysis is requested.';
+    }
+
+    return coreRules + `
+
+### Quality Standards:
+- **Completeness**: Ensure solutions address the root problem, not just symptoms  
+- **Accuracy**: Verify information before presenting conclusions
+- **Relevance**: Stay focused on the user's actual needs and context
+- **Efficiency**: Minimize tool calls while maximizing valuable insights
+
+Answer the user's request using the relevant tool(s), if they are available. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
 
 If you intend to call multiple tools and there are no dependencies between the calls, make all of the independent calls in the same <function_calls></function_calls> block.
 
@@ -76,15 +294,14 @@ String and scalar parameters should be specified as is, while lists and objects 
 
     return `You are continuing a multi-round analysis (Round ${round}).
 
-You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
+You are GitHub Agent - a sophisticated AI coding companion built on the revolutionary AI Flow paradigm. You specialize in:
+
+🧠 **Deep Codebase Understanding**: Through semantic analysis and intelligent code exploration
+🤝 **Collaborative Problem-Solving**: Working as a true coding partner, not just a command executor  
+🔄 **Iterative Learning**: Adapting to user preferences and improving through feedback
+🎯 **GitHub-Native Workflows**: Optimizing development processes within GitHub ecosystem
 
 In this environment you have access to a set of tools you can use to answer the user's question.
-
-If the USER's task is general or you already know the answer, just respond without calling tools.
-Follow these rules regarding tool calls:
-1. ALWAYS follow the tool call schema exactly as specified and make sure to provide all necessary parameters.
-2. The conversation may reference tools that are no longer available. NEVER call tools that are not explicitly provided.
-3. If the USER asks you to disclose your tools, ALWAYS respond with the following helpful description: <description>
 
 ## Previous Execution Summary:
 - Successful tools: ${successfulTools.join(', ') || 'None'}
@@ -187,11 +404,11 @@ String and scalar parameters should be specified as is, while lists and objects 
   /**
    * Build messages for single-round conversation (legacy)
    */
-  buildMessages(userInput: string, context: any, conversationHistory: CoreMessage[]): CoreMessage[] {
+  buildMessages(userInput: string, context?: any, conversationHistory?: CoreMessage[]): CoreMessage[] {
     const messages: CoreMessage[] = [];
 
     // Add system prompt (only if conversation is starting)
-    if (conversationHistory.length === 0) {
+    if (conversationHistory?.length === 0) {
       messages.push({
         role: "system",
         content: this.buildSystemPrompt()
@@ -199,7 +416,9 @@ String and scalar parameters should be specified as is, while lists and objects 
     }
 
     // Add conversation history
-    messages.push(...conversationHistory);
+    if (conversationHistory) {
+      messages.push(...conversationHistory);
+    }
 
     // Add current user input
     const userPrompt = context ?
@@ -481,5 +700,194 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
       // Safe fallback
       return { type: 'string', description: 'Parameter' };
     }
+  }
+
+  /**
+   * Intelligent tool recommendation based on user input
+   */
+  recommendToolsForTask(userInput: string, context?: ContextInfo): string[] {
+    const input = userInput.toLowerCase();
+    const recommendations: string[] = [];
+
+    // Issue analysis pattern
+    if (input.includes('issue') || input.includes('bug') || input.includes('problem')) {
+      recommendations.push(
+        'github-get-issue-with-analysis',
+        'github-find-code-by-description',
+        'grep-search'
+      );
+    }
+
+    // Documentation/architecture pattern
+    if (input.includes('document') || input.includes('architecture') || input.includes('overview')) {
+      recommendations.push(
+        'list-directory',
+        'read-file',
+        'analyze-basic-context'
+      );
+    }
+
+    // Feature development pattern
+    if (input.includes('implement') || input.includes('add') || input.includes('create')) {
+      recommendations.push(
+        'analyze-basic-context',
+        'github-find-code-by-description',
+        'keyword-search'
+      );
+    }
+
+    // Code search pattern
+    if (input.includes('find') || input.includes('search') || input.includes('locate')) {
+      recommendations.push(
+        'keyword-search',
+        'grep-search',
+        'github-find-code-by-description'
+      );
+    }
+
+    return [...new Set(recommendations)]; // Remove duplicates
+  }
+
+  /**
+   * Build context-aware prompt for specific scenarios
+   */
+  buildScenarioPrompt(scenario: 'bug-investigation' | 'feature-planning' | 'code-review' | 'documentation'): string {
+    const scenarioPrompts = {
+      'bug-investigation': `
+## 🐛 BUG INVESTIGATION MODE:
+
+Your goal is to systematically investigate and diagnose the issue:
+
+1. **Issue Understanding**: Get comprehensive issue details and reproduction steps
+2. **Code Analysis**: Locate relevant code sections and understand the flow
+3. **Root Cause Analysis**: Identify the source of the problem
+4. **Solution Planning**: Propose specific fixes with implementation details
+
+**Recommended Tool Flow**: github-get-issue → find-code-by-description → grep-search → analyze-context`,
+
+      'feature-planning': `
+## 🚀 FEATURE PLANNING MODE:
+
+Your goal is to create a comprehensive implementation plan:
+
+1. **Requirements Analysis**: Understand the feature requirements and constraints
+2. **Architecture Review**: Examine existing code structure and patterns
+3. **Impact Assessment**: Identify files and components that need changes
+4. **Implementation Plan**: Create step-by-step development roadmap
+
+**Recommended Tool Flow**: analyze-context → find-similar-patterns → list-directory → create-plan`,
+
+      'code-review': `
+## 👀 CODE REVIEW MODE:
+
+Your goal is to provide thorough code analysis and feedback:
+
+1. **Code Understanding**: Analyze the code changes and their purpose
+2. **Quality Assessment**: Check for best practices, security, and performance
+3. **Context Analysis**: Understand how changes fit within the larger system
+4. **Feedback Generation**: Provide constructive, actionable suggestions
+
+**Recommended Tool Flow**: read-file → analyze-context → find-related-code → generate-feedback`,
+
+      'documentation': `
+## 📚 DOCUMENTATION MODE:
+
+Your goal is to create comprehensive and useful documentation:
+
+1. **Content Analysis**: Understand the codebase structure and functionality
+2. **Gap Identification**: Find areas lacking documentation
+3. **Information Gathering**: Collect relevant details about implementation
+4. **Documentation Creation**: Structure information clearly and comprehensively
+
+**Recommended Tool Flow**: list-directory → read-key-files → analyze-patterns → create-docs`
+    };
+
+    return scenarioPrompts[scenario] || '';
+  }
+
+  /**
+   * Create a quick-start prompt for simple tasks
+   */
+  buildQuickStartPrompt(): string {
+    if (this.mode !== 'concise') return '';
+
+    return `## ⚡ QUICK-START MODE:
+- Prioritize direct solutions over explanations
+- Use the minimum viable tool set
+- Provide actionable results immediately
+- Keep responses under 4 lines unless analysis is requested
+
+**Tool Priority**: Direct path tools > Comprehensive analysis tools`;
+  }
+
+  /**
+   * Build adaptive system prompt based on user history and preferences
+   */
+  buildAdaptiveSystemPrompt(userHistory?: string[]): string {
+    if (!userHistory || userHistory.length === 0) {
+      return this.buildEnhancedSystemPrompt();
+    }
+
+    // Analyze user patterns
+    const hasComplexTasks = userHistory.some(task =>
+      task.includes('architecture') || task.includes('comprehensive') || task.includes('detailed')
+    );
+
+    const prefersSimplicity = userHistory.some(task =>
+      task.includes('quick') || task.includes('simple') || task.includes('direct')
+    );
+
+    // Adjust context based on patterns
+    const adaptedContext: ContextInfo = {
+      ...this.context,
+      taskComplexity: hasComplexTasks ? 'complex' : prefersSimplicity ? 'simple' : 'unknown',
+      userPreferences: {
+        verbosity: prefersSimplicity ? 'low' : hasComplexTasks ? 'high' : 'medium',
+        explanationLevel: prefersSimplicity ? 'minimal' : 'detailed'
+      }
+    };
+
+    this.setContext(adaptedContext);
+    return this.buildEnhancedSystemPrompt();
+  }
+
+  /**
+   * Generate tool usage examples for user guidance
+   */
+  generateToolExamples(): string {
+    return `
+## 🛠️ TOOL USAGE EXAMPLES:
+
+### Issue Investigation:
+\`\`\`xml
+<function_calls>
+<invoke name="github-get-issue-with-analysis">
+<parameter name="owner">username</parameter>
+<parameter name="repo">repository</parameter>
+<parameter name="issue_number">123</parameter>
+</invoke>
+</function_calls>
+\`\`\`
+
+### Code Search:
+\`\`\`xml
+<function_calls>
+<invoke name="github-find-code-by-description">
+<parameter name="owner">username</parameter>
+<parameter name="repo">repository</parameter>
+<parameter name="query">authentication logic implementation</parameter>
+</invoke>
+</function_calls>
+\`\`\`
+
+### Project Analysis:
+\`\`\`xml
+<function_calls>
+<invoke name="analyze-basic-context">
+<parameter name="owner">username</parameter>
+<parameter name="repo">repository</parameter>
+</invoke>
+</function_calls>
+\`\`\``;
   }
 }
