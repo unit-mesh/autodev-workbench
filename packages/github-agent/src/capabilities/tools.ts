@@ -4,8 +4,50 @@ import { installReadFileTool } from "./tools/fs-read-file";
 import { installWriteFileTool } from "./tools/fs-write-file";
 import { installDeleteFileTool } from "./tools/fs-delete-file";
 
+// Advanced File Editing Tools
+import { installStrReplaceEditorTool } from "./tools/str-replace-editor";
+
 // Terminal Tools
 import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
+import { installReadTerminalTool, installWriteProcessTool, installKillProcessTool } from "./tools/terminal-interaction";
+
+// Process Management Tools
+import { installLaunchProcessTool, installListProcessesTool, installReadProcessTool } from "./tools/process-management";
+
+// Process Management Tools
+// TODO: Implement interactive process management
+// - installLaunchProcessTool: Launch processes with wait/background modes
+// - installListProcessesTool: List all active processes with status
+// - installReadProcessTool: Read output from specific process
+// - installWriteProcessTool: Send input to interactive processes
+// - installKillProcessTool: Terminate processes by ID
+
+// Terminal Interaction Tools
+// TODO: Implement advanced terminal capabilities
+// - installReadTerminalTool: Read current terminal output/selected text
+// - installTerminalSessionTool: Manage persistent terminal sessions
+
+// Diagnostic Tools
+// TODO: Implement development environment diagnostics
+// - installDiagnosticsTool: Get IDE errors, warnings, type issues
+// - installHealthCheckTool: System and environment health monitoring
+
+// Codebase Intelligence Tools
+// TODO: Implement semantic code understanding
+// - installCodebaseRetrievalTool: AI-powered code search and context
+// - installSymbolAnalysisTool: Deep symbol relationship analysis
+// - installDependencyMapTool: Project dependency visualization
+
+// Visualization Tools
+// TODO: Implement rich content rendering
+// - installRenderMermaidTool: Generate interactive diagrams
+// - installOpenBrowserTool: Launch URLs in browser
+// - installMarkdownRenderTool: Rich markdown preview
+
+// Memory Management Tools
+// TODO: Implement persistent context
+// - installRememberTool: Store long-term memories across sessions
+// - installContextManagerTool: Manage conversation context
 
 // Code Analysis Tools
 import { installAnalysisBasicContextTool } from "./tools/context-analyzer";
@@ -32,6 +74,10 @@ export const FileSystemTools = [
   installDeleteFileTool,
 ] as const;
 
+export const AdvancedEditingTools = [
+  installStrReplaceEditorTool,
+] as const;
+
 export const CodeAnalysisTools = [
   installAnalysisBasicContextTool,
   installSearchKeywordsTool,
@@ -40,6 +86,18 @@ export const CodeAnalysisTools = [
 
 export const TerminalTools = [
   installRunTerminalCommandTool,
+] as const;
+
+export const TerminalInteractionTools = [
+  installReadTerminalTool,
+  installWriteProcessTool,
+  installKillProcessTool,
+] as const;
+
+export const ProcessManagementTools = [
+  installLaunchProcessTool,
+  installListProcessesTool,
+  installReadProcessTool,
 ] as const;
 
 export const GitHubTools = [
@@ -59,8 +117,14 @@ export const WebTools = [
 // Tool Collections
 export const CoreTools = [
   ...FileSystemTools,
+  ...AdvancedEditingTools,
   ...CodeAnalysisTools,
   ...TerminalTools,
+] as const;
+
+export const AdvancedTools = [
+  ...TerminalInteractionTools,
+  ...ProcessManagementTools,
 ] as const;
 
 export const IntegrationTools = [
@@ -78,5 +142,12 @@ export const AutoDevRemoteAgentTools = [
 // All Tools (including comment tool for full agent)
 export const AllTools = [
   ...CoreTools,
+  ...IntegrationTools,
+] as const;
+
+// Enhanced Tools (with advanced capabilities)
+export const EnhancedAgentTools = [
+  ...CoreTools,
+  ...AdvancedTools,
   ...IntegrationTools,
 ] as const;

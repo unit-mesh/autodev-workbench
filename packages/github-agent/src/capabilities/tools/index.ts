@@ -11,4 +11,11 @@ export { installDeleteFileTool } from "./fs-delete-file";
 export { installListDirectoryTool } from "./fs-list-directory";
 export { installReadFileTool } from "./fs-read-file";
 export { installWriteFileTool } from "./fs-write-file";
+export { installStrReplaceEditorTool } from "./str-replace-editor";
 export { installRunTerminalCommandTool } from "./terminal-run-command";
+
+// Terminal Interaction Tools
+export { installReadTerminalTool, installWriteProcessTool, installKillProcessTool } from "./terminal-interaction";
+
+// Process Management Tools
+export { installLaunchProcessTool, installListProcessesTool, installReadProcessTool } from "./process-management";
