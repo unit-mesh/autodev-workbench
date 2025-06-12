@@ -18,7 +18,7 @@ const DANGEROUS_CHARS = [';', '|', '&', '>', '<', '`', '$', '[', ']'];
 const ALLOWED_ENV_VARS = ['PATH', 'HOME', 'USER', 'LANG', 'LC_ALL', 'NODE_ENV'];
 
 export const installRunTerminalCommandTool: ToolLike = (installer) => {
-  installer("run-terminal-command", "Execute a terminal command with safety checks and output capture", {
+  installer("run-terminal-command", "Execute shell commands with comprehensive safety validation, output capture, timeout control, and secure environment isolation", {
     command: z.string().describe("The command to execute"),
     args: z.array(z.string()).optional().describe("Command arguments as array"),
     working_directory: z.string().optional().describe("Working directory for command execution (relative to workspace)"),
