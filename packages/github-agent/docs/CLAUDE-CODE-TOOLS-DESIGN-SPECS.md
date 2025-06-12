@@ -2,27 +2,27 @@
 
 ## 📊 完整工具清单对比
 
-| 功能类别 | Claude Code 工具 | Cascade (我的工具) | 状态对比 | 功能差异分析 |
-|---------|-------------------|-------------------|----------|-------------|
-| **文件操作** | `View` (读取文件) | `view_file` | ✅ 功能相近 | Claude: 支持偏移量和行数限制<br>Cascade: 支持行范围和摘要模式 |
-| | `Edit` (字符串替换编辑) | `edit_file` | ✅ 功能相近 | Claude: 严格唯一性校验<br>Cascade: 支持多处并行编辑 |
-| | `LS` (列出文件) | `list_dir` | ✅ 功能对等 | 基本相同的目录列表功能 |
-| | ❌ 无写入工具 | `write_to_file` | ❌ Cascade独有 | Cascade: 专门的文件创建工具 |
-| **终端执行** | `Bash` (命令执行) | `run_command` | ✅ 功能相近 | Claude: 命令注入检测，命令描述生成<br>Cascade: 安全策略控制，异步执行 |
-| **搜索功能** | `GlobTool` (文件模式搜索) | `grep_search` (glob模式) | ✅ 功能对等 | Claude: 按修改时间排序<br>Cascade: 更详细的匹配信息 |
-| | `GrepTool` (内容搜索) | `grep_search` (内容搜索) | ✅ 功能对等 | Claude: 正则表达式支持<br>Cascade: 节点路径和上下文信息 |
-| | ❌ 无语义搜索 | `codebase_search` | ❌ Cascade独有 | **Cascade优势**: AI驱动的语义代码搜索 |
-| **代码分析** | ❌ 无符号搜索 | `view_code_item` | ❌ Cascade独有 | **Cascade优势**: 精确的符号级定位 |
-| | ❌ 无诊断工具 | ❌ 无 | ❌ 双方缺失 | **改进机会**: 代码质量诊断 |
-| **Jupyter支持** | `NotebookReadTool` | ❌ 无 | ❌ Claude独有 | **Claude优势**: 完整的Jupyter支持 |
-| | `NotebookEditCell` | ❌ 无 | ❌ Claude独有 | **Claude优势**: 笔记本单元格编辑 |
-| **GitHub集成** | ❌ 基础Git | 完整GitHub API | ✅ Cascade更强 | **Cascade优势**: Issue、PR、评论管理 |
-| **网络功能** | ❌ 无 | `read_resource` (MCP资源) | ❌ Cascade独有 | **Cascade优势**: 多协议资源访问 |
-| **智能代理** | `Agent` (自主任务执行) | ❌ 无 | ❌ Claude独有 | **Claude优势**: 复杂任务自动化 |
-| **进程管理** | ❌ 基础进程 | `command_status` | ✅ Cascade更强 | **Cascade优势**: 完整进程生命周期 |
-| **记忆管理** | CLAUDE.md (项目记忆) | `create_memory` | ✅ 不同实现 | Claude: 文件方式<br>Cascade: 数据库方式 |
-| **可视化** | ❌ 无 | ❌ 无 | ❌ 双方缺失 | **改进机会**: 图表和可视化 |
-| **辅助工具** | `Think` (思考工具) | ❌ 无 | ❌ Claude独有 | **Claude优势**: 透明的思考过程 |
+| 功能类别          | Claude Code 工具      | Cascade                 | 状态对比        | 功能差异分析                                        |
+|---------------|---------------------|-------------------------|-------------|-----------------------------------------------|
+| **文件操作**      | `View` (读取文件)       | `view_file`             | ✅ 功能相近      | Claude: 支持偏移量和行数限制<br>Cascade: 支持行范围和摘要模式     |
+|               | `Edit` (字符串替换编辑)    | `edit_file`             | ✅ 功能相近      | Claude: 严格唯一性校验<br>Cascade: 支持多处并行编辑          |
+|               | `LS` (列出文件)         | `list_dir`              | ✅ 功能对等      | 基本相同的目录列表功能                                   |
+|               | ❌ 无写入工具             | `write_to_file`         | ❌ Cascade独有 | Cascade: 专门的文件创建工具                            |
+| **终端执行**      | `Bash` (命令执行)       | `run_command`           | ✅ 功能相近      | Claude: 命令注入检测，命令描述生成<br>Cascade: 安全策略控制，异步执行 |
+| **搜索功能**      | `GlobTool` (文件模式搜索) | `grep_search` (glob模式)  | ✅ 功能对等      | Claude: 按修改时间排序<br>Cascade: 更详细的匹配信息          |
+|               | `GrepTool` (内容搜索)   | `grep_search` (内容搜索)    | ✅ 功能对等      | Claude: 正则表达式支持<br>Cascade: 节点路径和上下文信息        |
+|               | ❌ 无语义搜索             | `codebase_search`       | ❌ Cascade独有 | **Cascade优势**: AI驱动的语义代码搜索                    |
+| **代码分析**      | ❌ 无符号搜索             | `view_code_item`        | ❌ Cascade独有 | **Cascade优势**: 精确的符号级定位                       |
+|               | ❌ 无诊断工具             | ❌ 无                     | ❌ 双方缺失      | **改进机会**: 代码质量诊断                              |
+| **Jupyter支持** | `NotebookReadTool`  | ❌ 无                     | ❌ Claude独有  | **Claude优势**: 完整的Jupyter支持                    |
+|               | `NotebookEditCell`  | ❌ 无                     | ❌ Claude独有  | **Claude优势**: 笔记本单元格编辑                        |
+| **GitHub集成**  | ❌ 基础Git             | 完整GitHub API            | ✅ Cascade更强 | **Cascade优势**: Issue、PR、评论管理                  |
+| **网络功能**      | ❌ 无                 | `read_resource` (MCP资源) | ❌ Cascade独有 | **Cascade优势**: 多协议资源访问                        |
+| **智能代理**      | `Agent` (自主任务执行)    | ❌ 无                     | ❌ Claude独有  | **Claude优势**: 复杂任务自动化                         |
+| **进程管理**      | ❌ 基础进程              | `command_status`        | ✅ Cascade更强 | **Cascade优势**: 完整进程生命周期                       |
+| **记忆管理**      | CLAUDE.md (项目记忆)    | `create_memory`         | ✅ 不同实现      | Claude: 文件方式<br>Cascade: 数据库方式                |
+| **可视化**       | ❌ 无                 | ❌ 无                     | ❌ 双方缺失      | **改进机会**: 图表和可视化                              |
+| **辅助工具**      | `Think` (思考工具)      | ❌ 无                     | ❌ Claude独有  | **Claude优势**: 透明的思考过程                         |
 
 ## 🎯 核心差异分析
 
