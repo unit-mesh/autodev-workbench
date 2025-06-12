@@ -2,89 +2,17 @@ import { ToolLike } from "../_typing";
 import { z } from "zod";
 import * as fs from "fs/promises";
 import * as path from "path";
-
-// 类型定义
-interface ProjectInfo {
-  name: string;
-  type: string;
-  version: string;
-  description: string;
-  project_files: ProjectFile[];
-  has_readme: boolean;
-  has_license: boolean;
-  has_changelog: boolean;
-}
-
-interface ProjectFile {
-  name: string;
-  size: number;
-  modified: string;
-}
-
-interface CodebaseAnalysis {
-  total_files: number;
-  total_size: number;
-  by_extension: Record<string, { count: number; size: number }>;
-  by_directory: Record<string, { count: number; size: number }>;
-  largest_files: FileInfo[];
-  code_files: number;
-  code_ratio: number;
-  average_file_size: number;
-  most_common_extensions: [string, { count: number; size: number }][];
-}
-
-interface FileInfo {
-  path: string;
-  size: number;
-  extension: string;
-  modified: string;
-}
-
-interface WorkflowAnalysis {
-  cicd_platforms: string[];
-  workflow_files: WorkflowFile[];
-  npm_scripts: string[];
-  has_docker: boolean;
-  has_makefile: boolean;
-  automation_score: number;
-}
-
-interface WorkflowFile {
-  type: string;
-  path: string;
-  size?: number;
-  modified?: string;
-  files?: number;
-}
-
-interface ArchitectureAnalysis {
-  patterns: {
-    monorepo: boolean;
-    microservices: boolean;
-    mvc: boolean;
-    component_based: boolean;
-    layered: boolean;
-  };
-  directory_structure: string[];
-  complexity_score: number;
-  detailed_structure?: any;
-}
-
-interface GitAnalysis {
-  is_git_repo: boolean;
-  has_gitignore?: boolean;
-  has_git_hooks?: boolean;
-  note?: string;
-}
-
-interface DependenciesAnalysis {
-  has_dependencies: boolean;
-  production_deps?: number;
-  dev_deps?: number;
-  peer_deps?: number;
-  total_deps?: number;
-  error?: string;
-}
+import {
+  ArchitectureAnalysis,
+  CodebaseAnalysis,
+  DependenciesAnalysis,
+  FileInfo,
+  GitAnalysis,
+  ProjectFile,
+  ProjectInfo,
+  WorkflowAnalysis,
+  WorkflowFile
+} from "./context-analyzer.type";
 
 interface AnalysisResult {
   analysis: {
@@ -236,7 +164,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       try {
         const filePath = path.join(workspacePath, file);
         const stats = await fs.stat(filePath);
-        
+
         foundFiles.push({
           name: file,
           size: stats.size,
@@ -294,15 +222,15 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
 
       try {
         const entries = await fs.readdir(dirPath);
-        
+
         for (const entry of entries) {
           const entryPath = path.join(dirPath, entry);
           const relativePath = path.relative(workspacePath, entryPath);
-          
+
           if (config.excludeDirs.some(exclude => relativePath.includes(exclude))) continue;
 
           const stats = await fs.stat(entryPath);
-          
+
           if (stats.isDirectory()) {
             await scanDirectory(entryPath, currentDepth + 1);
           } else if (stats.isFile()) {
@@ -343,7 +271,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       .slice(0, 10);
 
     const codeFiles = allFiles.filter(f => config.codeExtensions.includes(f.extension));
-    
+
     return {
       ...fileStats,
       code_files: codeFiles.length,
@@ -364,7 +292,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       try {
         const workflowPath = path.join(workspacePath, workflow);
         const stats = await fs.stat(workflowPath);
-        
+
         if (stats.isDirectory()) {
           const files = await fs.readdir(workflowPath);
           const yamlFiles = files.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'));
@@ -383,7 +311,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
             size: stats.size,
             modified: stats.mtime.toISOString()
           });
-          
+
           const type = getWorkflowType(workflow);
           if (type !== 'Unknown' && !cicdPlatforms.includes(type)) {
             cicdPlatforms.push(type);
@@ -475,7 +403,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
   // 异步Git仓库分析
   async function analyzeGitRepository(workspacePath: string): Promise<GitAnalysis> {
     const gitPath = path.join(workspacePath, '.git');
-    
+
     try {
       await fs.access(gitPath);
       return {
@@ -495,7 +423,7 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
       const packageJsonPath = path.join(workspacePath, 'package.json');
       const content = await fs.readFile(packageJsonPath, 'utf8');
       const packageJson = JSON.parse(content);
-      
+
       return {
         has_dependencies: true,
         production_deps: Object.keys(packageJson.dependencies || {}).length,
@@ -539,20 +467,20 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
 
   async function getDetailedStructure(workspacePath: string, maxDepth: number) {
     const structure: any = {};
-    
+
     async function buildStructure(dirPath: string, currentDepth: number = 0): Promise<any> {
       if (currentDepth > maxDepth) return null;
-      
+
       try {
         const entries = await fs.readdir(dirPath);
         const result: any = {};
-        
+
         for (const entry of entries) {
           if (entry.startsWith('.')) continue;
-          
+
           const entryPath = path.join(dirPath, entry);
           const stats = await fs.stat(entryPath);
-          
+
           if (stats.isDirectory()) {
             const subStructure = await buildStructure(entryPath, currentDepth + 1);
             if (subStructure) {
@@ -562,57 +490,57 @@ export const installAnalysisBasiContextTool: ToolLike = (installer) => {
             result[entry] = 'file';
           }
         }
-        
+
         return result;
       } catch (error) {
         return null;
       }
     }
-    
+
     return buildStructure(workspacePath);
   }
 
   function generateInsights(result: AnalysisResult): string[] {
     const insights: string[] = [];
-    
+
     if (result.project_info?.type !== 'unknown') {
       insights.push(`Project is identified as a ${result.project_info.type} project`);
     }
-    
+
     if (result.codebase_analysis?.code_ratio > 70) {
       insights.push("High code-to-total-files ratio indicates a focused codebase");
     }
-    
+
     if (result.workflow_analysis?.automation_score > 60) {
       insights.push("Good automation setup with CI/CD and build scripts");
     }
-    
+
     if (result.architecture_analysis?.patterns.monorepo) {
       insights.push("Monorepo architecture detected - consider workspace management tools");
     }
-    
+
     return insights;
   }
 
   function generateContextRecommendations(result: AnalysisResult): string[] {
     const recommendations: string[] = [];
-    
+
     if (!result.project_info?.has_readme) {
       recommendations.push("Consider adding a README.md file for project documentation");
     }
-    
+
     if (!result.project_info?.has_license) {
       recommendations.push("Consider adding a LICENSE file to clarify usage rights");
     }
-    
+
     if (result.workflow_analysis?.automation_score < 30) {
       recommendations.push("Low automation score - consider adding CI/CD workflows and build scripts");
     }
-    
+
     if (result.dependencies_summary?.total_deps > 100) {
       recommendations.push("Large number of dependencies - consider dependency audit and cleanup");
     }
-    
+
     return recommendations;
   }
 };
