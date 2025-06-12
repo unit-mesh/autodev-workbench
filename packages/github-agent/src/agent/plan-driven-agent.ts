@@ -5,23 +5,23 @@ import { ToolResult } from "./tool-definition";
 
 export interface PlanDrivenConfig extends AgentConfig {
   // 计划模式配置
-  planningMode: 'always' | 'auto' | 'never';
+  planningMode?: 'always' | 'auto' | 'never';
   
   // 复杂度阈值
-  complexityThreshold: {
+  complexityThreshold?: {
     simple: number;    // 工具数量 <= 1
     medium: number;    // 工具数量 <= 3  
     complex: number;   // 工具数量 > 3
   };
   
   // 自动执行设置
-  autoExecuteSimple: boolean;  // 简单任务自动执行
-  requireConfirmation: boolean; // 是否需要用户确认
+  autoExecuteSimple?: boolean;  // 简单任务自动执行
+  requireConfirmation?: boolean; // 是否需要用户确认
   
   // 计划生成设置
-  maxPlanningRounds: number;   // 最大计划轮次
-  enableRiskAnalysis: boolean; // 启用风险分析
-  enableRollback: boolean;     // 启用回滚机制
+  maxPlanningRounds?: number;   // 最大计划轮次
+  enableRiskAnalysis?: boolean; // 启用风险分析
+  enableRollback?: boolean;     // 启用回滚机制
 }
 
 export interface PlanDrivenResponse extends AgentResponse {
@@ -35,58 +35,61 @@ export interface PlanDrivenResponse extends AgentResponse {
   };
 }
 
+/**
+ * 计划驱动的智能代理
+ * 在AIAgent基础上添加规划能力，支持复杂任务的分解和执行
+ */
 export class PlanDrivenAgent extends AIAgent {
   private planningEngine: PlanningEngine;
   private currentPlan?: ExecutionPlan;
-  private planDrivenConfig: PlanDrivenConfig;
+  private planDrivenConfig: PlanDrivenConfig & Required<Pick<PlanDrivenConfig, 'planningMode' | 'complexityThreshold' | 'autoExecuteSimple' | 'requireConfirmation' | 'maxPlanningRounds' | 'enableRiskAnalysis' | 'enableRollback'>>;
 
-  constructor(config: PlanDrivenConfig) {
+  constructor(config: PlanDrivenConfig = {}) {
     super(config);
     
-    // 设置默认配置
+    // 设置默认的计划驱动配置
     this.planDrivenConfig = {
-      planningMode: 'auto',
+      ...this.config,
+      planningMode: config.planningMode || 'auto',
       complexityThreshold: {
         simple: 1,
         medium: 3,
-        complex: 5
+        complex: 5,
+        ...config.complexityThreshold
       },
-      autoExecuteSimple: true,
-      requireConfirmation: true,
-      maxPlanningRounds: 3,
-      enableRiskAnalysis: true,
-      enableRollback: true,
-      ...config
+      autoExecuteSimple: config.autoExecuteSimple ?? true,
+      requireConfirmation: config.requireConfirmation ?? true,
+      maxPlanningRounds: config.maxPlanningRounds || 3,
+      enableRiskAnalysis: config.enableRiskAnalysis ?? true,
+      enableRollback: config.enableRollback ?? true
     };
 
     this.planningEngine = new PlanningEngine(this.toolExecutor, this.llmConfig);
+    this.log('PlanDrivenAgent initialized with planning capabilities');
   }
 
   /**
-   * 主要入口点 - 处理用户输入
+   * 重写start方法，集成计划功能
    */
   async start(userInput: string, context?: any): Promise<PlanDrivenResponse> {
     const startTime = Date.now();
 
     try {
-      // 检查是否是计划确认或控制命令
-      const controlResponse = await this.handleControlCommands(userInput);
+      // 处理计划相关的控制命令
+      const controlResponse = await this.handlePlanningCommands(userInput);
       if (controlResponse) {
-        return controlResponse;
+        return this.extendResponse(controlResponse, startTime);
       }
 
-      // 分析任务类型
-      const taskType = await this.analyzeTaskType(userInput, context);
+      // 根据配置决定是否启用计划模式
+      const shouldUsePlanning = await this.shouldUsePlanning(userInput, context);
       
-      this.log(`Task type analyzed: ${taskType}`);
-
-      switch (taskType) {
-        case 'simple':
-          return await this.handleSimpleTask(userInput, context, startTime);
-        
-        case 'medium':
-        case 'complex':
-          return await this.handleComplexTask(userInput, context, startTime);
+      if (shouldUsePlanning) {
+        return await this.executeWithPlanning(userInput, context, startTime);
+      } else {
+        // 使用父类的标准处理流程
+        const response = await super.start(userInput, context);
+        return this.extendResponse(response, startTime);
       }
 
     } catch (error) {
@@ -98,6 +101,7 @@ export class PlanDrivenAgent extends AIAgent {
         toolResults: [],
         success: false,
         error: errorMessage,
+        totalRounds: 0,
         executionTime: Date.now() - startTime,
         planningPhase: 'completed'
       };
@@ -105,293 +109,199 @@ export class PlanDrivenAgent extends AIAgent {
   }
 
   /**
-   * 处理控制命令 (yes, no, modify, cancel等)
+   * 处理计划相关的控制命令
    */
-  private async handleControlCommands(userInput: string): Promise<PlanDrivenResponse | null> {
+  private async handlePlanningCommands(userInput: string): Promise<AgentResponse | null> {
     const input = userInput.toLowerCase().trim();
-
-    // 计划确认
-    if (['yes', 'y', '是', '执行', 'execute'].includes(input)) {
+    
+    if (input === 'confirm' || input === 'yes' || input === 'y') {
       if (this.currentPlan) {
         return await this.executePlan(this.currentPlan);
-      } else {
+      }
+    }
+    
+    if (input === 'cancel' || input === 'no' || input === 'n') {
+      if (this.currentPlan) {
+        this.currentPlan = undefined;
         return {
-          text: '没有待执行的计划。请先提出一个任务请求。',
+          text: '已取消当前计划',
           toolResults: [],
-          success: false,
-          planningPhase: 'completed'
+          success: true
         };
       }
     }
-
-    // 计划取消
-    if (['no', 'n', '否', '取消', 'cancel'].includes(input)) {
-      this.currentPlan = undefined;
-      return {
-        text: '计划已取消。请提出新的任务请求。',
-        toolResults: [],
-        success: true,
-        planningPhase: 'completed'
-      };
-    }
-
-    // 计划修改
-    if (['modify', '修改', 'change', 'adjust'].includes(input)) {
+    
+    if (input === 'show plan' || input === 'plan') {
       if (this.currentPlan) {
         return {
-          text: PlanPresenter.formatPlanModificationOptions(this.currentPlan),
+          text: PlanPresenter.formatPlanForUser(this.currentPlan),
           toolResults: [],
-          success: true,
-          plan: this.currentPlan,
-          requiresConfirmation: true,
-          planningPhase: 'presenting'
+          success: true
         };
       }
     }
-
-    return null; // 不是控制命令
-  }
-
-  /**
-   * 分析任务类型
-   */
-  private async analyzeTaskType(userInput: string, context?: any): Promise<TaskComplexity> {
-    // 如果强制使用计划模式
-    if (this.planDrivenConfig.planningMode === 'always') {
-      return 'complex';
-    }
-
-    // 如果禁用计划模式
-    if (this.planDrivenConfig.planningMode === 'never') {
-      return 'simple';
-    }
-
-    // 自动分析模式
-    let score = 0;
-
-    // 基于关键词分析
-    const complexKeywords = [
-      'implement', 'create', 'build', 'refactor', 'migrate', 'fix bug',
-      'multiple files', 'architecture', 'system', 'deploy'
-    ];
     
-    const mediumKeywords = [
-      'modify', 'update', 'change', 'add', 'remove', 'configure',
-      'install', 'setup', 'test'
-    ];
-
-    const simpleKeywords = [
-      'read', 'show', 'list', 'display', 'what is', 'how to', 'explain',
-      'find', 'search', 'get'
-    ];
-
-    if (complexKeywords.some(keyword => userInput.toLowerCase().includes(keyword))) {
-      score += 3;
-    } else if (mediumKeywords.some(keyword => userInput.toLowerCase().includes(keyword))) {
-      score += 2;
-    } else if (simpleKeywords.some(keyword => userInput.toLowerCase().includes(keyword))) {
-      score += 1;
-    }
-
-    // 基于文件数量分析
-    const fileMatches = userInput.match(/\b\w+\.\w+\b/g);
-    if (fileMatches && fileMatches.length > 2) score += 1;
-
-    // 基于GitHub相关任务
-    if (/github.*issue/i.test(userInput)) score += 1;
-
-    // 基于长度和复杂度
-    if (userInput.length > 100) score += 1;
-    if (userInput.split(' ').length > 20) score += 1;
-
-    if (score >= this.planDrivenConfig.complexityThreshold.complex) return 'complex';
-    if (score >= this.planDrivenConfig.complexityThreshold.medium) return 'medium';
-    return 'simple';
+    return null;
   }
 
   /**
-   * 处理简单任务 (直接执行)
+   * 判断是否应该使用计划模式
    */
-  private async handleSimpleTask(
-    userInput: string, 
-    context: any, 
-    startTime: number
-  ): Promise<PlanDrivenResponse> {
-    this.log('Handling simple task directly');
-
-    if (this.planDrivenConfig.autoExecuteSimple) {
-      // 直接执行，使用原有的单轮模式
-      const response = await super.start(userInput, context);
-      return {
-        ...response,
-        planningPhase: 'completed'
-      };
-    } else {
-      // 即使是简单任务也创建计划
-      return await this.handleComplexTask(userInput, context, startTime);
-    }
-  }
-
-  /**
-   * 处理复杂任务 (计划模式)
-   */
-  private async handleComplexTask(
-    userInput: string, 
-    context: any, 
-    startTime: number
-  ): Promise<PlanDrivenResponse> {
-    this.log('Handling complex task with planning');
-
+  private async shouldUsePlanning(userInput: string, context?: any): Promise<boolean> {
+    const mode = this.planDrivenConfig.planningMode;
+    
+    if (mode === 'never') return false;
+    if (mode === 'always') return true;
+    
+    // auto模式下分析任务复杂度
     try {
-      // 1. 创建执行计划
-      this.log('Creating execution plan...');
-      this.currentPlan = await this.planningEngine.createPlan(userInput, {
-        workspacePath: this.config.workspacePath,
-        ...context
-      });
-
-      this.log(`Plan created: ${PlanPresenter.formatPlanSummary(this.currentPlan)}`);
-
-      // 2. 展示计划给用户
-      const planPresentation = PlanPresenter.formatPlanForUser(this.currentPlan);
+      const taskType = await this.analyzeTaskComplexity(userInput, context);
+      const threshold = this.planDrivenConfig.complexityThreshold;
       
+      // 简单任务可选择跳过计划阶段
+      if (taskType === 'simple' && this.planDrivenConfig.autoExecuteSimple) {
+        return false;
+      }
+      
+      return taskType === 'medium' || taskType === 'complex';
+    } catch (error) {
+      this.log('Error analyzing task complexity, falling back to standard mode:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 带计划的执行流程
+   */
+  private async executeWithPlanning(
+    userInput: string, 
+    context: any, 
+    startTime: number
+  ): Promise<PlanDrivenResponse> {
+    // 1. 生成执行计划
+    this.log('Generating execution plan...');
+    const plan = await this.planningEngine.createPlan(userInput, context);
+    this.currentPlan = plan;
+
+    // 2. 展示计划并等待确认
+    if (this.planDrivenConfig.requireConfirmation) {
       return {
-        text: planPresentation,
+        text: PlanPresenter.formatPlanForUser(plan) + '\n\n请输入 "confirm" 确认执行，或 "cancel" 取消计划',
         toolResults: [],
         success: true,
-        plan: this.currentPlan,
-        requiresConfirmation: this.planDrivenConfig.requireConfirmation,
+        plan,
+        requiresConfirmation: true,
         planningPhase: 'presenting',
         executionTime: Date.now() - startTime
       };
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.log('Error creating plan:', errorMessage);
-
-      // 如果计划创建失败，回退到直接执行
-      this.log('Falling back to direct execution');
-      const response = await super.start(userInput, context);
-      return {
-        ...response,
-        planningPhase: 'completed'
-      };
     }
+
+    // 3. 直接执行計劃
+    const result = await this.executePlan(plan);
+    return this.extendResponse(result, startTime, { plan, planningPhase: 'completed' });
   }
 
   /**
    * 执行计划
    */
-  private async executePlan(plan: ExecutionPlan): Promise<PlanDrivenResponse> {
-    const startTime = Date.now();
-    const results: ToolResult[] = [];
+  private async executePlan(plan: ExecutionPlan): Promise<AgentResponse> {
+    const phaseResults: ToolResult[] = [];
     let currentPhaseIndex = 0;
-
-    this.log(`Starting plan execution: ${plan.id}`);
 
     try {
       for (const phase of plan.phases) {
-        this.log(`Executing phase ${currentPhaseIndex + 1}/${plan.phases.length}: ${phase.name}`);
-
-        // 显示进度
-        const progressText = PlanPresenter.formatExecutionProgress(plan, currentPhaseIndex, results);
+        this.log(`Executing phase ${currentPhaseIndex + 1}: ${phase.name}`);
         
-        // 执行阶段
-        const phaseResults = await this.executePhase(phase, {
-          round: currentPhaseIndex + 1,
-          previousResults: results,
-          userInput: plan.goal,
-          workspacePath: this.config.workspacePath || process.cwd()
-        });
-
-        results.push(...phaseResults);
-
-        // 验证阶段结果
-        const validation = this.validatePhaseResults(phase, phaseResults);
-        if (!validation.success) {
-          return this.handleExecutionFailure(plan, phase, validation.error, results, startTime);
+        // 构建该阶段的prompt
+        const phasePrompt = this.buildPhasePrompt(phase, phaseResults);
+        
+        // 使用父类的处理逻辑执行该阶段
+        const phaseResult = await super.start(phasePrompt);
+        
+        if (!phaseResult.success) {
+          throw new Error(`Phase ${phase.name} failed: ${phaseResult.error}`);
         }
-
+        
+        phaseResults.push(...phaseResult.toolResults);
         currentPhaseIndex++;
       }
 
-      // 执行成功
-      const executionTime = Date.now() - startTime;
-      const finalText = PlanPresenter.formatExecutionResults(plan, results, true, executionTime);
-
-      this.currentPlan = undefined; // 清除当前计划
-
       return {
-        text: finalText,
-        toolResults: results,
+        text: '计划执行完成！',
+        toolResults: phaseResults,
         success: true,
-        plan: plan,
-        planningPhase: 'completed',
-        executionTime,
-        executionProgress: {
-          currentPhase: currentPhaseIndex,
-          totalPhases: plan.phases.length,
-          phaseResults: results
-        }
+        totalRounds: phaseResults.length,
+        executionTime: 0 // 将在extendResponse中计算
       };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      return this.handleExecutionFailure(plan, plan.phases[currentPhaseIndex], errorMessage, results, startTime);
-    }
-  }
-
-  /**
-   * 执行单个阶段
-   */
-  private async executePhase(phase: any, context: any): Promise<ToolResult[]> {
-    const functionCalls = phase.tools.map((tool: any) => ({
-      name: tool.tool,
-      parameters: tool.parameters
-    }));
-
-    return await this.toolExecutor.executeToolsWithContext(context, functionCalls);
-  }
-
-  /**
-   * 验证阶段结果
-   */
-  private validatePhaseResults(phase: any, results: ToolResult[]): { success: boolean; error?: string } {
-    // 检查是否有工具执行失败
-    const failedTools = results.filter(r => !r.success);
-    if (failedTools.length > 0) {
       return {
+        text: `计划执行失败: ${errorMessage}`,
+        toolResults: phaseResults,
         success: false,
-        error: `Phase "${phase.name}" failed: ${failedTools.map(t => t.error).join(', ')}`
+        error: errorMessage,
+        totalRounds: phaseResults.length,
+        executionTime: 0
       };
+    } finally {
+      this.currentPlan = undefined;
     }
-
-    return { success: true };
   }
 
   /**
-   * 处理执行失败
+   * 构建阶段执行的prompt
    */
-  private handleExecutionFailure(
-    plan: ExecutionPlan,
-    failedPhase: any,
-    error: string,
-    results: ToolResult[],
-    startTime: number
+  private buildPhasePrompt(phase: any, previousResults: ToolResult[]): string {
+    let prompt = `执行任务阶段: ${phase.name}\n`;
+    prompt += `目标: ${phase.description}\n`;
+    
+    if (phase.tools && phase.tools.length > 0) {
+      prompt += `需要使用的工具: ${phase.tools.map((t: any) => t.tool).join(', ')}\n`;
+    }
+    
+    if (previousResults.length > 0) {
+      prompt += `\n前置步骤结果:\n`;
+      previousResults.forEach((result, index) => {
+        prompt += `${index + 1}. ${result.functionCall.name}: ${result.success ? '成功' : '失败'}\n`;
+      });
+    }
+    
+    return prompt;
+  }
+
+  /**
+   * 分析任务复杂度
+   */
+  private async analyzeTaskComplexity(userInput: string, context?: any): Promise<TaskComplexity> {
+    // 简化版本的复杂度分析
+    const toolKeywords = ['file', 'search', 'git', 'create', 'update', 'delete', 'run', 'execute'];
+    const foundTools = toolKeywords.filter(keyword => 
+      userInput.toLowerCase().includes(keyword)
+    ).length;
+
+    const threshold = this.planDrivenConfig.complexityThreshold;
+    
+    if (foundTools <= threshold.simple) return 'simple';
+    if (foundTools <= threshold.medium) return 'medium';
+    return 'complex';
+  }
+
+  /**
+   * 扩展响应对象，添加计划相关信息
+   */
+  private extendResponse(
+    response: AgentResponse, 
+    startTime: number, 
+    planInfo?: Partial<PlanDrivenResponse>
   ): PlanDrivenResponse {
-    const executionTime = Date.now() - startTime;
-    const failureText = PlanPresenter.formatExecutionResults(plan, results, false, executionTime);
-
-    this.log(`Plan execution failed at phase "${failedPhase.name}": ${error}`);
-
     return {
-      text: failureText,
-      toolResults: results,
-      success: false,
-      error: `执行失败在阶段 "${failedPhase.name}": ${error}`,
-      plan: plan,
-      planningPhase: 'completed',
-      executionTime
+      ...response,
+      executionTime: Date.now() - startTime,
+      plan: planInfo?.plan || this.currentPlan,
+      requiresConfirmation: planInfo?.requiresConfirmation,
+      planningPhase: planInfo?.planningPhase || 'completed',
+      executionProgress: planInfo?.executionProgress
     };
   }
 }

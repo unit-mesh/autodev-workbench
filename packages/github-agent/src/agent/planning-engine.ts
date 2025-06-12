@@ -65,13 +65,13 @@ export class PlanningEngine {
   async createPlan(userInput: string, context: any): Promise<ExecutionPlan> {
     // 1. 信息收集阶段
     const gatheringResults = await this.gatherInformation(userInput, context);
-    
+
     // 2. 分析任务复杂度
     const complexity = this.analyzeTaskComplexity(userInput, gatheringResults);
-    
+
     // 3. 生成执行计划
     const plan = await this.generateExecutionPlan(userInput, gatheringResults, complexity);
-    
+
     return plan;
   }
 
@@ -80,7 +80,7 @@ export class PlanningEngine {
    */
   private async gatherInformation(userInput: string, context: any): Promise<ToolResult[]> {
     const gatheringTools = this.selectGatheringTools(userInput);
-    
+
     if (gatheringTools.length === 0) {
       return [];
     }
@@ -103,11 +103,12 @@ export class PlanningEngine {
    */
   private selectGatheringTools(userInput: string): Array<{name: string, parameters: any}> {
     const tools: Array<{name: string, parameters: any}> = [];
+    const availableTools = this.toolExecutor.getAvailableToolNames();
 
     // GitHub相关任务
     if (/github.*issue/i.test(userInput)) {
       const issueMatch = userInput.match(/#(\d+)/);
-      if (issueMatch) {
+      if (issueMatch && availableTools.includes('github-get-issue-with-analysis')) {
         tools.push({
           name: 'github-get-issue-with-analysis',
           parameters: {
@@ -119,8 +120,19 @@ export class PlanningEngine {
       }
     }
 
+    // GitHub代码搜索
+    if (/find.*code|search.*github/i.test(userInput) && availableTools.includes('github-find-code-by-description')) {
+      tools.push({
+        name: 'github-find-code-by-description',
+        parameters: {
+          description: userInput,
+          max_results: 5
+        }
+      });
+    }
+
     // 代码相关任务
-    if (/code|function|class|file/i.test(userInput)) {
+    if (/code|function|class|file/i.test(userInput) && availableTools.includes('analyze-basic-context')) {
       tools.push({
         name: 'analyze-basic-context',
         parameters: {
@@ -129,14 +141,45 @@ export class PlanningEngine {
       });
     }
 
+    // 关键词搜索
+    if (/search|find/i.test(userInput) && availableTools.includes('search-keywords')) {
+      tools.push({
+        name: 'search-keywords',
+        parameters: {
+          query: userInput
+        }
+      });
+    }
+
+    // 正则搜索
+    if (/pattern|regex|grep/i.test(userInput) && availableTools.includes('grep-search')) {
+      tools.push({
+        name: 'grep-search',
+        parameters: {
+          pattern: userInput,
+          file_pattern: '**/*'
+        }
+      });
+    }
+
     // 文件操作相关
     const fileMatch = userInput.match(/([a-zA-Z0-9_.-]+\.[a-zA-Z]+)/);
-    if (fileMatch) {
+    if (fileMatch && availableTools.includes('read-file')) {
       tools.push({
         name: 'read-file',
         parameters: {
           file_path: fileMatch[1],
           max_size: 10000
+        }
+      });
+    }
+
+    // 目录浏览
+    if (/list|directory|folder/i.test(userInput) && availableTools.includes('list-directory')) {
+      tools.push({
+        name: 'list-directory',
+        parameters: {
+          path: '.'
         }
       });
     }
@@ -155,7 +198,7 @@ export class PlanningEngine {
       'implement', 'create', 'build', 'refactor', 'migrate', 'fix bug',
       'multiple files', 'architecture', 'system'
     ];
-    
+
     const mediumKeywords = [
       'modify', 'update', 'change', 'add', 'remove', 'configure'
     ];
@@ -189,20 +232,20 @@ export class PlanningEngine {
    * 生成执行计划
    */
   private async generateExecutionPlan(
-    userInput: string, 
-    gatheringResults: ToolResult[], 
+    userInput: string,
+    gatheringResults: ToolResult[],
     complexity: TaskComplexity
   ): Promise<ExecutionPlan> {
     const planId = `plan_${Date.now()}`;
-    
+
     // 根据复杂度生成不同的计划
     switch (complexity) {
       case 'simple':
         return this.generateSimplePlan(planId, userInput, gatheringResults);
-      
+
       case 'medium':
         return this.generateMediumPlan(planId, userInput, gatheringResults);
-      
+
       case 'complex':
         return this.generateComplexPlan(planId, userInput, gatheringResults);
     }
@@ -213,7 +256,16 @@ export class PlanningEngine {
    */
   private generateSimplePlan(planId: string, userInput: string, gatheringResults: ToolResult[]): ExecutionPlan {
     const tool = this.selectPrimaryTool(userInput);
-    
+    const availableTools = this.toolExecutor.getAvailableToolNames();
+
+    // 选择验证工具
+    let validationTool = 'read-file';
+    if (availableTools.includes('analyze-basic-context')) {
+      validationTool = 'analyze-basic-context';
+    } else if (availableTools.includes('list-directory')) {
+      validationTool = 'list-directory';
+    }
+
     return {
       id: planId,
       goal: `Execute simple task: ${userInput}`,
@@ -237,7 +289,7 @@ export class PlanningEngine {
       }],
       validation: [{
         description: 'Verify task completion',
-        tool: 'read-file',
+        tool: validationTool,
         parameters: {},
         successCriteria: 'Task completed successfully'
       }]
@@ -302,6 +354,14 @@ export class PlanningEngine {
       }
     ];
 
+    const availableTools = this.toolExecutor.getAvailableToolNames();
+    let validationTool = 'read-file';
+    if (availableTools.includes('analyze-basic-context')) {
+      validationTool = 'analyze-basic-context';
+    } else if (availableTools.includes('list-directory')) {
+      validationTool = 'list-directory';
+    }
+
     return {
       id: planId,
       goal: `Complete medium complexity task: ${userInput}`,
@@ -320,8 +380,8 @@ export class PlanningEngine {
       validation: [
         {
           description: 'Run tests to verify changes',
-          tool: 'launch-process',
-          parameters: { command: 'npm test' },
+          tool: validationTool,
+          parameters: {},
           successCriteria: 'All tests pass'
         }
       ],
@@ -333,46 +393,129 @@ export class PlanningEngine {
     };
   }
 
-  /**
-   * 生成复杂任务计划
-   */
+
   private generateComplexPlan(planId: string, userInput: string, gatheringResults: ToolResult[]): ExecutionPlan {
-    // 复杂任务需要更详细的分析和多阶段执行
-    // 这里可以调用LLM来生成更智能的计划
     return this.generateMediumPlan(planId, userInput, gatheringResults);
   }
 
-  /**
-   * 选择主要工具
-   */
   private selectPrimaryTool(userInput: string): PlannedToolCall {
-    if (/read|show|display/i.test(userInput)) {
+    const availableTools = this.toolExecutor.getAvailableToolNames();
+    
+    // GitHub Issue相关任务
+    if (/github.*issue/i.test(userInput) && availableTools.includes('github-get-issue-with-analysis')) {
+      return {
+        tool: 'github-get-issue-with-analysis',
+        parameters: {},
+        purpose: 'Analyze GitHub issue',
+        expectedOutcome: 'Issue details and code analysis',
+        fallbackOptions: availableTools.includes('github-list-repository-issues') ? ['github-list-repository-issues'] : []
+      };
+    }
+
+    // 代码搜索任务
+    if (/find.*code|search.*code/i.test(userInput) && availableTools.includes('github-find-code-by-description')) {
+      return {
+        tool: 'github-find-code-by-description',
+        parameters: {},
+        purpose: 'Find relevant code',
+        expectedOutcome: 'Code files and functions found',
+        fallbackOptions: availableTools.includes('search-keywords') ? ['search-keywords'] : []
+      };
+    }
+
+    // 文件读取任务
+    if (/read|show|display/i.test(userInput) && availableTools.includes('read-file')) {
       return {
         tool: 'read-file',
         parameters: {},
         purpose: 'Read file content',
         expectedOutcome: 'File content displayed',
-        fallbackOptions: ['list-directory']
+        fallbackOptions: availableTools.includes('list-directory') ? ['list-directory'] : []
       };
     }
 
-    if (/list|directory/i.test(userInput)) {
+    // 目录浏览任务
+    if (/list|directory/i.test(userInput) && availableTools.includes('list-directory')) {
       return {
         tool: 'list-directory',
         parameters: {},
         purpose: 'List directory contents',
         expectedOutcome: 'Directory structure shown',
-        fallbackOptions: ['read-file']
+        fallbackOptions: availableTools.includes('read-file') ? ['read-file'] : []
       };
     }
 
-    // 默认工具
+    // 代码分析任务
+    if (/analyze|understand|context/i.test(userInput) && availableTools.includes('analyze-basic-context')) {
+      return {
+        tool: 'analyze-basic-context',
+        parameters: {},
+        purpose: 'Analyze project context',
+        expectedOutcome: 'Project structure understood',
+        fallbackOptions: availableTools.includes('list-directory') ? ['list-directory'] : []
+      };
+    }
+
+    // 搜索任务
+    if (/search|find/i.test(userInput)) {
+      if (availableTools.includes('search-keywords')) {
+        return {
+          tool: 'search-keywords',
+          parameters: {},
+          purpose: 'Search for keywords',
+          expectedOutcome: 'Relevant code symbols found',
+          fallbackOptions: availableTools.includes('grep-search') ? ['grep-search'] : []
+        };
+      } else if (availableTools.includes('grep-search')) {
+        return {
+          tool: 'grep-search',
+          parameters: {},
+          purpose: 'Search with regex patterns',
+          expectedOutcome: 'Pattern matches found',
+          fallbackOptions: []
+        };
+      }
+    }
+
+    // 终端执行任务
+    if (/run|execute|command/i.test(userInput) && availableTools.includes('run-terminal-command')) {
+      return {
+        tool: 'run-terminal-command',
+        parameters: {},
+        purpose: 'Execute terminal command',
+        expectedOutcome: 'Command output',
+        fallbackOptions: []
+      };
+    }
+
+    // 默认工具 - 按优先级选择
+    const defaultTools = [
+      'analyze-basic-context',
+      'list-directory', 
+      'read-file',
+      'search-keywords',
+      'grep-search'
+    ];
+
+    for (const toolName of defaultTools) {
+      if (availableTools.includes(toolName)) {
+        return {
+          tool: toolName,
+          parameters: {},
+          purpose: 'Analyze and understand the request',
+          expectedOutcome: 'Context and information gathered',
+          fallbackOptions: []
+        };
+      }
+    }
+
+    // 如果没有可用工具，返回一个占位符
     return {
       tool: 'analyze-basic-context',
       parameters: {},
       purpose: 'Analyze project context',
       expectedOutcome: 'Project structure understood',
-      fallbackOptions: ['list-directory']
+      fallbackOptions: []
     };
   }
 
@@ -381,7 +524,7 @@ export class PlanningEngine {
    */
   private extractFilesToModify(userInput: string, gatheringResults: ToolResult[]): string[] {
     const files: string[] = [];
-    
+
     // 从用户输入中提取文件名
     const fileMatches = userInput.match(/\b[\w.-]+\.\w+\b/g);
     if (fileMatches) {

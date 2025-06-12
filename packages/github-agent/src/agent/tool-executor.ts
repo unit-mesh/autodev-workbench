@@ -113,6 +113,20 @@ export class ToolExecutor {
   }
 
   /**
+   * Get list of available tool names
+   */
+  getAvailableToolNames(): string[] {
+    return Array.from(this.toolHandlers.keys());
+  }
+
+  /**
+   * Check if a tool is available
+   */
+  hasToolAvailable(toolName: string): boolean {
+    return this.toolHandlers.has(toolName);
+  }
+
+  /**
    * Execute tools with context and error handling
    * Enhanced with parallel execution capability
    */
