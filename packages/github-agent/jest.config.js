@@ -1,36 +1,20 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  roots: ["<rootDir>/src", "<rootDir>/__tests__"],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src'],
   testMatch: [
-    "**/__tests__/**/*.test.ts",
-    "**/?(*.)+(spec|test).ts"
+    '**/__tests__/**/*.test.ts',
+    '**/?(*.)+(spec|test).ts'
   ],
   transform: {
-    "^.+\\.ts$": ["ts-jest", {
-      useESM: false,
-      tsconfig: {
-        module: "commonjs"
-      }
-    }]
+    '^.+\\.ts$': 'ts-jest',
   },
-  moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/src/$1",
-    "^@autodev/(.*)$": "<rootDir>/../$1/src"
-  },
-  moduleFileExtensions: ["ts", "js", "json", "node"],
   collectCoverageFrom: [
-    "src/**/*.ts",
-    "!src/**/*.d.ts",
-    "!src/**/*.test.ts",
-    "!src/**/*.spec.ts"
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/__tests__/**',
   ],
-  coverageDirectory: "coverage",
-  coverageReporters: ["text", "lcov", "html"],
-  setupFilesAfterEnv: ["<rootDir>/__tests__/setup.ts"],
+  moduleFileExtensions: ['ts', 'js', 'json'],
   testTimeout: 30000,
-  verbose: true,
-  // Environment variables for tests
-  setupFiles: ["<rootDir>/__tests__/env.setup.js"]
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts']
 };
