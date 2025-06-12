@@ -1,3 +1,26 @@
+## 0.6.2 (2025-06-12)
+
+### 🚀 Features
+
+- add terminal command and str replace editor ([50bc69a](https://github.com/unit-mesh/autodev-workbench/commit/50bc69a))
+- implement plan-driven architecture for GitHub Agent ([3e87801](https://github.com/unit-mesh/autodev-workbench/commit/3e87801))
+- add GitHub Agent tool design specifications ([c52a982](https://github.com/unit-mesh/autodev-workbench/commit/c52a982))
+- enhance PromptBuilder with adaptive strategies and context-aware prompting ([8bf1ffc](https://github.com/unit-mesh/autodev-workbench/commit/8bf1ffc))
+- enhance PlanDrivenAgent with optional configuration parameters and improved planning capabilities ([fd58ca9](https://github.com/unit-mesh/autodev-workbench/commit/fd58ca9))
+- **codebase-scanner:** enhance file scanning and project structure retrieval ([7a6a839](https://github.com/unit-mesh/autodev-workbench/commit/7a6a839))
+- **codebase-scanner, insight-generator, project-info-analyzer:** add codebase scanning and insight generation features ([92c4b98](https://github.com/unit-mesh/autodev-workbench/commit/92c4b98))
+- **llm:** implement services for analysis report, code relevance, and keyword extraction ([258f815](https://github.com/unit-mesh/autodev-workbench/commit/258f815))
+- **tests:** add Jest setup and integration tests for ProjectContextAnalyzer ([4e9cd53](https://github.com/unit-mesh/autodev-workbench/commit/4e9cd53))
+- **tool-executor:** add parallel execution, performance monitoring, and intelligent caching ([b04f063](https://github.com/unit-mesh/autodev-workbench/commit/b04f063))
+
+### 🩹 Fixes
+
+- **github-agent:** fix typo in function name ([0bb1e80](https://github.com/unit-mesh/autodev-workbench/commit/0bb1e80))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.6.1 (2025-06-11)
 
 This was a version bump only, there were no code changes.
