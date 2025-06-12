@@ -217,7 +217,7 @@ export const installBrowserHistoryTool: ToolLike = (installer) => {
       const manager = BrowserManager.getInstance();
       
       switch (action) {
-        case "list":
+        case "list": {
           const urls = manager.getOpenedUrls();
           return {
             content: [{
@@ -230,8 +230,8 @@ export const installBrowserHistoryTool: ToolLike = (installer) => {
               }, null, 2)
             }]
           };
-          
-        case "clear":
+        }
+        case "clear": {
           manager.clearHistory();
           return {
             content: [{
@@ -243,7 +243,7 @@ export const installBrowserHistoryTool: ToolLike = (installer) => {
               }, null, 2)
             }]
           };
-          
+        }
         default:
           return {
             content: [{

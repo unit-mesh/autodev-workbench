@@ -3,6 +3,52 @@ import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
 
+// Helper function to count items in directory
+function countItems(dirPath: string): { files: number; directories: number; total_size: number } {
+  let files = 0;
+  let directories = 0;
+  let total_size = 0;
+
+  try {
+    const entries = fs.readdirSync(dirPath);
+    for (const entry of entries) {
+      const entryPath = path.join(dirPath, entry);
+      const entryStats = fs.statSync(entryPath);
+      
+      if (entryStats.isDirectory()) {
+        directories++;
+        const subCounts = countItems(entryPath);
+        files += subCounts.files;
+        directories += subCounts.directories;
+        total_size += subCounts.total_size;
+      } else {
+        files++;
+        total_size += entryStats.size;
+      }
+    }
+  } catch (error) {
+    // If we can't read the directory, return current counts
+  }
+
+  return { files, directories, total_size };
+}
+
+// Helper function to copy directory recursively
+function copyDir(src: string, dest: string) {
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src);
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry);
+    const destPath = path.join(dest, entry);
+    const stat = fs.statSync(srcPath);
+    if (stat.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
 export const installDeleteFileTool: ToolLike = (installer) => {
   installer("delete-file", "Delete a file or directory with safety checks", {
     file_path: z.string().describe("Path to the file or directory to delete (relative to workspace or absolute)"),
@@ -123,35 +169,6 @@ export const installDeleteFileTool: ToolLike = (installer) => {
 
       if (isDirectory && recursive) {
         // Count items in directory
-        function countItems(dirPath: string): { files: number; directories: number; total_size: number } {
-          let files = 0;
-          let directories = 0;
-          let total_size = 0;
-
-          try {
-            const entries = fs.readdirSync(dirPath);
-            for (const entry of entries) {
-              const entryPath = path.join(dirPath, entry);
-              const entryStats = fs.statSync(entryPath);
-              
-              if (entryStats.isDirectory()) {
-                directories++;
-                const subCounts = countItems(entryPath);
-                files += subCounts.files;
-                directories += subCounts.directories;
-                total_size += subCounts.total_size;
-              } else {
-                files++;
-                total_size += entryStats.size;
-              }
-            }
-          } catch (error) {
-            console.warn(`Warning: Cannot access ${dirPath}: ${error}`);
-          }
-
-          return { files, directories, total_size };
-        }
-
         const counts = countItems(resolvedPath);
         deletionInfo.contents = {
           files: counts.files,
@@ -168,20 +185,6 @@ export const installDeleteFileTool: ToolLike = (installer) => {
         
         if (isDirectory) {
           // Copy directory recursively
-          function copyDir(src: string, dest: string) {
-            fs.mkdirSync(dest, { recursive: true });
-            const entries = fs.readdirSync(src);
-            for (const entry of entries) {
-              const srcPath = path.join(src, entry);
-              const destPath = path.join(dest, entry);
-              const stat = fs.statSync(srcPath);
-              if (stat.isDirectory()) {
-                copyDir(srcPath, destPath);
-              } else {
-                fs.copyFileSync(srcPath, destPath);
-              }
-            }
-          }
           copyDir(resolvedPath, backupPath);
         } else {
           fs.copyFileSync(resolvedPath, backupPath);

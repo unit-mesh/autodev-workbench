@@ -189,10 +189,10 @@ export class GitLabPlatformService extends BasePlatformService {
   }
 
   parseIssueUrl(url: string): { owner: string; repo: string; issueId: string | number } | null {
-    const gitlabIssueRegex = /gitlab\.com\/([^\/]+)\/([^\/]+)\/-\/issues\/(\d+)/;
-    const match = url.match(gitlabIssueRegex);
+    const gitlabIssueRegex = /gitlab\.com\/([^/]+)\/([^/]+)\/-\/issues\/(\d+)/;
     
-    if (match) {
+    if (url.match(gitlabIssueRegex)) {
+      const match = url.match(gitlabIssueRegex);
       return {
         owner: match[1],
         repo: match[2],

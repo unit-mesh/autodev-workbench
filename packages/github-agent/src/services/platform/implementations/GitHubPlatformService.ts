@@ -141,7 +141,7 @@ export class GitHubPlatformService extends BasePlatformService {
   }
 
   parseIssueUrl(url: string): { owner: string; repo: string; issueId: string | number } | null {
-    const githubIssueRegex = /github\.com\/([^\/]+)\/([^\/]+)\/issues\/(\d+)/;
+    const githubIssueRegex = /github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/;
     const match = url.match(githubIssueRegex);
     
     if (match) {

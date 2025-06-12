@@ -25,7 +25,7 @@ class TerminalSessionManager {
   addToHistory(command: string, output: string): void {
     const entry = `$ ${command}\n${output}`;
     this.sessionHistory.push(entry);
-    
+
     // 保持历史记录在合理大小
     if (this.sessionHistory.length > 100) {
       this.sessionHistory = this.sessionHistory.slice(-50);
@@ -60,19 +60,19 @@ export const installReadTerminalTool: ToolLike = (installer) => {
     include_history: z.boolean().optional().describe("Include command history in output (default: true)"),
     parse_output: z.boolean().optional().describe("Parse and analyze terminal output (default: true)"),
     filter_noise: z.boolean().optional().describe("Filter out noise and focus on important content (default: true)")
-  }, async ({ 
-    only_selected = false, 
-    lines, 
+  }, async ({
+    only_selected = false,
+    lines,
     include_history = true,
     parse_output = true,
     filter_noise = true
   }) => {
     try {
       const sessionManager = TerminalSessionManager.getInstance();
-      
+
       // 模拟读取终端输出（在实际实现中，这里会与真实终端交互）
       let terminalOutput = "";
-      
+
       if (only_selected) {
         // 在实际实现中，这里会读取终端中选中的文本
         terminalOutput = "Selected text would be read here";
@@ -83,9 +83,9 @@ export const installReadTerminalTool: ToolLike = (installer) => {
           const { stdout: pwd } = await execAsync('pwd');
           const { stdout: whoami } = await execAsync('whoami');
           const { stdout: date } = await execAsync('date');
-          
+
           terminalOutput = `Current Directory: ${pwd.trim()}\nUser: ${whoami.trim()}\nTime: ${date.trim()}\n`;
-          
+
           // 如果包含历史记录
           if (include_history) {
             const history = sessionManager.getHistory(lines);
@@ -194,7 +194,7 @@ function analyzeTerminalOutput(output: string) {
   if (analysis.hasErrors) {
     analysis.suggestions.push("Review error messages and consider debugging steps");
   }
-  
+
   if (analysis.commandsDetected.length > 0) {
     analysis.suggestions.push("Recent commands executed - check their output for important information");
   }
@@ -205,22 +205,22 @@ function analyzeTerminalOutput(output: string) {
 // 过滤终端噪音
 function filterTerminalNoise(output: string): string {
   // 移除ANSI转义序列
-  let filtered = output.replace(/\x1b\[[0-9;]*m/g, '');
-  
+  let filtered = output.replace(/\u001b\[[0-9;]*m/g, '');
+
   // 移除过多的空行
   filtered = filtered.replace(/\n\s*\n\s*\n/g, '\n\n');
-  
+
   // 移除常见的噪音模式
   const noisePatterns = [
     /^\s*$/gm, // 空行
     /^Last login:/gm, // 登录信息
     /^Welcome to/gm, // 欢迎信息
   ];
-  
+
   noisePatterns.forEach(pattern => {
     filtered = filtered.replace(pattern, '');
   });
-  
+
   return filtered.trim();
 }
 
@@ -234,9 +234,9 @@ export const installWriteProcessTool: ToolLike = (installer) => {
     try {
       // 这里需要与进程管理器集成
       // 在实际实现中，会从进程管理器获取进程并写入输入
-      
+
       const finalInput = add_newline ? input_text + '\n' : input_text;
-      
+
       // 模拟写入过程
       const result = {
         terminal_id,
@@ -273,7 +273,7 @@ export const installKillProcessTool: ToolLike = (installer) => {
     try {
       // 这里需要与进程管理器集成
       // 在实际实现中，会从进程管理器获取进程并终止它
-      
+
       const result = {
         terminal_id,
         action: force ? "force_killed" : "terminated",
