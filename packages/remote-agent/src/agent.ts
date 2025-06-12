@@ -697,7 +697,6 @@ export class AIAgent {
 	 * Export memories to markdown file at the end of conversation
 	 * This uses LLM to generate a summary of the conversation
 	 */
-// 在 agent.ts 中添加
 	private async exportMemoriesToMarkdown(): Promise<void> {
 		try {
 			if (this.conversationHistory.length === 0) {
