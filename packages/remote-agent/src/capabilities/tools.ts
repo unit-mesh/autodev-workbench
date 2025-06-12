@@ -121,11 +121,11 @@ export const WebTools = [
 ] as const;
 
 // New Enhanced Tools Category
-export const EnhancedIntelligenceTools = [
-  installIntelligentAgentTool,
-  installProjectMemoryTool,
-  installSemanticCodeSearchTool,
-] as const;
+// export const EnhancedIntelligenceTools = [
+//   installIntelligentAgentTool,
+//   installProjectMemoryTool,
+//   installSemanticCodeSearchTool,
+// ] as const;
 
 // Tool Collections
 export const CoreTools = [
@@ -138,7 +138,7 @@ export const CoreTools = [
 export const AdvancedTools = [
   ...TerminalInteractionTools,
   ...ProcessManagementTools,
-  ...EnhancedIntelligenceTools,
+  // ...EnhancedIntelligenceTools,
 ] as const;
 
 export const IntegrationTools = [
@@ -151,14 +151,14 @@ export const AutoDevRemoteAgentTools = [
   ...CoreTools,
   ...GitHubTools.filter(tool => tool !== installGitHubAddIssueCommentTool),
   ...WebTools,
-  ...EnhancedIntelligenceTools,
+  // ...EnhancedIntelligenceTools,
 ] as const;
 
 // All Tools (including comment tool for full agent)
 export const AllTools = [
   ...CoreTools,
   ...IntegrationTools,
-  ...EnhancedIntelligenceTools,
+  // ...EnhancedIntelligenceTools,
 ] as const;
 
 // Enhanced Tools (with advanced capabilities)
