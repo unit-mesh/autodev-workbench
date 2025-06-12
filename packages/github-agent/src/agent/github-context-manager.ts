@@ -1,6 +1,8 @@
 import { GitHubConfig, GitHubIssueContext, GitHubIssueUploadOptions } from './github-types';
 import { ToolResult } from './tool-definition';
 
+const GITHUB_ISSUE_URL_PATTERN = /(?:github\.com\/|^|\s)([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(?:\/issues\/|#)(\d+)/i;
+
 export class GitHubContextManager {
   private config: GitHubConfig;
 
@@ -11,11 +13,7 @@ export class GitHubContextManager {
     };
   }
 
-  /**
-   * Extract GitHub context from user input and tool results
-   */
   extractContext(userInput: string, toolResults: ToolResult[]): GitHubIssueContext | undefined {
-    // First, try to use GitHub context from configuration (from GitHub Actions environment)
     if (this.config.context) {
       return {
         owner: this.config.context.owner,
@@ -24,8 +22,7 @@ export class GitHubContextManager {
       };
     }
 
-    // Second, try to extract from user input
-    const inputMatch = userInput.match(/(?:github\.com\/|^|\s)([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(?:\/issues\/|#)(\d+)/i);
+    const inputMatch = userInput.match(GITHUB_ISSUE_URL_PATTERN);
     if (inputMatch) {
       return {
         owner: inputMatch[1],
@@ -34,7 +31,6 @@ export class GitHubContextManager {
       };
     }
 
-    // Finally, try to extract from tool results
     for (const result of toolResults) {
       if (result.success && result.functionCall.name.includes('github')) {
         const params = result.functionCall.parameters;
@@ -51,9 +47,6 @@ export class GitHubContextManager {
     return undefined;
   }
 
-  /**
-   * Upload content to GitHub issue
-   */
   async uploadToIssue(options: GitHubIssueUploadOptions): Promise<boolean> {
     if (!this.config.token) {
       throw new Error('GitHub token is required for uploading to issues');
@@ -86,30 +79,18 @@ export class GitHubContextManager {
     }
   }
 
-  /**
-   * Get GitHub configuration
-   */
   getConfig(): GitHubConfig {
     return { ...this.config };
   }
 
-  /**
-   * Update GitHub configuration
-   */
   updateConfig(newConfig: Partial<GitHubConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  /**
-   * Check if GitHub integration is enabled
-   */
   isEnabled(): boolean {
     return Boolean(this.config.token);
   }
 
-  /**
-   * Check if auto-upload to issues is enabled
-   */
   isAutoUploadEnabled(): boolean {
     return Boolean(this.config.autoUploadToIssue && this.config.token);
   }
