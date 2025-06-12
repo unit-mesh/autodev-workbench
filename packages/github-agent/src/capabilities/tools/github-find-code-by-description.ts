@@ -10,24 +10,18 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
     query: z.string().describe("Natural language description of what you're looking for (e.g., 'authentication logic', 'database connection code', 'error handling for API calls')"),
     workspace_path: z.string().optional().describe("Path to the workspace to analyze (defaults to current directory)"),
     search_depth: z.enum(["shallow", "medium", "deep"]).optional().describe("Search depth - affects number of results and analysis detail"),
-    include_symbols: z.boolean().optional().describe("Whether to include symbol analysis in results"),
-    include_ripgrep: z.boolean().optional().describe("Whether to use ripgrep for fast text search"),
   }, async ({ 
     owner, 
     repo, 
     query,
     workspace_path,
-    search_depth = "medium",
-    include_symbols = true,
-    include_ripgrep = true
+    search_depth = "medium"
   }: { 
     owner: string; 
     repo: string; 
     query: string;
     workspace_path?: string;
     search_depth?: "shallow" | "medium" | "deep";
-    include_symbols?: boolean;
-    include_ripgrep?: boolean;
   }) => {
     try {
       const githubToken = process.env.GITHUB_TOKEN;
@@ -93,13 +87,13 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
             content_preview: file.content.substring(0, 500) + (file.content.length > 500 ? "..." : ""),
             why_relevant: `This file has a ${(file.relevanceScore * 100).toFixed(1)}% relevance score based on keyword matching and content analysis.`
           })),
-          relevant_symbols: include_symbols ? searchResults.symbols.slice(0, Math.floor(maxResults / 2)).map(symbol => ({
+          relevant_symbols: searchResults.symbols.slice(0, Math.floor(maxResults / 2)).map(symbol => ({
             name: symbol.name,
             type: symbol.type,
             location: symbol.location,
             description: symbol.description,
             why_relevant: `This ${symbol.type.toLowerCase()} appears to be related to your search query.`
-          })) : [],
+          })),
           relevant_apis: searchResults.apis.slice(0, Math.floor(maxResults / 3)).map(api => ({
             path: api.path,
             method: api.method,
@@ -122,10 +116,10 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
           methods_used: [
             "Intelligent keyword extraction",
             "Symbol analysis",
-            include_ripgrep ? "Ripgrep text search" : null,
+            "Ripgrep text search",
             "Relevance scoring",
             "Context analysis"
-          ].filter(Boolean),
+          ],
           confidence: searchResults.files.length > 0 ? "high" : searchResults.symbols.length > 0 ? "medium" : "low"
         },
         recommendations: [
