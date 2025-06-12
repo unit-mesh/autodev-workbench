@@ -223,46 +223,4 @@ export class GitHubService {
       throw new Error(`Failed to create issue: ${error.message}`);
     }
   }
-
-  /**
-   * Get comments for a GitHub issue
-   * @param owner Repository owner
-   * @param repo Repository name
-   * @param issueNumber Issue number
-   * @returns Array of comments
-   */
-  async getIssueComments(
-    owner: string,
-    repo: string,
-    issueNumber: number
-  ): Promise<Array<{
-    id: number;
-    body: string;
-    user: { login: string; id: number } | null;
-    created_at: string;
-    updated_at: string;
-    html_url: string;
-  }>> {
-    try {
-      const { data } = await this.octokit.issues.listComments({
-        owner,
-        repo,
-        issue_number: issueNumber,
-      });
-
-      return data.map(comment => ({
-        id: comment.id,
-        body: comment.body || '',
-        user: comment.user ? {
-          login: comment.user.login,
-          id: comment.user.id,
-        } : null,
-        created_at: comment.created_at,
-        updated_at: comment.updated_at,
-        html_url: comment.html_url,
-      }));
-    } catch (error: any) {
-      throw new Error(`Failed to fetch comments for issue #${issueNumber}: ${error.message}`);
-    }
-  }
 }

@@ -1,4 +1,4 @@
-import { PlatformConfig, PlatformIssue, PlatformType } from "../services/platform";
+import { PlatformConfig, PlatformType } from "../services/platform";
 export type {
   PlatformRepository,
   PlatformComment,
@@ -8,13 +8,6 @@ export type {
   IssueState,
   IPlatformService
 } from '../services/platform/interfaces/IPlatformService';
-
-// Legacy GitHub-specific types (for backward compatibility)
-export interface GitHubConfig {
-  token: string;
-  owner: string;
-  repo: string;
-}
 
 export interface GitHubIssue {
   id: number;
@@ -88,7 +81,6 @@ export interface GitHubAgentImplementation {
   version: string;
   githubToken?: string;
   workspacePath?: string;
-  // Platform-agnostic configuration
   platformType?: PlatformType;
   platformConfig?: PlatformConfig;
 }
