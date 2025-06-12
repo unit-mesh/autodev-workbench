@@ -2,169 +2,147 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { CodebaseAnalysis, FileInfo } from "./context-analyzer.type";
 import { Stats } from "node:fs";
+import { listFiles } from "@autodev/worker-core";
 
 export interface ScanConfig {
-  excludeDirs: string[];
-  codeExtensions: string[];
-  maxDepth?: number;
+	excludeDirs: string[];
+	codeExtensions: string[];
+	maxDepth?: number;
 }
 
 export class CodebaseScanner {
-  private static readonly DEFAULT_CONFIG: ScanConfig = {
-    excludeDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'],
-    codeExtensions: ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h']
-  };
+	private static readonly DEFAULT_CONFIG: ScanConfig = {
+		excludeDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'],
+		codeExtensions: ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h']
+	};
 
-  private config: ScanConfig;
+	private config: ScanConfig;
 
-  constructor(config?: Partial<ScanConfig>) {
-    this.config = { ...CodebaseScanner.DEFAULT_CONFIG, ...config };
-  }
+	constructor(config?: Partial<ScanConfig>) {
+		this.config = { ...CodebaseScanner.DEFAULT_CONFIG, ...config };
+	}
 
-  async scanWorkspace(workspacePath: string, maxDepth: number = 2): Promise<CodebaseAnalysis> {
-    const fileStats = {
-      total_files: 0,
-      total_size: 0,
-      by_extension: {} as Record<string, { count: number; size: number }>,
-      by_directory: {} as Record<string, { count: number; size: number }>,
-      largest_files: [] as FileInfo[]
-    };
+	async scanWorkspace(workspacePath: string, maxDepth: number = 2): Promise<CodebaseAnalysis> {
+		const fileStats = {
+			total_files: 0,
+			total_size: 0,
+			by_extension: {} as Record<string, { count: number; size: number }>,
+			by_directory: {} as Record<string, { count: number; size: number }>,
+			largest_files: [] as FileInfo[]
+		};
 
-    const allFiles: FileInfo[] = [];
+		const allFiles: FileInfo[] = [];
+		const [filePaths] = await listFiles(workspacePath, true, 10000);
+		const fileOnlyPaths = filePaths.filter(filePath => !filePath.endsWith('/'));
 
-    await this.scanDirectory(workspacePath, workspacePath, fileStats, allFiles, maxDepth);
+		for (const filePath of fileOnlyPaths) {
+			try {
+				const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(workspacePath, filePath);
+				const stats = await fs.stat(absolutePath);
 
-    fileStats.largest_files = allFiles
-      .sort((a, b) => b.size - a.size)
-      .slice(0, 10);
+				if (stats.isFile()) {
+					const relativePath = path.relative(workspacePath, absolutePath);
+					const fileName = path.basename(filePath);
 
-    const codeFiles = allFiles.filter(f => this.config.codeExtensions.includes(f.extension));
+					if (this.shouldExcludeFile(relativePath)) {
+						continue;
+					}
 
-    return {
-      ...fileStats,
-      code_files: codeFiles.length,
-      code_ratio: fileStats.total_files > 0 ? Math.round((codeFiles.length / fileStats.total_files) * 100) : 0,
-      average_file_size: fileStats.total_files > 0 ? Math.round(fileStats.total_size / fileStats.total_files) : 0,
-      most_common_extensions: Object.entries(fileStats.by_extension)
-        .sort(([, a], [, b]) => b.count - a.count)
-        .slice(0, 10)
-    };
-  }
+					this.processFile(fileName, relativePath, stats, fileStats, allFiles);
+				}
+			} catch (error) {
+				// Skip files that can't be accessed
+				console.warn(`Warning: Cannot access file ${filePath}: ${error}`);
+				continue;
+			}
+		}
 
-  private async scanDirectory(
-    dirPath: string,
-    workspacePath: string,
-    fileStats: any,
-    allFiles: FileInfo[],
-    maxDepth: number,
-    currentDepth: number = 0
-  ): Promise<void> {
-    if (currentDepth > maxDepth) return;
+		fileStats.largest_files = allFiles
+			.sort((a, b) => b.size - a.size)
+			.slice(0, 10);
 
-    try {
-      const entries = await fs.readdir(dirPath);
+		const codeFiles = allFiles.filter(f => this.config.codeExtensions.includes(f.extension));
 
-      for (const entry of entries) {
-        const entryPath = path.join(dirPath, entry);
-        const relativePath = path.relative(workspacePath, entryPath);
+		return {
+			...fileStats,
+			code_files: codeFiles.length,
+			code_ratio: fileStats.total_files > 0 ? Math.round((codeFiles.length / fileStats.total_files) * 100) : 0,
+			average_file_size: fileStats.total_files > 0 ? Math.round(fileStats.total_size / fileStats.total_files) : 0,
+			most_common_extensions: Object.entries(fileStats.by_extension)
+				.sort(([, a], [, b]) => b.count - a.count)
+				.slice(0, 10)
+		};
+	}
 
-        if (this.shouldExclude(relativePath)) continue;
+	private shouldExcludeFile(relativePath: string): boolean {
+		return this.config.excludeDirs.some(exclude => relativePath.includes(exclude));
+	}
 
-        const stats = await fs.stat(entryPath);
+	private processFile(
+		entry: string,
+		relativePath: string,
+		stats: Stats,
+		fileStats: any,
+		allFiles: FileInfo[]
+	): void {
+		fileStats.total_files++;
+		fileStats.total_size += stats.size;
 
-        if (stats.isDirectory()) {
-          await this.scanDirectory(entryPath, workspacePath, fileStats, allFiles, maxDepth, currentDepth + 1);
-        } else if (stats.isFile()) {
-          this.processFile(entry, relativePath, stats, fileStats, allFiles);
-        }
-      }
-    } catch (error) {
-      console.warn(`Warning: Cannot scan directory ${dirPath}: ${error}`);
-    }
-  }
+		const ext = path.extname(entry).toLowerCase() || 'no-extension';
+		if (!fileStats.by_extension[ext]) {
+			fileStats.by_extension[ext] = { count: 0, size: 0 };
+		}
+		fileStats.by_extension[ext].count++;
+		fileStats.by_extension[ext].size += stats.size;
 
-  private shouldExclude(relativePath: string): boolean {
-    return this.config.excludeDirs.some(exclude => relativePath.includes(exclude));
-  }
+		const dir = path.dirname(relativePath) || '.';
+		if (!fileStats.by_directory[dir]) {
+			fileStats.by_directory[dir] = { count: 0, size: 0 };
+		}
+		fileStats.by_directory[dir].count++;
+		fileStats.by_directory[dir].size += stats.size;
 
-  private processFile(
-    entry: string,
-    relativePath: string,
-    stats: Stats,
-    fileStats: any,
-    allFiles: FileInfo[]
-  ): void {
-    fileStats.total_files++;
-    fileStats.total_size += stats.size;
+		allFiles.push({
+			path: relativePath,
+			size: stats.size,
+			extension: ext,
+			modified: stats.mtime.toISOString()
+		});
+	}
 
-    const ext = path.extname(entry).toLowerCase() || 'no-extension';
-    if (!fileStats.by_extension[ext]) {
-      fileStats.by_extension[ext] = { count: 0, size: 0 };
-    }
-    fileStats.by_extension[ext].count++;
-    fileStats.by_extension[ext].size += stats.size;
+	async getProjectStructure(workspacePath: string, maxDepth: number = 2): Promise<any> {
+		const [allPaths] = await listFiles(workspacePath, true, 5000);
 
-    const dir = path.dirname(relativePath) || '.';
-    if (!fileStats.by_directory[dir]) {
-      fileStats.by_directory[dir] = { count: 0, size: 0 };
-    }
-    fileStats.by_directory[dir].count++;
-    fileStats.by_directory[dir].size += stats.size;
+		const structure: any = {};
 
-    allFiles.push({
-      path: relativePath,
-      size: stats.size,
-      extension: ext,
-      modified: stats.mtime.toISOString()
-    });
-  }
+		for (const itemPath of allPaths) {
+			const relativePath = path.isAbsolute(itemPath) ? path.relative(workspacePath, itemPath) : itemPath;
+			const pathParts = relativePath.split(path.sep);
 
-  async getProjectStructure(workspacePath: string, maxDepth: number = 2): Promise<any> {
-    const buildStructure = async (dirPath: string, currentDepth: number = 0): Promise<any> => {
-      if (currentDepth > maxDepth) return null;
+			// Respect maxDepth
+			if (pathParts.length > maxDepth + 1) {
+				continue;
+			}
 
-      try {
-        const entries = await fs.readdir(dirPath);
-        const result: any = {};
+			let current = structure;
 
-        for (const entry of entries) {
-          if (entry.startsWith('.')) continue;
+			for (let i = 0; i < pathParts.length; i++) {
+				const part = pathParts[i];
+				if (!part) continue;
 
-          const entryPath = path.join(dirPath, entry);
-          const stats = await fs.stat(entryPath);
+				if (i === pathParts.length - 1) {
+					if (itemPath.endsWith('/') || allPaths.some(p => p.startsWith(itemPath + '/'))) {
+						current[part] = current[part] || {};
+					} else {
+						current[part] = 'file';
+					}
+				} else {
+					current[part] = current[part] || {};
+					current = current[part];
+				}
+			}
+		}
 
-          if (stats.isDirectory()) {
-            const subStructure = await buildStructure(entryPath, currentDepth + 1);
-            if (subStructure) {
-              result[entry] = subStructure;
-            }
-          } else {
-            result[entry] = 'file';
-          }
-        }
-
-        return result;
-      } catch (error) {
-        return null;
-      }
-    };
-
-    return buildStructure(workspacePath);
-  }
-
-  getCodeFileCount(analysis: CodebaseAnalysis): number {
-    return analysis.code_files;
-  }
-
-  getCodeRatio(analysis: CodebaseAnalysis): number {
-    return analysis.code_ratio;
-  }
-
-  getLargestFiles(analysis: CodebaseAnalysis, count: number = 5): FileInfo[] {
-    return analysis.largest_files.slice(0, count);
-  }
-
-  getMostCommonExtensions(analysis: CodebaseAnalysis, count: number = 5): Array<[string, { count: number; size: number }]> {
-    return analysis.most_common_extensions.slice(0, count);
-  }
+		return structure;
+	}
 }
