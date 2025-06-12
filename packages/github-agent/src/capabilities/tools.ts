@@ -66,6 +66,11 @@ import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
 import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
 import { installWebSearchTool } from "./tools/web-search";
 
+// Enhanced Tools - New Implementations
+import { installSemanticCodeSearchTool } from "./tools/semantic-code-search";
+import { installIntelligentAgentTool } from "./tools/intelligent-agent";
+import { installProjectMemoryTool } from "./tools/project-memory";
+
 // Tool Categories
 export const FileSystemTools = [
   installListDirectoryTool,
@@ -82,6 +87,7 @@ export const CodeAnalysisTools = [
   installAnalysisBasicContextTool,
   installSearchKeywordsTool,
   installGrepSearchTool,
+  installSemanticCodeSearchTool,
 ] as const;
 
 export const TerminalTools = [
@@ -114,6 +120,13 @@ export const WebTools = [
   installWebSearchTool,
 ] as const;
 
+// New Enhanced Tools Category
+export const EnhancedIntelligenceTools = [
+  installIntelligentAgentTool,
+  installProjectMemoryTool,
+  installSemanticCodeSearchTool,
+] as const;
+
 // Tool Collections
 export const CoreTools = [
   ...FileSystemTools,
@@ -125,6 +138,7 @@ export const CoreTools = [
 export const AdvancedTools = [
   ...TerminalInteractionTools,
   ...ProcessManagementTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 export const IntegrationTools = [
@@ -137,12 +151,14 @@ export const AutoDevRemoteAgentTools = [
   ...CoreTools,
   ...GitHubTools.filter(tool => tool !== installGitHubAddIssueCommentTool),
   ...WebTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 // All Tools (including comment tool for full agent)
 export const AllTools = [
   ...CoreTools,
   ...IntegrationTools,
+  ...EnhancedIntelligenceTools,
 ] as const;
 
 // Enhanced Tools (with advanced capabilities)
