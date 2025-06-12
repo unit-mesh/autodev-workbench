@@ -1,69 +1,82 @@
 // File System Tools
-import {installListDirectoryTool} from "./tools/fs-list-directory";
-import {installReadFileTool} from "./tools/fs-read-file";
-import {installWriteFileTool} from "./tools/fs-write-file";
-import {installDeleteFileTool} from "./tools/fs-delete-file";
+import { installListDirectoryTool } from "./tools/fs-list-directory";
+import { installReadFileTool } from "./tools/fs-read-file";
+import { installWriteFileTool } from "./tools/fs-write-file";
+import { installDeleteFileTool } from "./tools/fs-delete-file";
 
 // Terminal Tools
-import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
+import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
 
-// context engine
-import {installAnalysisBasicContextTool} from "./tools/context-analyzer";
-import {installGrepSearchTool} from "./tools/code-search-regex";
-import {installSearchKeywordsTool} from "./tools/keyword-search";
+// Code Analysis Tools
+import { installAnalysisBasicContextTool } from "./tools/context-analyzer";
+import { installGrepSearchTool } from "./tools/code-search-regex";
+import { installSearchKeywordsTool } from "./tools/keyword-search";
 
-// git related
-import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-issue";
-import {installGitHubGetIssueWithAnalysisTool} from "./tools/github-issue-get";
-import {installGitHubAddIssueCommentTool} from "./tools/github-issue-comment";
-import {installGitHubListRepositoryIssuesTool} from "./tools/github-list-repository-issues";
-import {installGitHubFindCodeByDescriptionTool} from "./tools/github-find-code-by-description";
-import {installGitHubCreateNewIssueTool} from "./tools/github-issue-create";
+// GitHub Tools
+import { installGitHubAnalyzeIssueTool } from "./tools/github-analysis-issue";
+import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-issue-get";
+import { installGitHubAddIssueCommentTool } from "./tools/github-issue-comment";
+import { installGitHubListRepositoryIssuesTool } from "./tools/github-list-repository-issues";
+import { installGitHubFindCodeByDescriptionTool } from "./tools/github-find-code-by-description";
+import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
 
-// web search
-import {installExtractWebpageAsMarkdownTool} from "./tools/web-fetch-content";
-import {installWebSearchTool} from "./tools/web-search";
+// Web Tools
+import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
+import { installWebSearchTool } from "./tools/web-search";
 
-// File System Tools
+// Tool Categories
 export const FileSystemTools = [
-    installListDirectoryTool,
-    installReadFileTool,
-    installWriteFileTool,
-    installDeleteFileTool,
+  installListDirectoryTool,
+  installReadFileTool,
+  installWriteFileTool,
+  installDeleteFileTool,
 ] as const;
 
 export const CodeAnalysisTools = [
-    installAnalysisBasicContextTool,
-    installSearchKeywordsTool,
-    installGrepSearchTool,
+  installAnalysisBasicContextTool,
+  installSearchKeywordsTool,
+  installGrepSearchTool,
 ] as const;
 
-// Terminal Tools
 export const TerminalTools = [
-    installRunTerminalCommandTool,
+  installRunTerminalCommandTool,
 ] as const;
 
-// GitHub Tools
 export const GitHubTools = [
-    installGitHubGetIssueWithAnalysisTool,
-    installGitHubCreateNewIssueTool,
-    installGitHubAddIssueCommentTool,
-    installGitHubListRepositoryIssuesTool,
-    installGitHubFindCodeByDescriptionTool,
-    installGitHubAnalyzeIssueTool,
+  installGitHubGetIssueWithAnalysisTool,
+  installGitHubCreateNewIssueTool,
+  installGitHubAddIssueCommentTool,
+  installGitHubListRepositoryIssuesTool,
+  installGitHubFindCodeByDescriptionTool,
+  installGitHubAnalyzeIssueTool,
 ] as const;
 
-// Web Tools
 export const WebTools = [
-    installExtractWebpageAsMarkdownTool,
-    installWebSearchTool,
+  installExtractWebpageAsMarkdownTool,
+  installWebSearchTool,
 ] as const;
 
-// All Tools
+// Tool Collections
+export const CoreTools = [
+  ...FileSystemTools,
+  ...CodeAnalysisTools,
+  ...TerminalTools,
+] as const;
+
+export const IntegrationTools = [
+  ...GitHubTools,
+  ...WebTools,
+] as const;
+
+// All Tools (excluding comment tool for remote agent)
 export const AutoDevRemoteAgentTools = [
-    ...FileSystemTools,
-    ...CodeAnalysisTools,
-    ...TerminalTools,
-    ...GitHubTools.filter(it => it.name !== installGitHubAddIssueCommentTool.name),
-    ...WebTools,
+  ...CoreTools,
+  ...GitHubTools.filter(tool => tool !== installGitHubAddIssueCommentTool),
+  ...WebTools,
+] as const;
+
+// All Tools (including comment tool for full agent)
+export const AllTools = [
+  ...CoreTools,
+  ...IntegrationTools,
 ] as const;
