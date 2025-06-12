@@ -9,7 +9,6 @@ export type * from "./types/index";
 // AI Agent System
 // =============================================================================
 export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
-export { PlanDrivenAgent, type PlanDrivenConfig, type PlanDrivenResponse } from "./agent/plan-driven-agent";
 export { PromptBuilder } from "./agent/prompt-builder";
 export { FunctionParser } from "./agent/function-parser";
 export { ToolExecutor, type ToolResult, type ToolExecutionContext } from "./agent/tool-executor";
