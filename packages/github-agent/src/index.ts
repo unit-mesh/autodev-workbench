@@ -62,7 +62,7 @@ export { installGitHubListRepositoryIssuesTool } from "./capabilities/tools/gith
 export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/github-issue-get";
 export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
-export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-search-smart";
+export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-find-code-by-description";
 export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-issue";
 
 // =============================================================================

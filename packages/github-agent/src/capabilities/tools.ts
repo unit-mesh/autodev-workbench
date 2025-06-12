@@ -17,7 +17,7 @@ import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-issue";
 import {installGitHubGetIssueWithAnalysisTool} from "./tools/github-issue-get";
 import {installGitHubAddIssueCommentTool} from "./tools/github-issue-comment";
 import {installGitHubListRepositoryIssuesTool} from "./tools/github-list-repository-issues";
-import {installGitHubFindCodeByDescriptionTool} from "./tools/github-search-smart";
+import {installGitHubFindCodeByDescriptionTool} from "./tools/github-find-code-by-description";
 import {installGitHubCreateNewIssueTool} from "./tools/github-issue-create";
 
 // web search
