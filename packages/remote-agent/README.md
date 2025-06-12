@@ -1,10 +1,10 @@
-# AutoDev GitHub Remote AI Agent
+# AutoDev Remote AI Agent
 
 A comprehensive Model Context Protocol (MCP) server that provides advanced GitHub issue analysis capabilities with intelligent code context integration. This server can fetch GitHub issues, analyze them with AI-powered insights, and provide relevant code context from your local workspace using the AutoDev ecosystem.
 
 ## ✨ Key Features
 
-- **🔍 GitHub Issues Integration**: Fetch, analyze, and interact with GitHub issues from any repository
+- **🔍 GitHub Integration**: Fetch, analyze, and interact with GitHub issues from any repository
 - **🧠 AI-Powered Analysis**: Uses LLM to intelligently extract keywords, generate insights, and create analysis reports
 - **🌐 Web Content Processing**: Automatically fetch and convert web URLs to markdown using Puppeteer, Cheerio, and TurndownService
 - **📊 Code Context Analysis**: Analyze your local codebase to find relevant files, symbols, and APIs using advanced search strategies
@@ -98,166 +98,42 @@ autodev-analyze-issue --owner microsoft --repo vscode --issue 12345
 
 ### Available Tools
 
-The GitHub Agent provides seven comprehensive MCP tools:
+The Remote Agent provides the following comprehensive MCP tools:
 
-#### 1. `github_get_issues`
+#### GitHub Integration Tools
+- **`github_get_issues`**: Fetch GitHub issues with advanced filtering options
+- **`github_analyze_issue`**: Analyze issues with AI-powered insights and URL content fetching
+- **`github_get_issue_context`**: Get detailed context for issues including related code
+- **`github_smart_search`**: Intelligently search for code related to any query
+- **`github_upload_analysis`**: Analyze issues and upload results as comments
+- **`github_issue_create`**: Create new GitHub issues
+- **`github_issue_comment`**: Add comments to GitHub issues
 
-Fetch GitHub issues from a repository with advanced filtering options.
+#### File System Tools
+- **`read-file`**: Read file contents with encoding support
+- **`write-file`**: Create or update files with multiple modes (create/append/overwrite)
+- **`list-directory`**: List directory contents with filtering options
+- **`delete-file`**: Delete files from the filesystem
+- **`str-replace-editor`**: Precise code editing with pattern matching
 
-**Parameters:**
-- `owner` (string): Repository owner (username or organization)
-- `repo` (string): Repository name
-- `state` (optional): Issue state - "open", "closed", or "all" (default: "open")
-- `labels` (optional): Comma-separated list of label names to filter by
-- `assignee` (optional): Username of the assignee to filter by
-- `since` (optional): Only issues updated after this time (ISO 8601 format)
-- `per_page` (optional): Number of issues per page (1-100, default: 30)
-- `page` (optional): Page number to retrieve (default: 1)
+#### Code Analysis Tools
+- **`analyze-basic-context`**: Analyze project structure and context
+- **`search-keywords`**: Search for keywords across files
+- **`code-search-regex`**: Search code using regular expressions
+- **`semantic-code-search`**: AI-powered semantic code search
 
-**Example:**
-```json
-{
-  "owner": "microsoft",
-  "repo": "vscode",
-  "state": "open",
-  "labels": "bug,help-wanted",
-  "per_page": 10
-}
-```
+#### Terminal & Process Tools
+- **`run-terminal-command`**: Execute terminal commands with output capture
+- **`get-terminal-output`**: Get output from previously executed commands
+- **`launch-process`**: Start background processes with management options
+- **`list-processes`**: List running processes
+- **`read-process`**: Get output from running processes
+- **`kill-process`**: Terminate running processes
 
-#### 2. `github_analyze_issue`
-
-Analyze a specific GitHub issue with AI-powered insights and automatic URL content fetching.
-
-**Parameters:**
-- `owner` (string): Repository owner
-- `repo` (string): Repository name
-- `issue_number` (number): Issue number to analyze
-- `workspace_path` (optional): Path to workspace (defaults to current directory)
-- `fetch_urls` (optional): Automatically fetch content from URLs in issue (default: true)
-- `url_timeout` (optional): Timeout for URL fetching in milliseconds (default: 10000)
-
-**Example:**
-```json
-{
-  "owner": "microsoft",
-  "repo": "vscode",
-  "issue_number": 12345,
-  "workspace_path": "/path/to/your/project",
-  "fetch_urls": true
-}
-```
-
-#### 3. `github_get_issue_context`
-
-Get detailed context for a GitHub issue including related code and suggestions.
-
-**Parameters:**
-- `owner` (string): Repository owner
-- `repo` (string): Repository name
-- `issue_number` (number): Issue number
-- `workspace_path` (optional): Path to workspace (defaults to current directory)
-- `include_file_content` (optional): Include full file content (default: false)
-- `max_files` (optional): Maximum number of files to return (1-20, default: 5)
-
-**Example:**
-```json
-{
-  "owner": "microsoft",
-  "repo": "vscode",
-  "issue_number": 12345,
-  "include_file_content": true,
-  "max_files": 10
-}
-```
-
-#### 4. `github_smart_search`
-
-Intelligently search for code related to any query using AI-generated keywords and multiple search strategies.
-
-**Parameters:**
-- `owner` (string): Repository owner
-- `repo` (string): Repository name
-- `query` (string): Search query - can be an issue description, error message, or feature request
-- `workspace_path` (optional): Path to workspace (defaults to current directory)
-- `search_depth` (optional): "shallow", "medium", or "deep" (default: "medium")
-- `include_symbols` (optional): Include symbol analysis (default: true)
-- `include_ripgrep` (optional): Use ripgrep for text search (default: true)
-
-**Example:**
-```json
-{
-  "owner": "microsoft",
-  "repo": "vscode",
-  "query": "authentication error when connecting to remote server",
-  "search_depth": "deep",
-  "include_symbols": true
-}
-```
-
-#### 5. `github_upload_analysis`
-
-Analyze a GitHub issue and automatically upload the analysis results as a comment to the issue.
-
-**Parameters:**
-- `owner` (string): Repository owner
-- `repo` (string): Repository name
-- `issue_number` (number): Issue number to analyze and upload results to
-- `workspace_path` (optional): Path to workspace (defaults to current directory)
-- `language` (optional): Language for the report - "en" or "zh" (default: "en")
-- `include_file_content` (optional): Include file content in the report (default: false)
-- `max_files` (optional): Maximum number of files to include (default: 10)
-
-**Example:**
-```json
-{
-  "owner": "microsoft",
-  "repo": "vscode",
-  "issue_number": 12345,
-  "language": "zh",
-  "include_file_content": true
-}
-```
-
-#### 6. `github_fetch_url_content`
-
-Fetch and convert web page content to markdown for analysis, with support for extracting URLs from GitHub issues.
-
-**Parameters:**
-- `url` (string): URL to fetch content from
-- `timeout` (optional): Request timeout in milliseconds (default: 10000)
-- `extract_urls` (optional): Extract URLs from GitHub issue content (default: false)
-- `issue_content` (optional): GitHub issue content to extract URLs from
-
-**Example:**
-```json
-{
-  "url": "https://example.com/documentation",
-  "timeout": 15000
-}
-```
-
-#### 7. `web-search`
-
-Search the web for information when the LLM is uncertain about specific knowledge. Supports Google Custom Search and Bing Search APIs with automatic fallback.
-
-**Parameters:**
-- `query` (string): Search query to find information
-- `num_results` (optional): Number of search results to return (1-10, default: 5)
-- `search_engine` (optional): Search engine to use - "google", "bing", or "auto" (default: "auto")
-- `language` (optional): Language for search results (e.g., "en", "zh-CN", default: "en")
-- `safe_search` (optional): Enable safe search filtering (default: true)
-
-**Example:**
-```json
-{
-  "query": "TypeScript 5.0 new features",
-  "num_results": 8,
-  "search_engine": "google",
-  "language": "en",
-  "safe_search": true
-}
-```
+#### Web Tools
+- **`web-fetch-content`**: Fetch and convert web content to markdown
+- **`web-search`**: Search the web using Google or Bing APIs
+- **`open-browser`**: Open URLs in the system browser
 
 ## 🚀 Advanced Capabilities
 
@@ -390,12 +266,27 @@ Add to your Claude Desktop MCP configuration:
 - **Intelligent cache invalidation**: Based on issue updates and workspace changes
 - **Optimized search algorithms**: Efficient file filtering and content analysis
 
+## 📊 Comparison with Other AI Agents
+
+AutoDev Remote Agent has been designed with a comprehensive set of tools that compare favorably with other AI coding agents:
+
+| Feature Category | AutoDev Remote Agent | Other AI Agents |
+|-----------------|----------------------|----------------|
+| **File Operations** | Complete suite (read, write, list, delete) | Often limited to basic operations |
+| **Terminal Execution** | Advanced command execution with output analysis | Basic command execution |
+| **Process Management** | Full process lifecycle management | Limited or no process management |
+| **Code Search** | Multiple search strategies (keywords, regex, semantic) | Basic search capabilities |
+| **GitHub Integration** | Complete GitHub workflow tools | Limited or no GitHub integration |
+| **Web Capabilities** | Content fetching, web search, browser control | Limited web interaction |
+
+With **23 specialized tools**, AutoDev Remote Agent provides one of the most comprehensive tool sets among AI coding agents, particularly excelling in GitHub integration and process management.
+
 ## Development
 
 ### Building from Source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/unit-mesh/autodev
 cd packages/remote-agent
 pnpm install
 pnpm build
@@ -407,94 +298,17 @@ pnpm build
 pnpm test
 ```
 
-### Development Mode
-
-```bash
-pnpm dev
-```
-
-## 🔧 Available Binaries
-
-The package provides two executable binaries:
-
-### `autodev-github-agent`
-Main MCP server for GitHub integration. Supports both stdio and HTTP modes.
-
-```bash
-# Start as MCP server (stdio)
-autodev-remote-agent
-
-# Start as HTTP server
-autodev-remote-agent --port 3000
-```
-
-### `autodev-analyze-issue`
-Standalone CLI tool for analyzing GitHub issues with code context.
-
-```bash
-# Analyze a specific issue
-autodev-analyze-issue --owner microsoft --repo vscode --issue 12345
-
-# Analyze with custom workspace
-autodev-analyze-issue --owner microsoft --repo vscode --issue 12345 --workspace /path/to/project
-```
-
-## 📦 Dependencies
-
-### Core Dependencies
-- `@autodev/context-worker`: Advanced code analysis and context building
-- `@autodev/worker-core`: Core worker functionality and utilities
-- `@modelcontextprotocol/sdk`: MCP protocol implementation
-- `@octokit/rest`: GitHub API client
-- `express`: HTTP server for MCP over HTTP
-
-### AI & Analysis
-- `@ai-sdk/openai`: AI SDK for LLM integration
-- `ai`: AI utilities and providers
-- `zod`: Schema validation and type safety
-
-### Web Content Processing
-- `cheerio`: Server-side HTML parsing and manipulation
-- `turndown`: HTML to Markdown conversion
-- `@types/cheerio`: TypeScript definitions for Cheerio
-
-### Search & Performance
-- `@vscode/ripgrep`: Fast text search capabilities
-- `dotenv`: Environment variable management
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Contributing
+### Contributing
 
 Contributions are welcome! Please read the contributing guidelines and submit pull requests to the main repository.
 
 ## 📚 Additional Resources
 
-### Configuration Examples
-- See `.env.example` for environment variable templates
-- Check `USAGE_EXAMPLES.md` for detailed usage scenarios
-- Review `INTEGRATION_SUMMARY.md` for technical implementation details
+- [Full Tool Comparison Analysis](/docs/TOOL_COMPARISON_ANALYSIS.md)
+- [Claude Code Tools Design Specs](/docs/CLAUDE-CODE-TOOLS-DESIGN-SPECS.md)
+- [GitHub Agent Tools Design Specs](/docs/GITHUB-AGENT-TOOLS-DESIGN-SPECS.md)
+- [Tool Optimization Plan](/docs/TOOL-OPTIMIZATION-PLAN.md)
 
-### Troubleshooting
-- Ensure GitHub token has appropriate permissions (repo, issues)
-- Verify LLM configuration for AI-powered features
-- Check workspace path accessibility for code analysis
-- Monitor timeout settings for web content fetching
-- Configure web search API keys for search functionality (Google Custom Search or Bing Search)
-- Check API quota limits if search requests fail
+## 📄 License
 
-## 🆘 Support
-
-For issues and questions:
-- Create an issue in the GitHub repository
-- Check the documentation and examples
-- Review existing issues for solutions
-- Consult the AutoDev ecosystem documentation
-
-## 🔗 Related Projects
-
-- [`@autodev/context-worker`](../context-worker): Core code analysis engine
-- [`@autodev/worker-core`](../worker-core): Shared utilities and functionality
-- [AutoDev Web Interface](../web): Web-based interface for the AutoDev ecosystem
+This project is licensed under the MIT License - see the LICENSE file for details.
