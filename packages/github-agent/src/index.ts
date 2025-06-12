@@ -23,10 +23,10 @@ export * from "./agent/tool-definition";
 export { ContextAnalyzer, FileLoader } from "./services/core";
 export { GitHubService } from "./services/github";
 export {
-  LLMService, 
-  configureLLMProvider, 
-  hasLLMProvider, 
-  getLLMProviderStatus, 
+  LLMService,
+  configureLLMProvider,
+  hasLLMProvider,
+  getLLMProviderStatus,
   type LLMProviderConfig
 } from "./services/llm";
 export { AnalysisReportGenerator } from "./services/reporting";
@@ -63,7 +63,7 @@ export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/gith
 export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-search-smart";
-export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-upload";
+export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-issue";
 
 // =============================================================================
 // File System Tools
@@ -78,7 +78,7 @@ export { installDeleteFileTool } from "./capabilities/tools/fs-delete-file";
 // =============================================================================
 export { installAnalysisBasiContextTool } from "./capabilities/tools/planning-context-analyzer";
 export { installGrepSearchTool } from "./capabilities/tools/code-search-regex";
-export { installKeywordSearchTool } from "./capabilities/tools/keyword-search";
+export { installSearchKeywordsTool } from "./capabilities/tools/keyword-search";
 
 // =============================================================================
 // Terminal Tools

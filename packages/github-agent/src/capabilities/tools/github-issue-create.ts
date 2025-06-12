@@ -1,6 +1,6 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github/github-service";
+import { GitHubService } from "../../services/github";
 
 export const installGitHubCreateNewIssueTool: ToolLike = (installer) => {
   installer("github-create-new-issue", "Create a new GitHub issue with title, description, labels, assignees, and milestone assignment", {
@@ -11,17 +11,17 @@ export const installGitHubCreateNewIssueTool: ToolLike = (installer) => {
     labels: z.array(z.string()).optional().describe("Array of label names to add to the issue"),
     assignees: z.array(z.string()).optional().describe("Array of usernames to assign to the issue"),
     milestone: z.number().optional().describe("Milestone number to associate with the issue"),
-  }, async ({ 
-    owner, 
-    repo, 
+  }, async ({
+    owner,
+    repo,
     title,
     body,
     labels,
     assignees,
     milestone
-  }: { 
-    owner: string; 
-    repo: string; 
+  }: {
+    owner: string;
+    repo: string;
     title: string;
     body?: string;
     labels?: string[];
@@ -42,7 +42,7 @@ export const installGitHubCreateNewIssueTool: ToolLike = (installer) => {
       }
 
       const githubService = new GitHubService(githubToken);
-      
+
       const issueData = await githubService.createIssue(owner, repo, {
         title,
         body,

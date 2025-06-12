@@ -10,10 +10,10 @@ import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
 // context engine
 import {installAnalysisBasiContextTool} from "./tools/planning-context-analyzer";
 import {installGrepSearchTool} from "./tools/code-search-regex";
-import {installKeywordSearchTool} from "./tools/keyword-search";
+import {installSearchKeywordsTool} from "./tools/keyword-search";
 
 // git related
-import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-upload";
+import {installGitHubAnalyzeIssueTool} from "./tools/github-analysis-issue";
 import {installGitHubGetIssueWithAnalysisTool} from "./tools/github-issue-get";
 import {installGitHubAddIssueCommentTool} from "./tools/github-issue-comment";
 import {installGitHubListRepositoryIssuesTool} from "./tools/github-list-repository-issues";
@@ -34,7 +34,7 @@ export const FileSystemTools = [
 
 export const CodeAnalysisTools = [
     installAnalysisBasiContextTool,
-    installKeywordSearchTool,
+    installSearchKeywordsTool,
     installGrepSearchTool,
 ] as const;
 
