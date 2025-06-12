@@ -2,7 +2,7 @@
 
 /**
  * Fix Dependencies Script
- * Resolves module dependency issues in the github-agent package
+ * Resolves module dependency issues in the remote-agent package
  */
 
 const fs = require('fs');
@@ -55,17 +55,17 @@ function writeJsonFile(filePath, data) {
  */
 function checkDependencies() {
   console.log('\n📦 Checking package dependencies...');
-  
+
   const packageJsonPath = path.join(__dirname, '..', 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
-  
+
   if (!packageJson) {
     console.error('❌ Could not read package.json');
     return false;
   }
-  
+
   console.log(`📋 Package: ${packageJson.name}@${packageJson.version}`);
-  
+
   // Check critical dependencies
   const criticalDeps = [
     '@autodev/context-worker',
@@ -73,10 +73,10 @@ function checkDependencies() {
     'ai',
     '@octokit/rest'
   ];
-  
+
   const missing = [];
   const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-  
+
   criticalDeps.forEach(dep => {
     if (!dependencies[dep]) {
       missing.push(dep);
@@ -85,12 +85,12 @@ function checkDependencies() {
       console.log(`✅ Found: ${dep}@${dependencies[dep]}`);
     }
   });
-  
+
   if (missing.length > 0) {
     console.log(`\n⚠️  Missing ${missing.length} critical dependencies`);
     return false;
   }
-  
+
   console.log('✅ All critical dependencies found');
   return true;
 }
@@ -100,14 +100,14 @@ function checkDependencies() {
  */
 function checkBuiltPackages() {
   console.log('\n🏗️  Checking built packages...');
-  
+
   const packages = [
     { name: 'context-worker', path: '../context-worker/dist' },
     { name: 'worker-core', path: '../worker-core/dist' }
   ];
-  
+
   let allBuilt = true;
-  
+
   packages.forEach(pkg => {
     const distPath = path.join(__dirname, '..', pkg.path);
     if (fileExists(distPath)) {
@@ -117,7 +117,7 @@ function checkBuiltPackages() {
       allBuilt = false;
     }
   });
-  
+
   return allBuilt;
 }
 
@@ -126,22 +126,22 @@ function checkBuiltPackages() {
  */
 function buildMissingPackages() {
   console.log('\n🔨 Building missing packages...');
-  
+
   const packages = [
     { name: 'worker-core', path: '../worker-core' },
     { name: 'context-worker', path: '../context-worker' }
   ];
-  
+
   packages.forEach(pkg => {
     const pkgPath = path.join(__dirname, '..', pkg.path);
     const distPath = path.join(pkgPath, 'dist');
-    
+
     if (!fileExists(distPath)) {
       console.log(`🔨 Building ${pkg.name}...`);
       try {
-        execSync('npm run build', { 
-          cwd: pkgPath, 
-          stdio: 'inherit' 
+        execSync('npm run build', {
+          cwd: pkgPath,
+          stdio: 'inherit'
         });
         console.log(`✅ ${pkg.name} built successfully`);
       } catch (error) {
@@ -156,29 +156,29 @@ function buildMissingPackages() {
  */
 function updateRollupConfig() {
   console.log('\n⚙️  Updating rollup configuration...');
-  
+
   const rollupConfigPath = path.join(__dirname, '..', 'rollup.config.mjs');
-  
+
   if (!fileExists(rollupConfigPath)) {
     console.error('❌ rollup.config.mjs not found');
     return false;
   }
-  
+
   try {
     let config = fs.readFileSync(rollupConfigPath, 'utf8');
-    
+
     // Check if external dependencies are properly configured
     const hasContextWorkerExternals = config.includes('@autodev/context-worker/src/analyzer');
-    
+
     if (!hasContextWorkerExternals) {
       console.log('⚠️  Rollup config needs context-worker externals');
-      
+
       // Add the missing externals (this was already done in the previous edit)
       console.log('✅ Rollup config externals should be updated manually');
     } else {
       console.log('✅ Rollup config externals are properly configured');
     }
-    
+
     return true;
   } catch (error) {
     console.error('❌ Failed to update rollup config:', error.message);
@@ -191,9 +191,9 @@ function updateRollupConfig() {
  */
 function createSymlinks() {
   console.log('\n🔗 Creating development symlinks...');
-  
+
   const nodeModulesPath = path.join(__dirname, '..', 'node_modules', '@autodev');
-  
+
   // Ensure @autodev directory exists
   if (!fileExists(nodeModulesPath)) {
     try {
@@ -204,7 +204,7 @@ function createSymlinks() {
       return false;
     }
   }
-  
+
   const symlinks = [
     {
       name: 'context-worker',
@@ -217,14 +217,14 @@ function createSymlinks() {
       target: path.join(nodeModulesPath, 'worker-core')
     }
   ];
-  
+
   symlinks.forEach(link => {
     try {
       // Remove existing symlink/directory
       if (fileExists(link.target)) {
         fs.rmSync(link.target, { recursive: true, force: true });
       }
-      
+
       // Create symlink
       fs.symlinkSync(link.source, link.target, 'dir');
       console.log(`✅ Created symlink: ${link.name}`);
@@ -232,7 +232,7 @@ function createSymlinks() {
       console.error(`❌ Failed to create symlink for ${link.name}:`, error.message);
     }
   });
-  
+
   return true;
 }
 
@@ -241,11 +241,11 @@ function createSymlinks() {
  */
 function testBuild() {
   console.log('\n🧪 Testing build...');
-  
+
   try {
-    execSync('npm run build', { 
-      cwd: path.join(__dirname, '..'), 
-      stdio: 'inherit' 
+    execSync('npm run build', {
+      cwd: path.join(__dirname, '..'),
+      stdio: 'inherit'
     });
     console.log('✅ Build successful');
     return true;
@@ -260,30 +260,30 @@ function testBuild() {
  */
 function testAgentImport() {
   console.log('\n🤖 Testing agent import...');
-  
+
   try {
     const agentPath = path.join(__dirname, '..', 'dist', 'agent.js');
-    
+
     if (!fileExists(agentPath)) {
       console.error('❌ agent.js not found in dist/');
       return false;
     }
-    
+
     // Try to require the agent
     const { AIAgent } = require(agentPath);
-    
+
     if (AIAgent) {
       console.log('✅ AIAgent imported successfully');
-      
+
       // Test basic instantiation
       const agent = new AIAgent({
         workspacePath: process.cwd(),
         verbose: false
       });
-      
+
       console.log('✅ AIAgent instantiated successfully');
       console.log(`🔧 Available tools: ${agent.getAvailableTools().join(', ')}`);
-      
+
       return true;
     } else {
       console.error('❌ AIAgent not found in exports');
@@ -300,7 +300,7 @@ function testAgentImport() {
  */
 async function fixDependencies() {
   console.log('🚀 Starting dependency fix process...\n');
-  
+
   const steps = [
     { name: 'Check Dependencies', fn: checkDependencies },
     { name: 'Check Built Packages', fn: checkBuiltPackages },
@@ -310,9 +310,9 @@ async function fixDependencies() {
     { name: 'Test Build', fn: testBuild },
     { name: 'Test Agent Import', fn: testAgentImport }
   ];
-  
+
   let successCount = 0;
-  
+
   for (const step of steps) {
     console.log(`\n📋 ${step.name}...`);
     try {
@@ -327,10 +327,10 @@ async function fixDependencies() {
       console.error(`❌ ${step.name} failed:`, error.message);
     }
   }
-  
+
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Results: ${successCount}/${steps.length} steps completed successfully`);
-  
+
   if (successCount === steps.length) {
     console.log('✅ All dependencies fixed successfully!');
     console.log('\n💡 Next steps:');
@@ -344,7 +344,7 @@ async function fixDependencies() {
     console.log('   2. Verify rollup.config.mjs externals');
     console.log('   3. Ensure all packages are built');
   }
-  
+
   console.log('='.repeat(50));
 }
 

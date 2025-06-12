@@ -43,10 +43,10 @@ jobs:
         run: pnpm --filter context-worker build
 
       - name: GitHub Agent Build
-        run: pnpm --filter github-agent build
+        run: pnpm --filter remote-agent build
 
       - name: GitHub Agent Action Build
-        run: pnpm --filter github-agent-action build
+        run: pnpm --filter remote-agent-action build
 
       - name: Run Core Tests
         run: pnpm --filter worker-core vitest run
@@ -61,8 +61,8 @@ jobs:
         run: pnpm --filter context-mcp vitest run
 
       - name: Run GitHub Agent Tests
-        run: pnpm --filter github-agent test
+        run: pnpm --filter remote-agent test
 
       - name: Run GitHub Agent Action Tests
-        run: pnpm --filter github-agent-action test
+        run: pnpm --filter remote-agent-action test
         continue-on-error: true

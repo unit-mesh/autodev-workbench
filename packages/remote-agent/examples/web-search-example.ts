@@ -2,18 +2,18 @@
 
 /**
  * WebSearch Tool Usage Example
- * 
+ *
  * This example demonstrates how to use the WebSearch tool to search for information
  * when the AI model is uncertain about specific knowledge.
- * 
+ *
  * Prerequisites:
  * 1. Set up API keys in environment variables:
  *    - GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_ENGINE_ID (for Google Search)
  *    - BING_SEARCH_API_KEY (for Bing Search)
- * 
+ *
  * 2. Install dependencies:
  *    npm install
- * 
+ *
  * Usage:
  *    node examples/web-search-example.ts
  */
@@ -168,7 +168,7 @@ async function runExamples() {
   console.log('- To get actual search results, configure API keys in environment variables');
   console.log('- The tool handles errors gracefully and provides helpful suggestions');
   console.log('- Parameters are validated and clamped to acceptable ranges');
-  console.log('\n📚 For more information, see: packages/github-agent/docs/web-search-tool.md');
+  console.log('\n📚 For more information, see: packages/remote-agent/docs/web-search-tool.md');
 }
 
 // Check if API keys are configured
@@ -194,9 +194,9 @@ function checkApiKeys() {
 // Main execution
 async function main() {
   console.log('🔍 WebSearch Tool Example\n');
-  
+
   checkApiKeys();
-  
+
   await runExamples();
 }
 

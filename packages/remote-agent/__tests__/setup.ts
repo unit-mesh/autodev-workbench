@@ -1,5 +1,5 @@
 /**
- * Jest setup file for github-agent tests
+ * Jest setup file for remote-agent tests
  * Configures global test environment and utilities
  */
 
@@ -8,12 +8,12 @@ import { jest } from '@jest/globals';
 // Extend Jest matchers
 expect.extend({
   toBeValidGitHubIssue(received: any) {
-    const pass = received && 
+    const pass = received &&
                  typeof received.number === 'number' &&
                  typeof received.title === 'string' &&
                  typeof received.state === 'string' &&
                  Array.isArray(received.labels);
-    
+
     if (pass) {
       return {
         message: () => `expected ${received} not to be a valid GitHub issue`,
@@ -26,13 +26,13 @@ expect.extend({
       };
     }
   },
-  
+
   toBeValidToolResult(received: any) {
     const pass = received &&
                  typeof received.success === 'boolean' &&
                  received.functionCall &&
                  typeof received.functionCall.name === 'string';
-    
+
     if (pass) {
       return {
         message: () => `expected ${received} not to be a valid tool result`,
@@ -60,7 +60,7 @@ global.testUtils = {
     comments: 0,
     ...overrides
   }),
-  
+
   createMockToolResult: (overrides = {}) => ({
     success: true,
     functionCall: { name: 'github_analyze_issue', parameters: {} },
@@ -69,7 +69,7 @@ global.testUtils = {
     round: 1,
     ...overrides
   }),
-  
+
   createMockAgentResponse: (overrides = {}) => ({
     text: 'Mock agent response',
     toolResults: [],
@@ -88,13 +88,13 @@ declare global {
       toBeValidToolResult(): R;
     }
   }
-  
+
   var testUtils: {
     createMockGitHubIssue: (overrides?: any) => any;
     createMockToolResult: (overrides?: any) => any;
     createMockAgentResponse: (overrides?: any) => any;
   };
-  
+
   var restoreConsole: () => void;
   var mockConsole: () => void;
 }

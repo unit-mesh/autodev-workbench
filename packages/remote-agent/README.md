@@ -21,13 +21,13 @@ A comprehensive Model Context Protocol (MCP) server that provides advanced GitHu
 ### Using npx (Recommended)
 
 ```bash
-npx @autodev/github-agent@latest
+npx @autodev/remote-agent@latest
 ```
 
 ### Using pnpm
 
 ```bash
-pnpm add -g @autodev/github-agent
+pnpm add -g @autodev/remote-agent
 ```
 
 ## Setup
@@ -81,13 +81,13 @@ export LLM_MODEL=your_model_name
 #### Start as MCP Server (stdio)
 
 ```bash
-autodev-github-agent
+autodev-remote-agent
 ```
 
 #### Start as HTTP Server
 
 ```bash
-autodev-github-agent --port 3001
+autodev-remote-agent --port 3001
 ```
 
 #### Standalone Issue Analysis
@@ -356,7 +356,7 @@ Add to your Claude Desktop MCP configuration:
   "mcpServers": {
     "github-agent": {
       "command": "npx",
-      "args": ["@autodev/github-agent@latest"],
+      "args": ["@autodev/remote-agent@latest"],
       "env": {
         "GITHUB_TOKEN": "your_github_token_here",
         "GLM_TOKEN": "your_glm_token_here",
@@ -396,7 +396,7 @@ Add to your Claude Desktop MCP configuration:
 
 ```bash
 git clone <repository-url>
-cd packages/github-agent
+cd packages/remote-agent
 pnpm install
 pnpm build
 ```
@@ -422,10 +422,10 @@ Main MCP server for GitHub integration. Supports both stdio and HTTP modes.
 
 ```bash
 # Start as MCP server (stdio)
-autodev-github-agent
+autodev-remote-agent
 
 # Start as HTTP server
-autodev-github-agent --port 3000
+autodev-remote-agent --port 3000
 ```
 
 ### `autodev-analyze-issue`

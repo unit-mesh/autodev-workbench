@@ -90,10 +90,10 @@ After building the package, these binaries will be available globally if the pac
 
 ```bash
 # Install the package globally
-npm install -g @autodev/github-agent
+npm install -g @autodev/remote-agent
 
 # Or use via npx
-npx @autodev/github-agent analyze-issue microsoft vscode 12345
+npx @autodev/remote-agent analyze-issue microsoft vscode 12345
 ```
 
 ## Development
