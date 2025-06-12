@@ -1,4 +1,4 @@
-import { Agent, AgentConfig, AgentResponse } from "../agent";
+import { AIAgent, AgentConfig, AgentResponse } from "../agent";
 import { PlanningEngine, ExecutionPlan, TaskComplexity } from "./planning-engine";
 import { PlanPresenter } from "./plan-presenter";
 import { ToolResult } from "./tool-definition";
@@ -35,7 +35,7 @@ export interface PlanDrivenResponse extends AgentResponse {
   };
 }
 
-export class PlanDrivenAgent extends Agent {
+export class PlanDrivenAgent extends AIAgent {
   private planningEngine: PlanningEngine;
   private currentPlan?: ExecutionPlan;
   private planDrivenConfig: PlanDrivenConfig;
@@ -59,7 +59,7 @@ export class PlanDrivenAgent extends Agent {
       ...config
     };
 
-    this.planningEngine = new PlanningEngine(this.toolExecutor, this.llmProvider);
+    this.planningEngine = new PlanningEngine(this.toolExecutor, this.llmConfig);
   }
 
   /**

@@ -1,5 +1,5 @@
 import { ToolExecutor, ToolResult } from "./tool-executor";
-import { LLMProvider } from "../services/llm";
+import { LLMProviderConfig } from "../services/llm";
 
 export interface ExecutionPlan {
   id: string;
@@ -56,7 +56,7 @@ export type TaskComplexity = 'simple' | 'medium' | 'complex';
 export class PlanningEngine {
   constructor(
     private toolExecutor: ToolExecutor,
-    private llmProvider: any // 使用现有的LLM provider
+    private llmConfig: LLMProviderConfig // 使用LLM配置
   ) {}
 
   /**
@@ -223,7 +223,7 @@ export class PlanningEngine {
       phases: [{
         id: 'phase_1',
         name: 'Execute Task',
-        description: `Use ${tool.name} to complete the request`,
+        description: `Use ${tool.tool} to complete the request`,
         tools: [tool],
         dependencies: [],
         optional: false,

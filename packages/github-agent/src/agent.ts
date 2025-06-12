@@ -43,13 +43,13 @@ export interface AgentResponse {
 }
 
 export class AIAgent {
-  private llmConfig: LLMProviderConfig;
-  private conversationHistory: CoreMessage[] = [];
-  private config: AgentConfig;
-  private promptBuilder: PromptBuilder = new PromptBuilder();
-  private responseGenerator: ResponseGenerator;
-  private toolExecutor: ToolExecutor;
-  private githubManager: GitHubContextManager;
+  protected llmConfig: LLMProviderConfig;
+  protected conversationHistory: CoreMessage[] = [];
+  protected config: AgentConfig;
+  protected promptBuilder: PromptBuilder = new PromptBuilder();
+  protected responseGenerator: ResponseGenerator;
+  protected toolExecutor: ToolExecutor;
+  protected githubManager: GitHubContextManager;
 
   constructor(config: AgentConfig = {}) {
     this.config = {
@@ -674,7 +674,7 @@ export class AIAgent {
   /**
    * Logging utility
    */
-  private log(message: string, data?: any): void {
+  protected log(message: string, data?: any): void {
     if (this.config.verbose) {
       console.log(`[AIAgent] ${message}`, data || '');
     }
