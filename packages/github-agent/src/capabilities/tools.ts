@@ -8,7 +8,7 @@ import {installDeleteFileTool} from "./tools/fs-delete-file";
 import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
 
 // context engine
-import {installAnalysisBasicContextTool} from "./tools/planning-context-analyzer";
+import {installAnalysisBasicContextTool} from "./tools/context-analyzer";
 import {installGrepSearchTool} from "./tools/code-search-regex";
 import {installSearchKeywordsTool} from "./tools/keyword-search";
 

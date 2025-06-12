@@ -76,7 +76,7 @@ export { installDeleteFileTool } from "./capabilities/tools/fs-delete-file";
 // =============================================================================
 // Analysis and Search Tools
 // =============================================================================
-export { installAnalysisBasicContextTool } from "./capabilities/tools/planning-context-analyzer";
+export { installAnalysisBasicContextTool } from "./capabilities/tools/context-analyzer";
 export { installGrepSearchTool } from "./capabilities/tools/code-search-regex";
 export { installSearchKeywordsTool } from "./capabilities/tools/keyword-search";
 

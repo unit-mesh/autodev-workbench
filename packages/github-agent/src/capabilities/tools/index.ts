@@ -6,7 +6,7 @@ export { installGitHubCreateNewIssueTool } from "./github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./github-search-smart";
 export { installGitHubAnalyzeIssueTool } from "./github-analysis-issue";
-export { installAnalysisBasicContextTool } from "./planning-context-analyzer";
+export { installAnalysisBasicContextTool } from "./context-analyzer";
 export { installDeleteFileTool } from "./fs-delete-file";
 export { installListDirectoryTool } from "./fs-list-directory";
 export { installReadFileTool } from "./fs-read-file";

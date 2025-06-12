@@ -1,6 +1,6 @@
 import { ToolLike } from "../_typing";
 import { z } from "zod";
-import { ProjectContextAnalyzer } from "./project-context-analyzer";
+import { ProjectContextAnalyzer } from "./analyzers/project-context-analyzer";
 
 export const installAnalysisBasicContextTool: ToolLike = (installer) => {
   installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning", {
@@ -16,10 +16,10 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
     try {
       // Resolve workspace path
       const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
-      
+
       // Create analyzer instance
       const analyzer = new ProjectContextAnalyzer();
-      
+
       // Perform analysis
       const result = await analyzer.analyze(workspacePath, analysis_scope);
 

@@ -4,9 +4,7 @@ import {
   ArchitectureAnalysis,
   CodebaseAnalysis,
   DependenciesAnalysis,
-  FileInfo,
   GitAnalysis,
-  ProjectFile,
   ProjectInfo,
   WorkflowAnalysis,
   WorkflowFile
@@ -97,7 +95,7 @@ export class ProjectContextAnalyzer {
     // 生成洞察和建议
     result.insights = this.insightGenerator.generateInsights(result);
     result.recommendations = this.insightGenerator.generateRecommendations(result);
-    
+
     // 计算项目健康度评分
     if (isFullAnalysis) {
       result.health_score = this.insightGenerator.getProjectHealthScore(result);
@@ -120,7 +118,7 @@ export class ProjectContextAnalyzer {
     health_score: number;
   }> {
     const result = await this.analyze(workspacePath, "full");
-    
+
     return {
       categorized_insights: this.insightGenerator.generateCategorizedInsights(result),
       actionable_recommendations: this.insightGenerator.generateActionableRecommendations(result),
