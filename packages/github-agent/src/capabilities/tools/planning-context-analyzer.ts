@@ -52,7 +52,7 @@ const config = {
 // 缓存
 const cache = new Map<string, any>();
 
-export const installAnalysisBasiContextTool: ToolLike = (installer) => {
+export const installAnalysisBasicContextTool: ToolLike = (installer) => {
   installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning", {
     workspace_path: z.string().optional().describe("Path to analyze (defaults to current directory)"),
     analysis_scope: z.enum(["basic", "full"]).optional().describe("Analysis scope: basic (essential info only) or full (detailed analysis)")

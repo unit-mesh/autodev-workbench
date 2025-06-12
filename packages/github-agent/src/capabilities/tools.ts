@@ -8,7 +8,7 @@ import {installDeleteFileTool} from "./tools/fs-delete-file";
 import {installRunTerminalCommandTool} from "./tools/terminal-run-command";
 
 // context engine
-import {installAnalysisBasiContextTool} from "./tools/planning-context-analyzer";
+import {installAnalysisBasicContextTool} from "./tools/planning-context-analyzer";
 import {installGrepSearchTool} from "./tools/code-search-regex";
 import {installSearchKeywordsTool} from "./tools/keyword-search";
 
@@ -33,7 +33,7 @@ export const FileSystemTools = [
 ] as const;
 
 export const CodeAnalysisTools = [
-    installAnalysisBasiContextTool,
+    installAnalysisBasicContextTool,
     installSearchKeywordsTool,
     installGrepSearchTool,
 ] as const;
