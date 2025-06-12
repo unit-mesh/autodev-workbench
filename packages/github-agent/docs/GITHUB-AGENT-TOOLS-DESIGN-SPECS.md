@@ -1,4 +1,3 @@
-// filepath: /Users/phodal/ai/autodev-work/packages/github-agent/docs/GITHUB-AGENT-TOOLS-DESIGN-SPECS.md
 # GitHub Agent 工具设计规范
 
 ```TypeScript
