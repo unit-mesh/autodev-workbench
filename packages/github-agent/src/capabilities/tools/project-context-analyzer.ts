@@ -11,6 +11,9 @@ import {
   WorkflowAnalysis,
   WorkflowFile
 } from "./context-analyzer.type";
+import { CodebaseScanner } from "./codebase-scanner";
+import { InsightGenerator } from "./insight-generator";
+import { ProjectInfoAnalyzer } from "./project-info-analyzer";
 
 export interface AnalysisResult {
   analysis: {
@@ -27,27 +30,24 @@ export interface AnalysisResult {
   dependencies_summary?: DependenciesAnalysis;
   insights: string[];
   recommendations: string[];
+  health_score?: number;
 }
 
 export class ProjectContextAnalyzer {
   private static readonly config = {
-    excludeDirs: ['node_modules', '.git', 'dist', 'build', 'coverage', '__pycache__', '.next', '.nuxt'],
-    codeExtensions: ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h'],
-    workflowFiles: [
-      '.github/workflows',
-      '.gitlab-ci.yml',
-      'Jenkinsfile',
-      'azure-pipelines.yml',
-      'bitbucket-pipelines.yml',
-      'Dockerfile',
-      'docker-compose.yml',
-      'Makefile',
-      'package.json'
-    ],
     commonDirs: ['src', 'lib', 'components', 'services', 'controllers', 'models', 'views', 'api', 'packages']
   };
 
   private cache = new Map<string, any>();
+  private codebaseScanner: CodebaseScanner;
+  private insightGenerator: InsightGenerator;
+  private projectInfoAnalyzer: ProjectInfoAnalyzer;
+
+  constructor() {
+    this.codebaseScanner = new CodebaseScanner();
+    this.insightGenerator = new InsightGenerator();
+    this.projectInfoAnalyzer = new ProjectInfoAnalyzer();
+  }
 
   async analyze(workspacePath: string, analysisScope: "basic" | "full" = "basic"): Promise<AnalysisResult> {
     const resolvedWorkspace = path.resolve(workspacePath);
@@ -62,8 +62,8 @@ export class ProjectContextAnalyzer {
 
     // 并行执行分析任务
     const [projectInfo, codebaseAnalysis] = await Promise.all([
-      this.analyzeProjectInfo(resolvedWorkspace),
-      this.analyzeCodebase(resolvedWorkspace, maxDepth)
+      this.projectInfoAnalyzer.analyzeProjectInfo(resolvedWorkspace),
+      this.codebaseScanner.scanWorkspace(resolvedWorkspace, maxDepth)
     ]);
 
     const result: AnalysisResult = {
@@ -85,7 +85,7 @@ export class ProjectContextAnalyzer {
         this.analyzeWorkflow(resolvedWorkspace),
         this.analyzeArchitecture(resolvedWorkspace, true),
         this.analyzeGitRepository(resolvedWorkspace),
-        this.analyzeDependenciesSummary(resolvedWorkspace)
+        this.projectInfoAnalyzer.analyzeDependencies(resolvedWorkspace)
       ]);
 
       result.workflow_analysis = workflowAnalysis;
@@ -95,8 +95,13 @@ export class ProjectContextAnalyzer {
     }
 
     // 生成洞察和建议
-    result.insights = this.generateInsights(result);
-    result.recommendations = this.generateContextRecommendations(result);
+    result.insights = this.insightGenerator.generateInsights(result);
+    result.recommendations = this.insightGenerator.generateRecommendations(result);
+    
+    // 计算项目健康度评分
+    if (isFullAnalysis) {
+      result.health_score = this.insightGenerator.getProjectHealthScore(result);
+    }
 
     // 缓存结果
     this.cache.set(cacheKey, result);
@@ -104,136 +109,27 @@ export class ProjectContextAnalyzer {
     return result;
   }
 
-  private async analyzeProjectInfo(workspacePath: string): Promise<ProjectInfo> {
-    const projectFiles = [
-      'package.json', 'requirements.txt', 'Cargo.toml', 'go.mod', 'pom.xml',
-      'README.md', 'README.rst', 'LICENSE', 'CHANGELOG.md'
-    ];
-
-    const foundFiles: ProjectFile[] = [];
-    let projectType = 'unknown';
-    let projectName = path.basename(workspacePath);
-    let projectVersion = 'unknown';
-    let projectDescription = '';
-
-    for (const file of projectFiles) {
-      try {
-        const filePath = path.join(workspacePath, file);
-        const stats = await fs.stat(filePath);
-
-        foundFiles.push({
-          name: file,
-          size: stats.size,
-          modified: stats.mtime.toISOString()
-        });
-
-        if (file === 'package.json') {
-          const content = await fs.readFile(filePath, 'utf8');
-          const packageJson = JSON.parse(content);
-          projectType = 'Node.js/JavaScript';
-          projectName = packageJson.name || projectName;
-          projectVersion = packageJson.version || projectVersion;
-          projectDescription = packageJson.description || projectDescription;
-        } else if (file === 'requirements.txt' || file === 'setup.py') {
-          projectType = 'Python';
-        } else if (file === 'Cargo.toml') {
-          projectType = 'Rust';
-        } else if (file === 'go.mod') {
-          projectType = 'Go';
-        } else if (file === 'pom.xml') {
-          projectType = 'Java/Maven';
-        }
-      } catch (error) {
-        continue;
-      }
-    }
-
+  async getDetailedInsights(workspacePath: string): Promise<{
+    categorized_insights: Record<string, string[]>;
+    actionable_recommendations: string[];
+    priority_recommendations: {
+      high: string[];
+      medium: string[];
+      low: string[];
+    };
+    health_score: number;
+  }> {
+    const result = await this.analyze(workspacePath, "full");
+    
     return {
-      name: projectName,
-      type: projectType,
-      version: projectVersion,
-      description: projectDescription,
-      project_files: foundFiles,
-      has_readme: foundFiles.some(f => f.name.toLowerCase().includes('readme')),
-      has_license: foundFiles.some(f => f.name.toLowerCase().includes('license')),
-      has_changelog: foundFiles.some(f => f.name.toLowerCase().includes('changelog'))
-    };
-  }
-
-  private async analyzeCodebase(workspacePath: string, maxDepth: number): Promise<CodebaseAnalysis> {
-    const fileStats: any = {
-      total_files: 0,
-      total_size: 0,
-      by_extension: {},
-      by_directory: {},
-      largest_files: []
-    };
-
-    const allFiles: FileInfo[] = [];
-
-    const scanDirectory = async (dirPath: string, currentDepth: number = 0) => {
-      if (currentDepth > maxDepth) return;
-
-      try {
-        const entries = await fs.readdir(dirPath);
-
-        for (const entry of entries) {
-          const entryPath = path.join(dirPath, entry);
-          const relativePath = path.relative(workspacePath, entryPath);
-
-          if (ProjectContextAnalyzer.config.excludeDirs.some(exclude => relativePath.includes(exclude))) continue;
-
-          const stats = await fs.stat(entryPath);
-
-          if (stats.isDirectory()) {
-            await scanDirectory(entryPath, currentDepth + 1);
-          } else if (stats.isFile()) {
-            fileStats.total_files++;
-            fileStats.total_size += stats.size;
-
-            const ext = path.extname(entry).toLowerCase() || 'no-extension';
-            if (!fileStats.by_extension[ext]) {
-              fileStats.by_extension[ext] = { count: 0, size: 0 };
-            }
-            fileStats.by_extension[ext].count++;
-            fileStats.by_extension[ext].size += stats.size;
-
-            const dir = path.dirname(relativePath) || '.';
-            if (!fileStats.by_directory[dir]) {
-              fileStats.by_directory[dir] = { count: 0, size: 0 };
-            }
-            fileStats.by_directory[dir].count++;
-            fileStats.by_directory[dir].size += stats.size;
-
-            allFiles.push({
-              path: relativePath,
-              size: stats.size,
-              extension: ext,
-              modified: stats.mtime.toISOString()
-            });
-          }
-        }
-      } catch (error) {
-        console.warn(`Warning: Cannot scan directory ${dirPath}: ${error}`);
-      }
-    };
-
-    await scanDirectory(workspacePath);
-
-    fileStats.largest_files = allFiles
-      .sort((a, b) => b.size - a.size)
-      .slice(0, 10);
-
-    const codeFiles = allFiles.filter(f => ProjectContextAnalyzer.config.codeExtensions.includes(f.extension));
-
-    return {
-      ...fileStats,
-      code_files: codeFiles.length,
-      code_ratio: fileStats.total_files > 0 ? Math.round((codeFiles.length / fileStats.total_files) * 100) : 0,
-      average_file_size: fileStats.total_files > 0 ? Math.round(fileStats.total_size / fileStats.total_files) : 0,
-      most_common_extensions: Object.entries(fileStats.by_extension)
-        .sort(([,a]: any, [,b]: any) => b.count - a.count)
-        .slice(0, 10)
+      categorized_insights: this.insightGenerator.generateCategorizedInsights(result),
+      actionable_recommendations: this.insightGenerator.generateActionableRecommendations(result),
+      priority_recommendations: {
+        high: this.insightGenerator.generatePriorityRecommendations(result, 'high'),
+        medium: this.insightGenerator.generatePriorityRecommendations(result, 'medium'),
+        low: this.insightGenerator.generatePriorityRecommendations(result, 'low')
+      },
+      health_score: this.insightGenerator.getProjectHealthScore(result)
     };
   }
 
@@ -241,7 +137,19 @@ export class ProjectContextAnalyzer {
     const foundWorkflows: WorkflowFile[] = [];
     const cicdPlatforms: string[] = [];
 
-    for (const workflow of ProjectContextAnalyzer.config.workflowFiles) {
+    const workflowFiles = [
+      '.github/workflows',
+      '.gitlab-ci.yml',
+      'Jenkinsfile',
+      'azure-pipelines.yml',
+      'bitbucket-pipelines.yml',
+      'Dockerfile',
+      'docker-compose.yml',
+      'Makefile',
+      'package.json'
+    ];
+
+    for (const workflow of workflowFiles) {
       try {
         const workflowPath = path.join(workspacePath, workflow);
         const stats = await fs.stat(workflowPath);
@@ -259,13 +167,13 @@ export class ProjectContextAnalyzer {
           }
         } else {
           foundWorkflows.push({
-            type: this.getWorkflowType(workflow),
+            type: this.projectInfoAnalyzer.getWorkflowType(workflow),
             path: workflow,
             size: stats.size,
             modified: stats.mtime.toISOString()
           });
 
-          const type = this.getWorkflowType(workflow);
+          const type = this.projectInfoAnalyzer.getWorkflowType(workflow);
           if (type !== 'Unknown' && !cicdPlatforms.includes(type)) {
             cicdPlatforms.push(type);
           }
@@ -275,15 +183,7 @@ export class ProjectContextAnalyzer {
       }
     }
 
-    let npmScripts: string[] = [];
-    try {
-      const packageJsonPath = path.join(workspacePath, 'package.json');
-      const content = await fs.readFile(packageJsonPath, 'utf8');
-      const packageJson = JSON.parse(content);
-      npmScripts = Object.keys(packageJson.scripts || {});
-    } catch (error) {
-      // package.json不存在或解析失败
-    }
+    const npmScripts = await this.projectInfoAnalyzer.extractNpmScripts(workspacePath);
 
     return {
       cicd_platforms: cicdPlatforms,
@@ -291,7 +191,7 @@ export class ProjectContextAnalyzer {
       npm_scripts: npmScripts,
       has_docker: foundWorkflows.some(w => w.path.includes('Docker')),
       has_makefile: foundWorkflows.some(w => w.path === 'Makefile'),
-      automation_score: this.calculateAutomationScore(foundWorkflows, npmScripts)
+      automation_score: this.projectInfoAnalyzer.calculateAutomationScore(foundWorkflows, npmScripts)
     };
   }
 
@@ -345,7 +245,7 @@ export class ProjectContextAnalyzer {
     };
 
     if (includeStructure) {
-      result.detailed_structure = await this.getDetailedStructure(workspacePath, 2);
+      result.detailed_structure = await this.codebaseScanner.getProjectStructure(workspacePath, 2);
     }
 
     return result;
@@ -367,126 +267,9 @@ export class ProjectContextAnalyzer {
     }
   }
 
-  private async analyzeDependenciesSummary(workspacePath: string): Promise<DependenciesAnalysis> {
-    try {
-      const packageJsonPath = path.join(workspacePath, 'package.json');
-      const content = await fs.readFile(packageJsonPath, 'utf8');
-      const packageJson = JSON.parse(content);
-
-      return {
-        has_dependencies: true,
-        production_deps: Object.keys(packageJson.dependencies || {}).length,
-        dev_deps: Object.keys(packageJson.devDependencies || {}).length,
-        peer_deps: Object.keys(packageJson.peerDependencies || {}).length,
-        total_deps: Object.keys({
-          ...packageJson.dependencies,
-          ...packageJson.devDependencies,
-          ...packageJson.peerDependencies
-        }).length
-      };
-    } catch (error) {
-      return { has_dependencies: false, error: 'Could not parse package.json' };
-    }
-  }
-
-  private getWorkflowType(filename: string): string {
-    if (filename.includes('github')) return 'GitHub Actions';
-    if (filename.includes('gitlab')) return 'GitLab CI';
-    if (filename.includes('Jenkins')) return 'Jenkins';
-    if (filename.includes('azure')) return 'Azure Pipelines';
-    if (filename.includes('bitbucket')) return 'Bitbucket Pipelines';
-    if (filename.includes('Docker')) return 'Docker';
-    if (filename === 'Makefile') return 'Make';
-    return 'Unknown';
-  }
-
-  private calculateAutomationScore(workflows: WorkflowFile[], scripts: string[]): number {
-    let score = 0;
-    score += workflows.length * 20;
-    score += scripts.length * 5;
-    return Math.min(score, 100);
-  }
-
   private calculateComplexityScore(dirs: string[], patterns: any): number {
     let score = dirs.length * 10;
     score += Object.values(patterns).filter(Boolean).length * 15;
     return Math.min(score, 100);
-  }
-
-  private async getDetailedStructure(workspacePath: string, maxDepth: number) {
-    const buildStructure = async (dirPath: string, currentDepth: number = 0): Promise<any> => {
-      if (currentDepth > maxDepth) return null;
-
-      try {
-        const entries = await fs.readdir(dirPath);
-        const result: any = {};
-
-        for (const entry of entries) {
-          if (entry.startsWith('.')) continue;
-
-          const entryPath = path.join(dirPath, entry);
-          const stats = await fs.stat(entryPath);
-
-          if (stats.isDirectory()) {
-            const subStructure = await buildStructure(entryPath, currentDepth + 1);
-            if (subStructure) {
-              result[entry] = subStructure;
-            }
-          } else {
-            result[entry] = 'file';
-          }
-        }
-
-        return result;
-      } catch (error) {
-        return null;
-      }
-    };
-
-    return buildStructure(workspacePath);
-  }
-
-  private generateInsights(result: AnalysisResult): string[] {
-    const insights: string[] = [];
-
-    if (result.project_info?.type !== 'unknown') {
-      insights.push(`Project is identified as a ${result.project_info.type} project`);
-    }
-
-    if (result.codebase_analysis?.code_ratio > 70) {
-      insights.push("High code-to-total-files ratio indicates a focused codebase");
-    }
-
-    if (result.workflow_analysis?.automation_score > 60) {
-      insights.push("Good automation setup with CI/CD and build scripts");
-    }
-
-    if (result.architecture_analysis?.patterns.monorepo) {
-      insights.push("Monorepo architecture detected - consider workspace management tools");
-    }
-
-    return insights;
-  }
-
-  private generateContextRecommendations(result: AnalysisResult): string[] {
-    const recommendations: string[] = [];
-
-    if (!result.project_info?.has_readme) {
-      recommendations.push("Consider adding a README.md file for project documentation");
-    }
-
-    if (!result.project_info?.has_license) {
-      recommendations.push("Consider adding a LICENSE file to clarify usage rights");
-    }
-
-    if (result.workflow_analysis?.automation_score < 30) {
-      recommendations.push("Low automation score - consider adding CI/CD workflows and build scripts");
-    }
-
-    if (result.dependencies_summary?.total_deps > 100) {
-      recommendations.push("Large number of dependencies - consider dependency audit and cleanup");
-    }
-
-    return recommendations;
   }
 }
