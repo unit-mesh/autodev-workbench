@@ -8,7 +8,7 @@ jobs:
   label-triggered-analysis:
     runs-on: ubuntu-latest
     if: github.event_name == 'issues' && github.event.action == 'labeled'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,12 +36,12 @@ jobs:
           pnpm --filter worker-core build
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
-          pnpm --filter github-agent build
+          pnpm --filter remote-agent build
 
       - name: Label-Specific AI Analysis
         timeout-minutes: 10
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           
           LABEL_NAME="${{ github.event.label.name }}"
           ISSUE_NUMBER="${{ github.event.issue.number }}"
@@ -85,7 +85,7 @@ jobs:
       (github.event.label.name == 'critical' || 
        github.event.label.name == 'security' || 
        github.event.label.name == 'breaking-change')
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -110,12 +110,12 @@ jobs:
           pnpm --filter worker-core build
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
-          pnpm --filter github-agent build
+          pnpm --filter remote-agent build
 
       - name: Critical Issue Deep Analysis
         timeout-minutes: 15
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           
           LABEL_NAME="${{ github.event.label.name }}"
           ISSUE_NUMBER="${{ github.event.issue.number }}"
@@ -175,7 +175,7 @@ jobs:
       (github.event.label.name == 'good-first-issue' || 
        github.event.label.name == 'help-wanted' ||
        github.event.label.name == 'beginner-friendly')
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -198,11 +198,11 @@ jobs:
           pnpm --filter worker-core build
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
-          pnpm --filter github-agent build
+          pnpm --filter remote-agent build
 
       - name: Newcomer-Friendly Analysis
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           
           echo "👋 Generating newcomer-friendly analysis for issue #${{ github.event.issue.number }}"
           

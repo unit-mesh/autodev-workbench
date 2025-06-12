@@ -37,12 +37,12 @@ jobs:
           pnpm --filter worker-core build
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
-          pnpm --filter github-agent build
+          pnpm --filter remote-agent build
 
       - name: Test GitHub Agent with AI Agent CLI
         timeout-minutes: 10
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           echo "🤖 Testing AI Agent CLI with GitHub issue analysis"
           echo "📋 Issue: ${{ github.event.issue.number || 'workflow_dispatch' }}"
           echo "🎯 Repository: ${{ github.repository }}"
@@ -85,13 +85,13 @@ jobs:
   manual-test:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -110,12 +110,12 @@ jobs:
           pnpm --filter worker-core build
           pnpm --filter worker-protobuf build
           pnpm --filter context-worker build
-          pnpm --filter github-agent build
-      
+          pnpm --filter remote-agent build
+
       - name: Manual Test - Analyze Issue #98 (Architecture Request)
         timeout-minutes: 8
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           # 分析 issue #98 - 测试 LLM 增强的架构分析功能
           echo "🧪 Testing AI Agent with LLM-enhanced analysis on issue #98"
           echo "📋 Issue: [TEST] generate project architecture"
@@ -148,7 +148,7 @@ jobs:
 
       - name: Test AI Agent Capabilities Demo
         run: |
-          cd packages/github-agent
+          cd packages/remote-agent
           echo "🎭 Running AI Agent Capabilities Demonstration"
           echo ""
           echo "🔧 Testing tool availability and LLM integration"

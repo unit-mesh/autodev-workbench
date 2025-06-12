@@ -230,7 +230,7 @@ Add to your Claude Desktop MCP configuration:
 ```json
 {
   "mcpServers": {
-    "github-agent": {
+    "remote-agent": {
       "command": "npx",
       "args": ["@autodev/remote-agent@latest"],
       "env": {
@@ -286,7 +286,7 @@ With **23 specialized tools**, AutoDev Remote Agent provides one of the most com
 ### Building from Source
 
 ```bash
-git clone https://github.com/unit-mesh/autodev
+git clone https://github.com/unit-mesh/autodev-workbench
 cd packages/remote-agent
 pnpm install
 pnpm build
@@ -301,13 +301,6 @@ pnpm test
 ### Contributing
 
 Contributions are welcome! Please read the contributing guidelines and submit pull requests to the main repository.
-
-## 📚 Additional Resources
-
-- [Full Tool Comparison Analysis](/docs/TOOL_COMPARISON_ANALYSIS.md)
-- [Claude Code Tools Design Specs](/docs/CLAUDE-CODE-TOOLS-DESIGN-SPECS.md)
-- [GitHub Agent Tools Design Specs](/docs/GITHUB-AGENT-TOOLS-DESIGN-SPECS.md)
-- [Tool Optimization Plan](/docs/TOOL-OPTIMIZATION-PLAN.md)
 
 ## 📄 License
 
