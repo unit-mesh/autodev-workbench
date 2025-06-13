@@ -1,5 +1,5 @@
 import TurndownService from "turndown";
-import * as cheerio from "cheerio/dist/browser";
+import * as cheerio from "cheerio";
 
 export function extractTitle(html: string): string {
 	const $ = cheerio.load(html);
