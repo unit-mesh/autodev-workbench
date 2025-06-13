@@ -1,6 +1,7 @@
 import { LLMService } from "../llm";
 import { GitHubService } from "../github";
 import { IssueAnalysisResult } from "../../types";
+import { AnalysisStep } from "../analysis/FallbackAnalysisService";
 
 interface AnalysisReportOptions {
   uploadToGitHub?: boolean;
@@ -124,7 +125,7 @@ export class AnalysisReportGenerator {
     if (llmReport.detailed_plan && llmReport.detailed_plan.steps) {
       sections.push('');
       sections.push(isZh ? '## 优化计划：' : '## Detailed Plan:');
-      llmReport.detailed_plan.steps.forEach((step: any, index: number) => {
+      llmReport.detailed_plan.steps.forEach((step: AnalysisStep, index: number) => {
         sections.push(`### ${index + 1}. ${step.title}`);
 
         if (step.files_to_modify && step.files_to_modify.length > 0) {

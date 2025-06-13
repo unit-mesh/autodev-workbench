@@ -75,7 +75,7 @@ export class AnalysisReportService {
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: language === 'zh' 
+          content: language === 'zh'
             ? "你是一个专业的软件架构师和代码分析专家。基于GitHub问题和代码分析结果生成结构化的分析和优化计划。始终以指定格式的有效JSON回应。"
             : "You are an expert software architect and code analyst. Generate structured analysis and optimization plans for GitHub issues based on code analysis results. Always respond with valid JSON in the specified format."
         },
@@ -299,15 +299,12 @@ Focus on:
 
   private parseStructuredAnalysisPlan(text: string, language: 'zh' | 'en'): StructuredAnalysisPlan {
     try {
-      // Clean the text to extract JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No JSON found in response');
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
-
-      // Validate required fields
       if (!parsed.title || !parsed.current_issues || !parsed.detailed_plan) {
         throw new Error('Missing required fields in structured analysis plan');
       }

@@ -10,9 +10,6 @@ export class ResponseGenerator {
     this.llmConfig = llmConfig;
   }
 
-  /**
-   * Generate comprehensive final response for multi-round tool execution
-   */
   async generateComprehensiveFinalResponse(
     userInput: string,
     lastLLMResponse: string,
@@ -23,7 +20,6 @@ export class ResponseGenerator {
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);
 
-    // Build comprehensive summary
     const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
 

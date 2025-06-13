@@ -1,6 +1,6 @@
 /**
  * Clean Context Analyzer using Design Patterns
- * 
+ *
  * This is a much shorter, cleaner version that delegates complex logic to specialized components.
  * The file is now ~150 lines instead of the original 1,276 lines.
  */
@@ -19,7 +19,7 @@ import { fetchUrlsFromIssue, extractUrlsFromText } from "../../capabilities/tool
 
 /**
  * Simplified Context Analyzer - Clean Facade Pattern Implementation
- * 
+ *
  * This class is now much shorter and cleaner, delegating complex logic to specialized components.
  * All heavy lifting is done by the strategy implementations.
  */
@@ -36,7 +36,7 @@ export class ContextAnalyzer {
   ) {
     this.workspacePath = workspacePath;
     this.cacheKeyGenerator = new DefaultCacheKeyGenerator();
-    
+
     // Initialize components asynchronously
     this.initializeComponents(config);
   }
@@ -56,11 +56,11 @@ export class ContextAnalyzer {
       };
 
       const components = await AnalyzerFactory.create(analyzerConfig);
-      
+
       this.analysisStrategy = components.strategy;
       this.cacheManager = components.cacheManager;
       this.initialized = true;
-      
+
       console.log(`🔧 Initialized ContextAnalyzer with strategy: ${this.analysisStrategy.name}`);
     } catch (error) {
       console.error('Failed to initialize analysis components:', error);
@@ -74,11 +74,11 @@ export class ContextAnalyzer {
   private async initializeFallbackComponents(): Promise<void> {
     const { RuleBasedAnalysisStrategy } = await import('../analysis/strategies/RuleBasedAnalysisStrategy');
     const { MemoryCacheManager } = await import('../analysis/cache/MemoryCacheManager');
-    
+
     this.analysisStrategy = new RuleBasedAnalysisStrategy();
     this.cacheManager = new MemoryCacheManager();
     this.initialized = true;
-    
+
     console.log('🔧 Initialized ContextAnalyzer with fallback components');
   }
 
@@ -99,10 +99,7 @@ export class ContextAnalyzer {
   async findRelevantCode(issue: GitHubIssue & { urlContent?: any[] }): Promise<CodeContext> {
     await this.ensureInitialized();
 
-    // Create cache key
     const issueKey = this.cacheKeyGenerator.generateIssueKey(issue.number, issue.updated_at);
-
-    // Check cache first
     const cached = await this.cacheManager.get<CodeContext>(`relevantCode-${issueKey}`);
     if (cached) {
       if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
@@ -115,10 +112,7 @@ export class ContextAnalyzer {
       console.log(`🔍 Analyzing with strategy: ${this.analysisStrategy.name}`);
     }
 
-    // Scan workspace for files
     const filteredFiles = await this.scanWorkspaceFiles();
-
-    // Create analysis context - strategies handle all the complex logic
     const context: AnalysisContext = {
       workspacePath: this.workspacePath,
       filteredFiles: filteredFiles,
@@ -126,19 +120,15 @@ export class ContextAnalyzer {
       issue
     };
 
-    // Delegate everything to the strategy
     const keywords = await this.analysisStrategy.generateKeywords(issue);
-    
+
     const [relevantFiles, relevantSymbols, relevantApis] = await Promise.all([
       this.analysisStrategy.findRelevantFiles(context, keywords),
       this.analysisStrategy.findRelevantSymbols(context, keywords),
       this.analysisStrategy.findRelevantApis(context, keywords)
     ]);
 
-    // Convert to expected format with deduplication
     const uniqueFiles = new Map<string, { path: string; content: string; relevanceScore: number }>();
-
-    // Deduplicate files by path, keeping the one with highest relevance score
     for (const file of relevantFiles) {
       const existing = uniqueFiles.get(file.path);
       if (!existing || file.relevanceScore > existing.relevanceScore) {
@@ -176,13 +166,9 @@ export class ContextAnalyzer {
       console.log(`🎯 Analyzing issue #${issue.number}: ${issue.title}`);
     }
 
-    // Step 1: Detect and fetch URL content if not already provided
     const enhancedIssue = await this.enhanceIssueWithUrlContent(issue);
-
-    // Step 2: Find relevant code using strategy pattern
     const relatedCode = await this.findRelevantCode(enhancedIssue);
 
-    // Step 3: Generate suggestions and summary (delegated to strategies)
     const [suggestions, summary] = await Promise.all([
       this.generateSuggestions(enhancedIssue, relatedCode),
       this.generateSummary(enhancedIssue, relatedCode)
@@ -365,10 +351,10 @@ export class ContextAnalyzer {
       searchType: config.searchType || 'hybrid',
       llmService: config.llmService
     });
-    
+
     // Ensure initialization is complete
     await analyzer.ensureInitialized();
-    
+
     return analyzer;
   }
 
