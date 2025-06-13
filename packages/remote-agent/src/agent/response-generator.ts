@@ -18,7 +18,6 @@ export class ResponseGenerator {
     allToolResults: ToolResult[],
     totalRounds: number
   ): Promise<string> {
-    // Group results by round and success
     const resultsByRound = this.groupResultsByRound(allToolResults);
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);

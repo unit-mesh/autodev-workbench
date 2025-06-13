@@ -5,9 +5,9 @@ import * as path from "path";
 import { regexSearchFiles } from "@autodev/worker-core";
 
 export const installGrepSearchTool: ToolLike = (installer) => {
-  installer("grep-search", "Search for patterns in code using regex with ripgrep", {
+  installer("grep-search", "Search for code patterns using regex with ripgrep. Useful for finding function definitions, variable usages, or specific code constructs across files.", {
     search_path: z.string().describe("Directory path to search within the workspace (relative path). Use \".\" for current directory if no specific path is provided."),
-    pattern: z.string().describe("Regex pattern to search for")
+    pattern: z.string().describe("Regex pattern to search for. Examples: \"function myFunction\", \"class\\s+User\", \"import\\s+.*from\\s+['\\\"](react|vue)['\\\"]\". Use word boundaries (\\b) for exact matches and escape special characters.")
   }, async ({
     search_path,
     pattern
