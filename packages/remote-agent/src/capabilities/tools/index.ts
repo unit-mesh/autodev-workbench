@@ -1,5 +1,5 @@
 // Tool exports
-export { installExtractWebpageAsMarkdownTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent, extractTitle } from "./web-fetch-content";
+export { installExtractWebpageAsMarkdownTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent } from "./web-fetch-content";
 export { installGitHubListRepositoryIssuesTool } from "./github-list-repository-issues";
 export { installGitHubGetIssueWithAnalysisTool } from "./github-issue-get";
 export { installGitHubCreateNewIssueTool } from "./github-issue-create";
