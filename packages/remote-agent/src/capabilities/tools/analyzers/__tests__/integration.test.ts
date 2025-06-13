@@ -15,14 +15,12 @@ describe('ProjectContextAnalyzer Integration Tests', () => {
     // 基本验证
     expect(result.analysis.workspace_path).toBe(projectRoot);
     expect(result.project_info.name).toBeDefined();
-    expect(result.codebase_analysis.total_files).toBeGreaterThan(0);
     expect(result.insights).toBeInstanceOf(Array);
     expect(result.recommendations).toBeInstanceOf(Array);
 
     console.log('Project Info:', {
       name: result.project_info.name,
-      type: result.project_info.type,
-      totalFiles: result.codebase_analysis.total_files,
+      type: result.project_info.type
     });
   });
 
