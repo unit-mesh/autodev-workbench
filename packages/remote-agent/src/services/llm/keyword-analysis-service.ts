@@ -70,7 +70,7 @@ export class KeywordAnalysisService {
     } catch (error: any) {
       this.logger.logAnalysisFailure('KEYWORD ANALYSIS', error);
       console.warn(`LLM keyword analysis failed: ${error.message}`);
-      
+
       // Fallback to rule-based extraction
       const fallbackResult = this.fallbackService.extractKeywords(issue);
       this.logger.logAnalysisFallback('KEYWORD ANALYSIS', error.message, fallbackResult);
@@ -80,7 +80,23 @@ export class KeywordAnalysisService {
 
   private buildKeywordExtractionPrompt(issue: GitHubIssue & { urlContent?: any[] }): string {
     let prompt = `
-Analyze this GitHub issue and extract keywords for code search:
+You are a coding assistant who helps the user answer questions about code in their workspace by providing a list of relevant keywords they can search for to answer the question.
+The user will provide you with potentially relevant information from the workspace. This information may be incomplete.
+
+DO NOT ask the user for additional information or clarification.
+DO NOT try to answer the user's question directly.
+
+**Additional Rules**
+Think step by step:
+
+1. Read the user's question to understand what they are asking about their workspace.
+2. If the question contains pronouns such as 'it' or 'that', try to understand what the pronoun refers to by looking at the rest of the question and the conversation history.
+3. If the question contains an ambiguous word such as 'this', try to understand what it refers to by looking at the rest of the question, the user's active selection, and the conversation history.
+4. Output a precise version of the question that resolves all pronouns and ambiguous words like 'this' to the specific nouns they stand for. Be sure to preserve the exact meaning of the question by only changing ambiguous pronouns and words like 'this'.
+5. Then output a short markdown list of up to 8 relevant keywords that the user could try searching for to answer their question. These keywords could be used as file names, symbol names, abbreviations, or comments in the relevant code. Put the most relevant keywords to the question first. Do not include overly generic keywords. Do not repeat keywords.
+6. For each keyword in the markdown list of related keywords, if applicable add a comma-separated list of variations after it. For example, for 'encode', possible variations include 'encoding', 'encoded', 'encoder', 'encoders'. Consider synonyms and plural forms. Do not repeat variations.
+
+Please analyze this GitHub issue and extract keywords:
 
 **Issue Title:** ${issue.title}
 
@@ -103,49 +119,12 @@ Analyze this GitHub issue and extract keywords for code search:
       }
     }
 
-    prompt += `
-
-Please extract keywords in the following categories and respond with JSON:
-
-1. **primary_keywords**: Main concepts, feature names, error types (5-10 words)
-2. **technical_terms**: Programming terms, frameworks, libraries, file extensions (5-15 words)
-3. **error_patterns**: Specific error messages, exception types, error codes (3-8 phrases)
-4. **component_names**: Likely class names, function names, module names (3-10 words)
-5. **file_patterns**: Likely file names, directory patterns, file types (3-8 patterns)
-6. **search_strategies**: Specific search terms that would help find related code (5-10 terms)
-7. **file_priorities**: Prioritized file patterns with importance scores (1-10 scale)
-8. **issue_type**: One of: "bug", "feature", "performance", "documentation", "testing", "security", "refactor"
-9. **confidence**: Float between 0.0-1.0 indicating confidence in the analysis
-
-Focus on terms that would help find relevant code files, functions, and components.
-Pay special attention to any technical information from the URL content provided above.
-
-For file_priorities, provide patterns with scores where:
-- 10: Critical files that must be analyzed (e.g., main config, auth files for auth issues)
-- 7-9: High priority files likely to contain relevant code
-- 4-6: Medium priority files that might be relevant
-- 1-3: Low priority files that could provide context
-
-Example response format:
+    prompt += `\n\nPlease respond with a JSON object containing the following fields:
 {
-  "primary_keywords": ["authentication", "login", "user", "session"],
-  "technical_terms": ["jwt", "token", "middleware", "express", "nodejs"],
-  "error_patterns": ["401 unauthorized", "token expired", "invalid credentials"],
-  "component_names": ["AuthMiddleware", "LoginController", "UserService"],
-  "file_patterns": ["auth", "login", "user", "middleware", "controller"],
-  "search_strategies": ["authenticate", "verify", "token", "session", "login"],
-  "file_priorities": [
-    {"pattern": "auth", "score": 10, "reason": "Core authentication logic"},
-    {"pattern": "prisma", "score": 9, "reason": "Database connection for auth"},
-    {"pattern": "middleware", "score": 7, "reason": "Auth middleware implementation"},
-    {"pattern": "config", "score": 6, "reason": "Configuration files"},
-    {"pattern": "test", "score": 2, "reason": "Test files for context only"}
-  ],
-  "issue_type": "bug",
-  "confidence": 0.85
-}
-
-Respond only with valid JSON:`;
+  "primary_keywords": ["keyword1", "keyword2", ...], // Most relevant keywords (weight: 0.9)
+  "secondary_keywords": ["keyword1", "keyword2", ...], // Related keywords (weight: 0.6)
+  "tertiary_keywords": ["keyword1", "keyword2", ...], // Additional context keywords (weight: 0.3)
+}`;
 
     return prompt;
   }
@@ -159,22 +138,10 @@ Respond only with valid JSON:`;
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
-
-      // Validate and normalize the response
       return {
-        primary_keywords: Array.isArray(parsed.primary_keywords) ? parsed.primary_keywords.slice(0, 10) : [],
-        technical_terms: Array.isArray(parsed.technical_terms) ? parsed.technical_terms.slice(0, 15) : [],
-        error_patterns: Array.isArray(parsed.error_patterns) ? parsed.error_patterns.slice(0, 8) : [],
-        component_names: Array.isArray(parsed.component_names) ? parsed.component_names.slice(0, 10) : [],
-        file_patterns: Array.isArray(parsed.file_patterns) ? parsed.file_patterns.slice(0, 8) : [],
-        search_strategies: Array.isArray(parsed.search_strategies) ? parsed.search_strategies.slice(0, 10) : [],
-        file_priorities: Array.isArray(parsed.file_priorities) ? parsed.file_priorities.slice(0, 10).map((fp: any) => ({
-          pattern: typeof fp.pattern === 'string' ? fp.pattern : '',
-          score: typeof fp.score === 'number' ? Math.min(Math.max(fp.score, 1), 10) : 5,
-          reason: typeof fp.reason === 'string' ? fp.reason : ''
-        })) : [],
-        issue_type: typeof parsed.issue_type === 'string' ? parsed.issue_type : 'general',
-        confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.5
+        primary_keywords: Array.isArray(parsed.primary_keywords) ? parsed.primary_keywords.slice(0, 8) : [],
+        secondary_keywords: Array.isArray(parsed.secondary_keywords) ? parsed.secondary_keywords.slice(0, 8) : [],
+        tertiary_keywords: Array.isArray(parsed.tertiary_keywords) ? parsed.tertiary_keywords.slice(0, 8) : [],
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

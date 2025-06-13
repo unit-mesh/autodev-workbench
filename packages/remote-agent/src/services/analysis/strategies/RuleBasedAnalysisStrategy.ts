@@ -51,14 +51,12 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
 
   async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
     console.log('📋 Generating keywords using rule-based analysis...');
-    
     const text = `${issue.title} ${issue.body || ''}`;
 
     return {
       primary: this.extractPrimaryKeywords(text),
       secondary: this.extractSecondaryKeywords(text),
-      technical: this.extractTechnicalTerms(text),
-      contextual: this.extractContextualKeywords(text)
+      tertiary: this.extractContextualKeywords(text)
     };
   }
 
@@ -90,7 +88,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
         const content = await this.loadFileContent(path.join(context.workspacePath, file));
         if (content) {
           fileContents.set(file, content);
-          
+
           // Update score based on content
           const contentScore = this.calculateContentScore(content, keywords);
           const currentScore = fileScores.get(file) || 0;
@@ -314,8 +312,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
-      ...keywords.technical,
-      ...keywords.contextual
+      ...keywords.tertiary
     ];
 
     let score = 0;
@@ -365,8 +362,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
-      ...keywords.technical,
-      ...keywords.contextual
+      ...keywords.tertiary
     ];
 
     let score = 0;
@@ -375,7 +371,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     for (const keyword of allKeywords) {
       const keywordLower = keyword.toLowerCase();
       const matches = (contentLower.match(new RegExp(keywordLower, 'g')) || []).length;
-      
+
       // Score based on frequency, but with diminishing returns
       score += Math.min(matches * 0.1, 2);
     }
@@ -426,8 +422,7 @@ export class RuleBasedAnalysisStrategy extends BaseAnalysisStrategy {
     const allKeywords = [
       ...keywords.primary.map(k => ({ keyword: k, weight: 3.0 })),
       ...keywords.secondary.map(k => ({ keyword: k, weight: 2.0 })),
-      ...keywords.technical.map(k => ({ keyword: k, weight: 2.5 })),
-      ...keywords.contextual.map(k => ({ keyword: k, weight: 1.5 }))
+      ...keywords.tertiary.map(k => ({ keyword: k, weight: 1.5 })),
     ];
 
     let score = 0;

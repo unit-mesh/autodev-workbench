@@ -455,8 +455,7 @@ export class FilePriorityManager {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
-      ...keywords.technical,
-      ...keywords.contextual
+      ...keywords.tertiary
     ].map(k => k.toLowerCase());
 
     // Database keywords

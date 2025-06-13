@@ -1,6 +1,6 @@
 /**
  * Analysis Strategy Interface
- * 
+ *
  * Defines the contract for different analysis strategies using the Strategy Pattern.
  * This allows for flexible switching between LLM-based, rule-based, and hybrid approaches.
  */
@@ -10,8 +10,7 @@ import { GitHubIssue } from "../../../types/index";
 export interface SearchKeywords {
   primary: string[];
   secondary: string[];
-  technical: string[];
-  contextual: string[];
+  tertiary: string[];
 }
 
 export interface AnalysisContext {
@@ -99,7 +98,7 @@ export abstract class BaseAnalysisStrategy implements IAnalysisStrategy {
     const fileScore = Math.min(result.files.length / 5, 1) * 0.4;
     const symbolScore = Math.min(result.symbols.length / 10, 1) * 0.3;
     const apiScore = Math.min(result.apis.length / 5, 1) * 0.3;
-    
+
     return fileScore + symbolScore + apiScore;
   }
 
@@ -113,12 +112,12 @@ export abstract class BaseAnalysisStrategy implements IAnalysisStrategy {
   protected extractPrimaryKeywords(text: string): string[] {
     const words = text.toLowerCase().match(/\b\w{3,}\b/g) || [];
     const stopWords = new Set([
-      'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 
-      'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 
-      'how', 'its', 'may', 'new', 'now', 'old', 'see', 'two', 'who', 'boy', 
-      'did', 'man', 'way', 'she', 'use', 'this', 'that', 'with', 'have', 
-      'from', 'they', 'know', 'want', 'been', 'good', 'much', 'some', 'time', 
-      'very', 'when', 'come', 'here', 'just', 'like', 'long', 'make', 'many', 
+      'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had',
+      'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his',
+      'how', 'its', 'may', 'new', 'now', 'old', 'see', 'two', 'who', 'boy',
+      'did', 'man', 'way', 'she', 'use', 'this', 'that', 'with', 'have',
+      'from', 'they', 'know', 'want', 'been', 'good', 'much', 'some', 'time',
+      'very', 'when', 'come', 'here', 'just', 'like', 'long', 'make', 'many',
       'over', 'such', 'take', 'than', 'them', 'well', 'were'
     ]);
 
@@ -129,34 +128,11 @@ export abstract class BaseAnalysisStrategy implements IAnalysisStrategy {
     ))].slice(0, 10);
   }
 
-  /**
-   * Helper method to extract technical terms
-   */
-  protected extractTechnicalTerms(text: string): string[] {
-    const technicalPatterns = [
-      /\b\w+\.(js|ts|jsx|tsx|py|java|go|rs|cpp|c|h|cs|php|rb|md)\b/g,
-      /\b(function|class|interface|method|api|endpoint|route|component|service|controller|model|view|database|table|column|field|property|attribute|parameter|argument|variable|constant|enum|struct|union|namespace|package|module|import|export|async|await|promise|callback|event|listener|handler|middleware|decorator|annotation|generic|template|abstract|static|final|private|public|protected|override|virtual|extends|implements|inherits|throws|catch|try|finally|if|else|switch|case|default|for|while|do|break|continue|return|yield|new|delete|this|super|null|undefined|true|false)\b/gi,
-      /\b(react|vue|angular|node|express|spring|django|flask|rails|laravel|symfony|asp\.net|blazor|xamarin|flutter|ionic|cordova|electron|webpack|vite|rollup|babel|typescript|javascript|python|java|kotlin|swift|objective-c|c\+\+|c#|go|rust|php|ruby|scala|clojure|haskell|erlang|elixir|dart|lua|perl|r|matlab|julia|fortran|cobol|assembly|sql|nosql|mongodb|postgresql|mysql|sqlite|redis|elasticsearch|docker|kubernetes|aws|azure|gcp|firebase|heroku|vercel|netlify|github|gitlab|bitbucket|jenkins|travis|circleci|jest|mocha|jasmine|cypress|selenium|puppeteer|playwright|storybook)\b/gi,
-    ];
-
-    const matches: string[] = [];
-    technicalPatterns.forEach(pattern => {
-      const found = text.match(pattern) || [];
-      matches.push(...found);
-    });
-
-    return [...new Set(matches.map(m => m.toLowerCase()))].slice(0, 20);
-  }
-
-  /**
-   * Helper method to calculate symbol relevance
-   */
   protected calculateSymbolRelevance(symbol: any, keywords: SearchKeywords): number {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
-      ...keywords.technical,
-      ...keywords.contextual
+      ...keywords.tertiary
     ];
 
     let score = 0;

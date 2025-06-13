@@ -10,14 +10,8 @@ export interface FilePriority {
 
 export interface LLMKeywordAnalysis {
 	primary_keywords: string[];
-	technical_terms: string[];
-	error_patterns: string[];
-	component_names: string[];
-	file_patterns: string[];
-	search_strategies: string[];
-	file_priorities?: FilePriority[];
-	issue_type: string;
-	confidence: number;
+	secondary_keywords: string[];
+	tertiary_keywords: string[];
 }
 
 export interface CodeRelevanceAnalysis {
@@ -285,16 +279,47 @@ export class FallbackAnalysisService {
 		const technical = this.keywordExtractor.extractTechnicalTerms(text);
 		const errors = this.keywordExtractor.extractErrorPatterns(text);
 
+		const allKeywords = [...new Set([...primary, ...technical, ...errors])];
+		const sortedKeywords = allKeywords.sort((a, b) => {
+			const aScore = this.calculateKeywordScore(a, text);
+			const bScore = this.calculateKeywordScore(b, text);
+			return bScore - aScore;
+		});
+
+		const totalKeywords = sortedKeywords.length;
+		const primaryCount = Math.min(8, Math.ceil(totalKeywords * 0.4));
+		const secondaryCount = Math.min(8, Math.ceil(totalKeywords * 0.3));
+
 		return {
-			primary_keywords: primary.slice(0, this.config.maxPrimaryKeywords),
-			technical_terms: technical.slice(0, this.config.maxTechnicalTerms),
-			error_patterns: errors.slice(0, this.config.maxErrorPatterns),
-			component_names: this.keywordExtractor.extractComponentNames(text).slice(0, this.config.maxComponentNames),
-			file_patterns: this.keywordExtractor.extractFilePatterns(text).slice(0, this.config.maxFilePatterns),
-			search_strategies: [...primary, ...technical].slice(0, this.config.maxSearchStrategies),
-			issue_type: this.keywordExtractor.detectIssueType(text),
-			confidence: 0.6 // Lower confidence for fallback
+			primary_keywords: sortedKeywords.slice(0, primaryCount),
+			secondary_keywords: sortedKeywords.slice(primaryCount, primaryCount + secondaryCount),
+			tertiary_keywords: sortedKeywords.slice(primaryCount + secondaryCount, primaryCount + secondaryCount + 8)
 		};
+	}
+
+	private calculateKeywordScore(keyword: string, text: string): number {
+		let score = 0;
+
+		// Frequency in text
+		const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+		const matches = text.match(regex);
+		score += (matches?.length || 0) * 2;
+
+		// Position in text (keywords appearing earlier are more relevant)
+		const firstIndex = text.indexOf(keyword);
+		if (firstIndex !== -1) {
+			score += Math.max(0, 10 - Math.floor(firstIndex / 100));
+		}
+
+		// Length bonus (prefer meaningful keywords)
+		score += Math.min(keyword.length / 2, 5);
+
+		// Technical term bonus
+		if (this.keywordExtractor.extractTechnicalTerms(keyword).length > 0) {
+			score += 3;
+		}
+
+		return score;
 	}
 
 	/**

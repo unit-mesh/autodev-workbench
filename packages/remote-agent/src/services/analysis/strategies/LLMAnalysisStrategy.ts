@@ -38,27 +38,16 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     this.maxFilesToAnalyze = options.maxFilesToAnalyze || 8;
   }
 
-  async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords & { priorities?: any[] }> {
+  async generateKeywords(issue: GitHubIssue): Promise<SearchKeywords> {
     try {
       console.log('🧠 Generating keywords using LLM...');
       const llmAnalysis = await this.llmService.analyzeIssueForKeywords(issue);
 
       const keywords = {
         primary: llmAnalysis.primary_keywords,
-        secondary: llmAnalysis.component_names,
-        technical: llmAnalysis.technical_terms,
-        contextual: [
-          ...llmAnalysis.error_patterns,
-          ...llmAnalysis.file_patterns,
-          ...llmAnalysis.search_strategies
-        ]
+        secondary: llmAnalysis.secondary_keywords,
+        tertiary: llmAnalysis.tertiary_keywords,
       };
-
-      // Store priorities for later use in file filtering
-      if (llmAnalysis.file_priorities) {
-        (keywords as any).priorities = llmAnalysis.file_priorities;
-        console.log('📊 File priorities from LLM:', JSON.stringify(llmAnalysis.file_priorities));
-      }
 
       return keywords;
     } catch (error: any) {
@@ -482,8 +471,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     return {
       primary: this.extractPrimaryKeywords(text),
       secondary: this.extractSecondaryKeywords(text),
-      technical: this.extractTechnicalTerms(text),
-      contextual: this.extractContextualKeywords(text)
+      tertiary: this.extractContextualKeywords(text)
     };
   }
 
@@ -564,18 +552,10 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     }
 
     // Technical terms get lower weight but still important
-    for (const keyword of keywords.technical) {
+    for (const keyword of keywords.tertiary) {
       const keywordLower = keyword.toLowerCase();
       if (fullPath.includes(keywordLower)) {
         score += 1;
-      }
-    }
-
-    // Contextual keywords get lowest weight
-    for (const keyword of keywords.contextual) {
-      const keywordLower = keyword.toLowerCase();
-      if (fullPath.includes(keywordLower)) {
-        score += 0.5;
       }
     }
 
@@ -649,8 +629,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     const allKeywords = [
       ...keywords.primary,
       ...keywords.secondary,
-      ...keywords.technical,
-      ...keywords.contextual
+      ...keywords.tertiary
     ];
 
     let score = 0;
