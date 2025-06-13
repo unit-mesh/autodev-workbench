@@ -72,27 +72,16 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     keywords: SearchKeywords & { priorities?: any[] }
   ): Promise<AnalysisResult['files']> {
     console.log('🧠 Using LLM to analyze file relevance...');
-
-    // First, get candidate files using traditional methods
     const candidateFiles = await this.findCandidateFiles(context, keywords);
-
-    // Apply priority-based filtering using the new FilePriorityManager
     const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords);
-
-    // Then use LLM to analyze only high-priority candidate files
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
-
-    // Analyze prioritized files with LLM (significantly reduced set)
     const filesToAnalyze = prioritizedFiles.slice(0, this.maxFilesToAnalyze);
-
-    // Process files in parallel batches to balance speed and API limits
     for (let i = 0; i < filesToAnalyze.length; i += this.batchSize) {
       const batch = filesToAnalyze.slice(i, i + this.batchSize);
 
       console.log(`🔍 LLM analyzing batch ${Math.floor(i / this.batchSize) + 1}/${Math.ceil(filesToAnalyze.length / this.batchSize)}: ${batch.map(f => f.path).join(', ')}`);
 
       const batchPromises = batch.map(async (file) => {
-        // Pre-filter with basic relevance check to avoid unnecessary LLM calls
         const basicRelevance = this.calculateBasicRelevance(file, keywords, context.issue);
         if (basicRelevance < 0.2) {
           console.log(`⏭️  Skipping file with low basic relevance: ${file.path} (${basicRelevance.toFixed(2)})`);
@@ -113,10 +102,8 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
       });
 
       const batchResults = await Promise.all(batchPromises);
-
       for (const { file, llmAnalysis, skipped } of batchResults) {
         if (skipped) {
-          // File was skipped due to low basic relevance
           continue;
         }
 
@@ -131,7 +118,6 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
         } else if (llmAnalysis) {
           console.log(`❌ ${file.path}: Not relevant - ${llmAnalysis.reason.substring(0, 80)}...`);
         } else {
-          // Fall back to original scoring for failed files
           if (file.content) {
             llmAnalyzedFiles.push({
               path: file.path,
