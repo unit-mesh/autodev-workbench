@@ -7,7 +7,7 @@ import { regexSearchFiles } from "@autodev/worker-core";
 export const installGrepSearchTool: ToolLike = (installer) => {
   installer("grep-search", "Search for code patterns using regex with ripgrep. Useful for finding function definitions, variable usages, or specific code constructs across files.", {
     search_path: z.string().describe("Directory path to search within the workspace (relative path). Use \".\" for current directory if no specific path is provided."),
-    pattern: z.string().describe("Regex pattern to search for. Examples: \"function myFunction\", \"class\\s+User\", \"import\\s+.*from\\s+['\\\"](react|vue)['\\\"]\". Use word boundaries (\\b) for exact matches and escape special characters.")
+    pattern: z.string().describe("Regex pattern to search code for. Examples: \"function myFunction\", \"class\\s+User\", \"import\\s+.*from\\s+['\\\"](react|vue)['\\\"]\". Use word boundaries (\\b) for exact matches and escape special characters.")
   }, async ({
     search_path,
     pattern
@@ -16,11 +16,9 @@ export const installGrepSearchTool: ToolLike = (installer) => {
     pattern: string;
   }) => {
     try {
-      // Resolve search path
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const searchDir = path.isAbsolute(search_path) ? search_path : path.join(workspacePath, search_path);
 
-      // Security check - ensure search path is within workspace
       const resolvedSearchDir = path.resolve(searchDir);
       const resolvedWorkspace = path.resolve(workspacePath);
       if (!resolvedSearchDir.startsWith(resolvedWorkspace)) {
@@ -34,7 +32,6 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Check if search directory exists
       if (!fs.existsSync(resolvedSearchDir)) {
         return {
           content: [
@@ -46,17 +43,10 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Execute search using ripgrep
       let searchResults: string;
 
       try {
-        searchResults = await regexSearchFiles(
-          workspacePath,
-          resolvedSearchDir,
-          pattern,
-          false, // includeNodeModules
-          undefined // filePattern
-        );
+        searchResults = await regexSearchFiles(workspacePath, resolvedSearchDir, pattern, false, undefined);
       } catch (error: any) {
         return {
           content: [
@@ -68,7 +58,6 @@ export const installGrepSearchTool: ToolLike = (installer) => {
         };
       }
 
-      // Check if we have results
       if (!searchResults || searchResults === "No results found") {
         return {
           content: [

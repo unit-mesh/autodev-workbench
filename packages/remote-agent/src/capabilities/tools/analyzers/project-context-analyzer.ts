@@ -2,7 +2,6 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import {
   ArchitectureAnalysis,
-  CodebaseAnalysis,
   DependenciesAnalysis,
   GitAnalysis,
   ProjectInfo,
@@ -21,7 +20,6 @@ export interface AnalysisResult {
     timestamp: string;
   };
   project_info: ProjectInfo;
-  codebase_analysis: CodebaseAnalysis;
   workflow_analysis?: WorkflowAnalysis;
   architecture_analysis?: ArchitectureAnalysis;
   git_info?: GitAnalysis;
@@ -50,19 +48,13 @@ export class ProjectContextAnalyzer {
   async analyze(workspacePath: string, analysisScope: "basic" | "full" = "basic"): Promise<AnalysisResult> {
     const resolvedWorkspace = path.resolve(workspacePath);
     const isFullAnalysis = analysisScope === "full";
-    const maxDepth = isFullAnalysis ? 3 : 2;
 
-    // 使用缓存
     const cacheKey = `${resolvedWorkspace}-${analysisScope}`;
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey);
     }
 
-    // 并行执行分析任务
-    const [projectInfo, codebaseAnalysis] = await Promise.all([
-      this.projectInfoAnalyzer.analyzeProjectInfo(resolvedWorkspace),
-      this.codebaseScanner.scanWorkspace(resolvedWorkspace, maxDepth)
-    ]);
+    const projectInfo = await this.projectInfoAnalyzer.analyzeProjectInfo(resolvedWorkspace);
 
     const result: AnalysisResult = {
       analysis: {
@@ -72,12 +64,10 @@ export class ProjectContextAnalyzer {
         timestamp: new Date().toISOString()
       },
       project_info: projectInfo,
-      codebase_analysis: codebaseAnalysis,
       insights: [],
       recommendations: []
     };
 
-    // 全量分析时执行额外任务
     if (isFullAnalysis) {
       const [workflowAnalysis, architectureAnalysis, gitInfo, dependenciesSummary] = await Promise.all([
         this.analyzeWorkflow(resolvedWorkspace),
@@ -92,18 +82,14 @@ export class ProjectContextAnalyzer {
       result.dependencies_summary = dependenciesSummary;
     }
 
-    // 生成洞察和建议
     result.insights = this.insightGenerator.generateInsights(result);
     result.recommendations = this.insightGenerator.generateRecommendations(result);
 
-    // 计算项目健康度评分
     if (isFullAnalysis) {
       result.health_score = this.insightGenerator.getProjectHealthScore(result);
     }
 
-    // 缓存结果
     this.cache.set(cacheKey, result);
-
     return result;
   }
 

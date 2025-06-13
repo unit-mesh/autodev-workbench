@@ -40,7 +40,9 @@ export class CodeRelevanceAnalysisService {
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: "You are an expert code analyst. Analyze whether a specific code file is relevant to a GitHub issue. Always respond with valid JSON in the specified format."
+          content: 'You are an expert code analyst. Analyze whether a specific code file is relevant to a GitHub issue. ' +
+            'The relevance does not require exact matching. If the code contains useful patterns, logic, structures, or approaches that could inspire or assist in solving the issue, consider it relevant.' +
+            'Always respond with valid JSON in the specified format.'
         },
         {
           role: "user",
@@ -62,7 +64,7 @@ export class CodeRelevanceAnalysisService {
     } catch (error: any) {
       this.logger.logAnalysisFailure('CODE RELEVANCE ANALYSIS', error, { filePath });
       console.warn(`LLM code relevance analysis failed: ${error.message}`);
-      
+
       const fallbackResult = this.fallbackService.analyzeCodeRelevance(issue, filePath, fileContent);
       this.logger.logAnalysisFallback('CODE RELEVANCE ANALYSIS', error.message, { filePath, fallbackResult });
       return fallbackResult;

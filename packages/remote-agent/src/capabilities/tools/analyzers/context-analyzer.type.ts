@@ -16,25 +16,6 @@ export interface ProjectFile {
 	modified: string;
 }
 
-export interface CodebaseAnalysis {
-	total_files: number;
-	total_size: number;
-	by_extension: Record<string, { count: number; size: number }>;
-	by_directory: Record<string, { count: number; size: number }>;
-	largest_files: FileInfo[];
-	code_files: number;
-	code_ratio: number;
-	average_file_size: number;
-	most_common_extensions: [string, { count: number; size: number }][];
-}
-
-export interface FileInfo {
-	path: string;
-	size: number;
-	extension: string;
-	modified: string;
-}
-
 export interface WorkflowAnalysis {
 	cicd_platforms: string[];
 	workflow_files: WorkflowFile[];

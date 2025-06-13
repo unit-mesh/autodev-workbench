@@ -24,24 +24,6 @@ export class InsightGenerator {
       priority: 'medium'
     },
     {
-      condition: (result) => result.codebase_analysis?.code_ratio > 80,
-      message: "Very high code-to-total-files ratio indicates a highly focused codebase",
-      category: 'codebase',
-      priority: 'high'
-    },
-    {
-      condition: (result) => result.codebase_analysis?.code_ratio > 70,
-      message: "High code-to-total-files ratio indicates a focused codebase",
-      category: 'codebase',
-      priority: 'medium'
-    },
-    {
-      condition: (result) => result.codebase_analysis?.code_ratio < 30,
-      message: "Low code ratio suggests significant documentation, configuration, or assets",
-      category: 'codebase',
-      priority: 'medium'
-    },
-    {
       condition: (result) => result.workflow_analysis?.automation_score > 80,
       message: "Excellent automation setup with comprehensive CI/CD and build scripts",
       category: 'workflow',
@@ -93,12 +75,6 @@ export class InsightGenerator {
       condition: (result) => result.dependencies_summary?.total_deps > 100,
       message: "Large number of dependencies - consider regular dependency audits",
       category: 'dependencies',
-      priority: 'medium'
-    },
-    {
-      condition: (result) => result.codebase_analysis?.total_files > 5000,
-      message: "Large-scale project with extensive codebase",
-      category: 'codebase',
       priority: 'medium'
     }
   ];
@@ -166,13 +142,6 @@ export class InsightGenerator {
       category: 'maintenance',
       priority: 'high',
       actionable: true
-    },
-    {
-      condition: (result) => result.codebase_analysis?.average_file_size > 50000,
-      message: "Large average file size detected - consider splitting large files",
-      category: 'maintenance',
-      priority: 'medium',
-      actionable: true
     }
   ];
 
@@ -238,14 +207,6 @@ export class InsightGenerator {
 
     if (result.architecture_analysis?.patterns.layered) score += 3;
     if (result.architecture_analysis?.patterns.component_based) score += 2;
-
-    // Code quality score (0-15 points)
-    if (result.codebase_analysis?.code_ratio > 70) score += 8;
-    else if (result.codebase_analysis?.code_ratio > 50) score += 5;
-    else if (result.codebase_analysis?.code_ratio > 30) score += 2;
-
-    if (result.codebase_analysis?.average_file_size < 10000) score += 4;
-    else if (result.codebase_analysis?.average_file_size < 20000) score += 2;
 
     // Dependency management (0-10 points)
     if (result.dependencies_summary?.total_deps < 50) score += 6;
