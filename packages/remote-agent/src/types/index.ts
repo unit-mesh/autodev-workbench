@@ -63,7 +63,7 @@ export interface CodeContext {
 }
 
 export interface IssueAnalysisResult {
-  issue: GitHubIssue;
+  issue: GitHubIssue & { urlContent?: any[] };
   relatedCode: CodeContext;
   suggestions: Array<{
     type: 'file' | 'function' | 'api' | 'symbol';
@@ -72,6 +72,7 @@ export interface IssueAnalysisResult {
     confidence: number;
   }>;
   summary: string;
+  projectContext?: any; // 添加项目上下文分析结果
 }
 
 export type Preset = "GitHub" | "GitLab" | "Jira" | "AzureDevOps" | "Bitbucket" | "Multi";

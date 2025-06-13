@@ -226,23 +226,23 @@ export function fetchHtmlContent(url: string, timeout: number): Promise<string> 
 export function transformGitHubCodeUrl(url: string): string {
   try {
     const parsedUrl = new URL(url);
-    
+
     // Check if it's a GitHub URL
     if (parsedUrl.hostname === 'github.com') {
       const pathParts = parsedUrl.pathname.split('/');
-      
+
       // Check if it's a code file URL (follows the pattern /username/repo/blob/branch/path/to/file)
       if (pathParts.length >= 5 && pathParts[3] === 'blob') {
         const username = pathParts[1];
         const repo = pathParts[2];
         const branch = pathParts[4];
         const filePath = pathParts.slice(5).join('/');
-        
+
         // Transform to raw GitHub URL
         return `https://raw.githubusercontent.com/${username}/${repo}/refs/heads/${branch}/${filePath}`;
       }
     }
-    
+
     // Check if it's a gist URL
     if (parsedUrl.hostname === 'gist.github.com' && parsedUrl.pathname.split('/').length >= 3) {
       const pathParts = parsedUrl.pathname.split('/');
@@ -250,7 +250,7 @@ export function transformGitHubCodeUrl(url: string): string {
       const gistId = pathParts[2];
       return `https://gist.githubusercontent.com/${username}/${gistId}/raw`;
     }
-    
+
     // Return the original URL if it's not a GitHub code URL or if transformation fails
     return url;
   } catch (error) {
@@ -292,7 +292,9 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
         content_length: markdownContent.length,
         status: "success" as const
       });
-      console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars)`);
+
+      const linesCount = markdownContent.split('\n').length;
+      console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars, ${linesCount} lines)`);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.log(`❌ Failed to fetch: ${url} - ${errorMessage}`);
