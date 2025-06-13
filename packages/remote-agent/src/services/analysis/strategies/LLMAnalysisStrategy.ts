@@ -15,6 +15,7 @@ import {
 } from "../interfaces/IAnalysisStrategy";
 import { FilePriorityManager } from "../priority/FilePriorityManager";
 import * as path from 'path';
+import { BM25 } from './BM25';
 
 export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   readonly name = 'llm';
@@ -62,9 +63,9 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   ): Promise<AnalysisResult['files']> {
     console.log('🧠 Using LLM to analyze file relevance...');
     const candidateFiles = await this.findCandidateFiles(context, keywords);
-    const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords);
+    // const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords);
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
-    const filesToAnalyze = prioritizedFiles.slice(0, this.maxFilesToAnalyze);
+    const filesToAnalyze = candidateFiles.slice(0, this.maxFilesToAnalyze).filter(it => it.relevanceScore > 0.6)
     for (let i = 0; i < filesToAnalyze.length; i += this.batchSize) {
       const batch = filesToAnalyze.slice(i, i + this.batchSize);
 
@@ -283,113 +284,88 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   }
 
   /**
-   * Apply advanced priority-based filtering using FilePriorityManager
+   * Apply advanced priority-based filtering using BM25 for content scoring
    * Ensures we always return some files, even if none pass strict filtering
    */
   private applyAdvancedPriorityFiltering(
-      candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
-      issue: GitHubIssue,
-      keywords: SearchKeywords & { priorities?: any[] }
-  ): Array<{ path: string; relevanceScore: number; content?: string; priorityScore?: number; reason?: string }> {
-    console.log('🎯 Applying advanced priority-based filtering...');
+    candidateFiles: Array<{ path: string; relevanceScore: number; content?: string }>,
+    issue: GitHubIssue,
+    keywords: SearchKeywords
+  ): Array<{ path: string; content?: string; relevanceScore: number }> {
+    console.log('🎯 Applying BM25-based content scoring...');
 
     if (candidateFiles.length === 0) {
       console.log('⚠️ No candidate files to filter');
       return [];
     }
 
-    const prioritizedFiles = candidateFiles.map(file => {
-      const priorityResult = this.priorityManager.calculatePriority(
-          file.path,
-          issue,
-          keywords,
-          keywords.priorities
-      );
+    const bm25 = new BM25();
+    const processedFiles = new Map<string, { path: string; content?: string; relevanceScore: number }>();
+    const chunkSize = 100; // Number of lines per chunk
 
-      return {
-        ...file,
-        priorityScore: priorityResult.score,
-        reason: priorityResult.reason
-      };
-    });
+    // Process each file
+    for (const file of candidateFiles) {
+      if (!file.content) continue;
 
-    // Sort by priority score (descending) then by relevance score
-    const sortedByPriority = prioritizedFiles.sort((a, b) => {
-      const priorityDiff = (b.priorityScore || 0) - (a.priorityScore || 0);
-      if (priorityDiff !== 0) return priorityDiff;
-      return b.relevanceScore - a.relevanceScore;
-    });
+      // Split content into chunks
+      const lines = file.content.split('\n');
+      const chunks: string[] = [];
 
-    // Filter out files that should be skipped from LLM analysis
-    const filteredFiles = sortedByPriority.filter(file => {
-      const shouldSkip = this.priorityManager.shouldSkipLLMAnalysis(file.path, file.priorityScore || 0, issue);
-
-      if (shouldSkip) {
-        console.log(`⏭️ Skipping file (advanced filter): ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'})`);
-        return false;
+      for (let i = 0; i < lines.length; i += chunkSize) {
+        chunks.push(lines.slice(i, i + chunkSize).join('\n'));
       }
 
-      return true;
-    });
+      // Add chunks to BM25 index
+      chunks.forEach((chunk, index) => {
+        bm25.addDocument(`${file.path}:${index}`, chunk);
+      });
 
-    // Fallback strategy: if no files pass filtering, provide top files with informative comments
-    let finalFiles = filteredFiles;
+      // Calculate scores for each keyword type
+      const primaryQuery = keywords.primary.join(' ');
+      const secondaryQuery = keywords.secondary.join(' ');
+      const tertiaryQuery = keywords.tertiary.join(' ');
 
-    if (finalFiles.length === 0) {
-      console.log('⚠️ No files passed advanced filtering, falling back to top priority files with informative comments');
+      // Score chunks with different weights
+      const chunkScores = chunks.map((_, index) => {
+        const chunkId = `${file.path}:${index}`;
+        const primaryScore = bm25.score(chunkId, primaryQuery) * 1.0;
+        const secondaryScore = bm25.score(chunkId, secondaryQuery) * 0.7;
+        const tertiaryScore = bm25.score(chunkId, tertiaryQuery) * 0.5;
+        return primaryScore + secondaryScore + tertiaryScore;
+      });
 
-      // Take top 3-5 files from sorted priority list
-      const fallbackFiles = sortedByPriority.slice(0, Math.min(5, sortedByPriority.length));
+      // Get top 10 chunks
+      const topChunks = chunkScores
+        .map((score, index) => ({ score, index }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10);
 
-      finalFiles = fallbackFiles.map(file => ({
-        ...file,
-        content: `// This file may not be directly related to the issue, but was included for context. If you have interest in this file, use the read-file command to read its full content.`,
-        reason: `May not be directly related (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}). Use read-file command for full content.`
-      }));
+      // If we have relevant chunks, add the file with its content
+      if (topChunks.length > 0 && topChunks[0].score > 0) {
+        const relevantContent = topChunks
+          .map(({ index }) => chunks[index])
+          .join('\n\n');
 
-      console.log(`📋 Providing ${finalFiles.length} fallback files with informative comments`);
-    } else if (finalFiles.length < 3 && sortedByPriority.length > finalFiles.length) {
-      console.log('⚡ Few files passed filtering, adding additional files with comments for context');
-
-      // Add a few more files from the remaining ones with explanatory comments
-      const remainingFiles = sortedByPriority.filter(f => !finalFiles.includes(f));
-      const additionalFiles = remainingFiles.slice(0, Math.min(3, remainingFiles.length));
-
-      const commentedAdditionalFiles = additionalFiles.map(file => ({
-        ...file,
-        content: `// This file may be peripherally related to the issue.If you have interest in this file, use the read-file command to read its full content.`,
-        reason: `Additional context (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}). Use read-file command if interested.`
-      }));
-
-      finalFiles = [...finalFiles, ...commentedAdditionalFiles];
-      console.log(`📋 Added ${additionalFiles.length} additional files with explanatory comments`);
-    }
-
-    console.log(`🎯 Advanced priority filtering: ${candidateFiles.length} → ${filteredFiles.length} → ${finalFiles.length} files (with fallbacks)`);
-
-    // Log top priority files with detailed reasons
-    const topFiles = finalFiles.slice(0, 5);
-    topFiles.forEach((file, index) => {
-      const isOriginal = !file.content?.startsWith('//');
-      const status = isOriginal ? '✅' : '📋';
-      console.log(`   ${status} ${file.path} (priority: ${file.priorityScore?.toFixed(1) || 'N/A'}, relevance: ${file.relevanceScore.toFixed(2)}) - ${file.reason}`);
-    });
-
-    // Log priority statistics for debugging
-    if (candidateFiles.length > 0) {
-      const stats = this.priorityManager.getPriorityStats(
-          candidateFiles.map(f => f.path),
-          issue,
-          keywords
-      );
-      console.log(`📊 Priority stats: ${stats.highPriorityFiles}/${stats.totalFiles} high-priority files, avg score: ${stats.averageScore.toFixed(2)}`);
-
-      if (finalFiles.some(f => f.content?.startsWith('//'))) {
-        console.log(`💡 Some files include explanatory comments. Use read-file command to access original content.`);
+        processedFiles.set(file.path, {
+          path: file.path,
+          content: relevantContent,
+          relevanceScore: topChunks[0].score
+        });
+      } else {
+        // If no relevant chunks found, just add the path
+        processedFiles.set(file.path, {
+          path: file.path,
+          relevanceScore: 0
+        });
       }
     }
 
-    return finalFiles;
+    // Convert to array and sort by relevance score
+    const results = Array.from(processedFiles.values())
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    console.log(`✅ BM25 scoring complete: ${results.length} files processed`);
+    return results;
   }
 
   /**
