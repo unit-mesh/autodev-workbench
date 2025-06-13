@@ -155,6 +155,9 @@ export function extractUrlsFromText(text: string): string[] {
 }
 
 export function fetchHtmlContent(url: string, timeout: number): Promise<string> {
+  // Transform GitHub code links to raw GitHub URLs
+  url = transformGitHubCodeUrl(url);
+
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === 'https:' ? https : http;
@@ -210,6 +213,51 @@ export function fetchHtmlContent(url: string, timeout: number): Promise<string> 
 
     req.end();
   });
+}
+
+/**
+ * Transform GitHub code URLs to raw GitHub URLs for better content fetching
+ * Examples:
+ * - https://github.com/zed-industries/zed/blob/main/crates/copilot/src/copilot_chat.rs
+ *   → https://raw.githubusercontent.com/zed-industries/zed/refs/heads/main/crates/copilot/src/copilot_chat.rs
+ * - https://github.com/username/repo/blob/branch/path/to/file.ext
+ *   → https://raw.githubusercontent.com/username/repo/refs/heads/branch/path/to/file.ext
+ */
+export function transformGitHubCodeUrl(url: string): string {
+  try {
+    const parsedUrl = new URL(url);
+    
+    // Check if it's a GitHub URL
+    if (parsedUrl.hostname === 'github.com') {
+      const pathParts = parsedUrl.pathname.split('/');
+      
+      // Check if it's a code file URL (follows the pattern /username/repo/blob/branch/path/to/file)
+      if (pathParts.length >= 5 && pathParts[3] === 'blob') {
+        const username = pathParts[1];
+        const repo = pathParts[2];
+        const branch = pathParts[4];
+        const filePath = pathParts.slice(5).join('/');
+        
+        // Transform to raw GitHub URL
+        return `https://raw.githubusercontent.com/${username}/${repo}/refs/heads/${branch}/${filePath}`;
+      }
+    }
+    
+    // Check if it's a gist URL
+    if (parsedUrl.hostname === 'gist.github.com' && parsedUrl.pathname.split('/').length >= 3) {
+      const pathParts = parsedUrl.pathname.split('/');
+      const username = pathParts[1];
+      const gistId = pathParts[2];
+      return `https://gist.githubusercontent.com/${username}/${gistId}/raw`;
+    }
+    
+    // Return the original URL if it's not a GitHub code URL or if transformation fails
+    return url;
+  } catch (error) {
+    // If URL parsing fails, return the original URL
+    console.error(`Failed to transform GitHub URL: ${error}`);
+    return url;
+  }
 }
 
 /**
