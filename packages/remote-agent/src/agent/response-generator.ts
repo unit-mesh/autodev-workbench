@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { LLMProviderConfig } from "../services/llm";
 import { ToolResult } from "./tool-definition";
+import { LLMLogger } from "../services/llm/llm-logger";
 
 export class ResponseGenerator {
   private llmConfig: LLMProviderConfig;
@@ -67,6 +68,9 @@ Be precise, transparent about assumptions, and emphasize where the multi-step an
         temperature: 0.3,
         maxTokens: 3000
       });
+
+      const logger = new LLMLogger("final-result.log");
+      logger.log('Generated comprehensive final response:', comprehensivePrompt)
 
       return text;
     } catch (error) {

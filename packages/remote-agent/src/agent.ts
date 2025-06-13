@@ -214,7 +214,6 @@ export class AIAgent {
 
 			allToolResults.push(...roundResults);
 
-			// Check if we should continue (pass all results for comprehensive analysis)
 			const shouldContinue = this.shouldContinueToolChain(roundResults, currentRound, allToolResults);
 			if (!shouldContinue) {
 				this.log(`Round ${currentRound}: Stopping tool chain based on results`);
@@ -224,7 +223,6 @@ export class AIAgent {
 			currentRound++;
 		}
 
-		// Generate final comprehensive response
 		const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
 			userInput,
 			lastLLMResponse,
@@ -232,15 +230,11 @@ export class AIAgent {
 			currentRound - 1
 		);
 
-		// Update conversation history
 		this.updateConversationHistory(userInput, finalResponse);
 
 		const executionTime = Date.now() - startTime;
 
-		// Extract GitHub context
 		const githubContext = this.githubManager.extractContext(userInput, allToolResults);
-
-		// Auto-upload to GitHub issue if enabled
 		if (this.githubManager.isAutoUploadEnabled() && githubContext) {
 			await this.githubManager.uploadToIssue({
 				token: this.config.githubToken!,
@@ -251,7 +245,6 @@ export class AIAgent {
 			});
 		}
 
-		// Export memories to markdown at the end of conversation
 		await this.exportMemoriesToMarkdown();
 
 		return {
