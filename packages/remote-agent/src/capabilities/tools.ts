@@ -58,6 +58,7 @@ import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
 
 // Web Tools
 import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
+import { installFetchContentWithSummaryTool } from "./tools/fetch-content-with-summary";
 import { installWebSearchTool } from "./tools/web-search";
 import { installProjectMemoryTool } from "./tools/project-memory";
 
@@ -106,6 +107,7 @@ export const GitHubTools = [
 
 export const WebTools = [
   installExtractWebpageAsMarkdownTool,
+  installFetchContentWithSummaryTool,
   installWebSearchTool,
 ] as const;
 
