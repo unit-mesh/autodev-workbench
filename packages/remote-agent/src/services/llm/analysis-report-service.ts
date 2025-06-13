@@ -114,11 +114,14 @@ export class AnalysisReportService {
 - Labels: ${issue.labels.map(l => l.name).join(', ') || 'None'}
 - State: ${issue.state}
 
+**Project Context:**
+${analysisResult.projectContext}
+
+  
 **Code Analysis Results:**
 - Relevant Files Found: ${relevantFiles.length}
 - Top Files: ${relevantFiles.map(f => f.path).join(', ')}
 - Relevant Symbols: ${relevantSymbols.map(s => s.name).join(', ')}
-- Current Summary: ${analysisResult.summary}
 
 **Current Suggestions:**
 ${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
@@ -178,7 +181,6 @@ Focus on:
 - 找到相关文件: ${relevantFiles.length}个
 - 主要文件: ${relevantFiles.map(f => f.path).join(', ')}
 - 相关符号: ${relevantSymbols.map(s => s.name).join(', ')}
-- 当前摘要: ${analysisResult.summary}
 
 **当前建议:**
 ${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}
@@ -227,7 +229,6 @@ ${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s.description}`).join('\
 - Relevant Files Found: ${relevantFiles.length}
 - Top Files: ${relevantFiles.map(f => f.path).join(', ')}
 - Relevant Symbols: ${relevantSymbols.map(s => s.name).join(', ')}
-- Current Summary: ${analysisResult.summary}
 
 **Current Suggestions:**
 ${analysisResult.suggestions.map((s, i) => `${i + 1}. ${s.description}`).join('\n')}

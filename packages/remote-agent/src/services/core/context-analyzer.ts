@@ -169,16 +169,12 @@ export class ContextAnalyzer {
     const enhancedIssue = await this.enhanceIssueWithUrlContent(issue);
     const relatedCode = await this.findRelevantCode(enhancedIssue);
 
-    const [suggestions, summary] = await Promise.all([
-      this.generateSuggestions(enhancedIssue, relatedCode),
-      this.generateSummary(enhancedIssue, relatedCode)
-    ]);
+    const suggestions = await this.generateSuggestions(enhancedIssue, relatedCode)
 
     const result: IssueAnalysisResult = {
       issue: enhancedIssue,
       relatedCode,
       suggestions,
-      summary,
     };
 
     if (process.env.VERBOSE_ANALYSIS_LOGS === 'true') {
@@ -270,7 +266,6 @@ export class ContextAnalyzer {
       });
     }
 
-    // Generate suggestions based on symbols
     for (const symbol of codeContext.symbols.slice(0, 3)) {
       suggestions.push({
         type: 'symbol',

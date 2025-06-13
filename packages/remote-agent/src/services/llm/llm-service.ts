@@ -68,10 +68,7 @@ export class LLMService {
     issue: GitHubIssue,
     analysisResult: IssueAnalysisResult
   ): Promise<LLMAnalysisReport> {
-    this.logger.log('Delegating analysis report generation to AnalysisReportService', {
-      issueNumber: issue.number,
-      analysisResultSummary: analysisResult.summary
-    });
+    this.logger.log('Delegating analysis report generation to AnalysisReportService', { issueNumber: issue.number });
 
     return this.analysisReportService.generateAnalysisReport(issue, analysisResult, this.llmConfig);
   }

@@ -10,15 +10,15 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
     query: z.string().describe("Natural language description of what you're looking for (e.g., 'authentication logic', 'database connection code', 'error handling for API calls')"),
     workspace_path: z.string().optional().describe("Path to the workspace to analyze (defaults to current directory)"),
     search_depth: z.enum(["shallow", "medium", "deep"]).optional().describe("Search depth - affects number of results and analysis detail"),
-  }, async ({ 
-    owner, 
-    repo, 
+  }, async ({
+    owner,
+    repo,
     query,
     workspace_path,
     search_depth = "medium"
-  }: { 
-    owner: string; 
-    repo: string; 
+  }: {
+    owner: string;
+    repo: string;
     query: string;
     workspace_path?: string;
     search_depth?: "shallow" | "medium" | "deep";
@@ -38,7 +38,7 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
 
       const githubService = new GitHubService(githubToken);
       const contextAnalyzer = new ContextAnalyzer(workspace_path);
-      
+
       // Create a mock issue from the query for analysis
       const mockIssue = {
         id: 0,
@@ -57,10 +57,10 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
 
       // Get repository information
       const repoInfo = await githubService.getRepositoryInfo(owner, repo);
-      
+
       // Perform intelligent code search
       const searchResults = await contextAnalyzer.findRelevantCode(mockIssue);
-      
+
       // Generate analysis summary
       const analysisResult = await contextAnalyzer.analyzeIssue(mockIssue);
 
@@ -102,7 +102,6 @@ export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
           })),
         },
         analysis: {
-          summary: analysisResult.summary,
           suggestions: analysisResult.suggestions.slice(0, maxResults).map(suggestion => ({
             type: suggestion.type,
             description: suggestion.description,

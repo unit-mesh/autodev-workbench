@@ -228,9 +228,9 @@ export class ProjectContextAnalyzer {
       complexity_score: this.calculateComplexityScore(foundDirs, architecturePatterns)
     };
 
-    if (includeStructure) {
-      result.detailed_structure = await this.codebaseScanner.getProjectStructure(workspacePath, 2);
-    }
+    // if (includeStructure) {
+    //   result.detailed_structure = await this.codebaseScanner.getProjectStructure(workspacePath, 2);
+    // }
 
     return result;
   }

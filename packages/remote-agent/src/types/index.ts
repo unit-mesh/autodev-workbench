@@ -71,7 +71,6 @@ export interface IssueAnalysisResult {
     location?: string;
     confidence: number;
   }>;
-  summary: string;
   projectContext?: any; // 添加项目上下文分析结果
 }
 
