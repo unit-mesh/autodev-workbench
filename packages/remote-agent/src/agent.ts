@@ -55,7 +55,7 @@ export class AIAgent {
 		this.config = {
 			maxToolRounds: 5,
 			enableToolChaining: true,
-			toolTimeout: 120000,
+			toolTimeout: 1200000,
 			autoUploadToIssue: config.autoUploadToIssue || false,
 			...config
 		};

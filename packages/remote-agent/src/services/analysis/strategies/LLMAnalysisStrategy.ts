@@ -63,7 +63,6 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   ): Promise<AnalysisResult['files']> {
     console.log('🧠 Using LLM to analyze file relevance...');
     const candidateFiles = await this.findCandidateFiles(context, keywords);
-    // const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords);
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
     const filesToAnalyze = candidateFiles.slice(0, this.maxFilesToAnalyze).filter(it => it.relevanceScore > 0.6)
     for (let i = 0; i < filesToAnalyze.length; i += this.batchSize) {

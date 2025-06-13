@@ -81,7 +81,7 @@ export class ToolExecutor {
     cacheTTL?: number;
   } = {}) {
     this.options = {
-      timeout: 120000,
+      timeout: 1200000,
       verbose: false,
       enableParallelExecution: true,
       maxConcurrency: 3,
