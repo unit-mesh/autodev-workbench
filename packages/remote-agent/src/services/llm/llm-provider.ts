@@ -23,8 +23,8 @@ export function configureLLMProvider(): LLMProviderConfig | null {
     });
 
     return {
-      fullModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-      quickModel: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+      fullModel: process.env.DEEPSEEK_MODEL || "deepseek-reasoner",
+      quickModel: process.env.DEEPSEEK_MODEL || "deepseek-reasoner",
       openai,
       providerName: "DeepSeek"
     };

@@ -93,7 +93,6 @@ export {
   fetchUrlsFromIssue,
   extractUrlsFromText,
   fetchHtmlContent,
-  urlToMarkdown,
   extractTitle
 } from "./capabilities/tools/web-fetch-content";
 export { installWebSearchTool } from "./capabilities/tools/web-search";
@@ -109,3 +108,4 @@ export * from "./capabilities/tools/index";
 // =============================================================================
 export { performanceMonitor, PerformanceMonitor, MemoryTracker, timed } from "./utils/performance-monitor";
 export { EnhancedUI } from "./utils/enhanced-ui";
+export { urlToMarkdown } from "./utils/markdown-utils";

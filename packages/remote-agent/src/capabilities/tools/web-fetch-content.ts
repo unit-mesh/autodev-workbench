@@ -3,8 +3,7 @@ import { z } from "zod";
 import * as https from "https";
 import * as http from "http";
 import { URL } from "url";
-import * as cheerio from "cheerio";
-import TurndownService from "turndown";
+import { extractTitle, urlToMarkdown } from "../../utils/markdown-utils";
 
 export const installExtractWebpageAsMarkdownTool: ToolLike = (installer) => {
   installer("browse-webpage", "Extract and convert web page content by url and clean markdown format, removing navigation and ads for better readability", {
@@ -159,7 +158,6 @@ export function fetchHtmlContent(url: string, timeout: number): Promise<string> 
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const client = parsedUrl.protocol === 'https:' ? https : http;
-    
     const options = {
       hostname: parsedUrl.hostname,
       port: parsedUrl.port,
@@ -212,51 +210,6 @@ export function fetchHtmlContent(url: string, timeout: number): Promise<string> 
 
     req.end();
   });
-}
-
-export function extractTitle(html: string): string {
-  const $ = cheerio.load(html);
-  const title = $('title').text().trim();
-  return title || 'Untitled';
-}
-
-export async function urlToMarkdown(html: string): Promise<string> {
-  // Use cheerio to parse and clean up the HTML
-  const $ = cheerio.load(html);
-
-  // Remove script, style, nav, footer, header elements
-  $("script, style, nav, footer, header").remove();
-
-  // Convert cleaned HTML to markdown using TurndownService
-  const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    hr: '---',
-    bulletListMarker: '-',
-    codeBlockStyle: 'fenced',
-    fence: '```',
-    emDelimiter: '*',
-    strongDelimiter: '**',
-    linkStyle: 'inlined',
-    linkReferenceStyle: 'full'
-  });
-
-  // Add custom rules for better conversion
-  turndownService.addRule('removeComments', {
-    filter: function (node: any) {
-      return node.nodeType === 8; // Comment node
-    },
-    replacement: function () {
-      return '';
-    }
-  });
-
-  const markdown = turndownService.turndown($.html());
-
-  // Clean up excessive whitespace
-  return markdown
-    .replace(/\n\s*\n\s*\n/g, '\n\n') // Remove excessive line breaks
-    .replace(/^\s+|\s+$/g, '') // Trim
-    .replace(/\s+$/gm, ''); // Remove trailing spaces from lines
 }
 
 /**
