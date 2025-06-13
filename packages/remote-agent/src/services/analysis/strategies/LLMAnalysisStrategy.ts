@@ -50,6 +50,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
         tertiary: llmAnalysis.tertiary_keywords,
       };
 
+      console.log(`✅ LLM keywords generated: ${JSON.stringify(keywords)}`);
       return keywords;
     } catch (error: any) {
       console.warn(`LLM keyword extraction failed, falling back to rule-based: ${error.message}`);
