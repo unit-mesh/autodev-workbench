@@ -1,8 +1,3 @@
-/**
- * Prompt Builder for AI Agent
- * Constructs prompts for LLM to generate MCP tool calls
- */
-
 import { CoreMessage } from "ai";
 import { ToolLike } from "../capabilities/_typing";
 import { ToolDefinition, ToolResult } from "./tool-definition";
@@ -184,13 +179,8 @@ String and scalar parameters should be specified as is, while lists and objects 
     return messages;
   }
 
-  /**
-   * Build messages for single-round conversation (legacy)
-   */
   buildMessages(userInput: string, context: any, conversationHistory: CoreMessage[]): CoreMessage[] {
     const messages: CoreMessage[] = [];
-
-    // Add system prompt (only if conversation is starting)
     if (conversationHistory.length === 0) {
       messages.push({
         role: "system",
@@ -198,10 +188,7 @@ String and scalar parameters should be specified as is, while lists and objects 
       });
     }
 
-    // Add conversation history
     messages.push(...conversationHistory);
-
-    // Add current user input
     const userPrompt = context ?
       `Context: ${JSON.stringify(context, null, 2)}\n\nUser Request: ${userInput}` :
       userInput;
@@ -214,9 +201,6 @@ String and scalar parameters should be specified as is, while lists and objects 
     return messages;
   }
 
-  /**
-   * Build user prompt for specific round with enhanced context
-   */
   buildUserPromptForRound(
     userInput: string,
     context: any,
@@ -262,9 +246,6 @@ Based on the previous results, determine what additional analysis would strength
 Remember: Thorough investigation leads to better recommendations. Only conclude when you have sufficient depth of understanding.`;
   }
 
-  /**
-   * Summarize previous tool results for context
-   */
   private summarizePreviousResults(results: ToolResult[]): string {
     const summary = results.map(result => {
       if (result.success) {
@@ -369,9 +350,6 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
     return categories;
   }
 
-  /**
-   * Build user prompt with context (legacy)
-   */
   buildUserPrompt(userInput: string, context?: any): string {
     let prompt = userInput;
 
@@ -382,13 +360,9 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
     return prompt;
   }
 
-  /**
-   * Extract tool definitions from MCP tool installers
-   */
   static extractToolDefinitions(toolInstallers: readonly ToolLike[]): ToolDefinition[] {
     const tools: ToolDefinition[] = [];
 
-    // Mock installer to capture tool definitions
     const mockInstaller = (
       name: string,
       description: string,
@@ -398,7 +372,6 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
       const properties: Record<string, any> = {};
       const required: string[] = [];
 
-      // Convert Zod schema to JSON Schema (simplified)
       for (const [key, zodType] of Object.entries(inputSchema)) {
         try {
           properties[key] = PromptBuilder.zodToJsonSchema(zodType);
