@@ -13,7 +13,6 @@ import {
   AnalysisContext,
   AnalysisResult
 } from "../interfaces/IAnalysisStrategy";
-import { FilePriorityManager } from "../priority/FilePriorityManager";
 import * as path from 'path';
 import { BM25 } from './BM25';
 
@@ -21,7 +20,6 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   readonly name = 'llm';
 
   private llmService: LLMService;
-  private priorityManager: FilePriorityManager;
   private batchSize: number;
   private maxFilesToAnalyze: number;
 
@@ -34,7 +32,6 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
   ) {
     super();
     this.llmService = llmService || new LLMService();
-    this.priorityManager = new FilePriorityManager();
     this.batchSize = options.batchSize || 3;
     this.maxFilesToAnalyze = options.maxFilesToAnalyze || 8;
   }
@@ -63,9 +60,17 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
     keywords: SearchKeywords & { priorities?: any[] }
   ): Promise<AnalysisResult['files']> {
     console.log('🧠 Using LLM to analyze file relevance...');
-    const candidateFiles = await this.findCandidateFiles(context, keywords);
+    const candidateFiles = (await this.findCandidateFiles(context, keywords)).filter(it => it.relevanceScore > 0.6)
+    const prioritizedFiles = this.applyAdvancedPriorityFiltering(candidateFiles, context.issue, keywords).filter(it => it.relevanceScore > 0.6)
     const llmAnalyzedFiles: AnalysisResult['files'] = [];
-    const filesToAnalyze = candidateFiles.slice(0, this.maxFilesToAnalyze).filter(it => it.relevanceScore > 0.6)
+    const filesToAnalyze = [
+      ...prioritizedFiles.slice(0, 5),
+      ...candidateFiles.slice(0, this.maxFilesToAnalyze - 5)
+    ].filter((file, index, self) =>
+      index === self.findIndex(f => f.path === file.path)
+    );
+    console.log(JSON.stringify(filesToAnalyze.map(it => { return { path: it.path, score: it.relevanceScore }})))
+
     for (let i = 0; i < filesToAnalyze.length; i += this.batchSize) {
       const batch = filesToAnalyze.slice(i, i + this.batchSize);
 
@@ -301,7 +306,7 @@ export class LLMAnalysisStrategy extends BaseAnalysisStrategy {
 
     const bm25 = new BM25();
     const processedFiles = new Map<string, { path: string; content?: string; relevanceScore: number }>();
-    const chunkSize = 100; // Number of lines per chunk
+    const chunkSize = 1000; // Number of lines per chunk
 
     // Process each file
     for (const file of candidateFiles) {
