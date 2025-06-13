@@ -7,6 +7,15 @@ export function extractTitle(html: string): string {
 	return title || 'Untitled';
 }
 
+export function isHtml(content: string): boolean {
+	try {
+		const doc = new DOMParser().parseFromString(content, "text/html");
+		return doc.body.innerHTML !== content;
+	} catch {
+		return false;
+	}
+}
+
 export async function urlToMarkdown(html: string): Promise<string> {
 	const $ = cheerio.load(html);
 	$("script, style, nav, footer, header").remove();
