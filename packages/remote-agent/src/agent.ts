@@ -498,33 +498,6 @@ export class AIAgent {
 	}
 
 	/**
-	 * Get execution statistics
-	 */
-	getExecutionStats() {
-		return this.toolExecutor.getExecutionStats();
-	}
-
-	/**
-	 * Get agent configuration
-	 */
-	getConfig(): AgentConfig {
-		return { ...this.config };
-	}
-
-	updateConfig(newConfig: Partial<AgentConfig>): void {
-		this.config = { ...this.config, ...newConfig };
-		if (newConfig.githubToken || newConfig.githubContext || newConfig.autoUploadToIssue !== undefined) {
-			this.githubManager.updateConfig({
-				token: newConfig.githubToken,
-				context: newConfig.githubContext,
-				autoUploadToIssue: newConfig.autoUploadToIssue
-			});
-		}
-
-		this.log('Configuration updated:', newConfig);
-	}
-
-	/**
 	 * Extract GitHub context from user input and tool results
 	 */
 	private extractGitHubContext(userInput: string, toolResults: ToolResult[]): {
