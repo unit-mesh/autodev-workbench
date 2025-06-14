@@ -1,3 +1,7 @@
+# AI Agent 工具能力与协议对比
+
+本 README 对比多种 AI Agent 工具在功能能力、协议风格和设计哲学上的差异，帮助快速了解各家方案的优劣和适用场景。
+
 ## 📊 完整工具能力对比表
 
 | 功能类别          | AutoDev Remote Agent    | Claude Code        | Cascade            | GitHub Agent            | Lingma                 | Augment              | Trae AI                                                | **Cursor Agent**               | **CodeX Agent**                |
@@ -21,7 +25,7 @@
 | **代码搜索**      | ✅ 多种搜索                  | ✅ 基础搜索             | ✅ 高级搜索             | ✅ 多种搜索                  | ✅ 高级搜索                 | ✅ 高级搜索               | ✅ 多种搜索                                                 | ✅ 智能搜索                         | ⚠️ 基础搜索                        |
 | - 文件模式搜索      | `search-keywords`       | `GlobTool`         | `grep_search`      | `file-search`           | `search_symbol`        | `view` (搜索模式)        | `search_by_regex` (替代)                                 | `search_files` (模糊匹配)          | 通过 `shell.execute` (find/grep) |
 | - 内容搜索        | `code-search-regex`     | `GrepTool`         | `grep_search`      | `grep-search`           | `search_symbol`        | `view` (正则搜索)        | `search_by_regex`                                      | `grep_search` (ripgrep)        | 通过 `shell.execute` (grep)      |
-| - 语义搜索        | ❌ 无                     | ❌ 无                | `codebase_search`  | ❌ 无                     | `search_codebase`      | `codebase-retrieval` | `search_codebase`                                      | `codebase_search` (索引化语义搜索)    | ❌ 无                            |
+| - 语义搜索        | ❌ 无                     | ❌ 无                | `codebase_search`  | ❌ 无                     | `search_codebase`      | `codebase-retrieval` | `search_codebase`                                      | `codebase_search` (索���化语义搜索)  | ❌ 无                            |
 | - 符号搜索        | ❌ 无                     | ❌ 无                | `view_code_item`   | ❌ 无                     | `search_symbol`        | ❌ 无                  | ❌ 无                                                    | ❌ 无                            | ❌ 无                            |
 | **代码分析**      | ✅ 基础分析                  | ⚠️ 有限支持            | ✅ 高级分析             | ✅ 基础分析                  | ✅ 高级分析                 | ✅ 高级分析               | ⚠️ 有限支持                                                | ✅ 高级分析                         | ✅ 基础分析                         |
 | - 项目分析        | `analyze-basic-context` | ❌ 无                | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ 无                  | ❌ 无                                                    | 自动代码库理解                        | ❌ 无                            |
@@ -36,7 +40,7 @@
 | - 网络访问控制      | ❌ 无                     | ❌ 无                | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ 无                  | ❌ 无                                                    | ❌ 无                            | `net.enable/disable` (动态控制)    |
 | **Jupyter支持** | ❌ 无                     | ✅ 完整支持             | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ 无                  | ❌ 无                                                    | ✅ 基础支持                         | ❌ 无                            |
 | - 笔记本读取       | ❌ 无                     | `NotebookReadTool` | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ 无                  | ❌ 无                                                    | `edit_notebook` (读取模式)         | ❌ 无                            |
-| - 单元格编辑       | ❌ 无                     | `NotebookEditCell` | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ 无                  | ❌ 无                                                    | `edit_notebook`                | ❌ 无                            |
+| - 单元格编辑       | ❌ 无                     | `NotebookEditCell` | ❌ 无                | ❌ 无                     | ❌ 无                    | ❌ ��                 | ❌ 无                                                    | `edit_notebook`                | ❌ 无                            |
 | **记忆管理**      | ❌ 无                     | ✅ 文件方式             | ✅ 数据库方式            | ❌ 无                     | ✅ 数据库方式                | ✅ 数据库方式              | ❌ 无                                                    | ✅ 会话管理                         | ❌ 无                            |
 | - 记忆存储        | ❌ 无                     | `CLAUDE.md`        | `create_memory`    | ❌ 无                     | `create_memory`        | `remember`           | ❌ 无                                                    | 自动检查点 + 会话历史                   | ❌ 无                            |
 | - 记忆检索        | ❌ 无                     | 自动集成               | 自动集成               | ❌ 无                     | 自动集成                   | 自动集成                 | ❌ 无                                                    | 智能上下文建议                        | ❌ 无                            |
@@ -65,7 +69,7 @@
 
 ## 🎯 各 Agent 核心优势
 
-### AutoDev Remote Agent 核心优势
+### AutoDev Remote Agent 核心���势
 1. **完整的 GitHub 工作流集成** - 提供全面的 GitHub 操作支持
 2. **强大的进程管理能力** - 完整的进程生命周期管理
 3. **多样化的网络功能** - 网页抓取、搜索和浏览器控制
@@ -74,7 +78,7 @@
 ### Claude Code 核心优势
 1. **Jupyter 生态系统支持** - 完整的笔记本文件处理能力
 2. **智能代理工具** - 支持复杂任务的自主执行
-3. **命令安全机制** - 内置命令注入检测和风险评估
+3. **命���安全机制** - 内置命令注入检测和风险评估
 4. **项目记忆管理** - 通过文件维护项目上下文
 
 ### Cascade 核心优势
@@ -92,7 +96,7 @@
 ### Lingma 核心优势
 1. **语义代码搜索** - 基于自然语言的代码库搜索
 2. **代码诊断能力** - 获取编译错误和 Lint 警告
-3. **符号级定位** - 精确查找类、方法、变量定义
+3. **符号级定位** - ���确查找类、方法、变量定义
 4. **记忆管理系统** - 支持跨会话的知识保留
 
 ### Augment 核心优势
@@ -131,16 +135,17 @@
 9. **🏗️ 最小化核心设计** - 精简而强大的工具集，专注于核心开发任务
 10. **⚙️ 灵活工具扩展** - 元数据驱动的工具注册，无需修改核心代码即可扩展功能
 
-## 📋 设计哲学对比
+## 🛠️ 工具协议与定义风格对比
 
-| 维度       | AutoDev Remote Agent | Claude Code | Cascade | GitHub Agent | Lingma  | Augment | Trae AI               | **Cursor Agent**     | **CodeX Agent**      |
-|----------|----------------------|-------------|---------|--------------|---------|---------|-----------------------|----------------------|---------------------|
-| **用户体验** | 集成式开发环境              | 极简命令行界面     | 交互式对话界面 | 集成式开发环境      | 交互式对话界面 | 集成式开发环境 | Agentic IDE 集成        | **原生 IDE 体验**        | **沙箱化开发环境**         |
-| **响应风格** | 详细解释                 | 简洁(≤4行)     | 详细说明和引导 | 详细解释         | 详细说明和引导 | 详细解释    | 专业、协作                 | **即时预测 + 智能建议**      | **工具驱动 + 结构化输出**     |
-| **任务执行** | 协作性强                 | 自主性强        | 协作性强    | 协作性强         | 协作性强    | 协作性强    | 协作性强                  | **预测性 + 协作性**        | **自主性 + 沙箱隔离**       |
-| **安全策略** | 用户确认机制               | 内置检测机制      | 用户确认机制  | 命令白名单        | 用户确认机制  | 用户确认机制  | 用户确认、内置安全指南           | **分层防护栏系统**          | **沙箱隔离 + 结构化配置**     |
-| **扩展性**  | 插件化架构                | 工具固定        | 插件化架构   | 插件化架构        | 工具固定    | 插件化架构   | 工具集固定（通过 Prompt 工程扩展） | **MCP 协议 + 规则系统**    | **元数据驱动 + 动态配置**     |
-| **开发重点** | 全面集成                 | 简化交互        | 智能理解    | 生态完整性        | 语义能力    | 诊断能力    | IDE 协作                | **预测式编程**            | **安全可控执行**           |
+| Agent/协议     | 定义风格                 | 参数结构/协议                      | 典型特点        |
+|--------------|----------------------|------------------------------|-------------|
+| Claude Code  | Claude Tools Use 协议  | `input_schema` + 描述          | 极简 CLI、自主代理 |
+| Cascade      | MCP/JSON Schema      | `parameters`/`inputSchema`   | 插件化、语义搜索    |
+| GitHub Agent | TypeScript + Zod     | `parameters: z.ZodType`      | 类型安全、详细示例   |
+| Lingma       | JSON Schema          | `parameters`/`capabilities`  | 结构化、分类清晰    |
+| Augment      | MCP/TypeScript       | `inputSchema: z.ZodObject`   | 批量操作、IDE 诊断 |
+| Cursor Agent | Claude Tools Use     | `input_schema`/`explanation` | 专用模型、三模式切换  |
+| CodeX Agent  | OpenAI Function Call | `parameters`/OpenAPI 风格      | 沙箱隔离、最小核心   |
 
 ## 🎯 各 Agent 行动规划与设计理念
 
@@ -160,7 +165,7 @@ Cursor Agent代表了 AI 代码编辑器的新一代设计理念：
 
 1. **预测式编程体验**：通过 Tab 功能实现真正的"下一步预测"，不仅仅是代码补全，而是理解开发者意图的编辑建议
 2. **专用模型架构**：Apply 模型专门优化代码应用任务，与生成模型分离，实现极速的大规模代码变更
-3. **情境智能切换**：三种模式无缝切换，从自主 Agent 到精确 Manual 控制，适应不同复杂度的开发任务
+3. **情境智能切换**：三种模式无缝切换，从自主 Agent 到精确 Manual 控制，适应不��复杂度的开发任务
 4. **个性化 AI 行为**：规则系统允许开发者定制 AI 的行为模式，实现真正的个性化编程助手
 
 ### **CodeX Agent设计理念**
@@ -241,6 +246,6 @@ Cursor Agent为 AI 代码编辑器行业树立了新的标杆：
 1. **专用模型比通用模型更有效** - Apply 模型专门优化代码应用任务，性能远超通用模型
 2. **预测式交互超越响应式交互** - Tab 预测功能改变了传统的"请求-响应"模式
 3. **情境化比功能化更重要** - 三模式切换比大量工具更符合实际开发需求
-4. **个性化是 AI 助手的未来** - 规则系统实现真正的个性化编程体验
+4. **个性化是 AI 助手的未来** - 规则系统实现真正的���性化编程体验
 
 通过借鉴各个 Agent 的优势，特别是 **Cursor Agent的创新理念**和 **CodeX Agent的安全设计**，AutoDev Remote Agent 可以进一步完善其工具生态，朝着**预测式、专用化、个性化、安全化**的方向发展，提供更智能、高效、安全的开发辅助能力。
