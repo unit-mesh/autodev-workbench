@@ -127,6 +127,9 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 - Found relevant files: ${analysisResult.relatedCode.files}
 - Found relevant symbols: ${analysisResult.relatedCode.symbols}
 
+**Related Web Resources:**
+${analysisResult.issue.urlContent}
+
 **Analysis Results:**
 ${analysisResult.projectContext}
 `
