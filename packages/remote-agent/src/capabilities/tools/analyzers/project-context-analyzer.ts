@@ -35,12 +35,10 @@ export class ProjectContextAnalyzer {
   };
 
   private cache = new Map<string, any>();
-  private codebaseScanner: CodebaseScanner;
   private insightGenerator: InsightGenerator;
   private projectInfoAnalyzer: ProjectInfoAnalyzer;
 
   constructor() {
-    this.codebaseScanner = new CodebaseScanner();
     this.insightGenerator = new InsightGenerator();
     this.projectInfoAnalyzer = new ProjectInfoAnalyzer();
   }
