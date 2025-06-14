@@ -58,11 +58,11 @@ jobs:
           
           # The agent.js will automatically detect the labeled event and generate appropriate analysis
           timeout 480s node bin/agent.js --auto-upload --verbose --workspace "${{ github.workspace }}" \
-            --command "Smart analysis triggered by label" || {
-            echo "⚠️ Label-triggered analysis timed out or failed, but continuing..."
+            --command "Analyze GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }} and post the analysis results as a comment to the issue. Focus on providing detailed insights and actionable recommendations." || {
+            echo "⚠️ Analysis timed out or failed, but continuing..."
             exit 0
           }
-          
+
           echo "✅ Label-triggered analysis completed successfully"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
