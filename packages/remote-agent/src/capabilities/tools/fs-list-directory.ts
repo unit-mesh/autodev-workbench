@@ -40,6 +40,7 @@ export const installListDirectoryTool: ToolLike = (installer) => {
 
       interface FileInfo {
         name: string;
+        fullPath: string;
         type: "file" | "directory" | "symlink";
         depth: number;
       }
@@ -68,6 +69,7 @@ export const installListDirectoryTool: ToolLike = (installer) => {
 
               files.push({
                 name: entry,
+                fullPath: entryPath,
                 type: isSymlink ? "symlink" : (isDirectory ? "directory" : "file"),
                 depth: currentDepth
               });
@@ -86,8 +88,13 @@ export const installListDirectoryTool: ToolLike = (installer) => {
 
       listDirectory(resolvedPath);
 
-      // Sort files by name
-      files.sort((a, b) => a.name.localeCompare(b.name));
+      // Sort files by depth first, then by type (directories first), then by name
+      files.sort((a, b) => {
+        if (a.depth !== b.depth) return a.depth - b.depth;
+        if (a.type === "directory" && b.type !== "directory") return -1;
+        if (a.type !== "directory" && b.type === "directory") return 1;
+        return a.name.localeCompare(b.name);
+      });
 
       let output = "";
       for (const file of files) {

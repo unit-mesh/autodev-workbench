@@ -264,7 +264,7 @@ async function getAIAnalysis(prompt: string, llmConfig: any): Promise<any> {
 			maxTokens: 4000
 		});
 
-		new LLMLogger(installAnalysisBasicContextTool.name).log("Summary WebContent", {
+		new LLMLogger(installAnalysisBasicContextTool.name + ".log").log("Summary WebContent", {
 			request: messages,
 			response: text,
 		});
