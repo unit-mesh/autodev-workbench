@@ -5,9 +5,14 @@ export interface ProjectInfo {
 	version: string;
 	description: string;
 	project_files: ProjectFile[];
+	workflow_files?: WorkflowFile[];
 	has_readme: boolean;
 	has_license: boolean;
 	has_changelog: boolean;
+	has_lock_files?: boolean;
+	has_config_files?: boolean;
+	has_dockerfile?: boolean;
+	has_ci_cd?: boolean;
 }
 
 export interface ProjectFile {
@@ -26,6 +31,7 @@ export interface WorkflowAnalysis {
 }
 
 export interface WorkflowFile {
+	name?: string;
 	type: string;
 	path: string;
 	size?: number;
@@ -58,6 +64,8 @@ export interface DependenciesAnalysis {
 	production_deps?: number;
 	dev_deps?: number;
 	peer_deps?: number;
+	optional_deps?: number;
+	build_deps?: number;
 	total_deps?: number;
 	error?: string;
 }
