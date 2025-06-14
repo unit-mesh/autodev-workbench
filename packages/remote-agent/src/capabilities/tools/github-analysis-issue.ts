@@ -119,15 +119,16 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 								type: "text",
 								text: `Analysis completed:
 
-  **Issue:** #${issue_number} - ${issue.title}
+**Issue:** #${issue_number} - ${issue.title}
+**Issue Body:**: #${issue.body}
 
-  **Analysis Results:**
-  ${analysisResult.projectContext}
-  
-  - Found ${analysisResult.relatedCode.files.length} relevant files
-  - Found ${analysisResult.relatedCode.symbols.length} relevant symbols
-  - Found ${analysisResult.relatedCode.apis.length} relevant APIs
-  - Generated ${analysisResult.suggestions.length} suggestions
+**Search Results**
+
+- Found relevant files: ${analysisResult.relatedCode.files}
+- Found relevant symbols: ${analysisResult.relatedCode.symbols}
+
+**Analysis Results:**
+${analysisResult.projectContext}
 `
 							}
 						]
