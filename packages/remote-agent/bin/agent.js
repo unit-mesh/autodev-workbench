@@ -297,22 +297,6 @@ async function processSingleCommand(agent, command, config) {
   try {
     const response = await agent.start(finalCommand);
     const githubToken = process.env.GITHUB_TOKEN;
-    console.log(`try uploading response to GitHub with autoUpload: ${config.autoUpload}, githubContext: ${response.githubContext}, githubToken: ${githubToken ? githubToken.substring(0, 4) + '...' : 'undefined'}`);
-
-    if (config?.autoUpload && response.githubContext && githubToken) {
-      // Note: This is async but we can't await in a static method
-      // The upload will happen in the background
-      const githubService = new GitHubService(githubToken);
-      const commentData = await githubService.addIssueComment(
-          response.githubContext.owner,
-          response.githubContext.repo,
-          response.githubContext.issueNumber,
-          response.text
-      );
-      console.log(`Comment added: ${commentData.html_url}`);
-    } else {
-      console.log(`Cannot upload response to GitHub, options: ${JSON.stringify(config)}, text: ${response.text}`);
-    }
 
     if (!response.success) {
       console.error('❌ Command execution failed');
