@@ -163,7 +163,7 @@ export class AIAgent {
 			this.log(`=== Tool Execution Round ${currentRound} ===`);
 
 			// Build messages for current round
-			const messages = this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory);
+			const messages = await this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory, this.config.workspacePath);
 
 			// Call LLM
 			const llmResponse = await this.callLLM(messages);

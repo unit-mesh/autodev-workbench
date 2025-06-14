@@ -1,6 +1,7 @@
 import { CoreMessage } from "ai";
 import { ToolLike } from "../capabilities/_typing";
 import { ToolDefinition, ToolResult } from "./tool-definition";
+import { ProjectContextAnalyzer } from "../capabilities/tools/analyzers/project-context-analyzer";
 
 export class PromptBuilder {
   private tools: ToolDefinition[] = [];
@@ -141,22 +142,116 @@ String and scalar parameters should be specified as is, while lists and objects 
   }
 
   /**
+   * Build enhanced system prompt with project context for round 1
+   */
+  async buildEnhancedSystemPromptWithContext(workspacePath?: string): Promise<string> {
+    let contextInfo = '';
+    
+    if (workspacePath) {
+      try {
+        const analyzer = new ProjectContextAnalyzer();
+        const analysisResult = await analyzer.analyze(workspacePath, "basic");
+        
+        contextInfo = `
+
+## 📋 PROJECT CONTEXT INFORMATION:
+
+Based on the analysis of the current workspace, here's what I know about your project:
+
+**Project Overview:**
+- Name: ${analysisResult.project_info.name}
+- Type: ${analysisResult.project_info.type}
+- Description: ${analysisResult.project_info.description || 'No description available'}
+
+**Project Structure:**
+${analysisResult.architecture_analysis?.directory_structure?.length ? 
+  analysisResult.architecture_analysis.directory_structure.map(dir => `- ${dir}/`).join('\n') : 
+  '- Basic project structure detected'}
+
+**Architecture Patterns:**
+${analysisResult.architecture_analysis?.patterns ? 
+  Object.entries(analysisResult.architecture_analysis.patterns)
+    .filter(([_, value]) => value)
+    .map(([pattern, _]) => `- ${pattern.replace('_', ' ').toUpperCase()}`)
+    .join('\n') || '- Standard architecture' : 
+  '- Standard architecture'}
+
+**Key Insights:**
+${analysisResult.insights?.length ? 
+  analysisResult.insights.slice(0, 3).map(insight => `- ${insight}`).join('\n') : 
+  '- Project analysis completed'}
+
+This context will help me provide more relevant and targeted assistance for your specific project setup.
+`;
+      } catch (error) {
+        console.warn('Failed to analyze project context:', error);
+        contextInfo = `
+
+## 📋 PROJECT CONTEXT:
+Working in directory: ${workspacePath}
+(Project analysis unavailable - proceeding with general assistance)
+`;
+      }
+    }
+
+    return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.${contextInfo}
+
+In this environment you have access to a set of tools you can use to answer the user's question.
+
+## 🎯 CRITICAL TOOL SELECTION GUIDELINES:
+
+If the USER's task is general or you already know the answer, just respond without calling tools.
+Follow these rules regarding tool calls:
+1. ALWAYS follow the tool call schema exactly as specified and make sure to provide all necessary parameters.
+2. The conversation may reference tools that are no longer available. NEVER call tools that are not explicitly provided.
+3. If the USER asks you to disclose your tools, ALWAYS respond with the following helpful description: <description>
+
+Here are the functions available in JSONSchema format:
+<functions>
+${this.tools.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
+</functions>
+
+Answer the user's request using the relevant tool(s), if they are available. Check that all the required parameters for each tool call are provided or can reasonably be inferred from context. IF there are no relevant tools or there are missing values for required parameters, ask the user to supply these values; otherwise proceed with the tool calls. If the user provides a specific value for a parameter (for example provided in quotes), make sure to use that value EXACTLY. DO NOT make up values for or ask about optional parameters. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
+
+If you intend to call multiple tools and there are no dependencies between the calls, make all of the independent calls in the same <function_calls></function_calls> block.
+
+You can use tools by writing a "<function_calls>" inside markdown code-block like the following as part of your reply to the user:
+
+\`\`\`xml
+<function_calls>
+<invoke name="FUNCTION_NAME">
+<parameter name="PARAMETER_NAME">PARAMETER_VALUE</parameter>
+...
+</invoke>
+<invoke name="FUNCTION_NAME2">
+...
+</invoke>
+</function_calls>
+\`\`\`
+
+String and scalar parameters should be specified as is, while lists and objects should use JSON format.
+`;
+  }
+
+  /**
    * Build messages for multi-round conversation
    */
-  buildMessagesForRound(
+  async buildMessagesForRound(
     userInput: string,
     context: any,
     previousResults: ToolResult[],
     round: number,
-    conversationHistory: CoreMessage[]
-  ): CoreMessage[] {
+    conversationHistory: CoreMessage[],
+    workspacePath?: string
+  ): Promise<CoreMessage[]> {
     const messages: CoreMessage[] = [];
 
     // Add system prompt for current round
     if (round === 1) {
+      const systemPrompt = await this.buildEnhancedSystemPromptWithContext(workspacePath);
       messages.push({
         role: "system",
-        content: this.buildEnhancedSystemPrompt()
+        content: systemPrompt
       });
     } else {
       messages.push({
