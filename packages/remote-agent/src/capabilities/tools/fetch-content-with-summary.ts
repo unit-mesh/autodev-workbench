@@ -3,7 +3,8 @@ import { z } from "zod";
 import { fetchHtmlContent, transformGitHubCodeUrl } from "./web-fetch-content";
 import { extractTitle, urlToMarkdown } from "../../utils/markdown-utils";
 import { CoreMessage, generateText } from "ai";
-import { LLMProviderConfig, configureLLMProvider } from "../../services/llm/llm-provider";
+import { LLMProviderConfig, configureLLMProvider } from "../../services/llm";
+import { LLMLogger } from "../../services/llm/llm-logger";
 
 /**
  * Fetches content from a URL and generates a summary using LLM
@@ -15,10 +16,10 @@ export const installFetchContentWithSummaryTool: ToolLike = (installer) => {
 		timeout: z.number().optional().default(10000).describe("Request timeout in milliseconds"),
 		summarize_type: z.enum(["code", "article", "auto"]).optional().default("auto").describe("Type of content to summarize: 'code' for GitHub/Gist code, 'article' for general web content, or 'auto' to detect"),
 	}, async ({
-      url,
-      timeout = 10000,
-      summarize_type = "auto"
-    }: {
+		          url,
+		          timeout = 10000,
+		          summarize_type = "auto"
+	          }: {
 		url: string;
 		timeout?: number;
 		summarize_type?: "code" | "article" | "auto";
@@ -74,8 +75,8 @@ export const installFetchContentWithSummaryTool: ToolLike = (installer) => {
 				: summarize_type;
 
 			// Generate summary using LLM
-      const llmConfig = configureLLMProvider();
-      const summary = await generateContentSummary(markdownContent, title, contentType, llmConfig);
+			const llmConfig = configureLLMProvider();
+			const summary = await generateContentSummary(markdownContent, title, contentType, llmConfig);
 
 			return {
 				content: [
@@ -139,14 +140,13 @@ Your summary should be concise yet thorough, focusing on the most important aspe
 Your summary should be concise yet thorough, capturing the essence of the article.`;
 	}
 
-	// Prepare messages for LLM
 	const messages: CoreMessage[] = [
 		{ role: "system", content: systemPrompt },
 		{ role: "user", content: truncatedContent }
 	];
 
+	const logger = new LLMLogger();
 	try {
-		// Call LLM to generate summary
 		const { text } = await generateText({
 			model: llmConfig.openai(llmConfig.fullModel),
 			messages,
@@ -154,6 +154,10 @@ Your summary should be concise yet thorough, capturing the essence of the articl
 			maxTokens: 1000
 		});
 
+		logger.log("Summary WebContent", {
+			request: messages,
+			response: text,
+		});
 		return text;
 	} catch (error: any) {
 		console.error("Error generating content summary:", error);

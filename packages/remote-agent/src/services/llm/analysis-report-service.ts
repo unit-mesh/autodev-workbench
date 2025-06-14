@@ -1,5 +1,5 @@
 import { generateText, CoreMessage } from "ai";
-import { GitHubIssue, IssueAnalysisResult } from "../../types/index";
+import { GitHubIssue, IssueAnalysisResult } from "../../types";
 import { LLMProviderConfig } from "./llm-provider";
 import { LLMAnalysisReport, StructuredAnalysisPlan, FallbackAnalysisService } from "../analysis/FallbackAnalysisService";
 import { LLMLogger } from "./llm-logger";

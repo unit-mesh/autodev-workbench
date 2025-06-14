@@ -3,9 +3,10 @@ import { z } from "zod";
 import { ProjectContextAnalyzer } from "./analyzers/project-context-analyzer";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { generateText } from "ai";
+import { generateText, CoreMessage } from "ai";
 import { CodebaseScanner } from "./analyzers/codebase-scanner";
 import { configureLLMProvider } from "../../services/llm";
+import { LLMLogger } from "../../services/llm/llm-logger";
 
 export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 	installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning. Requires a valid directory path to analyze.", {
@@ -246,22 +247,27 @@ Provide ONLY the JSON object without any other text.
  */
 async function getAIAnalysis(prompt: string, llmConfig: any): Promise<any> {
 	try {
+		const messages: CoreMessage[] = [
+			{
+				role: "system",
+				content: "You are an expert code and project architecture analyzer. Base on following information, give next steps analysis ideas and suggestions."
+			},
+			{
+				role: "user",
+				content: prompt
+			}
+		];
 		const { text } = await generateText({
 			model: llmConfig.openai(llmConfig.fullModel),
-			messages: [
-				{
-					role: "system",
-					content: "You are an expert code and project architecture analyzer. Base on following information, give next steps analysis ideas and suggestions."
-				},
-				{
-					role: "user",
-					content: prompt
-				}
-			],
+			messages: messages,
 			temperature: 0.3,
 			maxTokens: 4000
 		});
 
+		new LLMLogger(installAnalysisBasicContextTool.name).log("Summary WebContent", {
+			request: messages,
+			response: text,
+		});
 		try {
 			return JSON.parse(text);
 		} catch (parseError) {
