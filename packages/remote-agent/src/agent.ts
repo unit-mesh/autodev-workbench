@@ -466,7 +466,6 @@ export class AIAgent {
 			{ role: "assistant", content: assistantResponse }
 		);
 
-		// Keep conversation history manageable (last 10 exchanges)
 		if (this.conversationHistory.length > 20) {
 			this.conversationHistory = this.conversationHistory.slice(-20);
 		}

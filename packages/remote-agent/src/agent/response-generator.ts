@@ -32,33 +32,49 @@ export class ResponseGenerator {
     const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
 
-    const comprehensivePrompt = `Based on the user's request and the results from multiple tool executions across ${totalRounds} rounds, provide a comprehensive, high-confidence analysis.
+    const comprehensivePrompt = `You are tasked with generating a comprehensive, high-confidence analysis based on the user's request and the outcomes of multiple tool executions across ${totalRounds} rounds.
 
-User Request:
+## 📝 User Request
 ${userInput}
 
-Execution Summary:
+## 🧪 Execution Summary
 ${executionSummary}
 
-Tool Results Summary:
+## 📊 Tool Results Summary
 ${toolResultsSummary}
 
-${failedResults.length > 0 ? `Failed Tools:
+${failedResults.length > 0 ? `---
+
+## ❌ Failed Tool Executions
 ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
+` : ''}
 
-` : ''}Please generate a well-structured, detailed final response that:
+## ✅ Instructions for Final Response
 
-1. **Directly answers the user's question** using all available information across tools and rounds.
-2. **Synthesizes insights** from the tools that returned successful results (${successfulResults.length} in total), especially where **consensus was observed** across multiple tool executions.
-3. **Cites key results explicitly** (e.g., function name, tool name, or file path) to enhance traceability and confidence. Prefer formulations like:
-4. **Highlights high-confidence findings** based on:
-   - Repeated confirmation across tools
-   - Low error rate
-   - Converging results from different tool types
-5. **Includes actionable recommendations** for next steps or code changes, clearly derived from the tools' output.
-6. **Clearly state any known limitations, edge cases, or missing information**, especially where tool execution failed or returned uncertain results.
+Please provide a **clear, well-structured response** that fulfills the following requirements:
 
-Be precise, transparent about assumptions, and emphasize where the multi-step analysis improves reliability or coverage.`;
+1. **Answer the user's question directly** using all relevant outputs from tools and rounds.
+2. **Synthesize insights** from the ${successfulResults.length} successful tool results, especially where multiple executions converge or reinforce the same conclusions.
+3. **Cite specific results clearly**, referencing:
+   - Function names
+   - Tool names
+   - File paths (if available)
+   Use formulations like: *"According to \`functionName\` from ToolX..."* or *"The result from \`/path/to/file\` suggests..."*
+4. **Highlight high-confidence findings**, supported by:
+   - Repeated confirmation across different tools or rounds
+   - Minimal or no errors
+   - Consistent patterns across diverse tool types
+5. **Provide actionable recommendations** (e.g., code changes, refactor suggestions, architectural decisions), clearly derived from the analysis.
+6. **Explicitly state any known limitations**, uncertainties, or gaps in coverage. For example:
+   - Tools that failed to execute
+   - Results that contradict each other
+   - Scenarios or edge cases not handled
+
+## 🎯 Goals
+
+- Be **precise**, **transparent**, and **traceable**.
+- Emphasize how the multi-step, multi-tool analysis improves overall confidence.
+- Avoid vague or generic statements unless clearly justified by tool results.`;
 
     try {
       const messages: CoreMessage[] = [
