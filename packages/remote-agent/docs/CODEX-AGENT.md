@@ -1,3 +1,50 @@
+# CODEX Agent Tools Reference
+
+The following table provides a comprehensive overview of all available tools that can be utilized in the CODEX agent environment. This reference is designed to facilitate future development and integration.
+
+| Tool Name       | Description                                          | Parameters                                                             |
+|-----------------|------------------------------------------------------|------------------------------------------------------------------------|
+| `shell.execute` | Run a shell command in the workspace                 | `cmd`: string - The command to execute                                 |
+| `file.read`     | Read a file from the workspace                       | `path`: string - Path to the file                                      |
+| `file.write`    | Write text to a file, creating it if necessary       | `path`: string - Path to the file<br>`text`: string - Content to write |
+| `process.start` | Launch a background process                          | `cmd`: string - The command to execute                                 |
+| `process.stop`  | Terminate a running background process               | `pid`: integer - Process ID to terminate                               |
+| `pip.install`   | Install a Python package during the run              | `packages`: array of strings - Package names to install                |
+| `python.exec`   | Execute a short Python snippet and return its output | `code`: string - Python code to execute                                |
+| `browser.open`  | Launch a headless browser to visit a URL             | `url`: string - URL to open                                            |
+| `net.enable`    | Allow outbound network access                        | None                                                                   |
+| `net.disable`   | Disable outbound network access                      | None                                                                   |
+| `tests.run`     | Run the repository's test suite                      | None                                                                   |
+| `diff.get`      | Show file diffs since the last commit                | None                                                                   |
+| `tool.describe` | Return a list of available tools and their usage     | None                                                                   |
+
+## Tool Categories
+
+### File Operations
+- `file.read` - Read file contents
+- `file.write` - Create or update files
+
+### Process Management
+- `shell.execute` - Run shell commands
+- `process.start` - Start background processes
+- `process.stop` - Terminate running processes
+
+### Python Integration
+- `pip.install` - Install Python packages
+- `python.exec` - Execute Python code
+
+### Network & Web
+- `browser.open` - Access web content
+- `net.enable` - Enable network access
+- `net.disable` - Disable network access
+
+### Repository Management
+- `tests.run` - Execute test suite
+- `diff.get` - View code changes
+
+### System
+- `tool.describe` - Get tool documentation
+
 ```json
     [
   {
