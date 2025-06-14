@@ -1,13 +1,15 @@
-import { generateText } from "ai";
+import { generateText, CoreMessage } from "ai";
 import { LLMProviderConfig } from "../services/llm";
 import { ToolResult } from "./tool-definition";
 import { LLMLogger } from "../services/llm/llm-logger";
 
 export class ResponseGenerator {
   private llmConfig: LLMProviderConfig;
+  private logger: LLMLogger;
 
   constructor(llmConfig: LLMProviderConfig) {
     this.llmConfig = llmConfig;
+    this.logger = new LLMLogger('response-generator.log');
   }
 
   async generateComprehensiveFinalResponse(
@@ -16,6 +18,13 @@ export class ResponseGenerator {
     allToolResults: ToolResult[],
     totalRounds: number
   ): Promise<string> {
+    this.logger.logAnalysisStart('FINAL RESPONSE GENERATION', {
+      userInput,
+      lastLLMResponse,
+      totalRounds,
+      toolResultsCount: allToolResults.length
+    });
+
     const resultsByRound = this.groupResultsByRound(allToolResults);
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);
@@ -52,27 +61,40 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 Be precise, transparent about assumptions, and emphasize where the multi-step analysis improves reliability or coverage.`;
 
     try {
-      const { text } = await generateText({
-        model: this.llmConfig.openai(this.llmConfig.fullModel),
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert GitHub issue analyst with access to comprehensive multi-tool analysis results. Provide detailed, actionable insights that synthesize information from multiple sources and analysis rounds."
-          },
-          { role: "user", content: comprehensivePrompt }
-        ],
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: "You are an expert GitHub issue analyst with access to comprehensive multi-tool analysis results. Provide detailed, actionable insights that synthesize information from multiple sources and analysis rounds."
+        },
+        { role: "user", content: comprehensivePrompt }
+      ];
+
+      this.logger.log('Sending request to LLM', {
+        messages,
         temperature: 0.3,
         maxTokens: 3000
       });
 
-      const logger = new LLMLogger("final-result.log");
-      logger.log('Generated comprehensive final response:', comprehensivePrompt)
+      const { text } = await generateText({
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
+        temperature: 0.3,
+        maxTokens: 3000
+      });
 
+      this.logger.log('Received response from LLM', {
+        response: text
+      });
+
+      this.logger.logAnalysisSuccess('FINAL RESPONSE GENERATION');
       return text;
     } catch (error) {
+      this.logger.logAnalysisFailure('FINAL RESPONSE GENERATION', error);
       console.warn('Error generating comprehensive final response:', error);
       // Fallback to simpler response
-      return this.buildFallbackResponse(userInput, allToolResults, totalRounds);
+      const fallbackResponse = this.buildFallbackResponse(userInput, allToolResults, totalRounds);
+      this.logger.logAnalysisFallback('FINAL RESPONSE GENERATION', error instanceof Error ? error.message : String(error), fallbackResponse);
+      return fallbackResponse;
     }
   }
 

@@ -66,3 +66,4 @@ coverage/
 .temp/
 !__tests__/fixtures/*.json
 memories.md
+logs
