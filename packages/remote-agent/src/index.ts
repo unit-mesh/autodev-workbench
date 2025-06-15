@@ -59,7 +59,7 @@ export {
 // GitHub Tools
 // =============================================================================
 export { installGitHubListRepositoryIssuesTool } from "./capabilities/tools/github-list-repository-issues";
-export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/github-issue-get";
+export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/github-issue-with-analysis";
 export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-find-code-by-description";

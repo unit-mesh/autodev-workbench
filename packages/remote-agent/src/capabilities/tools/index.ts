@@ -2,7 +2,7 @@
 export { installExtractWebpageAsMarkdownTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent } from "./web-fetch-content";
 export { installFetchContentWithSummaryTool } from "./fetch-content-with-summary";
 export { installGitHubListRepositoryIssuesTool } from "./github-list-repository-issues";
-export { installGitHubGetIssueWithAnalysisTool } from "./github-issue-get";
+export { installGitHubGetIssueWithAnalysisTool } from "./github-issue-with-analysis";
 export { installGitHubCreateNewIssueTool } from "./github-issue-create";
 export { installGitHubAddIssueCommentTool } from "./github-issue-comment";
 export { installGitHubFindCodeByDescriptionTool } from "./github-find-code-by-description";

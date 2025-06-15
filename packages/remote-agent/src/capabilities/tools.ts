@@ -50,7 +50,7 @@ import { installSearchKeywordsTool } from "./tools/keyword-search";
 
 // GitHub Tools
 import { installGitHubAnalyzeIssueTool } from "./tools/github-analysis-issue";
-import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-issue-get";
+import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-issue-with-analysis";
 import { installGitHubAddIssueCommentTool } from "./tools/github-issue-comment";
 import { installGitHubListRepositoryIssuesTool } from "./tools/github-list-repository-issues";
 import { installGitHubFindCodeByDescriptionTool } from "./tools/github-find-code-by-description";
