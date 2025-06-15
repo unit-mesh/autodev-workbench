@@ -5,6 +5,33 @@ import * as http from "http";
 import { URL } from "url";
 import { extractTitle, isHtml, urlToMarkdown } from "../../utils/markdown-utils";
 
+// Cache for storing fetched URL results to avoid redundant requests
+type UrlCacheResult = {
+	url: string;
+	title?: string;
+	content?: string;
+	content_length?: number;
+	status: 'success' | 'error';
+	error?: string;
+	timestamp: number; // When the URL was fetched
+};
+
+// URL cache with configurable TTL (time to live)
+const urlCache = new Map<string, UrlCacheResult>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours by default
+
+/**
+ * Clear expired cache entries
+ */
+function clearExpiredCache(maxAge: number = CACHE_TTL_MS): void {
+	const now = Date.now();
+	for (const [url, data] of urlCache.entries()) {
+		if (now - data.timestamp > maxAge) {
+			urlCache.delete(url);
+		}
+	}
+}
+
 export const installExtractWebpageAsMarkdownTool: ToolLike = (installer) => {
 	installer("browse-webpage", "Extract and convert web page content by url and clean markdown format, removing navigation and ads for better readability", {
 		url: z.string().describe("URL to fetch content from"),
@@ -42,27 +69,7 @@ export const installExtractWebpageAsMarkdownTool: ToolLike = (installer) => {
 				}
 
 				// Process all extracted URLs
-				const results = [];
-				for (const extractedUrl of extractedUrls) {
-					try {
-						const htmlContent = await fetchHtmlContent(extractedUrl, timeout);
-						const markdownContent = await urlToMarkdown(htmlContent);
-						results.push({
-							url: extractedUrl,
-							title: extractTitle(htmlContent),
-							content: markdownContent,
-							content_length: markdownContent.length,
-							status: "success"
-						});
-					} catch (error: any) {
-						results.push({
-							url: extractedUrl,
-							error: error.message,
-							status: "error"
-						});
-					}
-				}
-
+				const results = await fetchUrlsFromIssue(issue_content, timeout);
 				return {
 					content: [
 						{
@@ -263,7 +270,12 @@ export function transformGitHubCodeUrl(url: string): string {
 /**
  * Fetch URLs from issue content and return processed results
  */
-export async function fetchUrlsFromIssue(issueContent: string, timeout: number = 10000): Promise<Array<{
+export async function fetchUrlsFromIssue(
+	issueContent: string, 
+	timeout: number = 10000, 
+	useCache: boolean = true, 
+	cacheTtl: number = CACHE_TTL_MS
+): Promise<Array<{
 	url: string;
 	title?: string;
 	content?: string;
@@ -271,6 +283,11 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
 	status: 'success' | 'error';
 	error?: string;
 }>> {
+	// Clear expired cache entries
+	if (useCache) {
+		clearExpiredCache(cacheTtl);
+	}
+
 	const urls = extractUrlsFromText(issueContent);
 
 	if (urls.length === 0) {
@@ -281,6 +298,17 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
 
 	const results = [];
 	for (const url of urls) {
+		// Check if URL is in cache and cache is enabled
+		if (useCache && urlCache.has(url)) {
+			const cachedResult = urlCache.get(url)!;
+			console.log(`🔄 Using cached result for: ${url} (cached ${Math.floor((Date.now() - cachedResult.timestamp) / 1000)} seconds ago)`);
+			
+			// Remove timestamp property before adding to results
+			const { timestamp, ...resultWithoutTimestamp } = cachedResult;
+			results.push(resultWithoutTimestamp);
+			continue;
+		}
+
 		try {
 			console.log(`🌐 Fetching: ${url}`);
 			const htmlContent = await fetchHtmlContent(url, timeout);
@@ -291,24 +319,45 @@ export async function fetchUrlsFromIssue(issueContent: string, timeout: number =
 				markdownContent = htmlContent; // If it's not HTML, use it as is
 			}
 
-			results.push({
+			const result = {
 				url: url,
 				title: extractTitle(htmlContent),
 				content: markdownContent,
 				content_length: markdownContent.length,
 				status: "success" as const
-			});
+			};
+
+			// Store in cache if caching is enabled
+			if (useCache) {
+				urlCache.set(url, {
+					...result,
+					timestamp: Date.now()
+				});
+			}
+
+			results.push(result);
 
 			const linesCount = markdownContent.split('\n').length;
 			console.log(`✅ Successfully fetched: ${url} (${markdownContent.length} chars, ${linesCount} lines)`);
 		} catch (error: unknown) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.log(`❌ Failed to fetch: ${url} - ${errorMessage}`);
-			results.push({
+			
+			const result = {
 				url: url,
 				error: errorMessage,
 				status: "error" as const
-			});
+			};
+
+			// Store error in cache too if caching is enabled
+			if (useCache) {
+				urlCache.set(url, {
+					...result,
+					timestamp: Date.now()
+				});
+			}
+
+			results.push(result);
 		}
 	}
 

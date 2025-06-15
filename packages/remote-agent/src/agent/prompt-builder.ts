@@ -162,6 +162,8 @@ You can use tools by writing a "<function_calls>" inside markdown code-block lik
 </function_calls>
 \`\`\`
 
+Try call at least 2-3 different tools in your first response to the user, especially for complex tasks. This will help gather comprehensive context and provide a solid foundation for further analysis.
+
 String and scalar parameters should be specified as is, while lists and objects should use JSON format.
 `;
   }

@@ -4,7 +4,7 @@ import * as https from "https";
 import { URL } from "url";
 
 export const installWebSearchTool: ToolLike = (installer) => {
-  installer("web-search", "Search the web for information when you are uncertain about something or some knowledge.", {
+  installer("google-search", "Search the web for issue or related information when you are uncertain about something or some knowledge.", {
     query: z.string().describe("Search query to find information"),
     num_results: z.number().optional().default(5).describe("Number of search results to return (1-10)"),
     search_engine: z.enum(["google", "bing", "auto"]).optional().default("auto").describe("Search engine to use. 'auto' will try Google first, then Bing"),
@@ -57,7 +57,7 @@ export const installWebSearchTool: ToolLike = (installer) => {
         } catch (err: any) {
           error = err.message;
           console.warn("Google search failed:", err.message);
-          
+
           // If auto mode and Google failed, try Bing
           if (search_engine === "auto") {
             try {
@@ -148,9 +148,9 @@ interface SearchResult {
 }
 
 async function searchWithGoogle(
-  query: string, 
-  numResults: number, 
-  language: string, 
+  query: string,
+  numResults: number,
+  language: string,
   safeSearch: boolean
 ): Promise<SearchResult[]> {
   const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
@@ -170,7 +170,7 @@ async function searchWithGoogle(
   });
 
   const url = `https://www.googleapis.com/customsearch/v1?${params.toString()}`;
-  
+
   const response = await makeHttpRequest(url);
   const data = JSON.parse(response);
 
@@ -191,9 +191,9 @@ async function searchWithGoogle(
 }
 
 async function searchWithBing(
-  query: string, 
-  numResults: number, 
-  language: string, 
+  query: string,
+  numResults: number,
+  language: string,
   safeSearch: boolean
 ): Promise<SearchResult[]> {
   const apiKey = process.env.BING_SEARCH_API_KEY;
@@ -210,7 +210,7 @@ async function searchWithBing(
   });
 
   const url = `https://api.bing.microsoft.com/v7.0/search?${params.toString()}`;
-  
+
   const response = await makeHttpRequest(url, {
     'Ocp-Apim-Subscription-Key': apiKey
   });
@@ -236,7 +236,7 @@ async function searchWithBing(
 function makeHttpRequest(url: string, headers: Record<string, string> = {}): Promise<string> {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
-    
+
     const options = {
       hostname: parsedUrl.hostname,
       port: parsedUrl.port || 443,
