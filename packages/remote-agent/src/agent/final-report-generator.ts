@@ -3,7 +3,7 @@ import { LLMProviderConfig } from "../services/llm";
 import { ToolResult } from "./tool-definition";
 import { LLMLogger } from "../services/llm/llm-logger";
 
-export class ResponseGenerator {
+export class FinalReportGenerator {
   private llmConfig: LLMProviderConfig;
   private logger: LLMLogger;
 

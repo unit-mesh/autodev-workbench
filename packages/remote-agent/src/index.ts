@@ -13,7 +13,7 @@ export { PromptBuilder } from "./agent/prompt-builder";
 export { FunctionParser } from "./agent/function-parser";
 export { ToolExecutor, type ToolResult, type ToolExecutionContext } from "./agent/tool-executor";
 export { ToolDefinition } from "./agent/tool-definition";
-export { ResponseGenerator } from "./agent/response-generator";
+export { FinalReportGenerator } from "./agent/final-report-generator";
 export { GitHubContextManager } from "./agent/github-context-manager";
 export * from "./agent/tool-definition";
 

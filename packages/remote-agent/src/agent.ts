@@ -3,7 +3,7 @@ import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
 import { PromptBuilder } from "./agent/prompt-builder";
-import { ResponseGenerator } from "./agent/response-generator";
+import { FinalReportGenerator } from "./agent/final-report-generator";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
@@ -47,7 +47,7 @@ export class AIAgent {
 	protected conversationHistory: CoreMessage[] = [];
 	protected config: AgentConfig;
 	protected promptBuilder: PromptBuilder = new PromptBuilder();
-	protected responseGenerator: ResponseGenerator;
+	protected responseGenerator: FinalReportGenerator;
 	protected toolExecutor: ToolExecutor;
 	protected githubManager: GitHubContextManager;
 
@@ -66,7 +66,7 @@ export class AIAgent {
 			throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
 		}
 		this.llmConfig = llmConfig;
-		this.responseGenerator = new ResponseGenerator(this.llmConfig);
+		this.responseGenerator = new FinalReportGenerator(this.llmConfig);
 		this.toolExecutor = new ToolExecutor({
 			timeout: this.config.toolTimeout,
 			verbose: this.config.verbose
