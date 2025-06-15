@@ -271,7 +271,6 @@ async function getAIAnalysis(prompt: string, llmConfig: any): Promise<any> {
 		try {
 			return JSON.parse(text);
 		} catch (parseError) {
-			console.error("Failed to parse LLM response as JSON:", parseError);
 			const jsonMatch = text.match(/\{[\s\S]*\}/);
 			if (jsonMatch) {
 				return JSON.parse(jsonMatch[0]);
