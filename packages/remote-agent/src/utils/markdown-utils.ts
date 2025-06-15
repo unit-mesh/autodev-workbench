@@ -9,8 +9,19 @@ export function extractTitle(html: string): string {
 
 export function isHtml(content: string): boolean {
 	try {
-		const doc = new DOMParser().parseFromString(content, "text/html");
-		return doc.body.innerHTML !== content;
+		// Check for common HTML markers
+		if (content.trim().match(/^<!DOCTYPE|^<html|^<!DOCTYPE/i)) {
+			return true;
+		}
+
+		// Use cheerio to detect HTML structure
+		const $ = cheerio.load(content);
+		const hasHtmlElements = $('html').length > 0 || $('body').length > 0 || $('head').length > 0;
+
+		// Check for common HTML tags
+		const hasCommonTags = $('div, p, span, a, h1, h2, h3, ul, ol, table').length > 0;
+
+		return hasHtmlElements || hasCommonTags;
 	} catch {
 		return false;
 	}
