@@ -137,21 +137,10 @@ export const IntegrationTools = [
 // All Tools (excluding comment tool for remote agent)
 export const AutoDevRemoteAgentTools = [
   ...CoreTools,
-  ...GitHubTools.filter(tool => tool !== installGitHubAddIssueCommentTool),
+  ...GitHubTools.filter(tool =>
+    tool !== installGitHubAddIssueCommentTool &&
+    tool !== installGitHubFindCodeByDescriptionTool
+  ),
   ...WebTools,
   ...EnhancedIntelligenceTools,
-] as const;
-
-// All Tools (including comment tool for full agent)
-export const AllTools = [
-  ...CoreTools,
-  ...IntegrationTools,
-  ...EnhancedIntelligenceTools,
-] as const;
-
-// Enhanced Tools (with advanced capabilities)
-export const EnhancedAgentTools = [
-  ...CoreTools,
-  ...AdvancedTools,
-  ...IntegrationTools,
 ] as const;
