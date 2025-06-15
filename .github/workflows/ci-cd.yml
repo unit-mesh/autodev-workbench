@@ -66,3 +66,18 @@ jobs:
       - name: Run GitHub Agent Action Tests
         run: pnpm --filter remote-agent-action test
         continue-on-error: true
+
+      # New steps for compressing logs and uploading as artifacts
+      - name: Compress logs directory
+        if: always()  # Run even if previous steps fail
+        run: |
+          cd packages/remote-agent
+          tar -czvf remote-agent-logs.tar.gz logs/
+
+      - name: Upload logs as artifacts
+        if: always()  # Run even if previous steps fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-agent-logs
+          path: packages/remote-agent/remote-agent-logs.tar.gz
+          retention-days: 7
