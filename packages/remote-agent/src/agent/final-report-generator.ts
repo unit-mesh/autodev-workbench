@@ -29,12 +29,12 @@ export class FinalReportGenerator {
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);
 
-    const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
+    // const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
 
-    const comprehensivePrompt = `You are an expert GitHub issue analyst. Based on the comprehensive multi-tool analysis, provide a focused, actionable response to the user's request.
+    const comprehensivePrompt = `You are an expert GitHub issue analyst tasked with providing a comprehensive PROPOSED ACTION PLAN based on the analysis results. The plan should detail what the user should do next to address their issue.
 
-## 📝 User Request
+## 📝 Original User Request
 ${userInput}
 
 ## 🔍 Analysis Data Available
@@ -47,52 +47,54 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 
 ## ✅ Required Response Format
 
-Generate a **results-focused analysis** that directly answers the user's question with these sections:
+Generate a **proposed action plan** with these sections:
 
 ### 1. Executive Summary
-Provide a 2-3 sentence summary that directly answers the user's core question based on your analysis findings.
+A 2-3 sentence summary of what was found and what needs to be done to address the user's request.
 
-### 2. Key Findings
-List 3-5 concrete, evidence-based findings from the tool results that are most relevant to solving the user's issue. For each finding:
-- State the finding clearly
-- Reference the specific tool/file that provided evidence (e.g., "According to \`github-analyze-issue\`...")
-- Explain why this finding matters for the issue
+### 2. Key Findings from Analysis
+List 3-5 concrete, evidence-based findings from the analysis that inform the action plan:
+- Each finding should be clearly stated
+- Reference specific evidence found (e.g., "Analysis of \`file.js\` reveals...")
+- Explain how each finding impacts the proposed solution
 
-### 3. Actionable Recommendations
-Provide specific, implementable steps the user should take to address their issue:
-- Prioritize recommendations by impact and feasibility
+### 3. Proposed Action Plan
+Present a step-by-step plan of action:
+- Numbered steps in recommended sequence
+- Each step should be concrete and actionable
 - Include code snippets, file paths, or configuration changes when applicable
-- Reference existing project architecture and constraints found in the analysis
+- Indicate expected outcomes for each step
 
 ### 4. Technical Implementation Details
 When relevant, provide:
-- Specific code changes needed
+- Specific code changes recommended
 - Dependencies to add/remove
 - Configuration updates
 - Integration points with existing codebase
 
-### 5. Risk Assessment & Considerations
+### 5. Considerations & Alternative Approaches
 Briefly note:
-- Potential challenges or blockers identified
-- Alternative approaches if the primary recommendation has issues
-- Any assumptions made due to limited analysis coverage
+- Potential challenges or risks in the proposed approach
+- Alternative approaches if the main plan encounters obstacles
+- Additional information that might be needed
+- Future improvements to consider after implementation
 
 ## 🎯 Response Guidelines
 
-- **Focus on solutions, not analysis process**
-- **Be specific and actionable** - avoid generic advice
-- **Cite evidence** from tool results to support recommendations
+- **Be specific and actionable** - focus on concrete next steps
+- **Reference evidence** discovered during analysis
+- **Present a logical sequence** of actions
 - **Consider the project context** revealed by the analysis
-- **Prioritize practicality** over theoretical perfection
-- **Keep it concise** - aim for clarity over comprehensiveness
+- **Prioritize practical solutions** that can be implemented immediately
+- **Keep it concise** - aim for clarity and usefulness
 
-Remember: The user wants to know WHAT to do and HOW to do it based on the issue analysis, not HOW the analysis was conducted.`;
+Remember: The response should provide a clear, actionable plan that the user can follow to address their issue.`;
 
     try {
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: "You are an expert software architect and GitHub issue analyst. Your role is to provide direct, actionable solutions based on comprehensive code analysis. Focus on delivering practical recommendations rather than describing the analysis process. Always prioritize implementable solutions that fit the existing project architecture."
+          content: "You are an expert software architect and GitHub issue analyst. Your role is to provide a clear, actionable plan based on thorough code analysis. Focus on specific next steps the user should take rather than describing the analysis process. Present a logical sequence of actions that addresses the user's request in the context of their project architecture."
         },
         { role: "user", content: comprehensivePrompt }
       ];
