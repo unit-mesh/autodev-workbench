@@ -60,6 +60,8 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
       const symbolAnalyser = new SymbolAnalyser(languageService);
       const codeCollector = new CodeCollector(workspacePath);
 
+      console.log(`🔍 Analyzing file: ${resolvedPath}`);
+
       // Add the file to the collector
       const content = fs.readFileSync(resolvedPath, 'utf8');
       const language = codeCollector.inferLanguage(resolvedPath) || 'unknown';
