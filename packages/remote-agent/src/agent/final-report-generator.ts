@@ -32,69 +32,81 @@ export class FinalReportGenerator {
     const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
 
-    const comprehensivePrompt = `You are tasked with generating a comprehensive, high-confidence analysis based on the user's request and the outcomes of multiple tool executions across ${totalRounds} rounds.
+    const comprehensivePrompt = `You are an expert GitHub issue analyst. Based on the comprehensive multi-tool analysis, provide a focused, actionable response to the user's request.
 
 ## 📝 User Request
 ${userInput}
 
-## 🧪 Execution Summary
-${executionSummary}
-
-## 📊 Tool Results Summary
+## 🔍 Analysis Data Available
 ${toolResultsSummary}
 
-${failedResults.length > 0 ? `---
-
-## ❌ Failed Tool Executions
+${failedResults.length > 0 ? `## ⚠️ Analysis Limitations
+Some tools failed to execute:
 ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 ` : ''}
 
-## ✅ Instructions for Final Response
+## ✅ Required Response Format
 
-Please provide a **clear, well-structured response** that fulfills the following requirements:
+Generate a **results-focused analysis** that directly answers the user's question with these sections:
 
-1. **Answer the user's question directly** using all relevant outputs from tools and rounds.
-2. **Synthesize insights** from the ${successfulResults.length} successful tool results, especially where multiple executions converge or reinforce the same conclusions.
-3. **Cite specific results clearly**, referencing:
-   - Function names
-   - Tool names
-   - File paths (if available)
-   Use formulations like: *"According to \`functionName\` from ToolX..."* or *"The result from \`/path/to/file\` suggests..."*
-4. **Highlight high-confidence findings**, supported by:
-   - Repeated confirmation across different tools or rounds
-   - Minimal or no errors
-   - Consistent patterns across diverse tool types
-5. **Provide actionable recommendations** (e.g., code changes, refactor suggestions, architectural decisions), clearly derived from the analysis.
-6. **Explicitly state any known limitations**, uncertainties, or gaps in coverage. For example:
-   - Tools that failed to execute
-   - Results that contradict each other
-   - Scenarios or edge cases not handled
+### 1. Executive Summary
+Provide a 2-3 sentence summary that directly answers the user's core question based on your analysis findings.
 
-## 🎯 Goals
+### 2. Key Findings
+List 3-5 concrete, evidence-based findings from the tool results that are most relevant to solving the user's issue. For each finding:
+- State the finding clearly
+- Reference the specific tool/file that provided evidence (e.g., "According to \`github-analyze-issue\`...")
+- Explain why this finding matters for the issue
 
-- Be **precise**, **transparent**, and **traceable**.
-- Emphasize how the multi-step, multi-tool analysis improves overall confidence.
-- Avoid vague or generic statements unless clearly justified by tool results.`;
+### 3. Actionable Recommendations
+Provide specific, implementable steps the user should take to address their issue:
+- Prioritize recommendations by impact and feasibility
+- Include code snippets, file paths, or configuration changes when applicable
+- Reference existing project architecture and constraints found in the analysis
+
+### 4. Technical Implementation Details
+When relevant, provide:
+- Specific code changes needed
+- Dependencies to add/remove
+- Configuration updates
+- Integration points with existing codebase
+
+### 5. Risk Assessment & Considerations
+Briefly note:
+- Potential challenges or blockers identified
+- Alternative approaches if the primary recommendation has issues
+- Any assumptions made due to limited analysis coverage
+
+## 🎯 Response Guidelines
+
+- **Focus on solutions, not analysis process**
+- **Be specific and actionable** - avoid generic advice
+- **Cite evidence** from tool results to support recommendations
+- **Consider the project context** revealed by the analysis
+- **Prioritize practicality** over theoretical perfection
+- **Keep it concise** - aim for clarity over comprehensiveness
+
+Remember: The user wants to know WHAT to do and HOW to do it based on the issue analysis, not HOW the analysis was conducted.`;
 
     try {
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: "You are an expert GitHub issue analyst with access to comprehensive multi-tool analysis results. Provide detailed, actionable insights that synthesize information from multiple sources and analysis rounds."
+          content: "You are an expert software architect and GitHub issue analyst. Your role is to provide direct, actionable solutions based on comprehensive code analysis. Focus on delivering practical recommendations rather than describing the analysis process. Always prioritize implementable solutions that fit the existing project architecture."
         },
         { role: "user", content: comprehensivePrompt }
       ];
 
       this.logger.log('Sending request to LLM', {
         messages,
-        temperature: 0.3,
+        temperature: 0.1,
         maxTokens: 3000
       });
 
       const { text } = await generateText({
         model: this.llmConfig.openai(this.llmConfig.fullModel),
         messages,
-        temperature: 0.3,
+        temperature: 0.1,
         maxTokens: 3000
       });
 
