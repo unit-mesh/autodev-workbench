@@ -36,9 +36,40 @@ Follow these rules regarding tool calls:
 2. The conversation may reference tools that are no longer available. NEVER call tools that are not explicitly provided.
 3. If the USER asks you to disclose your tools, ALWAYS respond with the following helpful description: <description>
 
+
+## 🔍 COMPREHENSIVE ANALYSIS STRATEGY:
+
+For effective problem-solving, use a multi-tool approach to gather comprehensive information:
+1. ALWAYS use at least 2-3 different tools in your initial analysis when facing complex tasks - this is MANDATORY.
+2. Plan your tool usage in a strategic sequence - start with broader context tools, then use more specific tools.
+3. **When encountering unfamiliar terms, new technologies, external APIs, or concepts not explained in the codebase, IMMEDIATELY use the google-search tool.**
+4. For EVERY GitHub issue analysis, you MUST:
+   - First analyze the issue details
+   - Then search for related code files
+   - Finally examine code structure or dependencies
+   - **If the issue refers to external technologies or APIs, use google-search to gather relevant information**
+5. For code exploration tasks, combine at minimum:
+   - Project structure analysis
+   - Keyword/semantic code search
+   - File content examination
+   - **Use google-search when local information is insufficient**
+6. When implementing features, first explore similar implementations in the codebase before writing new code.
+7. Cross-reference findings from multiple tools to validate your understanding before proposing solutions.
+8. If your first tool doesn't return sufficient information, IMMEDIATELY follow up with additional tool calls.
+9. **If you don't find sufficient information in the local codebase, ALWAYS use google-search before giving up.**
+
+## RECOMMENDED TOOL COMBINATIONS Example:
+
+- GitHub issues: github-analyze-issue + google-search + search-keywords + read-file
+- Code understanding: analyze-basic-context + grep-search + read-file + google-search
+- Implementation tasks: search-keywords + analyze-basic-context + read-file
+- **External API integration: google-search + read-file + analyze-basic-context**
+- **Unknown technology research: google-search + search-keywords + read-file**
+- **Latest development trends: google-search + analyze-basic-context**
+
 Here are the functions available in JSONSchema format:
 <functions>
-${this.tools.map(tool => JSON.stringify(tool)).join('\n')}
+${this.tools.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
 </functions>
 
 Answer the user's request using the relevant tool(s), if they are available. Check that all the required parameters for each tool call are provided or can reasonably be inferred from context. IF there are no relevant tools or there are missing values for required parameters, ask the user to supply these values; otherwise proceed with the tool calls. If the user provides a specific value for a parameter (for example provided in quotes), make sure to use that value EXACTLY. DO NOT make up values for or ask about optional parameters. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
@@ -59,8 +90,9 @@ You can use tools by writing a "<function_calls>" inside markdown code-block lik
 </function_calls>
 \`\`\`
 
-String and scalar parameters should be specified as is, while lists and objects should use JSON format.
-`;
+String and scalar parameters should be specified as is, while lists and objects should use JSON format. You
+Should always return with XML code block with <function_calls> tag when calling tools.
+`
   }
 
   /**
@@ -196,20 +228,24 @@ For effective problem-solving in this round, continue using a multi-tool approac
 ${round === 2 ? 
   `- Now that you have initial context, dive deeper into specific code components and dependencies.
 - Examine implementation details of relevant functionality.
-- Identify patterns and architectural decisions that affect the problem/solution.` : 
+- Identify patterns and architectural decisions that affect the problem/solution.
+- **If local information is insufficient, use google-search to gather external knowledge about technologies and APIs.**` : 
   `- This is the final analysis round - focus on filling critical gaps in understanding.
 - Synthesize insights from all previous rounds.
-- Gather any missing details needed for complete recommendations.`
+- Gather any missing details needed for complete recommendations.
+- **Use google-search for any remaining knowledge gaps about external systems, APIs, or technologies.**`
 }
 
 ## RECOMMENDED TOOL COMBINATIONS FOR THIS ROUND:
 ${round === 2 ? 
   `- Code deep-dive: read-file + grep-search + analyze-basic-context
-- Implementation analysis: search-keywords + read-file + run-terminal-command
-- Architecture exploration: analyze-basic-context + list-directory + read-file` : 
+- Implementation analysis: search-keywords + read-file + run-terminal-command + google-search
+- Architecture exploration: analyze-basic-context + list-directory + read-file
+- **External knowledge gaps: google-search + read-file + analyze-basic-context**` : 
   `- Gap filling: tools not used in previous rounds
 - Verification: read-file + run-terminal-command
-- Solution validation: search-keywords + analyze-basic-context`
+- Solution validation: search-keywords + analyze-basic-context + google-search
+- **External technology research: google-search + analyze-basic-context**`
 }
 
 ## Deep Analysis Guidelines for This Round:
@@ -218,12 +254,15 @@ ${round === 2 ?
 - **For Documentation/Architecture Tasks**: Have you explored the project structure, existing docs, and key code components?
 - **For Issue Analysis**: Have you gathered context about the codebase, related files, and implementation patterns?
 - **For Planning Tasks**: Do you have enough context about current state, requirements, and constraints?
+- **For External Knowledge**: Have you used google-search to research unfamiliar technologies, APIs, or concepts?
 
 ### 2. Progressive Investigation Strategy:
 - **If Round 2**: Dive deeper into specific areas (code analysis, existing documentation, patterns)
 - **If Round 3**: Fill remaining gaps and synthesize comprehensive insights
+- **When Information is Missing**: Use google-search to complement local knowledge with external resources
 
 ### 3. Tool Selection Priorities:
+- **Highest Priority**: Tools that provide missing critical context (including google-search for external information)
 - **High Priority**: Tools that provide missing critical context
 - **Medium Priority**: Tools that add depth to existing understanding
 - **Low Priority**: Tools that provide supplementary information
@@ -239,7 +278,7 @@ Only provide final analysis when you have:
 
 Here are the functions available in JSONSchema format:
 <functions>
-${this.tools.map(tool => JSON.stringify(tool)).join('\n')}
+${this.tools.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
 </functions>
 
 Answer the user's request using the relevant tool(s), if they are available. Check that all the required parameters for each tool call are provided or can reasonably be inferred from context. IF there are no relevant tools or there are missing values for required parameters, ask the user to supply these values; otherwise proceed with the tool calls. If the user provides a specific value for a parameter (for example provided in quotes), make sure to use that value EXACTLY. DO NOT make up values for or ask about optional parameters. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
@@ -346,6 +385,13 @@ To provide a comprehensive response, consider using multiple tools to gather com
 1. **For GitHub Issues**: Start with issue analysis, then explore related code and project structure
 2. **For Documentation Tasks**: Examine existing docs, understand project architecture, identify gaps
 3. **For Planning Tasks**: Gather context about current state, requirements, and implementation patterns
+4. **For External Knowledge**: Use google-search when you need information about technologies, APIs, or concepts not found in the local codebase
+
+Remember that google-search is extremely valuable when:
+- You encounter unfamiliar technologies or terms
+- You need information about external APIs or libraries
+- You're researching best practices or standards
+- Local codebase information is insufficient
 
 Take a thorough, multi-step approach to ensure your analysis and recommendations are well-informed and actionable.`;
     }
@@ -367,6 +413,7 @@ Based on the previous results, determine what additional analysis would strength
 
 - **If gaps remain**: Use targeted tools to fill missing information
 - **If context is shallow**: Dive deeper into specific areas (code structure, existing docs, implementation patterns)
+- **If external knowledge is needed**: Use google-search to research technologies, APIs, or concepts not explained in the codebase
 - **If ready for synthesis**: Provide comprehensive final analysis with actionable recommendations
 
 Remember: Thorough investigation leads to better recommendations. Only conclude when you have sufficient depth of understanding.`;
