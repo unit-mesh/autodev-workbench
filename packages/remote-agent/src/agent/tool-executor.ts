@@ -279,7 +279,7 @@ export class ToolExecutor {
 			this.updateExecutionStats(true, executionTime, name);
 
 			// log
-			this.llmLogger.log('ToolExecutor: ${name} completed in ${executionTime}ms', {
+			this.llmLogger.log(`ToolExecutor: ${name} completed in ${executionTime}ms`, {
 				toolName: name,
 				parameters: parameters,
 				executionTime: executionTime,
@@ -445,39 +445,6 @@ export class ToolExecutor {
 		};
 	}
 
-	/**
-	 * Get performance summary for logging
-	 */
-	getPerformanceSummary(): string {
-		const stats = this.getExecutionStats();
-		const summary = [
-			`📊 Tool Executor Performance Summary:`,
-			`   Total calls: ${stats.totalCalls}`,
-			`   Success rate: ${stats.totalCalls > 0 ? ((stats.successfulCalls / stats.totalCalls) * 100).toFixed(1) : 0}%`,
-			`   Average execution time: ${stats.averageExecutionTime.toFixed(0)}ms`,
-			`   Parallel executions: ${stats.parallelExecutions}`,
-			`   Cache hit rate: ${stats.cacheHitRate.toFixed(1)}%`,
-			`   Cache size: ${stats.cacheSize} entries`
-		];
-
-		// Add top 3 slowest tools
-		const sortedTools = Array.from(this.executionStats.toolStats.entries())
-			.sort((a, b) => b[1].averageTime - a[1].averageTime)
-			.slice(0, 3);
-
-		if (sortedTools.length > 0) {
-			summary.push(`   Slowest tools:`);
-			sortedTools.forEach(([name, stat]) => {
-				summary.push(`     ${name}: ${stat.averageTime.toFixed(0)}ms avg`);
-			});
-		}
-
-		return summary.join('\n');
-	}
-
-	/**
-	 * Reset execution statistics
-	 */
 	resetExecutionStats(): void {
 		this.executionStats = {
 			totalCalls: 0,

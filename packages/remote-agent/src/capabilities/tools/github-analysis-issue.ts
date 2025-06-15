@@ -142,7 +142,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 ${analysisResult.urlContentSummary}
 
 **Analysis Results:**
-${analysisResult.projectContext}
+${JSON.stringify(analysisResult)}
 `
 							}
 						]
@@ -183,7 +183,7 @@ async function generateUrlContentSummary(result: IssueAnalysisResult): Promise<s
 
 		// Filter successful URL content entries
 		const validUrlContents = urlContents.filter(item => item.status === 'success' && item.content);
-		
+
 		if (validUrlContents.length === 0) {
 			return "No valid URL content available to summarize.";
 		}
