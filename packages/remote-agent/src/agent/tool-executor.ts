@@ -29,13 +29,6 @@ interface DetailedExecutionStats {
 	cacheMisses: number;
 }
 
-// Tool dependency graph for intelligent parallel execution
-interface ToolDependency {
-	name: string;
-	dependencies: string[];
-	canRunInParallel: boolean;
-}
-
 // Simple cache entry interface
 interface CacheEntry {
 	result: any;
@@ -270,11 +263,8 @@ export class ToolExecutor {
 
 			this.log(`Round ${context.round}: Executing tool: ${name}`);
 
-			// Enhance parameters with context and previous results
-			const enhancedParameters = this.enhanceToolParameters(parameters, context, name, previousResults);
-
 			// Execute with timeout and performance monitoring
-			const result = await this.executeWithPerformanceMonitoring(handler, enhancedParameters, name);
+			const result = await this.executeWithPerformanceMonitoring(handler, parameters, name);
 
 			const executionTime = Date.now() - startTime;
 			this.log(`Round ${context.round}: Tool ${name} completed in ${executionTime}ms`);
@@ -291,7 +281,7 @@ export class ToolExecutor {
 			// log
 			this.llmLogger.log('ToolExecutor: ${name} completed in ${executionTime}ms', {
 				toolName: name,
-				parameters: enhancedParameters,
+				parameters: parameters,
 				executionTime: executionTime,
 				round: context.round,
 				result: result
@@ -355,52 +345,6 @@ export class ToolExecutor {
 			clearTimeout(performanceTimer);
 			throw error;
 		}
-	}
-
-	/**
-	 * Enhanced parameter enhancement with previous results context
-	 */
-	private enhanceToolParameters(
-		parameters: Record<string, any>,
-		context: ToolExecutionContext,
-		toolName: string,
-		previousResults: ToolResult[]
-	): Record<string, any> {
-		const enhanced = { ...parameters };
-
-		// Add workspace_path if not provided and tool supports it
-		if (!enhanced.workspace_path && (
-			toolName === 'github-get-issue-with-analysis' ||
-			toolName === 'github-find-code-by-description'
-		)) {
-			enhanced.workspace_path = context.workspacePath;
-		}
-
-		// Add context from previous successful results
-		if (previousResults.length > 0) {
-			const successfulResults = previousResults.filter(r => r.success);
-
-			if (toolName === 'grep-search' && successfulResults.length > 0) {
-				// Extract keywords from previous issue analysis
-				const issueAnalysis = successfulResults.find(r =>
-					r.functionCall.name === 'github-get-issue-with-analysis'
-				);
-
-				if (issueAnalysis) {
-					enhanced.enhanced_with_issue_context = true;
-					this.log(`🔗 Enhanced ${toolName} parameters with issue analysis context`);
-				}
-			}
-
-			if (toolName === 'github-find-code-by-description') {
-				enhanced.context_from_previous_analysis = successfulResults
-					.filter(r => r.functionCall.name === 'github-get-issue-with-analysis')
-					.map(r => r.result)
-					.filter(Boolean);
-			}
-		}
-
-		return enhanced;
 	}
 
 	/**
