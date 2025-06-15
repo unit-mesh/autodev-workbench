@@ -1,3 +1,28 @@
+## 0.6.3 (2025-06-15)
+
+### 🚀 Features
+
+- integrate LLMLogger for enhanced logging in analysis tools ([49d063c](https://github.com/unit-mesh/autodev-workbench/commit/49d063c))
+- integrate ProjectContextAnalyzer into system prompt for round 1 ([c6b88d7](https://github.com/unit-mesh/autodev-workbench/commit/c6b88d7))
+- **github-analysis:** enhance GitHub issue analysis tool with project context and analysis scope options ([70df41e](https://github.com/unit-mesh/autodev-workbench/commit/70df41e))
+- **index, tools:** add fetch content with summary tool export ([f6558ac](https://github.com/unit-mesh/autodev-workbench/commit/f6558ac))
+- **project-memory:** implement conversation summary saving to markdown ([dee2386](https://github.com/unit-mesh/autodev-workbench/commit/dee2386))
+- **project-memory:** categorize memories and improve formatting ([418d20d](https://github.com/unit-mesh/autodev-workbench/commit/418d20d))
+- **remote-agent:** enable Enhanced Intelligence Tools ([64cb4bb](https://github.com/unit-mesh/autodev-workbench/commit/64cb4bb))
+- **remote-agent:** add GitHub URL transformation for raw content ([fad80c3](https://github.com/unit-mesh/autodev-workbench/commit/fad80c3))
+- **web-fetch-content:** add HTML content detection and improve URL fetching logic ([8332398](https://github.com/unit-mesh/autodev-workbench/commit/8332398))
+
+### 🩹 Fixes
+
+- fix tests ([93b8be4](https://github.com/unit-mesh/autodev-workbench/commit/93b8be4))
+- **index:** reintroduce extractTitle export from markdown-utils ([1845735](https://github.com/unit-mesh/autodev-workbench/commit/1845735))
+- **llm-logger:** update log file path and ensure log directory exists ([2e596bd](https://github.com/unit-mesh/autodev-workbench/commit/2e596bd))
+- **markdown-utils:** update cheerio import to use the main package ([274e650](https://github.com/unit-mesh/autodev-workbench/commit/274e650))
+
+### ❤️ Thank You
+
+- Phodal Huang @phodal
+
 ## 0.6.2 (2025-06-12)
 
 ### 🚀 Features
