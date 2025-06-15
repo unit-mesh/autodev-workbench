@@ -5,6 +5,10 @@ import { ContextAnalyzer } from "../../services/core/context-analyzer";
 import { AnalysisReportGenerator } from "../../services/reporting/analysis-report-generator";
 import { ProjectContextAnalyzer } from "./analyzers/project-context-analyzer";
 import { LLMService } from "../../services/llm";
+import { generateText, CoreMessage } from "ai";
+import { configureLLMProvider } from "../../services/llm";
+import { LLMLogger } from "../../services/llm/llm-logger";
+import { IssueAnalysisResult, UrlCacheResult } from "../../types";
 
 export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 	installer("github-analyze-issue", "🎯 PRIMARY TOOL for GitHub issue analysis and comment posting. Use this tool when the user asks to 'analyze GitHub issue and post results', 'analyze issue and upload to GitHub', 'analyze issue and comment', or similar requests that involve both analysis AND posting results to GitHub. This tool performs comprehensive analysis of a GitHub issue to find related code, then automatically posts a detailed analysis report as a comment to the issue. It also includes basic project context analysis features to provide a complete understanding of the codebase.",
@@ -69,6 +73,13 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 				// Add project context to analysis result
 				if (analysis_scope === "full") {
 					analysisResult.projectContext = projectContext;
+
+					// Add URL content summary if available
+					if (analysisResult.issue.urlContent && analysisResult.issue.urlContent.length > 0) {
+						console.log(`🔄 Generating summary for URL content in issue #${issue_number}...`);
+						const urlContentSummary = await generateUrlContentSummary(analysisResult);
+						analysisResult.urlContentSummary = urlContentSummary;
+					}
 				}
 
 				// Generate and upload the analysis report
@@ -127,8 +138,8 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 - Found relevant files: ${analysisResult.relatedCode.files}
 - Found relevant symbols: ${analysisResult.relatedCode.symbols}
 
-**Related Web Resources:**
-${analysisResult.issue.urlContent}
+**Related Web Resources Summary:**
+${analysisResult.urlContentSummary}
 
 **Analysis Results:**
 ${analysisResult.projectContext}
@@ -151,3 +162,91 @@ ${analysisResult.projectContext}
 		}
 	);
 };
+
+/**
+ * Generate a summary of URL content from a GitHub result using LLM
+ */
+async function generateUrlContentSummary(result: IssueAnalysisResult): Promise<string> {
+	try {
+		const llmConfig = configureLLMProvider();
+		const logger = new LLMLogger();
+
+		if (!llmConfig) {
+			console.warn('⚠️ No LLM provider available for generating URL content summary');
+			return "URL content summary is not available due to missing LLM provider.";
+		}
+
+		const urlContents = result.issue.urlContent;
+		if (!urlContents || urlContents.length === 0) {
+			return "No URL content available to summarize.";
+		}
+
+		// Filter successful URL content entries
+		const validUrlContents = urlContents.filter(item => item.status === 'success' && item.content);
+		
+		if (validUrlContents.length === 0) {
+			return "No valid URL content available to summarize.";
+		}
+
+		// Process each URL individually
+		const summaries = await Promise.all(validUrlContents.map(async urlItem => {
+			try {
+				// Truncate if too long
+				const maxContentLength = 10000;
+				const content = urlItem.content || '';
+				const truncatedContent = content.length > maxContentLength
+					? content.substring(0, maxContentLength) + "... [content truncated]"
+					: content;
+
+				// Create prompt for individual URL content analysis
+				const systemPrompt = `You are an expert content analyst. You are analyzing a specific URL content referenced in a GitHub issue.
+
+Issue Title: ${result.issue.title}
+Issue Description: ${result.issue.body || 'No description provided'}
+URL: ${urlItem.url}
+${urlItem.title ? `URL Title: ${urlItem.title}` : ''}
+
+Based on the URL content provided, summarize:
+1. The key information in this URL relevant to the GitHub issue
+2. How this content relates to the issue being analyzed
+3. Any technical details, code examples, or specifications that are important for understanding the issue
+4. Actionable insights derived from this URL content
+
+Be concise, factual, and focus on information that directly helps address the GitHub issue.`;
+
+				const messages: CoreMessage[] = [
+					{ role: "system", content: systemPrompt },
+					{ role: "user", content: truncatedContent }
+				];
+
+				// Generate summary for this URL
+				const { text } = await generateText({
+					model: llmConfig.openai(llmConfig.fullModel),
+					messages,
+					temperature: 0.3,
+					maxTokens: 500
+				});
+
+				logger.log("Individual URL Content Summary", {
+					request: {
+						url: urlItem.url,
+						contentLength: content.length
+					},
+					response: text,
+				});
+
+				// Return the summary with the URL information
+				return `## [${urlItem.title || urlItem.url}](${urlItem.url})\n\n${text}`;
+			} catch (error: any) {
+				console.error(`❌ Error summarizing URL ${urlItem.url}:`, error.message);
+				return `## [${urlItem.url}](${urlItem.url})\n\nFailed to generate summary: ${error.message}`;
+			}
+		}));
+
+		// Combine all URL summaries
+		return summaries.join('\n\n---\n\n');
+	} catch (error: any) {
+		console.error("❌ Error generating URL content summaries:", error.message);
+		return `Failed to generate URL content summaries: ${error.message}`;
+	}
+}

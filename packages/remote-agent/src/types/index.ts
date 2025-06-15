@@ -73,7 +73,7 @@ export type UrlCacheResult = {
 };
 
 export interface IssueAnalysisResult {
-  issue: GitHubIssue & { urlContent?: any[] };
+  issue: GitHubIssue & { urlContent?: UrlCacheResult[] };
   relatedCode: CodeContext;
   suggestions: Array<{
     type: 'file' | 'function' | 'api' | 'symbol';
@@ -82,6 +82,7 @@ export interface IssueAnalysisResult {
     confidence: number;
   }>;
   projectContext?: any; // 添加项目上下文分析结果
+  urlContentSummary?: string;
 }
 
 export type Preset = "GitHub" | "GitLab" | "Jira" | "AzureDevOps" | "Bitbucket" | "Multi";
