@@ -4,25 +4,11 @@ import * as https from "https";
 import * as http from "http";
 import { URL } from "url";
 import { extractTitle, isHtml, urlToMarkdown } from "../../utils/markdown-utils";
+import { UrlCacheResult } from "../../types";
 
-// Cache for storing fetched URL results to avoid redundant requests
-type UrlCacheResult = {
-	url: string;
-	title?: string;
-	content?: string;
-	content_length?: number;
-	status: 'success' | 'error';
-	error?: string;
-	timestamp: number; // When the URL was fetched
-};
-
-// URL cache with configurable TTL (time to live)
 const urlCache = new Map<string, UrlCacheResult>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours by default
 
-/**
- * Clear expired cache entries
- */
 function clearExpiredCache(maxAge: number = CACHE_TTL_MS): void {
 	const now = Date.now();
 	for (const [url, data] of urlCache.entries()) {
@@ -162,7 +148,6 @@ export function extractUrlsFromText(text: string): string[] {
 }
 
 export function fetchHtmlContent(url: string, timeout: number): Promise<string> {
-	// Transform GitHub code links to raw GitHub URLs
 	url = transformGitHubCodeUrl(url);
 
 	return new Promise((resolve, reject) => {
@@ -271,18 +256,11 @@ export function transformGitHubCodeUrl(url: string): string {
  * Fetch URLs from issue content and return processed results
  */
 export async function fetchUrlsFromIssue(
-	issueContent: string, 
-	timeout: number = 10000, 
-	useCache: boolean = true, 
+	issueContent: string,
+	timeout: number = 10000,
+	useCache: boolean = true,
 	cacheTtl: number = CACHE_TTL_MS
-): Promise<Array<{
-	url: string;
-	title?: string;
-	content?: string;
-	content_length?: number;
-	status: 'success' | 'error';
-	error?: string;
-}>> {
+): Promise<Array<UrlCacheResult>> {
 	// Clear expired cache entries
 	if (useCache) {
 		clearExpiredCache(cacheTtl);
@@ -302,7 +280,7 @@ export async function fetchUrlsFromIssue(
 		if (useCache && urlCache.has(url)) {
 			const cachedResult = urlCache.get(url)!;
 			console.log(`🔄 Using cached result for: ${url} (cached ${Math.floor((Date.now() - cachedResult.timestamp) / 1000)} seconds ago)`);
-			
+
 			// Remove timestamp property before adding to results
 			const { timestamp, ...resultWithoutTimestamp } = cachedResult;
 			results.push(resultWithoutTimestamp);
@@ -316,7 +294,7 @@ export async function fetchUrlsFromIssue(
 			if (isHtml(htmlContent)) {
 				markdownContent = await urlToMarkdown(htmlContent);
 			} else {
-				markdownContent = htmlContent; // If it's not HTML, use it as is
+				markdownContent = htmlContent;
 			}
 
 			const result = {
@@ -342,7 +320,7 @@ export async function fetchUrlsFromIssue(
 		} catch (error: unknown) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.log(`❌ Failed to fetch: ${url} - ${errorMessage}`);
-			
+
 			const result = {
 				url: url,
 				error: errorMessage,

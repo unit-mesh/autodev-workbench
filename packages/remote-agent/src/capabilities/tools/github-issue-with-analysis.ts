@@ -15,9 +15,9 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
     fetch_urls: z.boolean().optional().default(true).describe("Whether to fetch content from URLs mentioned in the issue"),
     url_timeout: z.number().optional().default(10000).describe("Timeout for URL fetching in milliseconds"),
     analysis_mode: z.enum(["basic", "full"]).optional().default("basic").describe("Analysis depth: basic (context only) or full (complete analysis)"),
-  }, async ({ 
-    owner, 
-    repo, 
+  }, async ({
+    owner,
+    repo,
     issue_number,
     workspace_path,
     include_file_content = false,
@@ -25,9 +25,9 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
     fetch_urls = true,
     url_timeout = 10000,
     analysis_mode = "basic"
-  }: { 
-    owner: string; 
-    repo: string; 
+  }: {
+    owner: string;
+    repo: string;
     issue_number: number;
     workspace_path?: string;
     include_file_content?: boolean;
@@ -51,10 +51,10 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
 
       const githubService = new GitHubService(githubToken);
       const contextAnalyzer = new ContextAnalyzer(workspace_path);
-      
+
       // Get the specific issue
       const issue = await githubService.getIssue(owner, repo, issue_number);
-      
+
       // Get repository information
       const repoInfo = await githubService.getRepositoryInfo(owner, repo);
 
@@ -67,22 +67,18 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
         urlContent = await fetchUrlsFromIssue(issue.body, url_timeout);
       }
 
-      // Enhance issue with URL content for analysis
       const enhancedIssue = { ...issue, urlContent };
 
       let analysisResult;
       let codeContext;
 
       if (analysis_mode === "full") {
-        // Full analysis including suggestions and summary
         analysisResult = await contextAnalyzer.analyzeIssue(enhancedIssue);
         codeContext = analysisResult.relatedCode;
       } else {
-        // Basic context analysis only
         codeContext = await contextAnalyzer.findRelevantCode(enhancedIssue);
       }
-      
-      // Limit the number of files returned
+
       const limitedFiles = codeContext.files.slice(0, max_files);
 
       const result = {
@@ -117,8 +113,8 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
             path: file.path,
             relevance_score: file.relevanceScore,
             content: include_file_content ? file.content : undefined,
-            content_preview: !include_file_content ? 
-              file.content.substring(0, 200) + (file.content.length > 200 ? "..." : "") : 
+            content_preview: !include_file_content ?
+              file.content.substring(0, 200) + (file.content.length > 200 ? "..." : "") :
               undefined,
           })),
           related_symbols: codeContext.symbols.map(symbol => ({

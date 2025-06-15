@@ -62,6 +62,16 @@ export interface CodeContext {
   }>;
 }
 
+export type UrlCacheResult = {
+  url: string;
+  title?: string;
+  content?: string;
+  content_length?: number;
+  status: 'success' | 'error';
+  error?: string;
+  timestamp: number; // When the URL was fetched
+};
+
 export interface IssueAnalysisResult {
   issue: GitHubIssue & { urlContent?: any[] };
   relatedCode: CodeContext;
