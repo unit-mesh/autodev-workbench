@@ -116,7 +116,7 @@ You have the same tools available as before. Use them strategically to build com
 
 Here are the functions available in JSONSchema format:
 <functions>
-${this.tools.map(tool => JSON.stringify(tool, null, 2)).join('\n')}
+${this.tools.map(tool => JSON.stringify(tool)).join('\n')}
 </functions>
 
 Answer the user's request using the relevant tool(s), if they are available. Check that all the required parameters for each tool call are provided or can reasonably be inferred from context. IF there are no relevant tools or there are missing values for required parameters, ask the user to supply these values; otherwise proceed with the tool calls. If the user provides a specific value for a parameter (for example provided in quotes), make sure to use that value EXACTLY. DO NOT make up values for or ask about optional parameters. Carefully analyze descriptive terms in the request as they may indicate required parameter values that should be included even if not explicitly quoted.
@@ -146,12 +146,12 @@ String and scalar parameters should be specified as is, while lists and objects 
    */
   async buildEnhancedSystemPromptWithContext(workspacePath?: string): Promise<string> {
     let contextInfo = '';
-    
+
     if (workspacePath) {
       try {
         const analyzer = new ProjectContextAnalyzer();
         const analysisResult = await analyzer.analyze(workspacePath, "basic");
-        
+
         contextInfo = `
 
 ## 📋 PROJECT CONTEXT INFORMATION:
@@ -159,27 +159,7 @@ String and scalar parameters should be specified as is, while lists and objects 
 Based on the analysis of the current workspace, here's what I know about your project:
 
 **Project Overview:**
-- Name: ${analysisResult.project_info.name}
-- Type: ${analysisResult.project_info.type}
-- Description: ${analysisResult.project_info.description || 'No description available'}
-
-**Project Structure:**
-${analysisResult.architecture_analysis?.directory_structure?.length ? 
-  analysisResult.architecture_analysis.directory_structure.map(dir => `- ${dir}/`).join('\n') : 
-  '- Basic project structure detected'}
-
-**Architecture Patterns:**
-${analysisResult.architecture_analysis?.patterns ? 
-  Object.entries(analysisResult.architecture_analysis.patterns)
-    .filter(([_, value]) => value)
-    .map(([pattern, _]) => `- ${pattern.replace('_', ' ').toUpperCase()}`)
-    .join('\n') || '- Standard architecture' : 
-  '- Standard architecture'}
-
-**Key Insights:**
-${analysisResult.insights?.length ? 
-  analysisResult.insights.slice(0, 3).map(insight => `- ${insight}`).join('\n') : 
-  '- Project analysis completed'}
+${JSON.stringify(analysisResult)}
 
 This context will help me provide more relevant and targeted assistance for your specific project setup.
 `;
