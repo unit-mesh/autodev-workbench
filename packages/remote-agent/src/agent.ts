@@ -312,52 +312,33 @@ export class AIAgent {
 				break;
 			}
 
-			// Execute function calls for this round
-			this.log(`Round ${currentRound}: Executing ${parsedResponse.functionCalls.length} function calls`);
-			const roundResults = await this.toolExecutor.executeToolsWithContext({
-				round: currentRound,
-				previousResults: allToolResults,
-				userInput,
-				workspacePath: this.config.workspacePath || process.cwd()
-			}, parsedResponse.functionCalls);
-
+			// Execute function calls
+			const roundResults = await this.executeFunctionCalls(parsedResponse.functionCalls);
 			allToolResults.push(...roundResults);
 
-			const shouldContinue = this.shouldContinueToolChain(roundResults, currentRound, allToolResults);
-			if (!shouldContinue) {
-				this.log(`Round ${currentRound}: Stopping tool chain based on results`);
+			// Check if we should continue
+			if (!this.shouldContinueChain(roundResults)) {
+				this.log(`Round ${currentRound}: Chain ending condition met`);
 				break;
 			}
 
 			currentRound++;
 		}
 
-		const finalResponse = await this.generateFinalResponse(userInput, lastLLMResponse, allToolResults, currentRound - 1);
-
-		this.updateConversationHistory(userInput, finalResponse);
-
-		const executionTime = Date.now() - startTime;
-
-		const githubContext = this.githubManager.extractContext(userInput, allToolResults);
-		if (this.githubManager.isAutoUploadEnabled() && githubContext) {
-			await this.githubManager.uploadToIssue({
-				token: this.config.githubToken!,
-				owner: githubContext.owner,
-				repo: githubContext.repo,
-				issueNumber: githubContext.issueNumber,
-				content: finalResponse
-			});
-		}
-
-		await this.exportMemoriesToMarkdown();
+		// Generate final response
+		const finalResponse = await this.generateFinalResponse(
+			userInput,
+			lastLLMResponse,
+			allToolResults,
+			currentRound
+		);
 
 		return {
 			text: finalResponse,
 			toolResults: allToolResults,
 			success: true,
-			totalRounds: currentRound - 1,
-			executionTime,
-			githubContext
+			totalRounds: currentRound,
+			executionTime: Date.now() - startTime
 		};
 	}
 
@@ -477,17 +458,17 @@ export class AIAgent {
 	/**
 	 * Helper methods for enhanced functionality
 	 */
-	private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number, allResults?: ToolResult[]): boolean {
+	private shouldContinueChain(roundResults: ToolResult[]): boolean {
 		// Don't continue if we've reached max rounds
-		if (currentRound >= this.config.maxToolRounds!) {
-			this.log(`Round ${currentRound}: Reached max rounds (${this.config.maxToolRounds}), stopping chain`);
+		if (this.config.maxToolRounds! <= 1) {
+			this.log(`Round ${1}: Reached max rounds (${this.config.maxToolRounds}), stopping chain`);
 			return false;
 		}
 
 		// Don't continue if all tools failed
 		const successfulTools = roundResults.filter(r => r.success);
 		if (successfulTools.length === 0) {
-			this.log(`Round ${currentRound}: All tools failed, stopping chain`);
+			this.log(`Round ${1}: All tools failed, stopping chain`);
 			return false;
 		}
 
@@ -495,8 +476,7 @@ export class AIAgent {
 		// Only stop if we have truly comprehensive coverage
 
 		// Check what types of analysis we've done so far
-		const allPreviousResults = allResults || [];
-		const toolTypes = this.categorizeToolResults(allPreviousResults);
+		const toolTypes = this.categorizeToolResults(roundResults);
 
 		// For documentation/architecture tasks, we need more comprehensive analysis
 		const hasIssueAnalysis = toolTypes.issueAnalysis > 0;
@@ -506,29 +486,29 @@ export class AIAgent {
 
 		// Continue if we're missing key analysis types for comprehensive understanding
 		if (!hasIssueAnalysis) {
-			this.log(`Round ${currentRound}: Missing issue analysis, continuing chain`);
+			this.log(`Round ${1}: Missing issue analysis, continuing chain`);
 			return true;
 		}
 
-		if (!hasCodeExploration && currentRound < 3) {
-			this.log(`Round ${currentRound}: Missing code exploration, continuing chain`);
+		if (!hasCodeExploration && 1 < 3) {
+			this.log(`Round ${1}: Missing code exploration, continuing chain`);
 			return true;
 		}
 
-		if (!hasStructureAnalysis && currentRound < 3) {
-			this.log(`Round ${currentRound}: Missing structure analysis, continuing chain`);
+		if (!hasStructureAnalysis && 1 < 3) {
+			this.log(`Round ${1}: Missing structure analysis, continuing chain`);
 			return true;
 		}
 
 		// If we have basic coverage but it's still early rounds, continue for depth
-		if (currentRound < 2) {
-			this.log(`Round ${currentRound}: Early round, continuing for deeper analysis`);
+		if (1 < 2) {
+			this.log(`Round ${1}: Early round, continuing for deeper analysis`);
 			return true;
 		}
 
 		// Stop if we have comprehensive coverage
 		if (hasIssueAnalysis && hasCodeExploration && hasStructureAnalysis) {
-			this.log(`Round ${currentRound}: Have comprehensive analysis coverage, stopping chain`);
+			this.log(`Round ${1}: Have comprehensive analysis coverage, stopping chain`);
 			return false;
 		}
 
@@ -816,5 +796,18 @@ export class AIAgent {
 		} catch (error) {
 			console.warn('Warning during memory export:', error);
 		}
+	}
+
+	/**
+	 * Execute function calls for the current round
+	 */
+	private async executeFunctionCalls(functionCalls: any[]): Promise<ToolResult[]> {
+		this.log(`Executing ${functionCalls.length} function calls`);
+		return this.toolExecutor.executeToolsWithContext({
+			round: 1,
+			previousResults: [],
+			userInput: '',
+			workspacePath: this.config.workspacePath || process.cwd()
+		}, functionCalls);
 	}
 }

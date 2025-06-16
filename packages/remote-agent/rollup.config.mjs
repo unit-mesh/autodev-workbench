@@ -132,4 +132,46 @@ export default defineConfig([
     ],
     plugins: [dts()],
   },
+  // Playbooks build
+  {
+    input: "src/playbooks/index.ts",
+    output: {
+      file: "dist/playbooks/index.js",
+      format: "cjs",
+      sourcemap: true,
+      exports: "named",
+    },
+    external: [
+      "@modelcontextprotocol/sdk",
+      "@octokit/rest",
+      "@autodev/context-worker",
+      "express",
+      "zod",
+      "cheerio",
+      "turndown",
+      "dotenv",
+      "ai",
+      "@ai-sdk/openai",
+      "node:crypto",
+      "node:http",
+      "node:fs",
+      "node:path",
+      "node:process",
+    ],
+    plugins: [
+      nodeResolve({
+        preferBuiltins: true,
+        exportConditions: ['node'],
+      }),
+      commonjs(),
+      json(),
+      typescript({
+        tsconfig: "tsconfig.json",
+        sourceMap: true,
+        declaration: false,
+        module: "ESNext",
+        cacheDir: "node_modules/.cache/rollup-typescript",
+      }),
+    ],
+  },
 ]);

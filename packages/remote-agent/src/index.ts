@@ -21,7 +21,7 @@ export * from "./agent/tool-definition";
 // =============================================================================
 // Playbooks
 // =============================================================================
-export { Playbook, IssuePlaybook, BugFixPlaybook } from "./playbooks";
+export { Playbook, IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from "./playbooks";
 
 // =============================================================================
 // Core Services
