@@ -6,7 +6,7 @@ export interface CodeFile extends CodeElement {
 	name: string;
 	filepath: string;
 	language: LanguageIdentifier;
-	path: string;
+	path?: string;
 	package: string;
 	imports: string[];
 	classes: CodeStructure[];
