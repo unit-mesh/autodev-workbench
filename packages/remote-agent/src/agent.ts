@@ -2,11 +2,12 @@ import { CoreMessage, generateText } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
+import { PromptBuilder } from "./agent/prompt-builder";
+import { FinalReportGenerator } from "./agent/final-report-generator";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
-import { Playbook, IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from "./playbooks";
-import { PromptBuilder } from "./agent/prompt-builder";
+import { IssueAnalysisPlaybook, Playbook } from "./playbooks";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -47,9 +48,11 @@ export class AIAgent {
 	protected llmConfig: LLMProviderConfig;
 	protected conversationHistory: CoreMessage[] = [];
 	protected config: AgentConfig;
-	protected playbook: Playbook;
+	protected promptBuilder: PromptBuilder = new PromptBuilder();
+	protected responseGenerator: FinalReportGenerator;
 	protected toolExecutor: ToolExecutor;
 	protected githubManager: GitHubContextManager;
+	protected playbook: Playbook;
 
 	constructor(config: AgentConfig = {}) {
 		this.config = {
@@ -60,13 +63,14 @@ export class AIAgent {
 			...config
 		};
 
+		// Initialize LLM provider
 		const llmConfig = config.llmConfig || configureLLMProvider();
 		if (!llmConfig) {
 			throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
 		}
 		this.llmConfig = llmConfig;
 		this.playbook = config.playbook || new IssueAnalysisPlaybook();
-
+		this.responseGenerator = new FinalReportGenerator(this.llmConfig);
 		this.toolExecutor = new ToolExecutor({
 			timeout: this.config.toolTimeout,
 			verbose: this.config.verbose
@@ -79,8 +83,9 @@ export class AIAgent {
 			autoUploadToIssue: this.config.autoUploadToIssue
 		});
 
-		// Extract tool definitions from MCP tools
+		// Extract tool definitions from MCP tools using PromptBuilder
 		AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
+		this.promptBuilder.registerTools(AUTODEV_REMOTE_TOOLS);
 
 		// Register real tool handlers
 		this.registerToolHandlers();
@@ -151,7 +156,7 @@ export class AIAgent {
 	/**
 	 * Process input with multi-round tool chaining capability
 	 */
-	protected async processInputWithToolChaining(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
+	async processInputWithToolChaining(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
 		const allToolResults: ToolResult[] = [];
 		let currentRound = 1;
 		let lastLLMResponse = '';
@@ -161,13 +166,8 @@ export class AIAgent {
 		while (currentRound <= this.config.maxToolRounds!) {
 			this.log(`=== Tool Execution Round ${currentRound} ===`);
 
-			// Build messages for current round using Playbook
-			const messages = await this.playbook.buildMessagesForRound(
-				userInput,
-				context,
-				currentRound,
-				this.conversationHistory
-			);
+			// Build messages for current round
+			const messages = await this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory, this.config.workspacePath);
 
 			// Call LLM
 			const llmResponse = await this.callLLM(messages);
@@ -207,33 +207,57 @@ export class AIAgent {
 				break;
 			}
 
-			// Execute function calls
-			const roundResults = await this.executeFunctionCalls(parsedResponse.functionCalls);
+			// Execute function calls for this round
+			this.log(`Round ${currentRound}: Executing ${parsedResponse.functionCalls.length} function calls`);
+			const roundResults = await this.toolExecutor.executeToolsWithContext({
+				round: currentRound,
+				previousResults: allToolResults,
+				userInput,
+				workspacePath: this.config.workspacePath || process.cwd()
+			}, parsedResponse.functionCalls);
+
 			allToolResults.push(...roundResults);
 
-			// Check if we should continue
-			if (!this.shouldContinueChain(roundResults)) {
-				this.log(`Round ${currentRound}: Chain ending condition met`);
+			const shouldContinue = this.shouldContinueToolChain(roundResults, currentRound, allToolResults);
+			if (!shouldContinue) {
+				this.log(`Round ${currentRound}: Stopping tool chain based on results`);
 				break;
 			}
 
 			currentRound++;
 		}
 
-		// Generate final response
-		const finalResponse = await this.generateFinalResponse(
+		const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
 			userInput,
 			lastLLMResponse,
 			allToolResults,
-			currentRound
+			currentRound - 1
 		);
+
+		this.updateConversationHistory(userInput, finalResponse);
+
+		const executionTime = Date.now() - startTime;
+
+		const githubContext = this.githubManager.extractContext(userInput, allToolResults);
+		if (this.githubManager.isAutoUploadEnabled() && githubContext) {
+			await this.githubManager.uploadToIssue({
+				token: this.config.githubToken!,
+				owner: githubContext.owner,
+				repo: githubContext.repo,
+				issueNumber: githubContext.issueNumber,
+				content: finalResponse
+			});
+		}
+
+		await this.exportMemoriesToMarkdown();
 
 		return {
 			text: finalResponse,
 			toolResults: allToolResults,
 			success: true,
-			totalRounds: currentRound,
-			executionTime: Date.now() - startTime
+			totalRounds: currentRound - 1,
+			executionTime,
+			githubContext
 		};
 	}
 
@@ -241,8 +265,8 @@ export class AIAgent {
 	 * Process input with single round (legacy mode)
 	 */
 	private async processInputSingleRound(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
-		// Build messages using Playbook
-		const messages = await this.playbook.buildMessagesForRound(userInput, context, 1, this.conversationHistory);
+		// Build messages for LLM
+		const messages = this.promptBuilder.buildMessages(userInput, context, this.conversationHistory);
 
 		// Call LLM to generate response
 		const llmResponse = await this.callLLM(messages);
@@ -281,7 +305,12 @@ export class AIAgent {
 
 			// If we have tool results, send them back to LLM for final analysis
 			if (toolResults.length > 0) {
-				const finalResponse = await this.generateFinalResponse(userInput, parsedResponse.text, toolResults, 1);
+				const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
+					userInput,
+					parsedResponse.text,
+					toolResults,
+					1
+				);
 
 				// Update conversation history with final response
 				this.updateConversationHistory(userInput, finalResponse);
@@ -323,47 +352,19 @@ export class AIAgent {
 	}
 
 	/**
-	 * Generate final response using Playbook
-	 */
-	private async generateFinalResponse(
-		userInput: string,
-		lastLLMResponse: string,
-		toolResults: ToolResult[],
-		totalRounds: number
-	): Promise<string> {
-		const summaryPrompt = this.playbook.prepareSummaryPrompt(userInput, toolResults, lastLLMResponse);
-		const verificationPrompt = this.playbook.prepareVerificationPrompt(userInput, toolResults);
-
-		const messages: CoreMessage[] = [
-			{ role: "system", content: this.playbook.getSystemPrompt() },
-			{ role: "user", content: summaryPrompt },
-			{ role: "user", content: verificationPrompt }
-		];
-
-		const { text } = await generateText({
-			model: this.llmConfig.openai(this.llmConfig.fullModel),
-			messages,
-			temperature: 0.3,
-			maxTokens: 4000
-		});
-
-		return text;
-	}
-
-	/**
 	 * Helper methods for enhanced functionality
 	 */
-	private shouldContinueChain(roundResults: ToolResult[]): boolean {
+	private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number, allResults?: ToolResult[]): boolean {
 		// Don't continue if we've reached max rounds
-		if (this.config.maxToolRounds! <= 1) {
-			this.log(`Round ${1}: Reached max rounds (${this.config.maxToolRounds}), stopping chain`);
+		if (currentRound >= this.config.maxToolRounds!) {
+			this.log(`Round ${currentRound}: Reached max rounds (${this.config.maxToolRounds}), stopping chain`);
 			return false;
 		}
 
 		// Don't continue if all tools failed
 		const successfulTools = roundResults.filter(r => r.success);
 		if (successfulTools.length === 0) {
-			this.log(`Round ${1}: All tools failed, stopping chain`);
+			this.log(`Round ${currentRound}: All tools failed, stopping chain`);
 			return false;
 		}
 
@@ -371,7 +372,8 @@ export class AIAgent {
 		// Only stop if we have truly comprehensive coverage
 
 		// Check what types of analysis we've done so far
-		const toolTypes = this.categorizeToolResults(roundResults);
+		const allPreviousResults = allResults || [];
+		const toolTypes = this.categorizeToolResults(allPreviousResults);
 
 		// For documentation/architecture tasks, we need more comprehensive analysis
 		const hasIssueAnalysis = toolTypes.issueAnalysis > 0;
@@ -381,29 +383,29 @@ export class AIAgent {
 
 		// Continue if we're missing key analysis types for comprehensive understanding
 		if (!hasIssueAnalysis) {
-			this.log(`Round ${1}: Missing issue analysis, continuing chain`);
+			this.log(`Round ${currentRound}: Missing issue analysis, continuing chain`);
 			return true;
 		}
 
-		if (!hasCodeExploration && 1 < 3) {
-			this.log(`Round ${1}: Missing code exploration, continuing chain`);
+		if (!hasCodeExploration && currentRound < 3) {
+			this.log(`Round ${currentRound}: Missing code exploration, continuing chain`);
 			return true;
 		}
 
-		if (!hasStructureAnalysis && 1 < 3) {
-			this.log(`Round ${1}: Missing structure analysis, continuing chain`);
+		if (!hasStructureAnalysis && currentRound < 3) {
+			this.log(`Round ${currentRound}: Missing structure analysis, continuing chain`);
 			return true;
 		}
 
 		// If we have basic coverage but it's still early rounds, continue for depth
-		if (1 < 2) {
-			this.log(`Round ${1}: Early round, continuing for deeper analysis`);
+		if (currentRound < 2) {
+			this.log(`Round ${currentRound}: Early round, continuing for deeper analysis`);
 			return true;
 		}
 
 		// Stop if we have comprehensive coverage
 		if (hasIssueAnalysis && hasCodeExploration && hasStructureAnalysis) {
-			this.log(`Round ${1}: Have comprehensive analysis coverage, stopping chain`);
+			this.log(`Round ${currentRound}: Have comprehensive analysis coverage, stopping chain`);
 			return false;
 		}
 
@@ -448,7 +450,7 @@ export class AIAgent {
 	/**
 	 * Call LLM with messages
 	 */
-	protected async callLLM(messages: CoreMessage[]): Promise<string> {
+	async callLLM(messages: CoreMessage[]): Promise<string> {
 		const { text } = await generateText({
 			model: this.llmConfig.openai(this.llmConfig.fullModel),
 			messages,
@@ -545,6 +547,8 @@ export class AIAgent {
 
 	/**
 	 * Format agent response for display with enhanced information
+	 * @param response - The agent response to format
+	 * @param options - Optional formatting options
 	 */
 	static formatResponse(response: AgentResponse, options?: { autoUpload?: boolean; githubToken?: string }): string {
 		const output: string[] = [];
@@ -691,18 +695,5 @@ export class AIAgent {
 		} catch (error) {
 			console.warn('Warning during memory export:', error);
 		}
-	}
-
-	/**
-	 * Execute function calls for the current round
-	 */
-	private async executeFunctionCalls(functionCalls: any[]): Promise<ToolResult[]> {
-		this.log(`Executing ${functionCalls.length} function calls`);
-		return this.toolExecutor.executeToolsWithContext({
-			round: 1,
-			previousResults: [],
-			userInput: '',
-			workspacePath: this.config.workspacePath || process.cwd()
-		}, functionCalls);
 	}
 }
