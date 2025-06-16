@@ -233,7 +233,7 @@ ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);
 
-    const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
+    const toolResultsSummary = this.toolPromptBuilder.buildToolResultsSummary(successfulResults);
 
     const comprehensivePrompt = `Based on the user's request and the analysis results from various tools, provide a comprehensive and helpful response.
 
@@ -324,33 +324,6 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
       this.logger.logAnalysisFallback('FINAL RESPONSE GENERATION', error instanceof Error ? error.message : String(error), fallbackResponse);
       return fallbackResponse;
     }
-  }
-
-  private buildToolResultsSummary(successfulResults: ToolResult[]): string {
-    return successfulResults
-      .map(result => {
-        const toolName = result.functionCall.name;
-        let content = '';
-        let sources = '';
-
-        if (result.result?.content && Array.isArray(result.result.content)) {
-          const textContent = result.result.content
-            .filter((item: any) => item.type === 'text')
-            .map((item: any) => item.text)
-            .join('\n');
-          content = textContent;
-        } else if (result.result?.content) {
-          content = String(result.result.content);
-        }
-
-        // Extract sources from tool results
-        sources = ToolPromptBuilder.extractSourcesFromToolResult(result);
-
-        return `## ${toolName} (Round ${result.round})
-${content}
-${sources ? `\n**Sources:** ${sources}` : ''}`;
-      })
-      .join('\n\n');
   }
 
   private buildFallbackResponse(userInput: string, allToolResults: ToolResult[], totalRounds: number): string {

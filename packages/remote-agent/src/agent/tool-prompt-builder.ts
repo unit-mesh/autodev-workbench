@@ -192,6 +192,33 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
     return tools;
   }
 
+  buildToolResultsSummary(successfulResults: ToolResult[]): string {
+    return successfulResults
+      .map(result => {
+        const toolName = result.functionCall.name;
+        let content = '';
+        let sources = '';
+
+        if (result.result?.content && Array.isArray(result.result.content)) {
+          const textContent = result.result.content
+            .filter((item: any) => item.type === 'text')
+            .map((item: any) => item.text)
+            .join('\n');
+          content = textContent;
+        } else if (result.result?.content) {
+          content = String(result.result.content);
+        }
+
+        // Extract sources from tool results
+        sources = ToolPromptBuilder.extractSourcesFromToolResult(result);
+
+        return `## ${toolName} (Round ${result.round})
+${content}
+${sources ? `\n**Sources:** ${sources}` : ''}`;
+      })
+      .join('\n\n');
+  }
+
   /**
    * Convert Zod type to JSON Schema (simplified)
    */
@@ -288,4 +315,4 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
 
     return sources.join(', ');
   }
-} 
+}
