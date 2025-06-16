@@ -7,16 +7,6 @@ import { URL } from "url";
 
 const execAsync = promisify(exec);
 
-/**
- * 浏览器集成工具 - 演示如何"打开浏览器"
- *
- * 技术原理：
- * 1. 使用操作系统的默认程序关联机制
- * 2. 通过命令行调用系统的浏览器启动命令
- * 3. 跨平台兼容 (macOS/Windows/Linux)
- */
-
-// 浏览器管理器
 class BrowserManager {
   private static instance: BrowserManager;
   private openedUrls: Set<string> = new Set();

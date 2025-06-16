@@ -1,8 +1,3 @@
-import { installAddTool } from "./tools/add.js";
-export const AddTools = [
-    installAddTool,
-] as const;
-
 import { installGetProjectContextTool } from "./tools/project/get-project-context.js";
 import { installResolveProjectTool } from "./tools/project/resolve-project.js";
 export const AutoDevTools = [
