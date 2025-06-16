@@ -5,11 +5,11 @@ import { installWriteFileTool } from "./tools/file-systems/fs-write-file";
 import { installDeleteFileTool } from "./tools/file-systems/fs-delete-file";
 
 // Advanced File Editing Tools
-import { installStrReplaceEditorTool } from "./tools/str-replace-editor";
+import { installStrReplaceEditorTool } from "./tools/code/str-replace-editor";
 
 // Terminal Tools
-import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
-import { installKillProcessTool, installReadTerminalTool, installWriteProcessTool } from "./tools/terminal-interaction";
+import { installRunTerminalCommandTool } from "./tools/terminal/terminal-run-command";
+import { installKillProcessTool, installReadTerminalTool, installWriteProcessTool } from "./tools/terminal/terminal-interaction";
 
 // Process Management Tools
 import { installLaunchProcessTool } from "./tools/process/process-management";
@@ -44,9 +44,9 @@ import { installLaunchProcessTool } from "./tools/process/process-management";
 // - installRememberTool: Store long-term memories across sessions
 // - installContextManagerTool: Manage conversation context
 // Code Analysis Tools
-import { installAnalysisBasicContextTool } from "./tools/context-analyzer";
-import { installGrepSearchTool } from "./tools/code-search-regex";
-import { installSearchKeywordsTool } from "./tools/keyword-search";
+import { installAnalysisBasicContextTool } from "./tools/code/context-analyzer";
+import { installGrepSearchTool } from "./tools/code/code-search-regex";
+import { installSearchKeywordsTool } from "./tools/code/keyword-search";
 
 // GitHub Tools
 import { installGitHubAnalyzeIssueTool } from "./tools/github/github-analysis-issue";
@@ -57,9 +57,9 @@ import { installGitHubFindCodeByDescriptionTool } from "./tools/github/github-fi
 import { installGitHubCreateNewIssueTool } from "./tools/github/github-issue-create";
 
 // Web Tools
-import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
-import { installFetchContentWithSummaryTool } from "./tools/fetch-content-with-summary";
-import { installWebSearchTool } from "./tools/web-search";
+import { installExtractWebpageAsMarkdownTool } from "./tools/web/web-fetch-content";
+import { installFetchContentWithSummaryTool } from "./tools/web/fetch-content-with-summary";
+import { installWebSearchTool } from "./tools/web/web-search";
 import { installProjectMemoryTool } from "./tools/project-memory";
 import { installListProcessesTool } from "./tools";
 import { installReadProcessTool } from "./tools/process/read-process-tool";

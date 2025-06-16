@@ -1,4 +1,4 @@
-import { installRunTerminalCommandTool } from '../terminal-run-command';
+import { installRunTerminalCommandTool } from '../terminal/terminal-run-command';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
@@ -102,4 +102,4 @@ describe('Terminal Command Execution Tool', () => {
       expect(result.content[0].text).toContain('would_execute');
     });
   });
-}); 
+});

@@ -76,15 +76,15 @@ export { installDeleteFileTool } from "./capabilities/tools/file-systems/fs-dele
 // =============================================================================
 // Analysis and Search Tools
 // =============================================================================
-export { installAnalysisBasicContextTool } from "./capabilities/tools/context-analyzer";
-export { installGrepSearchTool } from "./capabilities/tools/code-search-regex";
-export { installSearchKeywordsTool } from "./capabilities/tools/keyword-search";
+export { installAnalysisBasicContextTool } from "./capabilities/tools/code/context-analyzer";
+export { installGrepSearchTool } from "./capabilities/tools/code/code-search-regex";
+export { installSearchKeywordsTool } from "./capabilities/tools/code/keyword-search";
 export { ProjectDetector, type ProjectDetectionResult, type ProjectConfig } from "./capabilities/tools/analyzers/project-detector";
 
 // =============================================================================
 // Terminal Tools
 // =============================================================================
-export { installRunTerminalCommandTool } from "./capabilities/tools/terminal-run-command";
+export { installRunTerminalCommandTool } from "./capabilities/tools/terminal/terminal-run-command";
 
 // =============================================================================
 // Web Tools
@@ -94,8 +94,8 @@ export {
   fetchUrlsFromIssue,
   extractUrlsFromText,
   fetchHtmlContent,
-} from "./capabilities/tools/web-fetch-content";
-export { installWebSearchTool } from "./capabilities/tools/web-search";
+} from "./capabilities/tools/web/web-fetch-content";
+export { installWebSearchTool } from "./capabilities/tools/web/web-search";
 
 // =============================================================================
 // Tool Collections and Utilities

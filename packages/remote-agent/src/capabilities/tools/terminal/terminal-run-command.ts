@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import { spawn, exec, ChildProcess } from "child_process";
 import * as path from "path";
@@ -236,7 +236,7 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
 
       // 3. 工作目录检查
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
-      const workingDir = working_directory 
+      const workingDir = working_directory
         ? (path.isAbsolute(working_directory) ? working_directory : path.join(workspacePath, working_directory))
         : workspacePath;
 
@@ -288,7 +288,7 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
       };
 
       const fullCommand = args.length > 0 ? `${command} ${args.join(' ')}` : command;
-      
+
       const executionInfo = {
         command: command,
         args: args,
@@ -336,9 +336,9 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
           try {
             // 检查进程是否还存在
             if (childProcess.killed) return;
-            
+
             childProcess.kill('SIGTERM');
-            
+
             // 设置一个更短的超时时间
             const forceKillTimeout = setTimeout(() => {
               if (childProcess && !childProcess.killed) {
@@ -349,7 +349,7 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
                 }
               }
             }, 1000);
-            
+
             // 确保清理超时
             childProcess.on('exit', () => {
               clearTimeout(forceKillTimeout);
@@ -362,14 +362,14 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
         };
 
         try {
-          childProcess = shell 
-            ? exec(fullCommand, { 
-                cwd: resolvedWorkingDir, 
+          childProcess = shell
+            ? exec(fullCommand, {
+                cwd: resolvedWorkingDir,
                 env: filteredEnv,
-                timeout: timeout 
+                timeout: timeout
               })
-            : spawn(command, args, { 
-                cwd: resolvedWorkingDir, 
+            : spawn(command, args, {
+                cwd: resolvedWorkingDir,
                 env: filteredEnv,
                 stdio: capture_output ? 'pipe' : 'inherit'
               });
@@ -420,7 +420,7 @@ export const installRunTerminalCommandTool: ToolLike = (installer) => {
           childProcess.on('close', (code) => {
             clearTimeout(timeoutId);
             const executionTime = Date.now() - startTime;
-            
+
             resolve({
               stdout: stdout,
               stderr: stderr,

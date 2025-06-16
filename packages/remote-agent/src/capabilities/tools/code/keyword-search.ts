@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -83,7 +83,7 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
       // Initialize SymbolAnalyser and CodeCollector
       const languageServiceProvider = service.get(ILanguageServiceProvider);
       await languageServiceProvider.ready(); // Wait for language service to be ready
-      
+
       const symbolAnalyser = new SymbolAnalyser(languageServiceProvider)
       const codeCollector = new CodeCollector(workspacePath);
 
@@ -92,7 +92,7 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
       // Read file content and check language support
       const content = fs.readFileSync(resolvedPath, 'utf8');
       const language = codeCollector.inferLanguage(resolvedPath);
-      
+
       if (!language) {
         return {
           content: [

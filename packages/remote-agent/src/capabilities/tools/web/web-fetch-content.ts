@@ -1,10 +1,10 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as https from "https";
 import * as http from "http";
 import { URL } from "url";
-import { extractTitle, isHtml, urlToMarkdown } from "../../utils/markdown-utils";
-import { UrlCacheResult } from "../../types";
+import { extractTitle, isHtml, urlToMarkdown } from "../../../utils/markdown-utils";
+import { UrlCacheResult } from "../../../types";
 
 const urlCache = new Map<string, UrlCacheResult>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours by default

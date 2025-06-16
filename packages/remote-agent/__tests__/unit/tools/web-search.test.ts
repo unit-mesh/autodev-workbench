@@ -1,4 +1,4 @@
-import { installWebSearchTool } from "../../../src/capabilities/tools/web-search";
+import { installWebSearchTool } from "../../../src/capabilities/tools/web/web-search";
 
 describe("WebSearch Tool", () => {
   let mockInstaller: jest.Mock;
@@ -7,7 +7,7 @@ describe("WebSearch Tool", () => {
   beforeEach(() => {
     mockInstaller = jest.fn();
     installWebSearchTool(mockInstaller);
-    
+
     // Get the handler function from the mock call
     const installCall = mockInstaller.mock.calls[0];
     toolHandler = installCall[3]; // The handler is the 4th argument

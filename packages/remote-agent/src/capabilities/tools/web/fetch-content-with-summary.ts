@@ -1,10 +1,10 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import { fetchHtmlContent, transformGitHubCodeUrl } from "./web-fetch-content";
-import { extractTitle, urlToMarkdown } from "../../utils/markdown-utils";
+import { extractTitle, urlToMarkdown } from "../../../utils/markdown-utils";
 import { CoreMessage, generateText } from "ai";
-import { LLMProviderConfig, configureLLMProvider } from "../../services/llm";
-import { LLMLogger } from "../../services/llm/llm-logger";
+import { LLMProviderConfig, configureLLMProvider } from "../../../services/llm";
+import { LLMLogger } from "../../../services/llm/llm-logger";
 
 /**
  * Fetches content from a URL and generates a summary using LLM
@@ -16,10 +16,10 @@ export const installFetchContentWithSummaryTool: ToolLike = (installer) => {
 		timeout: z.number().optional().default(10000).describe("Request timeout in milliseconds"),
 		summarize_type: z.enum(["code", "article", "auto"]).optional().default("auto").describe("Type of content to summarize: 'code' for GitHub/Gist code, 'article' for general web content, or 'auto' to detect"),
 	}, async ({
-		          url,
-		          timeout = 10000,
-		          summarize_type = "auto"
-	          }: {
+      url,
+      timeout = 10000,
+      summarize_type = "auto"
+    }: {
 		url: string;
 		timeout?: number;
 		summarize_type?: "code" | "article" | "auto";

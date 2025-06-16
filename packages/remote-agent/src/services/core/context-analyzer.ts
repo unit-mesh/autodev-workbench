@@ -15,7 +15,7 @@ import { ICacheManager, DefaultCacheKeyGenerator } from "../analysis/interfaces/
 import { AnalyzerFactory, AnalyzerConfig } from "../analysis/factories/AnalyzerFactory";
 
 // Import URL fetching capabilities
-import { fetchUrlsFromIssue, extractUrlsFromText } from "../../capabilities/tools/web-fetch-content";
+import { fetchUrlsFromIssue, extractUrlsFromText } from "../../capabilities/tools/web/web-fetch-content";
 
 /**
  * Simplified Context Analyzer - Clean Facade Pattern Implementation

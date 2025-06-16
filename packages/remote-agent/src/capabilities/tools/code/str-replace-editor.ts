@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -36,9 +36,9 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
           }]
         };
       }
-      
+
       const fullPath = path.isAbsolute(targetFile) ? targetFile : path.join(workspacePath, targetFile);
-      
+
       // Security check
       const resolvedPath = path.resolve(fullPath);
       const resolvedWorkspace = path.resolve(workspacePath);
@@ -63,14 +63,14 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
 
       // Read file content
       const originalContent = fs.readFileSync(resolvedPath, 'utf8');
-      
+
       // Process the code edit with placeholders
       let modifiedContent = originalContent;
-      
+
       // Parse the code edit by splitting on {{ ... }} placeholders
       const placeholderPattern = /\{\{\s*\.\.\.\s*\}\}/g;
       const editParts = codeEdit.split(placeholderPattern);
-      
+
       if (editParts.length === 1 && !codeEdit.includes("{{ ... }}")) {
         // If no placeholders found, treat as a full file replacement
         modifiedContent = codeEdit;
@@ -78,15 +78,15 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
         // Process edits with placeholders
         let currentPos = 0;
         let resultContent = '';
-        
+
         for (let i = 0; i < editParts.length; i++) {
           const part = editParts[i].trim();
-          
+
           // Skip empty parts
           if (!part && i > 0 && i < editParts.length - 1) {
             continue;
           }
-          
+
           if (i === 0) {
             // First part - must match from the beginning
             if (!originalContent.startsWith(part)) {
@@ -105,7 +105,7 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
           } else {
             // Middle part - find this part in the original
             const nextPos = originalContent.indexOf(part, currentPos);
-            
+
             if (nextPos === -1) {
               // Part not found, just add it
               resultContent += part;
@@ -119,11 +119,11 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
             }
           }
         }
-        
+
         // Apply the changes
         modifiedContent = resultContent || modifiedContent;
       }
-      
+
       // Prepare result
       const result = {
         instruction,
@@ -136,7 +136,7 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
         backup_created: false,
         backup_path: null as string | null
       };
-      
+
       if (!dryRun) {
         // Create backup if requested
         if (createBackup) {
@@ -146,11 +146,11 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
           result.backup_created = true;
           result.backup_path = backupPath;
         }
-        
+
         // Write modified content
         fs.writeFileSync(resolvedPath, modifiedContent, 'utf8');
       }
-      
+
       return {
         content: [{
           type: "text",
@@ -161,7 +161,7 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
           }, null, 2)
         }]
       };
-      
+
     } catch (error: any) {
       return {
         content: [{

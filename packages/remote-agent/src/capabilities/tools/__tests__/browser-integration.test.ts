@@ -1,4 +1,4 @@
-import { installOpenBrowserTool, installBrowserHistoryTool } from "../browser-integration";
+import { installOpenBrowserTool, installBrowserHistoryTool } from "../web/browser-integration";
 import { platform } from "os";
 
 describe("browser-integration tools", () => {
@@ -14,7 +14,7 @@ describe("browser-integration tools", () => {
         historyHandler = handler;
       }
     };
-    
+
     installOpenBrowserTool(mockInstaller);
     installBrowserHistoryTool(mockInstaller);
   });
@@ -141,7 +141,7 @@ describe("browser-integration tools", () => {
     test("should generate correct command for current platform", () => {
       const currentPlatform = platform();
       const url = "https://github.com";
-      
+
       let expectedCommand: string;
       switch (currentPlatform) {
         case 'darwin':
@@ -211,7 +211,7 @@ describe("browser integration (manual test)", () => {
     // const result = await openBrowserHandler({
     //   url: "https://github.com"
     // });
-    // 
+    //
     // const response = JSON.parse(result.content[0].text);
     // expect(response.success).toBe(true);
     // expect(response.command).toBeDefined();

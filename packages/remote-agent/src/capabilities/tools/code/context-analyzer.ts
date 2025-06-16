@@ -1,13 +1,13 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
-import { ProjectContextAnalyzer } from "./analyzers/project-context-analyzer";
+import { ProjectContextAnalyzer } from "../analyzers/project-context-analyzer";
 import * as fs from "fs/promises";
 import * as path from "path";
 import { generateText, CoreMessage } from "ai";
-import { CodebaseScanner } from "./analyzers/codebase-scanner";
-import { configureLLMProvider } from "../../services/llm";
-import { LLMLogger } from "../../services/llm/llm-logger";
-import { ProjectDetector } from "./analyzers/project-detector";
+import { CodebaseScanner } from "../analyzers/codebase-scanner";
+import { configureLLMProvider } from "../../../services/llm";
+import { LLMLogger } from "../../../services/llm/llm-logger";
+import { ProjectDetector } from "../analyzers/project-detector";
 
 // 添加缓存和性能优化
 const analysisCache = new Map<string, { result: any; timestamp: number; ttl: number }>();
@@ -20,14 +20,14 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 		workspace_path: z.string().optional().describe("Path to analyze (defaults to current directory). Must be a valid, accessible directory."),
 		use_cache: z.boolean().optional().default(true).describe("Whether to use cached results if available"),
 		quick_mode: z.boolean().optional().default(false).describe("Use quick analysis mode for faster results"),
-	}, async ({ workspace_path, use_cache = true, quick_mode = false }: { 
-		workspace_path?: string; 
+	}, async ({ workspace_path, use_cache = true, quick_mode = false }: {
+		workspace_path?: string;
 		use_cache?: boolean;
 		quick_mode?: boolean;
 	}) => {
 		try {
 			const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
-			
+
 			// 验证目录
 			try {
 				const stats = await fs.stat(workspacePath);
@@ -65,8 +65,8 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 			}
 
 			// 设置超时控制
-			const analysisPromise = quick_mode ? 
-				performQuickAnalysis(workspacePath) : 
+			const analysisPromise = quick_mode ?
+				performQuickAnalysis(workspacePath) :
 				performFullAnalysis(workspacePath);
 
 			const timeoutPromise = new Promise((_, reject) => {
@@ -88,13 +88,13 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 
 		} catch (error: any) {
 			console.error('Error in analysis:', error);
-			
+
 			// 超时或其他错误时，返回基础分析
 			if (error.message === 'Analysis timeout') {
 				console.warn('Analysis timeout, falling back to basic structure analysis');
 				return await performBasicStructureAnalysis(workspace_path || process.cwd());
 			}
-			
+
 			return {
 				content: [
 					{
@@ -178,10 +178,10 @@ async function performBasicStructureAnalysis(workspacePath: string) {
  */
 async function collectBasicProjectInfo(workspacePath: string): Promise<any> {
 	const detector = new ProjectDetector();
-	
+
 	// 检测项目类型和语言
 	const projectDetection = await detector.detectProjectType(workspacePath);
-	
+
 	// 读取项目配置
 	const projectConfig = await detector.readProjectConfig(workspacePath, projectDetection);
 
@@ -235,8 +235,8 @@ async function getTopLevelDirectories(dirPath: string): Promise<string[]> {
 	try {
 		const entries = await fs.readdir(dirPath, { withFileTypes: true });
 		return entries
-			.filter(entry => 
-				entry.isDirectory() && 
+			.filter(entry =>
+				entry.isDirectory() &&
 				!entry.name.startsWith('.') &&
 				entry.name !== 'node_modules' &&
 				entry.name !== 'dist' &&
