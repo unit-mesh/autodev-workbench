@@ -28,6 +28,12 @@ export {
   SymbolKind
 } from './code-context/base/SymbolExtractor';
 
+export {
+  InstantiationService,
+  providerContainer
+} from './base/common/instantiation/instantiationService';
+export * from './base/common/instantiation/instantiation';
+
 // Language utilities
 export { inferLanguage } from './base/common/languages/languages';
 

@@ -17,12 +17,12 @@ const issuesToTest = [
     description: 'Analyze GitHub issue #105 in unit-mesh/autodev-workbench'
   },
   // Add more issues here, for example:
-  {
-    owner: 'unit-mesh',
-    repo: 'autodev-workbench',
-    issueNumber: 104,
-    description: 'Analyze GitHub issue #104 in unit-mesh/autodev-workbench'
-  }
+  // {
+  //   owner: 'unit-mesh',
+  //   repo: 'autodev-workbench',
+  //   issueNumber: 104,
+  //   description: 'Analyze GitHub issue #104 in unit-mesh/autodev-workbench'
+  // }
 ];
 
 async function quickTest (issueConfig) {
@@ -62,7 +62,7 @@ async function quickTest (issueConfig) {
     console.log(`🔧 Tools: ${agent.getAvailableTools().join(', ')}`)
 
     // Simple test
-    console.log('\n🧪 Running test for current issue...')
+    console.log('🧪 Running test for current issue...')
     const response = await agent.start(
       issueConfig.description,
       {
