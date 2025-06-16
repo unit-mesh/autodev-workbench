@@ -69,6 +69,7 @@ class ManagedProcess {
 	private endTime?: number;
 	private status: 'running' | 'completed' | 'failed' | 'killed' = 'running';
 	private exitCode?: number;
+	private wasKilled: boolean = false;
 
 	constructor(
 		public readonly id: number,
@@ -99,12 +100,16 @@ class ManagedProcess {
 		this.childProcess.on('exit', (code) => {
 			this.endTime = Date.now();
 			this.exitCode = code || 0;
-			this.status = code === 0 ? 'completed' : 'failed';
+			if (!this.wasKilled) {
+				this.status = code === 0 ? 'completed' : 'failed';
+			}
 		});
 
 		this.childProcess.on('error', () => {
 			this.endTime = Date.now();
-			this.status = 'failed';
+			if (!this.wasKilled) {
+				this.status = 'failed';
+			}
 		});
 	}
 
@@ -126,9 +131,10 @@ class ManagedProcess {
 
 	kill(): void {
 		if (this.childProcess && this.status === 'running') {
-			this.childProcess.kill('SIGTERM');
+			this.wasKilled = true;
 			this.status = 'killed';
 			this.endTime = Date.now();
+			this.childProcess.kill('SIGTERM');
 		}
 	}
 

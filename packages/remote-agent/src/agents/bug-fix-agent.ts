@@ -3,6 +3,7 @@ import { AIAgent, AgentConfig, AgentResponse } from "../agent";
 import { ToolResult } from "../agent/tool-definition";
 import { FunctionParser } from "../agent/function-parser";
 import { BugFixPlaybook } from "../playbooks/bug-fix-playbook";
+import { generateText } from "ai";
 
 /**
  * BugFixAgent 配置选项
@@ -151,12 +152,7 @@ export class BugFixAgent extends AIAgent {
       const verificationResponse = await this.callLLM(verificationMessages);
 
       // 生成最终响应
-      const finalText = await this.responseGenerator.generateComprehensiveFinalResponse(
-        userInput,
-        verificationResponse,
-        allToolResults,
-        3
-      );
+      const finalText = await this.generateBugFixFinalResponse(userInput, verificationResponse, allToolResults, 3);
 
       // 提取有关修改文件的信息
       const modifiedFiles = this.extractModifiedFiles(allToolResults);
@@ -219,5 +215,30 @@ export class BugFixAgent extends AIAgent {
     }
 
     return Array.from(modifiedFiles);
+  }
+
+  private async generateBugFixFinalResponse(
+    userInput: string,
+    lastLLMResponse: string,
+    toolResults: ToolResult[],
+    totalRounds: number
+  ): Promise<string> {
+    const summaryPrompt = this.bugFixPlaybook.prepareSummaryPrompt(userInput, toolResults, lastLLMResponse);
+    const verificationPrompt = this.bugFixPlaybook.prepareVerificationPrompt(userInput, toolResults);
+
+    const messages: CoreMessage[] = [
+      { role: "system", content: this.bugFixPlaybook.getSystemPrompt() },
+      { role: "user", content: summaryPrompt },
+      { role: "user", content: verificationPrompt }
+    ];
+
+    const { text } = await generateText({
+      model: this.llmConfig.openai(this.llmConfig.fullModel),
+      messages,
+      temperature: 0.3,
+      maxTokens: 4000
+    });
+
+    return text;
   }
 }
