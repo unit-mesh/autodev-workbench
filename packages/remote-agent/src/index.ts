@@ -58,12 +58,12 @@ export {
 // =============================================================================
 // GitHub Tools
 // =============================================================================
-export { installGitHubListRepositoryIssuesTool } from "./capabilities/tools/github-list-repository-issues";
-export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/github-issue-with-analysis";
-export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github-issue-create";
-export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github-issue-comment";
-export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github-find-code-by-description";
-export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github-analysis-issue";
+export { installGitHubListRepositoryIssuesTool } from "./capabilities/tools/github/github-list-repository-issues";
+export { installGitHubGetIssueWithAnalysisTool } from "./capabilities/tools/github/github-issue-with-analysis";
+export { installGitHubCreateNewIssueTool } from "./capabilities/tools/github/github-issue-create";
+export { installGitHubAddIssueCommentTool } from "./capabilities/tools/github/github-issue-comment";
+export { installGitHubFindCodeByDescriptionTool } from "./capabilities/tools/github/github-find-code-by-description";
+export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github/github-analysis-issue";
 
 // =============================================================================
 // File System Tools

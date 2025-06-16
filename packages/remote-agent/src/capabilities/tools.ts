@@ -49,12 +49,12 @@ import { installGrepSearchTool } from "./tools/code-search-regex";
 import { installSearchKeywordsTool } from "./tools/keyword-search";
 
 // GitHub Tools
-import { installGitHubAnalyzeIssueTool } from "./tools/github-analysis-issue";
-import { installGitHubGetIssueWithAnalysisTool } from "./tools/github-issue-with-analysis";
-import { installGitHubAddIssueCommentTool } from "./tools/github-issue-comment";
-import { installGitHubListRepositoryIssuesTool } from "./tools/github-list-repository-issues";
-import { installGitHubFindCodeByDescriptionTool } from "./tools/github-find-code-by-description";
-import { installGitHubCreateNewIssueTool } from "./tools/github-issue-create";
+import { installGitHubAnalyzeIssueTool } from "./tools/github/github-analysis-issue";
+import { installGitHubGetIssueWithAnalysisTool } from "./tools/github/github-issue-with-analysis";
+import { installGitHubAddIssueCommentTool } from "./tools/github/github-issue-comment";
+import { installGitHubListRepositoryIssuesTool } from "./tools/github/github-list-repository-issues";
+import { installGitHubFindCodeByDescriptionTool } from "./tools/github/github-find-code-by-description";
+import { installGitHubCreateNewIssueTool } from "./tools/github/github-issue-create";
 
 // Web Tools
 import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";

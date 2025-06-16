@@ -1,12 +1,12 @@
 // Tool exports
 export { installExtractWebpageAsMarkdownTool, fetchUrlsFromIssue, extractUrlsFromText, fetchHtmlContent } from "./web-fetch-content";
 export { installFetchContentWithSummaryTool } from "./fetch-content-with-summary";
-export { installGitHubListRepositoryIssuesTool } from "./github-list-repository-issues";
-export { installGitHubGetIssueWithAnalysisTool } from "./github-issue-with-analysis";
-export { installGitHubCreateNewIssueTool } from "./github-issue-create";
-export { installGitHubAddIssueCommentTool } from "./github-issue-comment";
-export { installGitHubFindCodeByDescriptionTool } from "./github-find-code-by-description";
-export { installGitHubAnalyzeIssueTool } from "./github-analysis-issue";
+export { installGitHubListRepositoryIssuesTool } from "./github/github-list-repository-issues";
+export { installGitHubGetIssueWithAnalysisTool } from "./github/github-issue-with-analysis";
+export { installGitHubCreateNewIssueTool } from "./github/github-issue-create";
+export { installGitHubAddIssueCommentTool } from "./github/github-issue-comment";
+export { installGitHubFindCodeByDescriptionTool } from "./github/github-find-code-by-description";
+export { installGitHubAnalyzeIssueTool } from "./github/github-analysis-issue";
 export { installAnalysisBasicContextTool } from "./context-analyzer";
 export { installDeleteFileTool } from "./fs-delete-file";
 export { installListDirectoryTool } from "./fs-list-directory";

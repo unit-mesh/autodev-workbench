@@ -1,6 +1,6 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github/github-service";
+import { GitHubService } from "../../../services/github/github-service";
 
 export const installGitHubListRepositoryIssuesTool: ToolLike = (installer) => {
   installer("github-list-repository-issues", "Browse and filter issues in a GitHub repository with support for pagination, labels, assignees, and date filtering", {
@@ -12,19 +12,19 @@ export const installGitHubListRepositoryIssuesTool: ToolLike = (installer) => {
     since: z.string().optional().describe("Only issues updated at or after this time (ISO 8601 format)"),
     per_page: z.number().min(1).max(100).optional().describe("Number of issues per page (1-100)"),
     page: z.number().min(1).optional().describe("Page number to retrieve"),
-  }, async ({ 
-    owner, 
-    repo, 
-    state = "open", 
-    labels, 
-    assignee, 
-    since, 
-    per_page = 30, 
-    page = 1 
-  }: { 
-    owner: string; 
-    repo: string; 
-    state?: "open" | "closed" | "all"; 
+  }, async ({
+    owner,
+    repo,
+    state = "open",
+    labels,
+    assignee,
+    since,
+    per_page = 30,
+    page = 1
+  }: {
+    owner: string;
+    repo: string;
+    state?: "open" | "closed" | "all";
     labels?: string;
     assignee?: string;
     since?: string;
@@ -45,7 +45,7 @@ export const installGitHubListRepositoryIssuesTool: ToolLike = (installer) => {
       }
 
       const githubService = new GitHubService(githubToken);
-      
+
       const issues = await githubService.getIssues(owner, repo, {
         state,
         labels,

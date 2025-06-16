@@ -1,6 +1,6 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github";
+import { GitHubService } from "../../../services/github";
 
 export const installGitHubCreateNewIssueTool: ToolLike = (installer) => {
   installer("github-create-new-issue", "Create a new GitHub issue with title, description, labels, assignees, and milestone assignment", {

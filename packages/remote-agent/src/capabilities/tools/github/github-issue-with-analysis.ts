@@ -1,8 +1,8 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github/github-service";
-import { ContextAnalyzer } from "../../services/core/context-analyzer";
-import { fetchUrlsFromIssue } from "./web-fetch-content";
+import { GitHubService } from "../../../services/github/github-service";
+import { ContextAnalyzer } from "../../../services/core/context-analyzer";
+import { fetchUrlsFromIssue } from "../web-fetch-content";
 
 export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
   installer("github-get-issue-with-analysis", "Retrieve a GitHub issue with intelligent code analysis, finding related files, symbols, and APIs in your workspace", {

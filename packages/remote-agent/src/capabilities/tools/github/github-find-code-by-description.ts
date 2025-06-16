@@ -1,7 +1,7 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
-import { GitHubService } from "../../services/github/github-service";
-import { ContextAnalyzer } from "../../services/core/context-analyzer";
+import { GitHubService } from "../../../services/github/github-service";
+import { ContextAnalyzer } from "../../../services/core/context-analyzer";
 
 export const installGitHubFindCodeByDescriptionTool: ToolLike = (installer) => {
   installer("github-find-code-by-description", "Find relevant code files and functions by describing what you're looking for in natural language, using AI-powered semantic search", {

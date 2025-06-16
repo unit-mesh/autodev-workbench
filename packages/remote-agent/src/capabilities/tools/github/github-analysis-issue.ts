@@ -1,14 +1,14 @@
 import { z } from "zod";
-import { ToolLike } from "../_typing";
-import { GitHubService } from "../../services/github/github-service";
-import { ContextAnalyzer } from "../../services/core/context-analyzer";
-import { AnalysisReportGenerator } from "../../services/reporting/analysis-report-generator";
-import { ProjectContextAnalyzer } from "./analyzers/project-context-analyzer";
-import { LLMService } from "../../services/llm";
+import { ToolLike } from "../../_typing";
+import { GitHubService } from "../../../services/github/github-service";
+import { ContextAnalyzer } from "../../../services/core/context-analyzer";
+import { AnalysisReportGenerator } from "../../../services/reporting/analysis-report-generator";
+import { ProjectContextAnalyzer } from "../analyzers/project-context-analyzer";
+import { LLMService } from "../../../services/llm";
 import { generateText, CoreMessage } from "ai";
-import { configureLLMProvider } from "../../services/llm";
-import { LLMLogger } from "../../services/llm/llm-logger";
-import { IssueAnalysisResult, UrlCacheResult } from "../../types";
+import { configureLLMProvider } from "../../../services/llm";
+import { LLMLogger } from "../../../services/llm/llm-logger";
+import { IssueAnalysisResult, UrlCacheResult } from "../../../types";
 
 export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 	installer("github-analyze-issue", "🎯 PRIMARY TOOL for GitHub issue analysis and comment posting. Use this tool when the user asks to 'analyze GitHub issue and post results', 'analyze issue and upload to GitHub', 'analyze issue and comment', or similar requests that involve both analysis AND posting results to GitHub. This tool performs comprehensive analysis of a GitHub issue to find related code, then automatically posts a detailed analysis report as a comment to the issue. It also includes basic project context analysis features to provide a complete understanding of the codebase.",
