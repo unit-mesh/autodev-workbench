@@ -144,36 +144,6 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
     return detectedTypes.length > 0 ? detectedTypes.join(', ') : 'general inquiry';
   }
 
-  private groupResultsByRound(results: ToolResult[]): Map<number, ToolResult[]> {
-    const grouped = new Map<number, ToolResult[]>();
-
-    results.forEach(result => {
-      const round = result.round || 1;
-      if (!grouped.has(round)) {
-        grouped.set(round, []);
-      }
-      grouped.get(round)!.push(result);
-    });
-
-    return grouped;
-  }
-
-  private buildExecutionSummary(resultsByRound: Map<number, ToolResult[]>, totalRounds: number): string {
-    const summary: string[] = [];
-    summary.push(`Completed ${totalRounds} rounds of tool execution:`);
-
-    for (let round = 1; round <= totalRounds; round++) {
-      const roundResults = resultsByRound.get(round) || [];
-      const successful = roundResults.filter(r => r.success).length;
-      const total = roundResults.length;
-      const tools = roundResults.map(r => r.functionCall.name).join(', ');
-
-      summary.push(`  Round ${round}: ${successful}/${total} tools successful (${tools})`);
-    }
-
-    return summary.join('\n');
-  }
-
   private buildToolResultsSummary(successfulResults: ToolResult[]): string {
     return successfulResults
       .map(result => {
