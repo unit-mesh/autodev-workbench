@@ -47,7 +47,6 @@ export class AIAgent {
 	protected llmConfig: LLMProviderConfig;
 	protected conversationHistory: CoreMessage[] = [];
 	protected config: AgentConfig;
-	protected promptBuilder: PromptBuilder = new PromptBuilder();
 	protected toolExecutor: ToolExecutor;
 	protected githubManager: GitHubContextManager;
 	protected playbook: Playbook;
@@ -82,7 +81,7 @@ export class AIAgent {
 
 		// Extract tool definitions from MCP tools using PromptBuilder
 		AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
-		this.promptBuilder.registerTools(AUTODEV_REMOTE_TOOLS);
+		this.playbook.registerTools(AUTODEV_REMOTE_TOOLS);
 
 		// Register real tool handlers
 		this.registerToolHandlers();
@@ -162,7 +161,7 @@ export class AIAgent {
 		while (currentRound <= this.config.maxToolRounds!) {
 			this.log(`=== Tool Execution Round ${currentRound} ===`);
 
-			const messages = await this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory, this.config.workspacePath);
+			const messages = await this.playbook.buildMessagesForRound(userInput, { ...context, previousResults: allToolResults }, currentRound, this.conversationHistory, this.config.workspacePath);
 			const llmResponse = await this.callLLM(messages);
 			lastLLMResponse = llmResponse;
 			this.log(`Round ${currentRound} LLM response:`, llmResponse.substring(0, 200) + '...');
@@ -218,7 +217,7 @@ export class AIAgent {
 			currentRound++;
 		}
 
-		const finalResponse = await this.promptBuilder.generateComprehensiveFinalResponse(
+		const finalResponse = await this.playbook.generateComprehensiveFinalResponse(
 			userInput,
 			lastLLMResponse,
 			allToolResults,
@@ -253,7 +252,7 @@ export class AIAgent {
 	}
 
 	private async processInputSingleRound(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
-		const messages = this.promptBuilder.buildMessages(userInput, context, this.conversationHistory);
+		const messages = await this.playbook.buildMessagesForRound(userInput, context, 1, this.conversationHistory, this.config.workspacePath);
 		const llmResponse = await this.callLLM(messages);
 		this.log('LLM response received:', llmResponse.substring(0, 200) + '...');
 
@@ -290,7 +289,7 @@ export class AIAgent {
 
 			// If we have tool results, send them back to LLM for final analysis
 			if (toolResults.length > 0) {
-				const finalResponse = await this.promptBuilder.generateComprehensiveFinalResponse(
+				const finalResponse = await this.playbook.generateComprehensiveFinalResponse(
 					userInput,
 					parsedResponse.text,
 					toolResults,

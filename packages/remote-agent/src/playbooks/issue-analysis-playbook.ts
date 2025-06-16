@@ -5,6 +5,7 @@ import { ProjectContextAnalyzer } from "../capabilities/tools/analyzers/project-
 import { LLMLogger } from "../services/llm/llm-logger";
 import { generateText } from "ai";
 import { configureLLMProvider } from "../services/llm";
+import { ToolPromptBuilder } from "../agent/tool-prompt-builder";
 
 /**
  * IssueAnalysisPlaybook 专注于管理 Bug 报告分析相关的提示词策略
@@ -13,6 +14,7 @@ export class IssueAnalysisPlaybook extends Playbook {
   private logger: LLMLogger;
   private llmConfig: any;
   protected basePrompt: string;
+  private toolPromptBuilder: ToolPromptBuilder;
 
   constructor() {
     const basePrompt = `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
@@ -52,6 +54,15 @@ When tackling complex coding tasks, especially in the initial planning phase:
     if (!this.llmConfig) {
       throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
     }
+    this.toolPromptBuilder = new ToolPromptBuilder();
+  }
+
+  /**
+   * 注册可用的工具
+   */
+  registerTools(tools: any[]): void {
+    super.registerTools(tools);
+    this.toolPromptBuilder.registerTools(tools);
   }
 
   /**
@@ -123,7 +134,7 @@ Working in directory: ${workspacePath}
 
       messages.push({
         role: "system",
-        content: this.basePrompt + contextInfo
+        content: this.basePrompt + contextInfo + '\n\n' + this.toolPromptBuilder.buildToolSystemPrompt()
       });
     } else {
       messages.push({
@@ -160,6 +171,8 @@ You are continuing a multi-round analysis (Round ${round}).
 
 ${this.basePrompt}
 
+${this.toolPromptBuilder.buildToolSystemPrompt()}
+
 According to the previous results, you should continue building on the analysis and findings from the last round.`;
   }
 
@@ -176,7 +189,9 @@ According to the previous results, you should continue building on the analysis 
 
       return `${basePrompt}
 
-${this.preparePrompt(userInput, context)}`;
+${this.preparePrompt(userInput, context)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     }
 
     // For subsequent rounds, include previous results and encourage deeper analysis
@@ -187,7 +202,9 @@ ${this.preparePrompt(userInput, context)}`;
 Previous Tool Results Summary:
 ${previousSummary}
 
-${this.preparePrompt(userInput, context)}`;
+${this.preparePrompt(userInput, context)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
   }
 
   private summarizePreviousResults(results: ToolResult[]): string {
