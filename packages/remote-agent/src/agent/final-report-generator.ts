@@ -25,101 +25,70 @@ export class FinalReportGenerator {
       toolResultsCount: allToolResults.length
     });
 
-    // const resultsByRound = this.groupResultsByRound(allToolResults);
     const successfulResults = allToolResults.filter(r => r.success);
     const failedResults = allToolResults.filter(r => !r.success);
 
-    // const executionSummary = this.buildExecutionSummary(resultsByRound, totalRounds);
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
     const issueContext = this.extractIssueContext(userInput, toolResultsSummary);
 
-    const comprehensivePrompt = `You are an expert GitHub issue analyst and software architect. Your task is to provide a comprehensive response that DIRECTLY ADDRESSES the user's specific issue/question while also providing a detailed development action plan.
+    const comprehensivePrompt = `Based on the user's request and the analysis results from various tools, provide a comprehensive and helpful response.
 
-## 📝 User's Specific Issue/Question
+## User's Request
 ${userInput}
 
-## 🔍 Analysis Results from Code Investigation
+## Analysis Results with Sources
 ${toolResultsSummary}
 
-${failedResults.length > 0 ? `## ⚠️ Analysis Limitations
+${failedResults.length > 0 ? `## Analysis Limitations
 Some analysis tools encountered issues:
 ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 ` : ''}
 
-Your response must include these sections in order:
+## CRITICAL REQUIREMENTS FOR RESPONSE
 
-### 1. Direct Answer to User's Question
-- **Directly address the user's specific question/issue first**
-- Provide a clear, concise answer based on the analysis findings
-- If it's a "how to" question, give the specific steps
-- If it's a "why" question, explain the root cause
-- If it's a "what" question, provide the specific information requested
+### 📚 Source Citation Requirements
+**MANDATORY**: When providing key information, analysis results, or recommendations, you MUST cite specific sources:
 
-### 2. Visual Architecture/Flow Diagram
-Create a Mermaid diagram that illustrates:
-- Current system architecture (if analyzing existing code)
-- Proposed solution flow (if implementing new features)
-- Data flow or process flow relevant to the user's issue
-- Component relationships and dependencies
+1. **For Code Information**: Always reference specific files and line numbers
+   - Example: "Based on the implementation in \`src/components/Button.tsx\` (lines 15-30)..."
+   - Example: "The configuration in \`package.json\` shows..."
 
-Use appropriate Mermaid diagram types:
-- \`graph TD\` for flowcharts and process flows
-- \`sequenceDiagram\` for interaction flows
-- \`classDiagram\` for class relationships
-- \`gitgraph\` for development workflows
+2. **For External Information**: Always cite web sources when using search results
+   - Example: "According to the official documentation (https://example.com/docs)..."
+   - Example: "As mentioned in the GitHub issue discussion (https://github.com/...)..."
 
-Example format:
-\`\`\`mermaid
-graph TD
-    A["Current State"] --> B["Identified Issue"]
-    B --> C["Proposed Solution"]
-    C --> D["Expected Outcome"]
-\`\`\`
+3. **For Analysis Results**: Reference the specific files or directories analyzed
+   - Example: "The project structure analysis of the \`src/\` directory reveals..."
+   - Example: "Code search results from \`components/\` show..."
 
-### 3. Evidence-Based Findings
-List 3-5 key findings from the code analysis that support your answer:
-- Reference specific files, functions, or code patterns found
-- Explain how each finding relates to the user's question
-- Include relevant code snippets when helpful
+4. **NEVER cite tool names as sources** - always cite the actual underlying sources:
+   - ❌ Wrong: "According to the analyze-basic-context tool..."
+   - ✅ Correct: "Based on the project structure analysis of the \`src/\` directory..."
 
-### 4. Step-by-Step Development Plan
-Provide a detailed, actionable plan:
-1. **Immediate Actions** - What to do first
-2. **Core Implementation** - Main development tasks
-3. **Integration Steps** - How to connect with existing code
-4. **Testing Strategy** - How to verify the solution works
-5. **Deployment Considerations** - Production readiness steps
+### 📝 Response Structure Requirements
 
-For each step, include:
-- Specific files to modify/create
-- Code examples or templates
-- Expected outcomes
-- Potential challenges
+1. **Start with a direct answer** to the user's specific question or request
+2. **Provide evidence** from the analysis results with proper source citations
+3. **Include actionable recommendations** with specific steps and file references
+4. **Use diagrams only when they add value** - create Mermaid diagrams if they help illustrate architecture, flows, or relationships
+5. **Be practical and specific** - reference actual files, functions, or code patterns found with their sources
 
-### 5. Implementation Priorities
-- **High Priority** (Must do first)
-- **Medium Priority** (Important but can wait)
-- **Low Priority** (Nice to have)
-- **Future Enhancements** (Post-implementation improvements)
+### 🎯 Content Guidelines
 
-## 🎯 Response Guidelines
+- Address the user's specific concern first and foremost
+- Use the analysis findings to provide concrete, evidence-based insights with sources
+- Give practical next steps and implementation guidance with file references
+- Include code examples or file references when helpful, always with source citations
+- Create visual diagrams only if they genuinely enhance understanding
+- Be concise but comprehensive - focus on what's most valuable to the user
 
-**CRITICAL**: Start by directly answering the user's question before diving into technical details.
-
-- **Be user-centric** - Address their specific concern first
-- **Use visual aids** - Include relevant Mermaid diagrams
-- **Provide evidence** - Reference actual code findings
-- **Be actionable** - Give concrete next steps
-- **Consider context** - Respect the existing codebase architecture
-- **Think holistically** - Balance immediate needs with long-term maintainability
-
-Remember: The user asked a specific question - answer it clearly first, then provide the comprehensive development plan to implement the solution.`;
+**Remember**: Your goal is to be maximally helpful to the user based on the analysis results, with proper source attribution for all claims and recommendations. Every significant piece of information should be traceable to its source.`;
 
     try {
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: "You are an expert software architect and GitHub issue analyst. Your primary goal is to directly answer the user's specific question while providing comprehensive technical guidance. Always start with a direct answer to their question, then provide detailed implementation guidance with visual diagrams. Use Mermaid diagrams to illustrate architecture, flows, and relationships. Be specific, actionable, and evidence-based in your recommendations."
+          content: "You are an expert software architect and code analyst. Provide clear, actionable responses based on code analysis results. Focus on directly answering the user's question with evidence from the analysis. Use appropriate formatting and include diagrams only when they add genuine value. Be practical, specific, and user-focused in your recommendations."
         },
         { role: "user", content: comprehensivePrompt }
       ];
@@ -208,16 +177,76 @@ Remember: The user asked a specific question - answer it clearly first, then pro
   private buildToolResultsSummary(successfulResults: ToolResult[]): string {
     return successfulResults
       .map(result => {
+        const toolName = result.functionCall.name;
+        let content = '';
+        let sources = '';
+
         if (result.result?.content && Array.isArray(result.result.content)) {
           const textContent = result.result.content
             .filter((item: any) => item.type === 'text')
             .map((item: any) => item.text)
             .join('\n');
-          return `Tool ${result.functionCall.name} (Round ${result.round}):\n${textContent}`;
+          content = textContent;
+        } else if (result.result?.content) {
+          content = String(result.result.content);
         }
-        return `Tool ${result.functionCall.name} (Round ${result.round}): Completed successfully`;
+
+        // Extract sources from tool results
+        sources = this.extractSourcesFromToolResult(result);
+
+        return `## ${toolName} (Round ${result.round})
+${content}
+${sources ? `\n**Sources:** ${sources}` : ''}`;
       })
       .join('\n\n');
+  }
+
+  private extractSourcesFromToolResult(result: ToolResult): string {
+    const toolName = result.functionCall.name;
+    const sources: string[] = [];
+
+    // Extract file paths from file-related tools
+    if (toolName.includes('read-file') || toolName.includes('grep-search') || toolName.includes('analyze-basic-context')) {
+      const params = result.functionCall.parameters;
+      if (params.target_file || params.file_path) {
+        sources.push(`File: ${params.target_file || params.file_path}`);
+      }
+      if (params.target_directories && Array.isArray(params.target_directories)) {
+        sources.push(`Directories: ${params.target_directories.join(', ')}`);
+      }
+    }
+
+    // Extract URLs from web search tools
+    if (toolName.includes('google-search') || toolName.includes('extract-webpage')) {
+      const params = result.functionCall.parameters;
+      if (params.url) {
+        sources.push(`Web: ${params.url}`);
+      }
+      if (params.search_term) {
+        sources.push(`Search: "${params.search_term}"`);
+      }
+    }
+
+    // Extract GitHub URLs from GitHub tools
+    if (toolName.includes('github-')) {
+      const params = result.functionCall.parameters;
+      if (params.issue_url) {
+        sources.push(`GitHub Issue: ${params.issue_url}`);
+      }
+      if (params.repo_url) {
+        sources.push(`GitHub Repo: ${params.repo_url}`);
+      }
+    }
+
+    // Extract project paths from analysis tools
+    if (toolName.includes('analyze-') || toolName.includes('list-directory')) {
+      const params = result.functionCall.parameters;
+      if (params.workspace_path || params.directory_path) {
+        sources.push(`Project: ${params.workspace_path || params.directory_path}`);
+      }
+    }
+
+    return sources.join(', ');
   }
 
   private buildFallbackResponse(userInput: string, allToolResults: ToolResult[], totalRounds: number): string {
