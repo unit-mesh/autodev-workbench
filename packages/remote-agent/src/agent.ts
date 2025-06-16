@@ -152,7 +152,7 @@ export class AIAgent {
 	/**
 	 * Process input with multi-round tool chaining capability
 	 */
-	private async processInputWithToolChaining(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
+	protected async processInputWithToolChaining(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
 		const allToolResults: ToolResult[] = [];
 		let currentRound = 1;
 		let lastLLMResponse = '';
@@ -446,7 +446,7 @@ export class AIAgent {
 	/**
 	 * Call LLM with messages
 	 */
-	private async callLLM(messages: CoreMessage[]): Promise<string> {
+	protected async callLLM(messages: CoreMessage[]): Promise<string> {
 		const { text } = await generateText({
 			model: this.llmConfig.openai(this.llmConfig.fullModel),
 			messages,

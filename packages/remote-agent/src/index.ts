@@ -9,6 +9,7 @@ export type * from "./types/index";
 // AI Agent System
 // =============================================================================
 export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
+export { CodeModificationAgent, type CodeModificationConfig, type CodeModificationResponse } from "./agents";
 export { PromptBuilder } from "./agent/prompt-builder";
 export { FunctionParser } from "./agent/function-parser";
 export { ToolExecutor, type ToolResult, type ToolExecutionContext } from "./agent/tool-executor";
