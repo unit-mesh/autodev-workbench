@@ -24,7 +24,6 @@ export const installLaunchProcessTool: ToolLike = (installer) => {
       });
 
       if (wait) {
-        // 等待进程完成
         const process = manager.getProcess(processId)!;
         const startTime = Date.now();
 

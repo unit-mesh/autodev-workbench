@@ -20,4 +20,4 @@ export { installReadTerminalTool, installWriteProcessTool } from "./terminal/ter
 export { installLaunchProcessTool } from "./process/launch-process-tool";
 export { installListProcessesTool } from "./process/list-processes-tool";
 export { installReadProcessTool } from "./process/read-process-tool";
-export { installKillProcessTool } from "./terminal/kill-process-tool";
+export { installKillProcessTool } from "./process/kill-process-tool";
