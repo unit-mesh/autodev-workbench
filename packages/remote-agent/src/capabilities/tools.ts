@@ -9,7 +9,7 @@ import { installStrReplaceEditorTool } from "./tools/code/str-replace-editor";
 
 // Terminal Tools
 import { installRunTerminalCommandTool } from "./tools/terminal/terminal-run-command";
-import { installKillProcessTool, installReadTerminalTool, installWriteProcessTool } from "./tools/terminal/terminal-interaction";
+import { installReadTerminalTool, installWriteProcessTool } from "./tools/terminal/terminal-interaction";
 
 // Process Management Tools
 import { installLaunchProcessTool } from "./tools/process/launch-process-tool";
@@ -63,6 +63,7 @@ import { installWebSearchTool } from "./tools/web/web-search";
 import { installProjectMemoryTool } from "./tools/project-memory";
 import { installListProcessesTool } from "./tools/process/list-processes-tool";
 import { installReadProcessTool } from "./tools/process/read-process-tool";
+import { installKillProcessTool } from "./tools/terminal/kill-process-tool";
 
 // Tool Categories
 export const FileSystemTools = [
