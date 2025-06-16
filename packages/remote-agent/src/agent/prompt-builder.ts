@@ -234,7 +234,6 @@ ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     const failedResults = allToolResults.filter(r => !r.success);
 
     const toolResultsSummary = this.buildToolResultsSummary(successfulResults);
-    const issueContext = this.extractIssueContext(userInput, toolResultsSummary);
 
     const comprehensivePrompt = `Based on the user's request and the analysis results from various tools, provide a comprehensive and helpful response.
 
@@ -325,28 +324,6 @@ ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
       this.logger.logAnalysisFallback('FINAL RESPONSE GENERATION', error instanceof Error ? error.message : String(error), fallbackResponse);
       return fallbackResponse;
     }
-  }
-
-  private extractIssueContext(userInput: string, toolResultsSummary: string): string {
-    // Extract key context from user input to better understand the issue type
-    const issueKeywords = {
-      implementation: ['how to implement', 'how do I', 'how can I', 'implement', 'create', 'build'],
-      debugging: ['error', 'bug', 'issue', 'problem', 'not working', 'fails', 'broken'],
-      architecture: ['architecture', 'design', 'structure', 'organize', 'best practice'],
-      integration: ['integrate', 'connect', 'combine', 'merge', 'link'],
-      optimization: ['optimize', 'improve', 'performance', 'faster', 'better']
-    };
-
-    const lowerInput = userInput.toLowerCase();
-    const detectedTypes: string[] = [];
-
-    Object.entries(issueKeywords).forEach(([type, keywords]) => {
-      if (keywords.some(keyword => lowerInput.includes(keyword))) {
-        detectedTypes.push(type);
-      }
-    });
-
-    return detectedTypes.length > 0 ? detectedTypes.join(', ') : 'general inquiry';
   }
 
   private buildToolResultsSummary(successfulResults: ToolResult[]): string {
