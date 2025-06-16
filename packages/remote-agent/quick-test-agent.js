@@ -31,7 +31,7 @@ async function quickTest (issueConfig) {
   // Check if agent is built
   try {
     const { AIAgent } = require('./dist/agent.js')
-    const { IssuePlaybook } = require('./dist/playbooks/index.js')
+    const { IssueAnalysisPlaybook } = require('./dist/playbooks/index.js')
     console.log('✅ Agent module loaded successfully')
 
     // Check environment
@@ -56,7 +56,7 @@ async function quickTest (issueConfig) {
       verbose: true,
       maxToolRounds: 3,
       enableToolChaining: true,
-      playbook: new IssuePlaybook() // Use IssuePlaybook for GitHub issue analysis
+      playbook: new IssueAnalysisPlaybook() // Use IssuePlaybook for GitHub issue analysis
     })
 
     const llmInfo = agent.getLLMInfo()
