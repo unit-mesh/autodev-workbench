@@ -5,14 +5,6 @@ import { installListProcessesTool } from '../capabilities/tools/process/list-pro
 import { installReadProcessTool } from '../capabilities/tools/process/read-process-tool';
 import { installKillProcessTool } from '../capabilities/tools/process/kill-process-tool';
 
-// Mock response content generation for testing tools
-const createMockContent = (content: any) => ({
-  content: [{
-    type: 'text',
-    text: typeof content === 'string' ? content : JSON.stringify(content, null, 2)
-  }]
-});
-
 describe('Process Management Tools', () => {
   // Mock installer function for testing tools
   const mockInstaller = jest.fn().mockImplementation((name: string, description: string, params: any, handler: any) => {
@@ -24,21 +16,21 @@ describe('Process Management Tools', () => {
   let listProcessesHandler: any;
   let readProcessHandler: any;
   let killProcessHandler: any;
-  
+
   beforeEach(() => {
     // Reset the mock and reinstall tools
     mockInstaller.mockClear();
-    
+
     // Install the tools and capture the handlers
     installLaunchProcessTool(mockInstaller);
     installListProcessesTool(mockInstaller);
     installReadProcessTool(mockInstaller);
     installKillProcessTool(mockInstaller);
-    
+
     // Get the most recent calls for each tool
     const calls = mockInstaller.mock.calls;
     const handlers = mockInstaller.mock.results.map(result => result.value);
-    
+
     // Assign handlers by tool name
     for (let i = 0; i < calls.length; i++) {
       const [name] = calls[i];
@@ -76,15 +68,15 @@ describe('Process Management Tools', () => {
       wait: true,
       max_wait_seconds: 5
     });
-    
+
     const launchData = JSON.parse(launchResult.content[0].text);
     expect(launchData.terminal_id).toBeGreaterThan(0);
-    
+
     // Now list processes
     const listResult = await listProcessesHandler({
       filter: 'all'
     });
-    
+
     const listData = JSON.parse(listResult.content[0].text);
     expect(listData.processes.length).toBeGreaterThan(0);
     expect(listData.processes.some((p: any) => p.terminal_id === launchData.terminal_id)).toBe(true);
@@ -97,17 +89,17 @@ describe('Process Management Tools', () => {
       wait: true,
       max_wait_seconds: 5
     });
-    
+
     const launchData = JSON.parse(launchResult.content[0].text);
     const processId = launchData.terminal_id;
-    
+
     // Read the process output
     const readResult = await readProcessHandler({
       terminal_id: processId,
       wait: false,
       max_wait_seconds: 1
     });
-    
+
     const readData = JSON.parse(readResult.content[0].text);
     expect(readData.stdout).toContain('Test Output Content');
     expect(readData.process_summary.status).toBe('completed');
@@ -120,57 +112,59 @@ describe('Process Management Tools', () => {
       wait: false,  // Don't wait for completion
       max_wait_seconds: 1
     });
-    
+
     const launchData = JSON.parse(launchResult.content[0].text);
     const processId = launchData.terminal_id;
-    
+
     // Check that the process is running
     const listResult = await listProcessesHandler({
       filter: 'running'
     });
-    
+
     const listData = JSON.parse(listResult.content[0].text);
     expect(listData.processes.some((p: any) => p.terminal_id === processId)).toBe(true);
-    
+
     // Kill the process
     const killResult = await killProcessHandler({
       terminal_id: processId
     });
-    
+
     const killData = JSON.parse(killResult.content[0].text);
     expect(killData.success).toBe(true);
     expect(killData.process_summary.status).toBe('killed');
-    
+
     // Check that the process is no longer running
     const finalListResult = await listProcessesHandler({
       filter: 'running'
     });
-    
+
     const finalListData = JSON.parse(finalListResult.content[0].text);
     expect(finalListData.processes.some((p: any) => p.terminal_id === processId)).toBe(false);
   });
 
   test('should run the remote-agent build process and manage it', async () => {
     // Launch the build process (non-blocking)
+    const cwd = process.cwd();
+    console.log('Current working directory:', cwd);
     const launchResult = await launchProcessHandler({
       command: 'npm run build',
       wait: false,
       max_wait_seconds: 30,
-      cwd: '/Users/phodal/ai/autodev-work/packages/remote-agent'
+      cwd: cwd
     });
-    
+
     const launchData = JSON.parse(launchResult.content[0].text);
     const processId = launchData.terminal_id;
     expect(processId).toBeGreaterThan(0);
-    
+
     // List processes to verify it's running
     const listResult = await listProcessesHandler({
       filter: 'running'
     });
-    
+
     const listData = JSON.parse(listResult.content[0].text);
     const isProcessRunning = listData.processes.some((p: any) => p.terminal_id === processId);
-    
+
     if (isProcessRunning) {
       // Read some output from the build process
       const readResult = await readProcessHandler({
@@ -178,23 +172,23 @@ describe('Process Management Tools', () => {
         wait: true,
         max_wait_seconds: 2
       });
-      
+
       const readData = JSON.parse(readResult.content[0].text);
       console.log('Build process output:', readData.stdout);
-      
+
       // Kill the process
       const killResult = await killProcessHandler({
         terminal_id: processId
       });
-      
+
       const killData = JSON.parse(killResult.content[0].text);
       expect(killData.success).toBe(true);
-      
+
       // Verify process was killed
       const finalListResult = await listProcessesHandler({
         filter: 'all'
       });
-      
+
       const finalListData = JSON.parse(finalListResult.content[0].text);
       const killedProcess = finalListData.processes.find((p: any) => p.terminal_id === processId);
       expect(killedProcess).toBeDefined();
