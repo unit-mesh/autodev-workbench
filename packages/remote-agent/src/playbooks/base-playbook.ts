@@ -84,4 +84,21 @@ export abstract class Playbook {
       3
     );
   }
+
+  /**
+   * Generate a comprehensive final response based on all tool results
+   */
+  async generateComprehensiveFinalResponse(
+    userInput: string,
+    lastLLMResponse: string,
+    allToolResults: ToolResult[],
+    totalRounds: number
+  ): Promise<string> {
+    return this.promptBuilder.generateComprehensiveFinalResponse(
+      userInput,
+      lastLLMResponse,
+      allToolResults,
+      totalRounds
+    );
+  }
 }
