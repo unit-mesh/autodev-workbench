@@ -12,7 +12,7 @@ import { installRunTerminalCommandTool } from "./tools/terminal-run-command";
 import { installKillProcessTool, installReadTerminalTool, installWriteProcessTool } from "./tools/terminal-interaction";
 
 // Process Management Tools
-import { installLaunchProcessTool, installListProcessesTool, installReadProcessTool } from "./tools/process-management";
+import { installLaunchProcessTool } from "./tools/process/process-management";
 
 // Process Management Tools
 // TODO: Implement interactive process management
@@ -61,6 +61,8 @@ import { installExtractWebpageAsMarkdownTool } from "./tools/web-fetch-content";
 import { installFetchContentWithSummaryTool } from "./tools/fetch-content-with-summary";
 import { installWebSearchTool } from "./tools/web-search";
 import { installProjectMemoryTool } from "./tools/project-memory";
+import { installListProcessesTool } from "./tools";
+import { installReadProcessTool } from "./tools/process/read-process-tool";
 
 // Tool Categories
 export const FileSystemTools = [

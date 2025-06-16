@@ -19,4 +19,6 @@ export { installRunTerminalCommandTool } from "./terminal-run-command";
 export { installReadTerminalTool, installWriteProcessTool, installKillProcessTool } from "./terminal-interaction";
 
 // Process Management Tools
-export { installLaunchProcessTool, installListProcessesTool, installReadProcessTool } from "./process-management";
+export { installLaunchProcessTool } from "./process/process-management";
+export { installListProcessesTool } from "./process/list-processes-tool";
+export { installReadProcessTool } from "./process/read-process-tool";
