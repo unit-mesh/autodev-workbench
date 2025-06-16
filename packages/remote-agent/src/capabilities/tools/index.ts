@@ -15,10 +15,8 @@ export { installWriteFileTool } from "./file-systems/fs-write-file";
 export { installStrReplaceEditorTool } from "./code/str-replace-editor";
 export { installRunTerminalCommandTool } from "./terminal/terminal-run-command";
 
-// Terminal Interaction Tools
 export { installReadTerminalTool, installWriteProcessTool, installKillProcessTool } from "./terminal/terminal-interaction";
 
-// Process Management Tools
-export { installLaunchProcessTool } from "./process/process-management";
+export { installLaunchProcessTool } from "./process/launch-process-tool";
 export { installListProcessesTool } from "./process/list-processes-tool";
 export { installReadProcessTool } from "./process/read-process-tool";

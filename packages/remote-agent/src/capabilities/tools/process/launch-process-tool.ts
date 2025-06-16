@@ -3,7 +3,6 @@ import { z } from "zod";
 import * as path from "path";
 import { GlobalProcessManager } from "./global-process-manager";
 
-// 启动进程工具
 export const installLaunchProcessTool: ToolLike = (installer) => {
   installer("launch-process", "Launch processes with advanced control (background/interactive modes)", {
     command: z.string().describe("Shell command to execute"),
@@ -58,4 +57,3 @@ export const installLaunchProcessTool: ToolLike = (installer) => {
     }
   });
 };
-
