@@ -61,54 +61,6 @@ String and scalar parameters should be specified as is, while lists and objects 
 Should always return with XML code block with <function_calls> tag when calling tools.`;
   }
 
-  /**
-   * Build tool-related part of continuation prompt
-   */
-  buildToolContinuationPrompt(round: number, previousResults: ToolResult[]): string {
-    const successfulTools = previousResults.filter(r => r.success).map(r => r.functionCall.name);
-    const failedTools = previousResults.filter(r => !r.success).map(r => r.functionCall.name);
-
-    return `## Previous Execution Summary:
-- Successful tools: ${successfulTools.join(', ') || 'None'}
-- Failed tools: ${failedTools.join(', ') || 'None'}
-
-## 🔍 COMPREHENSIVE ANALYSIS STRATEGY:
-
-For effective problem-solving in this round, continue using a multi-tool approach:
-1. ALWAYS use at least 2-3 different tools in this round to supplement your analysis - this is MANDATORY.
-2. If you haven't obtained sufficient context in previous rounds, prioritize information gathering tools.
-3. Avoid redundancy - don't repeat tool calls that were successful in previous rounds unless deeper analysis is needed.
-4. Fill information gaps identified from previous rounds.
-5. If your first tool doesn't return sufficient information, IMMEDIATELY follow up with additional tool calls.
-
-## Round-Specific Focus (Round ${round}):
-${round === 2 ? 
-  `- Now that you have initial context, dive deeper into specific code components and dependencies.
-- Examine implementation details of relevant functionality.
-- Identify patterns and architectural decisions that affect the problem/solution.
-- **If local information is insufficient, use google-search to gather external knowledge about technologies and APIs.**` : 
-  `- This is the final analysis round - focus on filling critical gaps in understanding.
-- Synthesize insights from all previous rounds.
-- Gather any missing details needed for complete recommendations.
-- **Use google-search for any remaining knowledge gaps about external systems, APIs, or technologies.**`
-}
-
-## RECOMMENDED TOOL COMBINATIONS FOR THIS ROUND:
-${round === 2 ? 
-  `- Code deep-dive: read-file + grep-search + analyze-basic-context
-- Implementation analysis: search-keywords + read-file + run-terminal-command + google-search
-- Architecture exploration: analyze-basic-context + list-directory + read-file
-- **External knowledge gaps: google-search + read-file + analyze-basic-context**` : 
-  `- Gap filling: tools not used in previous rounds
-- Verification: read-file + run-terminal-command
-- Solution validation: search-keywords + analyze-basic-context + google-search
-- **External technology research: google-search + analyze-basic-context**`
-}`;
-  }
-
-  /**
-   * Build tool-related part of user prompt
-   */
   buildToolUserPrompt(round: number): string {
     if (round === 1) {
       return `## Analysis Approach:

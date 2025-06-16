@@ -94,16 +94,21 @@ When tackling complex coding tasks, especially in the initial planning phase:
 ${this.toolPromptBuilder.buildToolSystemPrompt()}`;
   }
 
-  /**
-   * Build continuation system prompt for multi-round analysis
-   */
   buildContinuationSystemPrompt(round: number, previousResults: ToolResult[]): string {
-    return `You are continuing a multi-round analysis (Round ${round}).
+    const successfulTools = previousResults.filter(r => r.success).map(r => r.functionCall.name);
+    const failedTools = previousResults.filter(r => !r.success).map(r => r.functionCall.name);
 
-You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
+    return `You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
-${this.toolPromptBuilder.buildToolContinuationPrompt(round, previousResults)}
+You are continuing a multi-round analysis (Round ${round}).
+
+## Previous Execution Summary:
+- Successful tools: ${successfulTools.join(', ') || 'None'}
+- Failed tools: ${failedTools.join(', ') || 'None'}
+
 ${this.toolPromptBuilder.buildToolSystemPrompt()}
+
+According to the previous results, you should continue building on the analysis and findings from the last round. 
 `;
   }
 
