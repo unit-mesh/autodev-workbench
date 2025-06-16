@@ -17,12 +17,12 @@ const issuesToTest = [
     description: 'Analyze GitHub issue #105 in unit-mesh/autodev-workbench'
   },
   // Add more issues here, for example:
-  // {
-  //   owner: 'some-other-owner',
-  //   repo: 'some-other-repo',
-  //   issueNumber: 42,
-  //   description: 'Investigate performance problem in issue #42'
-  // }
+  {
+    owner: 'unit-mesh',
+    repo: 'autodev-workbench',
+    issueNumber: 104,
+    description: 'Analyze GitHub issue #104 in unit-mesh/autodev-workbench'
+  }
 ];
 
 async function quickTest (issueConfig) {
