@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -10,8 +10,8 @@ export const installListDirectoryTool: ToolLike = (installer) => {
     max_depth: z.number().optional().describe("Maximum recursion depth (default: 3)"),
     include_hidden: z.boolean().optional().describe("Include hidden files (default: false)"),
     filter: z.string().optional().describe("Filter files by pattern (e.g. *.ts)")
-  }, async ({ 
-    directory_path, 
+  }, async ({
+    directory_path,
     recursive = false,
     max_depth = 3,
     include_hidden = false,
@@ -20,7 +20,7 @@ export const installListDirectoryTool: ToolLike = (installer) => {
     try {
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const fullPath = path.isAbsolute(directory_path) ? directory_path : path.join(workspacePath, directory_path);
-      
+
       // Security check
       const resolvedPath = path.resolve(fullPath);
       const resolvedWorkspace = path.resolve(workspacePath);
@@ -52,16 +52,16 @@ export const installListDirectoryTool: ToolLike = (installer) => {
 
         try {
           const entries = fs.readdirSync(dirPath);
-          
+
           for (const entry of entries) {
             // Skip hidden files if not included
             if (!include_hidden && entry.startsWith('.')) continue;
-            
+
             // Apply filter if specified
             if (filter && !new RegExp(filter.replace('*', '.*')).test(entry)) continue;
 
             const entryPath = path.join(dirPath, entry);
-            
+
             try {
               const entryStats = fs.lstatSync(entryPath);
               const isSymlink = entryStats.isSymbolicLink();

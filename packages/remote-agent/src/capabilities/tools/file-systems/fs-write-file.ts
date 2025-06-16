@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -11,15 +11,15 @@ export const installWriteFileTool: ToolLike = (installer) => {
     mode: z.enum(["create", "overwrite", "append"]).optional().describe("Write mode (default: overwrite)"),
     create_dirs: z.boolean().optional().describe("Create parent directories if they don't exist (default: true)"),
     backup: z.boolean().optional().describe("Create backup of existing file (default: false)")
-  }, async ({ 
-    file_path, 
+  }, async ({
+    file_path,
     content,
     encoding = "utf8",
     mode = "overwrite",
     create_dirs = true,
     backup = false
-  }: { 
-    file_path: string; 
+  }: {
+    file_path: string;
     content: string;
     encoding?: "utf8" | "binary" | "base64";
     mode?: "create" | "overwrite" | "append";
@@ -30,7 +30,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
       // Resolve path relative to workspace
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const fullPath = path.isAbsolute(file_path) ? file_path : path.join(workspacePath, file_path);
-      
+
       // Security check - ensure path is within workspace
       const resolvedPath = path.resolve(fullPath);
       const resolvedWorkspace = path.resolve(workspacePath);
@@ -46,7 +46,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
       }
 
       const fileExists = fs.existsSync(resolvedPath);
-      
+
       // Handle create mode
       if (mode === "create" && fileExists) {
         return {

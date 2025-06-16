@@ -1,8 +1,8 @@
 // File System Tools
-import { installListDirectoryTool } from "./tools/fs-list-directory";
-import { installReadFileTool } from "./tools/fs-read-file";
-import { installWriteFileTool } from "./tools/fs-write-file";
-import { installDeleteFileTool } from "./tools/fs-delete-file";
+import { installListDirectoryTool } from "./tools/file-systems/fs-list-directory";
+import { installReadFileTool } from "./tools/file-systems/fs-read-file";
+import { installWriteFileTool } from "./tools/file-systems/fs-write-file";
+import { installDeleteFileTool } from "./tools/file-systems/fs-delete-file";
 
 // Advanced File Editing Tools
 import { installStrReplaceEditorTool } from "./tools/str-replace-editor";

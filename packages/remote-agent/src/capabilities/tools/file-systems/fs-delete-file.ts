@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -14,7 +14,7 @@ function countItems(dirPath: string): { files: number; directories: number; tota
     for (const entry of entries) {
       const entryPath = path.join(dirPath, entry);
       const entryStats = fs.statSync(entryPath);
-      
+
       if (entryStats.isDirectory()) {
         directories++;
         const subCounts = countItems(entryPath);
@@ -56,14 +56,14 @@ export const installDeleteFileTool: ToolLike = (installer) => {
     backup: z.boolean().optional().describe("Create backup before deletion (default: true)"),
     confirm_deletion: z.boolean().describe("Explicit confirmation required for deletion (safety measure)"),
     dry_run: z.boolean().optional().describe("Show what would be deleted without actually deleting (default: false)")
-  }, async ({ 
-    file_path, 
+  }, async ({
+    file_path,
     recursive = false,
     backup = true,
     confirm_deletion,
     dry_run = false
-  }: { 
-    file_path: string; 
+  }: {
+    file_path: string;
     recursive?: boolean;
     backup?: boolean;
     confirm_deletion: boolean;
@@ -85,7 +85,7 @@ export const installDeleteFileTool: ToolLike = (installer) => {
       // Resolve path relative to workspace
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const fullPath = path.isAbsolute(file_path) ? file_path : path.join(workspacePath, file_path);
-      
+
       // Security check - ensure path is within workspace
       const resolvedPath = path.resolve(fullPath);
       const resolvedWorkspace = path.resolve(workspacePath);
@@ -182,7 +182,7 @@ export const installDeleteFileTool: ToolLike = (installer) => {
       if (backup && !dry_run) {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         backupPath = `${resolvedPath}.backup.${timestamp}`;
-        
+
         if (isDirectory) {
           // Copy directory recursively
           copyDir(resolvedPath, backupPath);

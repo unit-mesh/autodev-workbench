@@ -1,4 +1,4 @@
-import { ToolLike } from "../_typing";
+import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
@@ -12,13 +12,13 @@ export const installReadFileTool: ToolLike = (installer) => {
       start: z.number().describe("Start line number (1-based)"),
       end: z.number().describe("End line number (1-based, -1 for end of file)")
     }).optional().describe("Read only specific line range")
-  }, async ({ 
-    file_path, 
+  }, async ({
+    file_path,
     encoding = "utf8",
     max_size = 1024 * 1024, // 1MB default
     line_range
-  }: { 
-    file_path: string; 
+  }: {
+    file_path: string;
     encoding?: "utf8" | "binary" | "base64";
     max_size?: number;
     line_range?: { start: number; end: number };
@@ -27,7 +27,7 @@ export const installReadFileTool: ToolLike = (installer) => {
       // Resolve path relative to workspace
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
       const fullPath = path.isAbsolute(file_path) ? file_path : path.join(workspacePath, file_path);
-      
+
       // Security check - ensure path is within workspace
       const resolvedPath = path.resolve(fullPath);
       const resolvedWorkspace = path.resolve(workspacePath);
@@ -81,7 +81,7 @@ export const installReadFileTool: ToolLike = (installer) => {
         const lines = content.split('\n');
         const startIdx = Math.max(0, line_range.start - 1);
         const endIdx = line_range.end === -1 ? lines.length : Math.min(lines.length, line_range.end);
-        
+
         if (startIdx >= lines.length) {
           return {
             content: [
@@ -104,7 +104,7 @@ export const installReadFileTool: ToolLike = (installer) => {
         line_count: encoding === "utf8" ? content.split('\n').length : null,
         last_modified: stats.mtime.toISOString(),
         content: content,
-        ...(line_range && { 
+        ...(line_range && {
           line_range: {
             start: line_range.start,
             end: line_range.end === -1 ? (encoding === "utf8" ? content.split('\n').length : -1) : line_range.end,

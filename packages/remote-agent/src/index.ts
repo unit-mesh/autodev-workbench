@@ -68,10 +68,10 @@ export { installGitHubAnalyzeIssueTool } from "./capabilities/tools/github/githu
 // =============================================================================
 // File System Tools
 // =============================================================================
-export { installListDirectoryTool } from "./capabilities/tools/fs-list-directory";
-export { installReadFileTool } from "./capabilities/tools/fs-read-file";
-export { installWriteFileTool } from "./capabilities/tools/fs-write-file";
-export { installDeleteFileTool } from "./capabilities/tools/fs-delete-file";
+export { installListDirectoryTool } from "./capabilities/tools/file-systems/fs-list-directory";
+export { installReadFileTool } from "./capabilities/tools/file-systems/fs-read-file";
+export { installWriteFileTool } from "./capabilities/tools/file-systems/fs-write-file";
+export { installDeleteFileTool } from "./capabilities/tools/file-systems/fs-delete-file";
 
 // =============================================================================
 // Analysis and Search Tools

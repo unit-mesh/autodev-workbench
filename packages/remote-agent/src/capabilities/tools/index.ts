@@ -8,10 +8,10 @@ export { installGitHubAddIssueCommentTool } from "./github/github-issue-comment"
 export { installGitHubFindCodeByDescriptionTool } from "./github/github-find-code-by-description";
 export { installGitHubAnalyzeIssueTool } from "./github/github-analysis-issue";
 export { installAnalysisBasicContextTool } from "./context-analyzer";
-export { installDeleteFileTool } from "./fs-delete-file";
-export { installListDirectoryTool } from "./fs-list-directory";
-export { installReadFileTool } from "./fs-read-file";
-export { installWriteFileTool } from "./fs-write-file";
+export { installDeleteFileTool } from "./file-systems/fs-delete-file";
+export { installListDirectoryTool } from "./file-systems/fs-list-directory";
+export { installReadFileTool } from "./file-systems/fs-read-file";
+export { installWriteFileTool } from "./file-systems/fs-write-file";
 export { installStrReplaceEditorTool } from "./str-replace-editor";
 export { installRunTerminalCommandTool } from "./terminal-run-command";
 
