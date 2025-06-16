@@ -42,20 +42,19 @@ ${context ? `上下文信息: ${JSON.stringify(context)}` : ''}
     input: string,
     context: any,
     round: number,
-    conversationHistory: CoreMessage[] = []
+    conversationHistory: CoreMessage[] = [],
+    workspacePath?: string
   ): Promise<CoreMessage[]> {
-    const messages: CoreMessage[] = [
-      { role: "system", content: this.getSystemPrompt() }
-    ];
+    const messages = await super.buildMessagesForRound(
+      input,
+      context,
+      round,
+      conversationHistory,
+      workspacePath
+    );
 
-    // 添加对话历史
-    if (conversationHistory.length > 0) {
-      messages.push(...conversationHistory);
-    }
-
-    // 根据轮次生成不同的提示词
+    // 根据轮次添加特定的提示词
     if (round === 1) {
-      // 第一轮：分析阶段
       messages.push({
         role: "user",
         content: `分析阶段: 分析以下代码问题，但不要进行修改。
@@ -69,7 +68,6 @@ ${this.preparePrompt(input, context)}
 4. 不要进行任何代码修改`
       });
     } else if (round === 2) {
-      // 第二轮：修复阶段
       messages.push({
         role: "user",
         content: `修复阶段: 基于前面的分析，现在实现代码修复。
@@ -83,7 +81,6 @@ ${this.preparePrompt(input, context)}
 4. 确保修复不会引入新问题`
       });
     } else {
-      // 第三轮及以后：验证和完善
       messages.push({
         role: "user",
         content: `验证和完善阶段: 检查修复是否完整，并进行必要的调整。

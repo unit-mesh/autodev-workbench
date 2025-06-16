@@ -41,16 +41,18 @@ ${context ? `上下文信息: ${JSON.stringify(context)}` : ''}
     input: string,
     context: any,
     round: number,
-    conversationHistory: CoreMessage[] = []
+    conversationHistory: CoreMessage[] = [],
+    workspacePath?: string
   ): Promise<CoreMessage[]> {
-    const messages: CoreMessage[] = [
-      { role: "system", content: this.getSystemPrompt() }
-    ];
+    const messages = await super.buildMessagesForRound(
+      input,
+      context,
+      round,
+      conversationHistory,
+      workspacePath
+    );
 
-    if (conversationHistory.length > 0) {
-      messages.push(...conversationHistory);
-    }
-
+    // 根据轮次添加特定的提示词
     if (round === 1) {
       messages.push({
         role: "user",

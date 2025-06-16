@@ -393,15 +393,11 @@ Take a thorough, multi-step approach to ensure your analysis and recommendations
 
     // For subsequent rounds, include previous results and encourage deeper analysis
     const previousSummary = this.summarizePreviousResults(previousResults);
-    const analysisGaps = this.identifyAnalysisGaps(previousResults, userInput);
 
     return `Original Request: ${userInput}
 
 Previous Tool Results Summary:
 ${previousSummary}
-
-## Analysis Progress Assessment:
-${analysisGaps}
 
 ## Next Steps Guidance:
 Based on the previous results, determine what additional analysis would strengthen your response:
@@ -427,105 +423,6 @@ Remember: Thorough investigation leads to better recommendations. Only conclude 
     const totalCount = results.length;
 
     return `${summary}\n\nSummary: ${successCount}/${totalCount} tools executed successfully`;
-  }
-
-  /**
-   * Identify gaps in analysis based on previous results and user request
-   */
-  private identifyAnalysisGaps(previousResults: ToolResult[], userInput: string): string {
-    const categories = this.categorizeToolResults(previousResults);
-    const gaps: string[] = [];
-
-    // Determine request type
-    const isDocumentationTask = userInput.toLowerCase().includes('document') ||
-      userInput.toLowerCase().includes('architecture') ||
-      userInput.toLowerCase().includes('plan');
-    const isIssueAnalysis = userInput.toLowerCase().includes('issue') ||
-      userInput.toLowerCase().includes('github.com');
-
-    // Check for missing analysis types
-    if (categories.issueAnalysis === 0 && isIssueAnalysis) {
-      gaps.push("❌ Missing: Issue details and context analysis");
-    }
-
-    if (categories.structureAnalysis === 0 && isDocumentationTask) {
-      gaps.push("❌ Missing: Project structure and architecture analysis");
-    }
-
-    if (categories.codeExploration === 0 && (isDocumentationTask || isIssueAnalysis)) {
-      gaps.push("❌ Missing: Codebase exploration and pattern analysis");
-    }
-
-    if (categories.contentAnalysis === 0 && isDocumentationTask) {
-      gaps.push("❌ Missing: Existing documentation and content analysis");
-    }
-
-    // Identify what we have
-    const completed: string[] = [];
-    if (categories.issueAnalysis > 0) completed.push("✅ Issue analysis completed");
-    if (categories.structureAnalysis > 0) completed.push("✅ Structure analysis completed");
-    if (categories.codeExploration > 0) completed.push("✅ Code exploration completed");
-    if (categories.contentAnalysis > 0) completed.push("✅ Content analysis completed");
-
-    const result = [];
-    if (completed.length > 0) {
-      result.push("**Completed Analysis:**");
-      result.push(...completed);
-    }
-
-    if (gaps.length > 0) {
-      result.push("**Analysis Gaps:**");
-      result.push(...gaps);
-    } else {
-      result.push("**Analysis Status:** ✅ Comprehensive coverage achieved");
-    }
-
-    return result.join('\n');
-  }
-
-  /**
-   * Categorize tool results by analysis type
-   */
-  private categorizeToolResults(results: ToolResult[]): {
-    issueAnalysis: number;
-    codeExploration: number;
-    structureAnalysis: number;
-    contentAnalysis: number;
-  } {
-    const categories = {
-      issueAnalysis: 0,
-      codeExploration: 0,
-      structureAnalysis: 0,
-      contentAnalysis: 0
-    };
-
-    results.forEach(result => {
-      if (!result.success) return;
-
-      const toolName = result.functionCall.name;
-
-      if (toolName.includes('issue') || toolName.includes('github-get-issue')) {
-        categories.issueAnalysis++;
-      } else if (toolName.includes('find-code') || toolName.includes('codebase-search') || toolName.includes('grep-search')) {
-        categories.codeExploration++;
-      } else if (toolName.includes('list-directory') || toolName.includes('analyze-dependencies') || toolName.includes('analyze-symbols')) {
-        categories.structureAnalysis++;
-      } else if (toolName.includes('read-file') || toolName.includes('extract-webpage')) {
-        categories.contentAnalysis++;
-      }
-    });
-
-    return categories;
-  }
-
-  buildUserPrompt(userInput: string, context?: any): string {
-    let prompt = userInput;
-
-    if (context) {
-      prompt = `Context: ${JSON.stringify(context, null, 2)}\n\nUser Request: ${userInput}`;
-    }
-
-    return prompt;
   }
 
   static extractToolDefinitions(toolInstallers: readonly ToolLike[]): ToolDefinition[] {
