@@ -6,6 +6,7 @@ import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
 import { Playbook, IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from "./playbooks";
+import { PromptBuilder } from "./agent/prompt-builder";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -59,14 +60,11 @@ export class AIAgent {
 			...config
 		};
 
-		// Initialize LLM provider
 		const llmConfig = config.llmConfig || configureLLMProvider();
 		if (!llmConfig) {
 			throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
 		}
 		this.llmConfig = llmConfig;
-
-		// Initialize Playbook
 		this.playbook = config.playbook || new IssueAnalysisPlaybook();
 
 		this.toolExecutor = new ToolExecutor({
@@ -82,7 +80,7 @@ export class AIAgent {
 		});
 
 		// Extract tool definitions from MCP tools
-		AUTODEV_REMOTE_TOOLS = this.extractToolDefinitions(AutoDevRemoteAgentTools);
+		AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
 
 		// Register real tool handlers
 		this.registerToolHandlers();
@@ -94,109 +92,6 @@ export class AIAgent {
 			enableToolChaining: this.config.enableToolChaining,
 			toolTimeout: this.config.toolTimeout
 		});
-	}
-
-	/**
-	 * Extract tool definitions from tool installers
-	 */
-	private extractToolDefinitions(toolInstallers: readonly any[]): ToolDefinition[] {
-		const tools: ToolDefinition[] = [];
-
-		const mockInstaller = (
-			name: string,
-			description: string,
-			inputSchema: Record<string, any>,
-			handler: any
-		) => {
-			const properties: Record<string, any> = {};
-			const required: string[] = [];
-
-			for (const [key, zodType] of Object.entries(inputSchema)) {
-				try {
-					properties[key] = this.zodToJsonSchema(zodType);
-
-					// Simple required check - assume all are required unless explicitly optional
-					if (zodType && typeof zodType === 'object') {
-						const zodObj = zodType as { isOptional?: boolean; _def?: { typeName?: string } };
-						if (!zodObj.isOptional) {
-							required.push(key);
-						}
-					}
-				} catch (error) {
-					// Fallback for complex types
-					properties[key] = { type: 'string', description: `Parameter ${key}` };
-					required.push(key);
-				}
-			}
-
-			tools.push({
-				name,
-				description,
-				parameters: {
-					type: "object",
-					properties,
-					required
-				}
-			});
-		};
-
-		// Execute tool installers to capture definitions
-		toolInstallers.forEach(installer => {
-			try {
-				installer(mockInstaller);
-			} catch (error) {
-				console.warn(`Failed to extract tool definition:`, error);
-			}
-		});
-
-		return tools;
-	}
-
-	/**
-	 * Convert Zod schema to JSON schema
-	 */
-	private zodToJsonSchema(zodType: any): any {
-		if (!zodType || typeof zodType !== 'object') {
-			return { type: 'string' };
-		}
-
-		// Handle basic types
-		if (zodType._def?.typeName === 'ZodString') {
-			return { type: 'string' };
-		}
-		if (zodType._def?.typeName === 'ZodNumber') {
-			return { type: 'number' };
-		}
-		if (zodType._def?.typeName === 'ZodBoolean') {
-			return { type: 'boolean' };
-		}
-		if (zodType._def?.typeName === 'ZodArray') {
-			return {
-				type: 'array',
-				items: this.zodToJsonSchema(zodType._def.type)
-			};
-		}
-		if (zodType._def?.typeName === 'ZodObject') {
-			const properties: Record<string, any> = {};
-			const required: string[] = [];
-
-			for (const [key, value] of Object.entries(zodType._def.shape())) {
-				properties[key] = this.zodToJsonSchema(value);
-				const zodValue = value as { isOptional?: () => boolean };
-				if (!zodValue.isOptional?.()) {
-					required.push(key);
-				}
-			}
-
-			return {
-				type: 'object',
-				properties,
-				required
-			};
-		}
-
-		// Fallback for unknown types
-		return { type: 'string' };
 	}
 
 	/**
