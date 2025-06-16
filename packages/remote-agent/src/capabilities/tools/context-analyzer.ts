@@ -7,6 +7,7 @@ import { generateText, CoreMessage } from "ai";
 import { CodebaseScanner } from "./analyzers/codebase-scanner";
 import { configureLLMProvider } from "../../services/llm";
 import { LLMLogger } from "../../services/llm/llm-logger";
+import { ProjectDetector } from "./analyzers/project-detector";
 
 // 添加缓存和性能优化
 const analysisCache = new Map<string, { result: any; timestamp: number; ttl: number }>();
@@ -173,49 +174,58 @@ async function performBasicStructureAnalysis(workspacePath: string) {
 }
 
 /**
- * 收集基础项目信息 - 优化版本
+ * 收集基础项目信息 - 使用 ProjectDetector 的优化版本
  */
 async function collectBasicProjectInfo(workspacePath: string): Promise<any> {
-	const projectInfo: any = {};
+	const detector = new ProjectDetector();
+	
+	// 检测项目类型和语言
+	const projectDetection = await detector.detectProjectType(workspacePath);
+	
+	// 读取项目配置
+	const projectConfig = await detector.readProjectConfig(workspacePath, projectDetection);
 
-	// 只读取关键文件
-	try {
-		const packageJsonPath = path.join(workspacePath, "package.json");
-		const packageJsonExists = await fs.access(packageJsonPath).then(() => true).catch(() => false);
+	// 检查通用关键文件
+	const universalFiles = [
+		"README.md", "README.rst", "README.txt",
+		"LICENSE", "LICENSE.txt", "LICENSE.md",
+		".gitignore", ".git",
+		"Dockerfile", "docker-compose.yml",
+		"Makefile", "CMakeLists.txt"
+	];
 
-		if (packageJsonExists) {
-			const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
-			projectInfo.name = packageJson.name || path.basename(workspacePath);
-			projectInfo.version = packageJson.version || "unknown";
-			projectInfo.description = packageJson.description || "";
-			// 只保留主要依赖信息
-			projectInfo.main_dependencies = Object.keys(packageJson.dependencies || {}).slice(0, 10);
-			projectInfo.dev_dependencies_count = Object.keys(packageJson.devDependencies || {}).length;
-		} else {
-			projectInfo.name = path.basename(workspacePath);
-		}
-	} catch (error) {
-		projectInfo.name = path.basename(workspacePath);
-	}
+	// 添加语言特定的关键文件
+	const languageSpecificFiles = detector.getLanguageSpecificFiles(projectDetection.language);
+	const allKeyFiles = [...universalFiles, ...languageSpecificFiles];
 
-	// 快速检查关键文件
-	const keyFiles = ["README.md", "package.json", "tsconfig.json", ".gitignore"];
-	projectInfo.key_files = {};
-
-	await Promise.all(keyFiles.map(async (file) => {
+	const keyFiles: Record<string, any> = {};
+	await Promise.all(allKeyFiles.map(async (file) => {
 		try {
 			const filePath = path.join(workspacePath, file);
 			const exists = await fs.access(filePath).then(() => true).catch(() => false);
-			projectInfo.key_files[file] = exists;
+			if (exists) {
+				const stats = await fs.stat(filePath);
+				keyFiles[file] = {
+					exists: true,
+					size: stats.size,
+					is_directory: stats.isDirectory()
+				};
+			} else {
+				keyFiles[file] = { exists: false };
+			}
 		} catch (error) {
-			projectInfo.key_files[file] = false;
+			keyFiles[file] = { exists: false };
 		}
 	}));
 
 	// 简化的目录结构 - 只扫描第一层
-	projectInfo.top_level_dirs = await getTopLevelDirectories(workspacePath);
+	const topLevelDirs = await getTopLevelDirectories(workspacePath);
 
-	return projectInfo;
+	return {
+		...projectConfig,
+		key_files: keyFiles,
+		top_level_dirs: topLevelDirs
+	};
 }
 
 /**

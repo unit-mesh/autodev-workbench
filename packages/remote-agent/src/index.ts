@@ -79,6 +79,7 @@ export { installDeleteFileTool } from "./capabilities/tools/fs-delete-file";
 export { installAnalysisBasicContextTool } from "./capabilities/tools/context-analyzer";
 export { installGrepSearchTool } from "./capabilities/tools/code-search-regex";
 export { installSearchKeywordsTool } from "./capabilities/tools/keyword-search";
+export { ProjectDetector, type ProjectDetectionResult, type ProjectConfig } from "./capabilities/tools/analyzers/project-detector";
 
 // =============================================================================
 // Terminal Tools
