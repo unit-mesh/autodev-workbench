@@ -1,12 +1,16 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 
 /**
  * Quick test script for agent.ts basic functionality
  * Simplified version for rapid validation
  */
 
-const { join } = require('node:path')
-require('dotenv').config()
+import { join } from 'node:path';
+import { config } from 'dotenv';
+import { AIAgent } from './src/agent';
+import { IssuePlaybook } from './src/playbooks';
+
+config();
 
 // Define the list of issues to test
 const issuesToTest = [
@@ -25,28 +29,25 @@ const issuesToTest = [
   // }
 ];
 
-async function quickTest (issueConfig) {
-  console.log(`\n🚀 Quick Agent Test - Issue #${issueConfig.issueNumber} (${issueConfig.owner}/${issueConfig.repo})`)
+async function quickTest(issueConfig: typeof issuesToTest[0]) {
+  console.log(`\n🚀 Quick Agent Test - Issue #${issueConfig.issueNumber} (${issueConfig.owner}/${issueConfig.repo})`);
 
-  // Check if agent is built
   try {
-    const { AIAgent } = require('./dist/agent.js')
-    const { IssuePlaybook } = require('./dist/playbooks/index.js')
-    console.log('✅ Agent module loaded successfully')
+    console.log('✅ Agent module loaded successfully');
 
     // Check environment
     if (!process.env.GITHUB_TOKEN) {
-      console.error('❌ GITHUB_TOKEN not found in environment')
-      return false
+      console.error('❌ GITHUB_TOKEN not found in environment');
+      return false;
     }
 
-    const hasLLM = process.env.GLM_TOKEN || process.env.DEEPSEEK_TOKEN || process.env.OPENAI_API_KEY
+    const hasLLM = process.env.GLM_TOKEN || process.env.DEEPSEEK_TOKEN || process.env.OPENAI_API_KEY;
     if (!hasLLM) {
-      console.error('❌ No LLM provider token found')
-      return false
+      console.error('❌ No LLM provider token found');
+      return false;
     }
 
-    console.log('✅ Environment variables configured')
+    console.log('✅ Environment variables configured');
 
     // Initialize agent with IssuePlaybook
     const agent = new AIAgent({
@@ -57,14 +58,14 @@ async function quickTest (issueConfig) {
       maxToolRounds: 3,
       enableToolChaining: true,
       playbook: new IssuePlaybook() // Use IssuePlaybook for GitHub issue analysis
-    })
+    });
 
-    const llmInfo = agent.getLLMInfo()
-    console.log(`✅ Agent initialized: ${llmInfo.provider} (${llmInfo.model})`)
-    console.log(`🔧 Tools: ${agent.getAvailableTools().join(', ')}`)
+    const llmInfo = agent.getLLMInfo();
+    console.log(`✅ Agent initialized: ${llmInfo.provider} (${llmInfo.model})`);
+    console.log(`🔧 Tools: ${agent.getAvailableTools().join(', ')}`);
 
     // Simple test
-    console.log('🧪 Running test for current issue...')
+    console.log('🧪 Running test for current issue...');
     const response = await agent.start(
       issueConfig.description,
       {
@@ -74,29 +75,29 @@ async function quickTest (issueConfig) {
           issueNumber: issueConfig.issueNumber
         }
       }
-    )
+    );
 
-    console.log(`\n📊 Test Results for Issue #${issueConfig.issueNumber}:`)
-    console.log(`✅ Success: ${response.success}`)
-    console.log(`🔄 Rounds: ${response.totalRounds || 1}`)
-    console.log(`🛠️ Tools Used: ${response.toolResults.length}`)
-    console.log(`📝 Response Length: ${response.text.length} chars`)
+    console.log(`\n📊 Test Results for Issue #${issueConfig.issueNumber}:`);
+    console.log(`✅ Success: ${response.success}`);
+    console.log(`🔄 Rounds: ${response.totalRounds || 1}`);
+    console.log(`🛠️ Tools Used: ${response.toolResults.length}`);
+    console.log(`📝 Response Length: ${response.text.length} chars`);
 
     if (response.toolResults.length > 0) {
-      console.log('\n🔧 Tools Executed:')
+      console.log('\n🔧 Tools Executed:');
       response.toolResults.forEach((result, i) => {
-        console.log(`  ${i + 1}. ${result.functionCall.name} - ${result.success ? '✅' : '❌'}`)
-      })
+        console.log(`  ${i + 1}. ${result.functionCall.name} - ${result.success ? '✅' : '❌'}`);
+      });
     }
 
-    console.log('\n📄 Final Response:')
-    console.log(response.text)
+    console.log('\n📄 Final Response:');
+    console.log(response.text);
 
-    return response.success
+    return response.success;
 
   } catch (error) {
-    console.error('❌ Test failed:', error.message)
-    return false
+    console.error('❌ Test failed:', error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
@@ -104,7 +105,7 @@ async function quickTest (issueConfig) {
 if (require.main === module) {
   (async () => {
     let allTestsPassed = true;
-    const results = [];
+    const results: Array<{ issue: string; success: boolean }> = [];
 
     for (const issue of issuesToTest) {
       try {
@@ -133,4 +134,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { quickTest, issuesToTest };
+export { quickTest, issuesToTest }; 

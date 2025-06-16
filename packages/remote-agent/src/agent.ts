@@ -2,11 +2,10 @@ import { CoreMessage, generateText } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
-import { PromptBuilder } from "./agent/prompt-builder";
-import { FinalReportGenerator } from "./agent/final-report-generator";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
+import { Playbook, AgentPlaybook, IssuePlaybook, BugFixPlaybook } from "./playbooks";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -26,6 +25,7 @@ export interface AgentConfig {
 		eventType?: string;
 		action?: string;
 	};
+	playbook?: Playbook;
 }
 
 export interface AgentResponse {
@@ -46,8 +46,7 @@ export class AIAgent {
 	protected llmConfig: LLMProviderConfig;
 	protected conversationHistory: CoreMessage[] = [];
 	protected config: AgentConfig;
-	protected promptBuilder: PromptBuilder = new PromptBuilder();
-	protected responseGenerator: FinalReportGenerator;
+	protected playbook: Playbook;
 	protected toolExecutor: ToolExecutor;
 	protected githubManager: GitHubContextManager;
 
@@ -66,7 +65,10 @@ export class AIAgent {
 			throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
 		}
 		this.llmConfig = llmConfig;
-		this.responseGenerator = new FinalReportGenerator(this.llmConfig);
+
+		// Initialize Playbook
+		this.playbook = config.playbook || new AgentPlaybook();
+
 		this.toolExecutor = new ToolExecutor({
 			timeout: this.config.toolTimeout,
 			verbose: this.config.verbose
@@ -79,9 +81,8 @@ export class AIAgent {
 			autoUploadToIssue: this.config.autoUploadToIssue
 		});
 
-		// Extract tool definitions from MCP tools using PromptBuilder
-		AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
-		this.promptBuilder.registerTools(AUTODEV_REMOTE_TOOLS);
+		// Extract tool definitions from MCP tools
+		AUTODEV_REMOTE_TOOLS = this.extractToolDefinitions(AutoDevRemoteAgentTools);
 
 		// Register real tool handlers
 		this.registerToolHandlers();
@@ -93,6 +94,109 @@ export class AIAgent {
 			enableToolChaining: this.config.enableToolChaining,
 			toolTimeout: this.config.toolTimeout
 		});
+	}
+
+	/**
+	 * Extract tool definitions from tool installers
+	 */
+	private extractToolDefinitions(toolInstallers: readonly any[]): ToolDefinition[] {
+		const tools: ToolDefinition[] = [];
+
+		const mockInstaller = (
+			name: string,
+			description: string,
+			inputSchema: Record<string, any>,
+			handler: any
+		) => {
+			const properties: Record<string, any> = {};
+			const required: string[] = [];
+
+			for (const [key, zodType] of Object.entries(inputSchema)) {
+				try {
+					properties[key] = this.zodToJsonSchema(zodType);
+
+					// Simple required check - assume all are required unless explicitly optional
+					if (zodType && typeof zodType === 'object') {
+						const zodObj = zodType as { isOptional?: boolean; _def?: { typeName?: string } };
+						if (!zodObj.isOptional) {
+							required.push(key);
+						}
+					}
+				} catch (error) {
+					// Fallback for complex types
+					properties[key] = { type: 'string', description: `Parameter ${key}` };
+					required.push(key);
+				}
+			}
+
+			tools.push({
+				name,
+				description,
+				parameters: {
+					type: "object",
+					properties,
+					required
+				}
+			});
+		};
+
+		// Execute tool installers to capture definitions
+		toolInstallers.forEach(installer => {
+			try {
+				installer(mockInstaller);
+			} catch (error) {
+				console.warn(`Failed to extract tool definition:`, error);
+			}
+		});
+
+		return tools;
+	}
+
+	/**
+	 * Convert Zod schema to JSON schema
+	 */
+	private zodToJsonSchema(zodType: any): any {
+		if (!zodType || typeof zodType !== 'object') {
+			return { type: 'string' };
+		}
+
+		// Handle basic types
+		if (zodType._def?.typeName === 'ZodString') {
+			return { type: 'string' };
+		}
+		if (zodType._def?.typeName === 'ZodNumber') {
+			return { type: 'number' };
+		}
+		if (zodType._def?.typeName === 'ZodBoolean') {
+			return { type: 'boolean' };
+		}
+		if (zodType._def?.typeName === 'ZodArray') {
+			return {
+				type: 'array',
+				items: this.zodToJsonSchema(zodType._def.type)
+			};
+		}
+		if (zodType._def?.typeName === 'ZodObject') {
+			const properties: Record<string, any> = {};
+			const required: string[] = [];
+
+			for (const [key, value] of Object.entries(zodType._def.shape())) {
+				properties[key] = this.zodToJsonSchema(value);
+				const zodValue = value as { isOptional?: () => boolean };
+				if (!zodValue.isOptional?.()) {
+					required.push(key);
+				}
+			}
+
+			return {
+				type: 'object',
+				properties,
+				required
+			};
+		}
+
+		// Fallback for unknown types
+		return { type: 'string' };
 	}
 
 	/**
@@ -162,8 +266,13 @@ export class AIAgent {
 		while (currentRound <= this.config.maxToolRounds!) {
 			this.log(`=== Tool Execution Round ${currentRound} ===`);
 
-			// Build messages for current round
-			const messages = await this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory, this.config.workspacePath);
+			// Build messages for current round using Playbook
+			const messages = await this.playbook.buildMessagesForRound(
+				userInput,
+				context,
+				currentRound,
+				this.conversationHistory
+			);
 
 			// Call LLM
 			const llmResponse = await this.callLLM(messages);
@@ -223,12 +332,7 @@ export class AIAgent {
 			currentRound++;
 		}
 
-		const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
-			userInput,
-			lastLLMResponse,
-			allToolResults,
-			currentRound - 1
-		);
+		const finalResponse = await this.generateFinalResponse(userInput, lastLLMResponse, allToolResults, currentRound - 1);
 
 		this.updateConversationHistory(userInput, finalResponse);
 
@@ -261,8 +365,8 @@ export class AIAgent {
 	 * Process input with single round (legacy mode)
 	 */
 	private async processInputSingleRound(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
-		// Build messages for LLM
-		const messages = this.promptBuilder.buildMessages(userInput, context, this.conversationHistory);
+		// Build messages using Playbook
+		const messages = await this.playbook.buildMessagesForRound(userInput, context, 1, this.conversationHistory);
 
 		// Call LLM to generate response
 		const llmResponse = await this.callLLM(messages);
@@ -301,12 +405,7 @@ export class AIAgent {
 
 			// If we have tool results, send them back to LLM for final analysis
 			if (toolResults.length > 0) {
-				const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
-					userInput,
-					parsedResponse.text,
-					toolResults,
-					1
-				);
+				const finalResponse = await this.generateFinalResponse(userInput, parsedResponse.text, toolResults, 1);
 
 				// Update conversation history with final response
 				this.updateConversationHistory(userInput, finalResponse);
@@ -345,6 +444,34 @@ export class AIAgent {
 			totalRounds: 0,
 			executionTime
 		};
+	}
+
+	/**
+	 * Generate final response using Playbook
+	 */
+	private async generateFinalResponse(
+		userInput: string,
+		lastLLMResponse: string,
+		toolResults: ToolResult[],
+		totalRounds: number
+	): Promise<string> {
+		const summaryPrompt = this.playbook.prepareSummaryPrompt(userInput, toolResults, lastLLMResponse);
+		const verificationPrompt = this.playbook.prepareVerificationPrompt(userInput, toolResults);
+
+		const messages: CoreMessage[] = [
+			{ role: "system", content: this.playbook.getSystemPrompt() },
+			{ role: "user", content: summaryPrompt },
+			{ role: "user", content: verificationPrompt }
+		];
+
+		const { text } = await generateText({
+			model: this.llmConfig.openai(this.llmConfig.fullModel),
+			messages,
+			temperature: 0.3,
+			maxTokens: 4000
+		});
+
+		return text;
 	}
 
 	/**
@@ -543,8 +670,6 @@ export class AIAgent {
 
 	/**
 	 * Format agent response for display with enhanced information
-	 * @param response - The agent response to format
-	 * @param options - Optional formatting options
 	 */
 	static formatResponse(response: AgentResponse, options?: { autoUpload?: boolean; githubToken?: string }): string {
 		const output: string[] = [];

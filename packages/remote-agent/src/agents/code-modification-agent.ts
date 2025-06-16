@@ -1,6 +1,8 @@
 import { AIAgent, AgentConfig, AgentResponse } from "../agent";
 import { ToolResult } from "../agent/tool-definition";
 import { FunctionParser } from "../agent/function-parser";
+import { CoreMessage } from "ai";
+import { generateText } from "ai";
 
 /**
  * Configuration options specific to CodeModificationAgent
@@ -119,13 +121,11 @@ export class CodeModificationAgent extends AIAgent {
     const modificationPrompt = this.prepareModificationPrompt(userInput, analysisResponse.text);
 
     // Call LLM to create a modification plan
-    const messages = await this.promptBuilder.buildMessagesForRound(
+    const messages = await this.playbook.buildMessagesForRound(
       modificationPrompt,
       context,
-      analysisResponse.toolResults,
       1,
-      this.conversationHistory,
-      this.config.workspacePath
+      this.conversationHistory
     );
 
     const llmResponse = await this.callLLM(messages);
@@ -147,22 +147,15 @@ export class CodeModificationAgent extends AIAgent {
       this.log('Phase 3: Verifying code modifications');
       const verificationPrompt = this.prepareVerificationPrompt(userInput, modResults);
 
-      const verificationMessages = await this.promptBuilder.buildMessagesForRound(
+      const verificationMessages = await this.playbook.buildMessagesForRound(
         verificationPrompt,
         context,
-        allToolResults,
         3,
-        this.conversationHistory,
-        this.config.workspacePath
+        this.conversationHistory
       );
 
       const verificationResponse = await this.callLLM(verificationMessages);
-      const finalText = await this.responseGenerator.generateComprehensiveFinalResponse(
-        userInput,
-        verificationResponse,
-        allToolResults,
-        3
-      );
+      const finalText = await this.generateCodeModificationFinalResponse(userInput, verificationResponse, allToolResults, 3);
 
       // Extract information about modified files
       const modifiedFiles = this.extractModifiedFiles(allToolResults);
@@ -179,12 +172,7 @@ export class CodeModificationAgent extends AIAgent {
     }
 
     // Generate final response
-    const finalText = await this.responseGenerator.generateComprehensiveFinalResponse(
-      userInput,
-      parsedResponse.text,
-      allToolResults,
-      2
-    );
+    const finalText = await this.generateCodeModificationFinalResponse(userInput, parsedResponse.text, allToolResults, 2);
 
     // Extract information about modified files
     const modifiedFiles = this.extractModifiedFiles(allToolResults);
@@ -287,5 +275,30 @@ Instructions:
 2. Verify syntax correctness
 3. Check for any potential runtime issues
 4. Suggest any additional improvements if necessary`;
+  }
+
+  private async generateCodeModificationFinalResponse(
+    userInput: string,
+    lastLLMResponse: string,
+    toolResults: ToolResult[],
+    totalRounds: number
+  ): Promise<string> {
+    const summaryPrompt = this.playbook.prepareSummaryPrompt(userInput, toolResults, lastLLMResponse);
+    const verificationPrompt = this.playbook.prepareVerificationPrompt(userInput, toolResults);
+
+    const messages: CoreMessage[] = [
+      { role: "system", content: this.playbook.getSystemPrompt() },
+      { role: "user", content: summaryPrompt },
+      { role: "user", content: verificationPrompt }
+    ];
+
+    const { text } = await generateText({
+      model: this.llmConfig.openai(this.llmConfig.fullModel),
+      messages,
+      temperature: 0.3,
+      maxTokens: 4000
+    });
+
+    return text;
   }
 }
