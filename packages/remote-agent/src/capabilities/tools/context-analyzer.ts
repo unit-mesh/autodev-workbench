@@ -8,12 +8,26 @@ import { CodebaseScanner } from "./analyzers/codebase-scanner";
 import { configureLLMProvider } from "../../services/llm";
 import { LLMLogger } from "../../services/llm/llm-logger";
 
+// 添加缓存和性能优化
+const analysisCache = new Map<string, { result: any; timestamp: number; ttl: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5分钟缓存
+const ANALYSIS_TIMEOUT = 10000; // 10秒超时
+const MAX_FILES_TO_SCAN = 50; // 限制扫描文件数量
+
 export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 	installer("analyze-basic-context", "Analyze project basic context, structure, and provide intelligent insights for planning. Requires a valid directory path to analyze.", {
 		workspace_path: z.string().optional().describe("Path to analyze (defaults to current directory). Must be a valid, accessible directory."),
-	}, async ({ workspace_path }: { workspace_path?: string; }) => {
+		use_cache: z.boolean().optional().default(true).describe("Whether to use cached results if available"),
+		quick_mode: z.boolean().optional().default(false).describe("Use quick analysis mode for faster results"),
+	}, async ({ workspace_path, use_cache = true, quick_mode = false }: { 
+		workspace_path?: string; 
+		use_cache?: boolean;
+		quick_mode?: boolean;
+	}) => {
 		try {
 			const workspacePath = workspace_path || process.env.WORKSPACE_PATH || process.cwd();
+			
+			// 验证目录
 			try {
 				const stats = await fs.stat(workspacePath);
 				if (!stats.isDirectory()) {
@@ -37,26 +51,49 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 				};
 			}
 
-			const llmConfig = configureLLMProvider();
-			if (llmConfig) {
-				const newVar = await performAIAnalysis(workspacePath, llmConfig);
-				return newVar as any;
-			} else {
-				console.warn("No LLM provider available. Falling back to code-based analysis.");
-				const analyzer = new ProjectContextAnalyzer();
-				const result = await analyzer.analyze(workspacePath);
-
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(result)
-						}
-					]
-				};
+			// 检查缓存
+			const cacheKey = `${workspacePath}-${quick_mode}`;
+			if (use_cache && analysisCache.has(cacheKey)) {
+				const cached = analysisCache.get(cacheKey)!;
+				if (Date.now() - cached.timestamp < cached.ttl) {
+					console.log('🚀 Using cached analysis result');
+					return cached.result;
+				} else {
+					analysisCache.delete(cacheKey);
+				}
 			}
+
+			// 设置超时控制
+			const analysisPromise = quick_mode ? 
+				performQuickAnalysis(workspacePath) : 
+				performFullAnalysis(workspacePath);
+
+			const timeoutPromise = new Promise((_, reject) => {
+				setTimeout(() => reject(new Error('Analysis timeout')), ANALYSIS_TIMEOUT);
+			});
+
+			const result = await Promise.race([analysisPromise, timeoutPromise]);
+
+			// 缓存结果
+			if (use_cache) {
+				analysisCache.set(cacheKey, {
+					result,
+					timestamp: Date.now(),
+					ttl: CACHE_TTL
+				});
+			}
+
+			return result;
+
 		} catch (error: any) {
 			console.error('Error in analysis:', error);
+			
+			// 超时或其他错误时，返回基础分析
+			if (error.message === 'Analysis timeout') {
+				console.warn('Analysis timeout, falling back to basic structure analysis');
+				return await performBasicStructureAnalysis(workspace_path || process.cwd());
+			}
+			
 			return {
 				content: [
 					{
@@ -68,6 +105,139 @@ export const installAnalysisBasicContextTool: ToolLike = (installer) => {
 		}
 	});
 };
+
+/**
+ * 快速分析模式 - 只分析基本结构，不调用 LLM
+ */
+async function performQuickAnalysis(workspacePath: string) {
+	console.log('🔧 Using quick analysis mode');
+	const analyzer = new ProjectContextAnalyzer();
+	const result = await analyzer.analyze(workspacePath, "basic");
+
+	return {
+		content: [
+			{
+				type: "text",
+				text: JSON.stringify({
+					...result,
+					analysis_mode: "quick",
+					note: "Quick analysis mode - limited LLM usage for faster results"
+				}, null, 2)
+			}
+		]
+	};
+}
+
+/**
+ * 完整分析模式 - 包含 LLM 分析
+ */
+async function performFullAnalysis(workspacePath: string) {
+	const llmConfig = configureLLMProvider();
+	if (llmConfig) {
+		console.log('🧠 Using LLM analysis strategy');
+		return await performAIAnalysis(workspacePath, llmConfig);
+	} else {
+		console.warn("No LLM provider available. Falling back to code-based analysis.");
+		return await performQuickAnalysis(workspacePath);
+	}
+}
+
+/**
+ * 基础结构分析 - 最简单的回退方案
+ */
+async function performBasicStructureAnalysis(workspacePath: string) {
+	try {
+		const projectInfo = await collectBasicProjectInfo(workspacePath);
+		return {
+			content: [
+				{
+					type: "text",
+					text: JSON.stringify({
+						analysis_mode: "basic_structure",
+						project_info: projectInfo,
+						note: "Basic structure analysis only - reduced scope due to performance constraints"
+					}, null, 2)
+				}
+			]
+		};
+	} catch (error: any) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: `Error in basic analysis: ${error.message}`
+				}
+			]
+		};
+	}
+}
+
+/**
+ * 收集基础项目信息 - 优化版本
+ */
+async function collectBasicProjectInfo(workspacePath: string): Promise<any> {
+	const projectInfo: any = {};
+
+	// 只读取关键文件
+	try {
+		const packageJsonPath = path.join(workspacePath, "package.json");
+		const packageJsonExists = await fs.access(packageJsonPath).then(() => true).catch(() => false);
+
+		if (packageJsonExists) {
+			const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+			projectInfo.name = packageJson.name || path.basename(workspacePath);
+			projectInfo.version = packageJson.version || "unknown";
+			projectInfo.description = packageJson.description || "";
+			// 只保留主要依赖信息
+			projectInfo.main_dependencies = Object.keys(packageJson.dependencies || {}).slice(0, 10);
+			projectInfo.dev_dependencies_count = Object.keys(packageJson.devDependencies || {}).length;
+		} else {
+			projectInfo.name = path.basename(workspacePath);
+		}
+	} catch (error) {
+		projectInfo.name = path.basename(workspacePath);
+	}
+
+	// 快速检查关键文件
+	const keyFiles = ["README.md", "package.json", "tsconfig.json", ".gitignore"];
+	projectInfo.key_files = {};
+
+	await Promise.all(keyFiles.map(async (file) => {
+		try {
+			const filePath = path.join(workspacePath, file);
+			const exists = await fs.access(filePath).then(() => true).catch(() => false);
+			projectInfo.key_files[file] = exists;
+		} catch (error) {
+			projectInfo.key_files[file] = false;
+		}
+	}));
+
+	// 简化的目录结构 - 只扫描第一层
+	projectInfo.top_level_dirs = await getTopLevelDirectories(workspacePath);
+
+	return projectInfo;
+}
+
+/**
+ * 获取顶层目录 - 性能优化版本
+ */
+async function getTopLevelDirectories(dirPath: string): Promise<string[]> {
+	try {
+		const entries = await fs.readdir(dirPath, { withFileTypes: true });
+		return entries
+			.filter(entry => 
+				entry.isDirectory() && 
+				!entry.name.startsWith('.') &&
+				entry.name !== 'node_modules' &&
+				entry.name !== 'dist' &&
+				entry.name !== 'build'
+			)
+			.map(entry => entry.name)
+			.slice(0, 20); // 限制返回数量
+	} catch (error) {
+		return [];
+	}
+}
 
 /**
  * Perform AI-powered project analysis using LLM
