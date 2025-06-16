@@ -46,8 +46,6 @@ Some analysis tools encountered issues:
 ${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 ` : ''}
 
-## ✅ Required Response Format
-
 Your response must include these sections in order:
 
 ### 1. Direct Answer to User's Question
@@ -98,17 +96,11 @@ For each step, include:
 - Expected outcomes
 - Potential challenges
 
-### 5. Implementation Timeline & Priorities
+### 5. Implementation Priorities
 - **High Priority** (Must do first)
 - **Medium Priority** (Important but can wait)
 - **Low Priority** (Nice to have)
 - **Future Enhancements** (Post-implementation improvements)
-
-### 6. Risk Assessment & Alternatives
-- Potential risks in the proposed approach
-- Mitigation strategies
-- Alternative solutions if the main approach fails
-- Rollback plan if needed
 
 ## 🎯 Response Guidelines
 
