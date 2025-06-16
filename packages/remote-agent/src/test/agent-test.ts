@@ -1,7 +1,7 @@
 import { AIAgent } from '../agent';
-import { CodeModificationAgent } from '../agents/code-modification-agent';
 import { BugFixAgent } from '../agents/bug-fix-agent';
-import { IssuePlaybook, BugFixPlaybook } from '../playbooks';
+import { FeatureAnalysisAgent } from '../agents/feature-analysis-agent';
+import { IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from '../playbooks';
 import { configureLLMProvider } from '../services/llm';
 import 'dotenv/config';
 
@@ -78,15 +78,9 @@ async function runTestSuite() {
   // Define test cases
   const testCases: TestCase[] = [
     {
-      name: 'Issue Analysis',
+      name: 'Bug Report Analysis',
       input: 'Analyze GitHub issue #105 in unit-mesh/autodev-workbench',
       expectedTools: ['github-get-issue-with-analysis', 'grep-search'],
-      expectedRounds: 2
-    },
-    {
-      name: 'Code Modification',
-      input: 'Add error handling to the login function in auth.ts',
-      expectedTools: ['grep-search', 'str-replace-editor'],
       expectedRounds: 2
     },
     {
@@ -94,30 +88,36 @@ async function runTestSuite() {
       input: 'Fix the null pointer exception in UserService.java',
       expectedTools: ['grep-search', 'str-replace-editor'],
       expectedRounds: 2
+    },
+    {
+      name: 'Feature Request Analysis',
+      input: 'Implement user authentication with OAuth2',
+      expectedTools: ['grep-search', 'codebase-search'],
+      expectedRounds: 2
     }
   ];
 
   // Initialize agents
   const agents = {
-    aiAgent: new AIAgent({
+    issueAnalysisAgent: new AIAgent({
       llmConfig,
       maxToolRounds: 3,
       enableToolChaining: true,
-      playbook: new IssuePlaybook()
-    }),
-    codeModAgent: new CodeModificationAgent({
-      llmConfig,
-      maxToolRounds: 3,
-      enableToolChaining: true,
-      modificationStrategy: 'analysis-first',
-      createBackups: true,
-      verifyChanges: true
+      playbook: new IssueAnalysisPlaybook()
     }),
     bugFixAgent: new BugFixAgent({
       llmConfig,
       maxToolRounds: 3,
       enableToolChaining: true,
       playbook: new BugFixPlaybook()
+    }),
+    featureAnalysisAgent: new FeatureAnalysisAgent({
+      llmConfig,
+      maxToolRounds: 3,
+      enableToolChaining: true,
+      analysisStrategy: 'requirements-first',
+      generateTechnicalDocs: true,
+      analyzeCompatibility: true
     })
   };
 

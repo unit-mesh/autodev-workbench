@@ -5,7 +5,7 @@ import { AutoDevRemoteAgentTools } from "./capabilities/tools";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
-import { Playbook, AgentPlaybook, IssuePlaybook, BugFixPlaybook } from "./playbooks";
+import { Playbook, IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from "./playbooks";
 
 let AUTODEV_REMOTE_TOOLS: ToolDefinition[] = [];
 
@@ -67,7 +67,7 @@ export class AIAgent {
 		this.llmConfig = llmConfig;
 
 		// Initialize Playbook
-		this.playbook = config.playbook || new AgentPlaybook();
+		this.playbook = config.playbook || new IssueAnalysisPlaybook();
 
 		this.toolExecutor = new ToolExecutor({
 			timeout: this.config.toolTimeout,
