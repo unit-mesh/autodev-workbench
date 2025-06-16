@@ -9,7 +9,7 @@ export type * from "./types/index";
 // AI Agent System
 // =============================================================================
 export { AIAgent, type AgentConfig, type AgentResponse } from "./agent";
-export { CodeModificationAgent, type CodeModificationConfig, type CodeModificationResponse } from "./agents";
+export { BugFixAgent, type BugFixAgentConfig, type BugFixAgentResponse } from "./agents";
 export { PromptBuilder } from "./agent/prompt-builder";
 export { FunctionParser } from "./agent/function-parser";
 export { ToolExecutor, type ToolResult, type ToolExecutionContext } from "./agent/tool-executor";
@@ -17,6 +17,11 @@ export { ToolDefinition } from "./agent/tool-definition";
 export { FinalReportGenerator } from "./agent/final-report-generator";
 export { GitHubContextManager } from "./agent/github-context-manager";
 export * from "./agent/tool-definition";
+
+// =============================================================================
+// Playbooks
+// =============================================================================
+export { Playbook, IssuePlaybook, BugFixPlaybook } from "./playbooks";
 
 // =============================================================================
 // Core Services

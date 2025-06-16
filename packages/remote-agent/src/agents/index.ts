@@ -1,1 +1,1 @@
-export * from './code-modification-agent';
+export * from './bug-fix-agent';
