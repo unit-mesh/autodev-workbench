@@ -3,7 +3,6 @@ import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
 import { PromptBuilder } from "./agent/prompt-builder";
-import { FinalReportGenerator } from "./agent/final-report-generator";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
@@ -49,7 +48,6 @@ export class AIAgent {
 	protected conversationHistory: CoreMessage[] = [];
 	protected config: AgentConfig;
 	protected promptBuilder: PromptBuilder = new PromptBuilder();
-	protected responseGenerator: FinalReportGenerator;
 	protected toolExecutor: ToolExecutor;
 	protected githubManager: GitHubContextManager;
 	protected playbook: Playbook;
@@ -70,7 +68,6 @@ export class AIAgent {
 		}
 		this.llmConfig = llmConfig;
 		this.playbook = config.playbook || new IssueAnalysisPlaybook();
-		this.responseGenerator = new FinalReportGenerator(this.llmConfig);
 		this.toolExecutor = new ToolExecutor({
 			timeout: this.config.toolTimeout,
 			verbose: this.config.verbose
@@ -227,7 +224,7 @@ export class AIAgent {
 			currentRound++;
 		}
 
-		const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
+		const finalResponse = await this.promptBuilder.generateComprehensiveFinalResponse(
 			userInput,
 			lastLLMResponse,
 			allToolResults,
@@ -261,14 +258,8 @@ export class AIAgent {
 		};
 	}
 
-	/**
-	 * Process input with single round (legacy mode)
-	 */
 	private async processInputSingleRound(userInput: string, startTime: number, context?: any): Promise<AgentResponse> {
-		// Build messages for LLM
 		const messages = this.promptBuilder.buildMessages(userInput, context, this.conversationHistory);
-
-		// Call LLM to generate response
 		const llmResponse = await this.callLLM(messages);
 		this.log('LLM response received:', llmResponse.substring(0, 200) + '...');
 
@@ -305,7 +296,7 @@ export class AIAgent {
 
 			// If we have tool results, send them back to LLM for final analysis
 			if (toolResults.length > 0) {
-				const finalResponse = await this.responseGenerator.generateComprehensiveFinalResponse(
+				const finalResponse = await this.promptBuilder.generateComprehensiveFinalResponse(
 					userInput,
 					parsedResponse.text,
 					toolResults,
@@ -351,9 +342,6 @@ export class AIAgent {
 		};
 	}
 
-	/**
-	 * Helper methods for enhanced functionality
-	 */
 	private shouldContinueToolChain(roundResults: ToolResult[], currentRound: number, allResults?: ToolResult[]): boolean {
 		// Don't continue if we've reached max rounds
 		if (currentRound >= this.config.maxToolRounds!) {
@@ -367,9 +355,6 @@ export class AIAgent {
 			this.log(`Round ${currentRound}: All tools failed, stopping chain`);
 			return false;
 		}
-
-		// For comprehensive analysis, we want to encourage deeper investigation
-		// Only stop if we have truly comprehensive coverage
 
 		// Check what types of analysis we've done so far
 		const allPreviousResults = allResults || [];
