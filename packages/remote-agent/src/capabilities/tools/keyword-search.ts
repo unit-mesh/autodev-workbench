@@ -4,11 +4,8 @@ import * as fs from "fs";
 import * as path from "path";
 
 import {
-  SymbolAnalyser,
-  CodeCollector,
-  SymbolInfo,
-  LanguageServiceProvider,
-  SymbolKind
+  SymbolAnalyser, CodeCollector, SymbolInfo,
+  LanguageServiceProvider, SymbolKind, ILanguageServiceProvider, InstantiationService
 } from "@autodev/context-worker";
 
 export const installSearchKeywordsTool: ToolLike = (installer) => {
@@ -41,7 +38,7 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
         };
       }
 
-      // Check if file exists
+      // Check if path exists
       if (!fs.existsSync(resolvedPath)) {
         return {
           content: [
@@ -53,27 +50,102 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
         };
       }
 
+      // Check if path is a directory
+      const stats = fs.statSync(resolvedPath);
+      if (stats.isDirectory()) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: '${file_path}' is a directory, not a file. Please provide a specific file path.`
+            }
+          ]
+        };
+      }
+
+      // Check if it's a regular file
+      if (!stats.isFile()) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: '${file_path}' is not a regular file.`
+            }
+          ]
+        };
+      }
+
       console.log('🔧 Initializing SymbolAnalyser for programming symbol search...');
 
-      // Initialize SymbolAnalyser
-      const languageService = new LanguageServiceProvider();
-      const symbolAnalyser = new SymbolAnalyser(languageService);
+      const service = new InstantiationService();
+      service.registerSingleton(ILanguageServiceProvider, LanguageServiceProvider);
+
+      // Initialize SymbolAnalyser and CodeCollector
+      const languageServiceProvider = service.get(ILanguageServiceProvider);
+      await languageServiceProvider.ready(); // Wait for language service to be ready
+      
+      const symbolAnalyser = new SymbolAnalyser(languageServiceProvider)
       const codeCollector = new CodeCollector(workspacePath);
 
       console.log(`🔍 Analyzing file: ${resolvedPath}`);
 
-      // Add the file to the collector
+      // Read file content and check language support
       const content = fs.readFileSync(resolvedPath, 'utf8');
-      const language = codeCollector.inferLanguage(resolvedPath) || 'unknown';
+      const language = codeCollector.inferLanguage(resolvedPath);
+      
+      if (!language) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: File '${file_path}' has unsupported language or file type.`
+            }
+          ]
+        };
+      }
+
+      // Set files in collector - this is the correct way based on CodeAnalyzer
       codeCollector.setAllFiles([{
         file: resolvedPath,
         content: content,
         language: language
       }]);
 
+      console.log(`🔍 Language detected: ${language}`);
+      console.log(`📄 File content length: ${content.length} characters`);
+      console.log(`📁 Files in collector: ${codeCollector.getAllFiles().length}`);
+
       // Perform symbol analysis
       const symbolAnalysisResult = await symbolAnalyser.analyze(codeCollector);
       console.log(`📊 SymbolAnalyser found ${symbolAnalysisResult.symbols.length} programming symbols`);
+
+      // If no symbols found, provide helpful information
+      if (symbolAnalysisResult.symbols.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                description: "AST-based programming symbol search results",
+                searched_for: symbols,
+                found_count: 0,
+                total_symbols_in_file: 0,
+                file_path: path.relative(workspacePath, resolvedPath),
+                language: language,
+                symbol_types_found: [],
+                results: [],
+                note: `No symbols were found in the ${language} file. This could be due to:
+1. The file contains only simple code without classes, functions, or interfaces
+2. The tree-sitter parser for ${language} may not be properly configured
+3. The symbol extraction queries may need adjustment for this specific code structure
+
+File content preview (first 200 chars):
+${content.substring(0, 200)}${content.length > 200 ? '...' : ''}`
+              }, null, 2)
+            }
+          ]
+        };
+      }
 
       // Filter symbols based on the requested symbol names
       const matchedSymbols: SymbolInfo[] = [];

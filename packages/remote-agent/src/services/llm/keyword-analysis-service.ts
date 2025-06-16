@@ -80,23 +80,20 @@ export class KeywordAnalysisService {
 
   private buildKeywordExtractionPrompt(issue: GitHubIssue & { urlContent?: any[] }): string {
     let prompt = `
-You are a coding assistant who helps the user answer questions about code in their workspace by providing a list of relevant keywords they can search for to answer the question.
-The user will provide you with potentially relevant information from the workspace. This information may be incomplete.
+You are an expert code analyst specialized in extracting keywords from GitHub issues. Your task is to analyze a GitHub issue and identify precise, technical keywords that directly relate to the issue's technical focus.
 
-DO NOT ask the user for additional information or clarification.
-DO NOT try to answer the user's question directly.
+**Guidelines for Keyword Extraction:**
+1. Focus ONLY on technical terms that appear in the issue's title, description, and any code snippets or URLs.
+2. Prioritize specific technical terms like:
+   - File paths mentioned in the issue (e.g., 'web-search.ts')
+   - Function names, class names, and method names (e.g., 'analyzeIssueForKeywords')
+   - Technical concepts directly mentioned (e.g., 'URL processing', 'GitHub link conversion')
+   - Programming language specific terms
+3. Extract exact variable names, function names, and technical terms used in the issue - don't generalize them.
+4. Exclude generic terms that aren't specific to the technical issue at hand.
+5. For any file paths or code references in the issue, include them exactly as written.
 
-**Additional Rules**
-Think step by step:
-
-1. Read the user's question to understand what they are asking about their workspace.
-2. If the question contains pronouns such as 'it' or 'that', try to understand what the pronoun refers to by looking at the rest of the question and the conversation history.
-3. If the question contains an ambiguous word such as 'this', try to understand what it refers to by looking at the rest of the question, the user's active selection, and the conversation history.
-4. Output a precise version of the question that resolves all pronouns and ambiguous words like 'this' to the specific nouns they stand for. Be sure to preserve the exact meaning of the question by only changing ambiguous pronouns and words like 'this'.
-5. Then output a short markdown list of up to 8 relevant keywords that the user could try searching for to answer their question. These keywords could be used as file names, symbol names, abbreviations, or comments in the relevant code. Put the most relevant keywords to the question first. Do not include overly generic keywords. Do not repeat keywords.
-6. For each keyword in the markdown list of related keywords, if applicable add a comma-separated list of variations after it. For example, for 'encode', possible variations include 'encoding', 'encoded', 'encoder', 'encoders'. Consider synonyms and plural forms. Do not repeat variations.
-
-Please analyze this GitHub issue and extract keywords:
+Please analyze this GitHub issue and extract precise technical keywords:
 
 **Issue Title:** ${issue.title}
 
@@ -113,18 +110,21 @@ Please analyze this GitHub issue and extract keywords:
           prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
           const content = urlData.content || '';
           if (content) {
-            prompt += `${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}\n`;
+            // Extract only the first portion to avoid overwhelming the model
+            prompt += `${content.substring(0, 500)}${content.length > 500 ? '...' : ''}\n`;
           }
         });
       }
     }
 
-    prompt += `\n\nPlease respond with a JSON object containing the following fields:
+    prompt += `\n\nRespond ONLY with a JSON object containing the following fields:
 {
-  "primary_keywords": ["keyword1", "keyword2", ...], // Most relevant keywords (weight: 0.9)
-  "secondary_keywords": ["keyword1", "keyword2", ...], // Related keywords (weight: 0.6)
-  "tertiary_keywords": ["keyword1", "keyword2", ...], // Additional context keywords (weight: 0.3)
-}`;
+  "primary_keywords": ["keyword1", "keyword2", ...], // Exact technical terms mentioned in the issue (max 5, weight: 0.9)
+  "secondary_keywords": ["keyword1", "keyword2", ...], // Related technical concepts (max 5, weight: 0.6)
+  "tertiary_keywords": ["keyword1", "keyword2", ...], // Implementation-related terms (max 5, weight: 0.3)
+}
+
+Include any file paths, function names, or code references exactly as they appear in the issue.`;
 
     return prompt;
   }
