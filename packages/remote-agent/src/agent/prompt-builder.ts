@@ -102,7 +102,9 @@ ${this.toolPromptBuilder.buildToolSystemPrompt()}`;
 
 You are an expert AI coding agent with comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
-${this.toolPromptBuilder.buildToolContinuationPrompt(round, previousResults)}`;
+${this.toolPromptBuilder.buildToolContinuationPrompt(round, previousResults)}
+${this.toolPromptBuilder.buildToolSystemPrompt()}
+`;
   }
 
   /**
@@ -118,7 +120,6 @@ ${this.toolPromptBuilder.buildToolContinuationPrompt(round, previousResults)}`;
   ): Promise<CoreMessage[]> {
     const messages: CoreMessage[] = [];
 
-    // Add system prompt for current round
     if (round === 1) {
       const systemPrompt = await this.buildEnhancedSystemPromptWithContext(workspacePath);
       messages.push({

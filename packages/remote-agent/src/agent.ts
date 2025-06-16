@@ -110,7 +110,6 @@ export class AIAgent {
 			this.toolExecutor.registerTool(name, handler);
 		};
 
-		// Execute tool installers to register handlers
 		AutoDevRemoteAgentTools.forEach(installer => {
 			try {
 				installer(mockInstaller);
@@ -163,10 +162,7 @@ export class AIAgent {
 		while (currentRound <= this.config.maxToolRounds!) {
 			this.log(`=== Tool Execution Round ${currentRound} ===`);
 
-			// Build messages for current round
 			const messages = await this.promptBuilder.buildMessagesForRound(userInput, context, allToolResults, currentRound, this.conversationHistory, this.config.workspacePath);
-
-			// Call LLM
 			const llmResponse = await this.callLLM(messages);
 			lastLLMResponse = llmResponse;
 			this.log(`Round ${currentRound} LLM response:`, llmResponse.substring(0, 200) + '...');
@@ -179,10 +175,8 @@ export class AIAgent {
 				console.log('---END---');
 			}
 
-			// Parse for function calls
 			const parsedResponse = FunctionParser.parseResponse(llmResponse);
 
-			// Debug: Show parsing details
 			if (this.config.verbose) {
 				console.log(`[AIAgent] Parsing result:`, {
 					functionCallsFound: parsedResponse.functionCalls.length,

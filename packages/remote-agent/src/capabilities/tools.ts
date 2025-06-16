@@ -137,7 +137,6 @@ export const IntegrationTools = [
   ...WebTools,
 ] as const;
 
-// All Tools (excluding comment tool for remote agent)
 export const AutoDevRemoteAgentTools = [
   ...CoreTools,
   ...GitHubTools.filter(tool =>
