@@ -28,6 +28,15 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
 
       // Resolve file path
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
+      if (!workspacePath) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error: Workspace path is not defined`
+          }]
+        };
+      }
+      
       const fullPath = path.isAbsolute(targetFile) ? targetFile : path.join(workspacePath, targetFile);
       
       // Security check
