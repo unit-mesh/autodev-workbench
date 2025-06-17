@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Test script for feature request analysis functionality
- * Tests GitHub issue analysis for feature requests using issue IDs
+ * Test script for FeatureRequestPlaybook functionality
+ * Tests automated feature request analysis and code modification
  *
  * Usage:
  *   node test-feature-request.js [issue_id]
@@ -20,15 +20,16 @@ const featureRequestIssues = [
     owner: 'unit-mesh',
     repo: 'autodev-workbench',
     issueNumber: 105,
-    description: 'Analyze feature request in GitHub issue #105',
-    expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file'],
-    expectedRounds: 3
+    description: 'Implement feature request from GitHub issue #105',
+    expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file', 'str-replace-editor'],
+    expectedRounds: 3,
+    validateCodeChanges: true
   },
   // Add more feature request issues here as needed
 ];
 
-async function testFeatureRequestAnalysis(issueConfig) {
-  console.log(`\n🚀 Testing Feature Request Analysis - Issue #${issueConfig.issueNumber} (${issueConfig.owner}/${issueConfig.repo})`)
+async function testFeatureRequestImplementation(issueConfig) {
+  console.log(`\n🚀 Testing Feature Request Implementation - Issue #${issueConfig.issueNumber} (${issueConfig.owner}/${issueConfig.repo})`)
   console.log(`📝 Description: ${issueConfig.description}`)
 
   try {
@@ -62,10 +63,10 @@ async function testFeatureRequestAnalysis(issueConfig) {
 
     const llmInfo = agent.getLLMInfo()
     console.log(`✅ Agent initialized: ${llmInfo.provider} (${llmInfo.model})`)
-    console.log(`🔧 Tools: ${agent.getAvailableTools().join(', ')}`)
+    console.log(`🔧 Available tools: ${agent.getAvailableTools().join(', ')}`)
 
-    // Run feature request analysis
-    console.log('🧪 Running feature request analysis...')
+    // Run feature request implementation
+    console.log('\n🧪 Starting feature request analysis and implementation...')
     const startTime = Date.now()
 
     const response = await agent.start(
@@ -75,22 +76,24 @@ async function testFeatureRequestAnalysis(issueConfig) {
           owner: issueConfig.owner,
           repo: issueConfig.repo,
           issueNumber: issueConfig.issueNumber
-        }
+        },
+        enableCodeModification: true,
+        targetBranch: `feature/issue-${issueConfig.issueNumber}-automated`
       }
     )
 
     const executionTime = Date.now() - startTime
 
-    console.log(`\n📊 Test Results for Issue #${issueConfig.issueNumber}:`)
+    console.log(`\n📊 Implementation Results for Issue #${issueConfig.issueNumber}:`)
     console.log(`✅ Success: ${response.success}`)
     console.log(`🔄 Rounds: ${response.totalRounds || 1}`)
     console.log(`🛠️ Tools Used: ${response.toolResults.length}`)
     console.log(`⏱️ Execution Time: ${executionTime}ms`)
     console.log(`📝 Response Length: ${response.text.length} chars`)
 
-    // Analyze tool usage
+    // Analyze tool usage by round
     if (response.toolResults.length > 0) {
-      console.log('\n🔧 Tools Executed:')
+      console.log('\n🔧 Tools Execution Summary:')
       const toolsByRound = new Map()
 
       response.toolResults.forEach((result) => {
@@ -102,14 +105,36 @@ async function testFeatureRequestAnalysis(issueConfig) {
       })
 
       for (const [round, tools] of toolsByRound) {
-        console.log(`  Round ${round}:`)
+        console.log(`\n  Round ${round}: ${getRoundDescription(round)}`)
         tools.forEach((result, i) => {
-          console.log(`    ${i + 1}. ${result.functionCall.name} - ${result.success ? '✅' : '❌'}`)
+          const status = result.success ? '✅' : '❌'
+          const toolName = result.functionCall.name
+          console.log(`    ${i + 1}. ${toolName} - ${status}`)
+          
+          // Show details for important tools
+          if (toolName === 'str-replace-editor' && result.success) {
+            const params = result.functionCall.parameters
+            console.log(`       Modified: ${params.targetFile || 'Unknown file'}`)
+          }
         })
       }
     }
 
-    // Validate expected tools were used (if specified)
+    // Check code modification tools
+    const codeModificationTools = response.toolResults.filter(r => 
+      r.functionCall.name === 'str-replace-editor' && r.success
+    )
+    
+    console.log(`\n💻 Code Modifications: ${codeModificationTools.length} file(s) changed`)
+    if (codeModificationTools.length > 0) {
+      console.log('📝 Modified files:')
+      codeModificationTools.forEach((tool, i) => {
+        const params = tool.functionCall.parameters
+        console.log(`  ${i + 1}. ${params.targetFile || 'Unknown file'}`)
+      })
+    }
+
+    // Validate expected tools were used
     if (issueConfig.expectedTools) {
       const toolsUsed = response.toolResults.map(r => r.functionCall.name)
       const expectedToolsUsed = issueConfig.expectedTools.filter(tool =>
@@ -125,42 +150,112 @@ async function testFeatureRequestAnalysis(issueConfig) {
       }
     }
 
-    // Check if response contains key sections for feature analysis
+    // Analyze implementation content
     const hasRequirements = response.text.toLowerCase().includes('requirement') || 
                            response.text.toLowerCase().includes('feature')
     const hasTechnicalAnalysis = response.text.toLowerCase().includes('technical') || 
                                response.text.toLowerCase().includes('implementation')
-    const hasActionPlan = response.text.toLowerCase().includes('plan') || 
-                         response.text.toLowerCase().includes('step')
+    const hasImplementationPlan = response.text.toLowerCase().includes('plan') || 
+                                 response.text.toLowerCase().includes('roadmap')
+    const hasCodeChanges = response.text.toLowerCase().includes('code') || 
+                          response.text.toLowerCase().includes('implementation')
 
-    console.log(`\n📋 Content Analysis:`)
+    console.log(`\n📋 Implementation Analysis:`)
     console.log(`  Requirements Analysis: ${hasRequirements ? '✅' : '❌'}`)
     console.log(`  Technical Analysis: ${hasTechnicalAnalysis ? '✅' : '❌'}`)
-    console.log(`  Action Plan: ${hasActionPlan ? '✅' : '❌'}`)
+    console.log(`  Implementation Plan: ${hasImplementationPlan ? '✅' : '❌'}`)
+    console.log(`  Code Changes: ${hasCodeChanges ? '✅' : '❌'}`)
 
-    console.log('\n📄 Feature Analysis Response:')
-    console.log('=' * 80)
-    console.log(response.text)
-    console.log('=' * 80)
+    // Show implementation summary
+    console.log('\n📄 Implementation Summary:')
+    console.log('='.repeat(80))
+    // Extract and show key sections from the response
+    const sections = extractImplementationSections(response.text)
+    if (sections.summary) {
+      console.log('\n🎯 Executive Summary:')
+      console.log(sections.summary)
+    }
+    if (sections.implementation) {
+      console.log('\n🚀 Implementation Details:')
+      console.log(sections.implementation)
+    }
+    if (sections.testing) {
+      console.log('\n🧪 Testing Strategy:')
+      console.log(sections.testing)
+    }
+    console.log('='.repeat(80))
 
     // Determine test success
     const testSuccess = response.success && 
                        response.totalRounds >= 2 && 
-                       response.toolResults.length >= 2 &&
+                       response.toolResults.length >= 4 &&
                        hasRequirements && 
-                       hasTechnicalAnalysis
+                       hasTechnicalAnalysis &&
+                       hasImplementationPlan &&
+                       (issueConfig.validateCodeChanges ? codeModificationTools.length > 0 : true)
 
     console.log(`\n${testSuccess ? '🎉 TEST PASSED' : '❌ TEST FAILED'}`)
     
-    return testSuccess
+    return {
+      success: testSuccess,
+      codeModifications: codeModificationTools.length,
+      response
+    }
 
   } catch (error) {
     console.error('❌ Test failed:', error.message)
     if (error.stack) {
       console.error('Stack trace:', error.stack)
     }
-    return false
+    return {
+      success: false,
+      codeModifications: 0,
+      error: error.message
+    }
   }
+}
+
+// Helper function to get round description
+function getRoundDescription(round) {
+  switch (round) {
+    case 1:
+      return 'Feature Requirements Analysis'
+    case 2:
+      return 'Codebase Discovery & Architecture Analysis'
+    case 3:
+      return 'Implementation Planning & Code Generation'
+    default:
+      return 'Additional Analysis & Refinement'
+  }
+}
+
+// Helper function to extract key sections from implementation response
+function extractImplementationSections(text) {
+  const sections = {
+    summary: '',
+    implementation: '',
+    testing: ''
+  }
+
+  // Extract executive summary
+  const summaryMatch = text.match(/(?:executive summary|overview|summary)[:\s]*([^#]+?)(?=\n#|\n\n#|$)/i)
+  if (summaryMatch) {
+    sections.summary = summaryMatch[1].trim().substring(0, 300) + '...'
+  }
+
+  // Extract implementation details
+  const implMatch = text.match(/(?:implementation|code changes|technical implementation)[:\s]*([^#]+?)(?=\n#|\n\n#|$)/i)
+  if (implMatch) {
+    sections.implementation = implMatch[1].trim().substring(0, 300) + '...'
+  }
+
+  // Extract testing strategy
+  const testMatch = text.match(/(?:testing strategy|test plan|testing)[:\s]*([^#]+?)(?=\n#|\n\n#|$)/i)
+  if (testMatch) {
+    sections.testing = testMatch[1].trim().substring(0, 300) + '...'
+  }
+
+  return sections
 }
 
 // Parse command line arguments for issue ID
@@ -176,14 +271,17 @@ function parseIssueFromArgs() {
         owner: owner || 'unit-mesh',
         repo: repo || 'autodev-workbench',
         issueNumber: parseInt(issueNumber),
-        description: `Analyze feature request in GitHub issue #${issueNumber}`
+        description: `Implement feature request from GitHub issue #${issueNumber}`,
+        expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file', 'str-replace-editor'],
+        expectedRounds: 3,
+        validateCodeChanges: true
       }
     }
   }
   return null
 }
 
-// Run feature request analysis
+// Run feature request implementation test
 if (require.main === module) {
   (async () => {
     // Check if issue ID provided via command line
@@ -198,7 +296,7 @@ if (require.main === module) {
       process.exit(1)
     }
 
-    console.log('🚀 Starting Feature Request Analysis Test Suite')
+    console.log('🚀 Starting Feature Request Implementation Test Suite')
     console.log(`📋 Running ${issuesToTest.length} test case(s)...`)
     if (cmdIssue) {
       console.log(`🎯 Testing issue: ${cmdIssue.owner}/${cmdIssue.repo}#${cmdIssue.issueNumber}`)
@@ -209,12 +307,12 @@ if (require.main === module) {
 
     for (const issue of issuesToTest) {
       try {
-        const success = await testFeatureRequestAnalysis(issue)
+        const result = await testFeatureRequestImplementation(issue)
         results.push({
           issue: `${issue.owner}/${issue.repo}#${issue.issueNumber}`,
-          success
+          ...result
         })
-        if (!success) {
+        if (!result.success) {
           allTestsPassed = false
         }
 
@@ -227,24 +325,33 @@ if (require.main === module) {
         results.push({
           issue: `${issue.owner}/${issue.repo}#${issue.issueNumber}`,
           success: false,
+          codeModifications: 0,
           error: error.message
         })
         allTestsPassed = false
       }
     }
 
-    console.log('\n📋 Feature Request Analysis Test Summary:')
+    console.log('\n📋 Feature Request Implementation Test Summary:')
     console.log('='.repeat(80))
     results.forEach(result => {
-      console.log(`  ${result.issue}: ${result.success ? '✅ PASSED' : '❌ FAILED'}`)
+      const status = result.success ? '✅ PASSED' : '❌ FAILED'
+      console.log(`  ${result.issue}: ${status}`)
+      if (result.codeModifications > 0) {
+        console.log(`    💻 Code modifications: ${result.codeModifications} file(s)`)
+      }
       if (result.error) {
         console.log(`    Error: ${result.error}`)
       }
     })
 
     const passedCount = results.filter(r => r.success).length
-    console.log(`\n📊 Overall Results: ${passedCount}/${results.length} tests passed`)
-    console.log(`${allTestsPassed ? '🎉 ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`)
+    const totalModifications = results.reduce((sum, r) => sum + (r.codeModifications || 0), 0)
+    
+    console.log(`\n📊 Overall Results:`)
+    console.log(`  Tests: ${passedCount}/${results.length} passed`)
+    console.log(`  Code modifications: ${totalModifications} file(s) total`)
+    console.log(`\n${allTestsPassed ? '🎉 ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`)
 
     process.exit(allTestsPassed ? 0 : 1)
   })().catch(error => {
@@ -253,4 +360,10 @@ if (require.main === module) {
   })
 }
 
-module.exports = { testFeatureRequestAnalysis, featureRequestIssues }
+// Export for use in other tests
+module.exports = { 
+  testFeatureRequestImplementation, 
+  featureRequestIssues,
+  getRoundDescription,
+  extractImplementationSections
+}
