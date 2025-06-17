@@ -80,20 +80,28 @@ export class KeywordAnalysisService {
 
   private buildKeywordExtractionPrompt(issue: GitHubIssue & { urlContent?: any[] }): string {
     let prompt = `
-You are an expert code analyst specialized in extracting keywords from GitHub issues. Your task is to analyze a GitHub issue and identify precise, technical keywords that directly relate to the issue's technical focus.
+You are an expert code analyst specialized in extracting keywords from GitHub issues for searching within the CURRENT project codebase.
+
+**CRITICAL CONTEXT:** You are analyzing an issue for the current project repository. Your keywords will be used to search for relevant files and code within THIS project, not external projects.
 
 **Guidelines for Keyword Extraction:**
-1. Focus ONLY on technical terms that appear in the issue's title, description, and any code snippets or URLs.
-2. Prioritize specific technical terms like:
-   - File paths mentioned in the issue (e.g., 'web-search.ts')
-   - Function names, class names, and method names (e.g., 'analyzeIssueForKeywords')
-   - Technical concepts directly mentioned (e.g., 'URL processing', 'GitHub link conversion')
-   - Programming language specific terms
-3. Extract exact variable names, function names, and technical terms used in the issue - don't generalize them.
-4. Exclude generic terms that aren't specific to the technical issue at hand.
-5. For any file paths or code references in the issue, include them exactly as written.
+1. Focus on CONCEPTUAL and FUNCTIONAL keywords that describe what needs to be implemented or fixed in the current project
+2. Prioritize:
+   - Core technical concepts (e.g., 'indexing', 'MCP service', 'embedding', 'vector store')
+   - Functionality descriptions (e.g., 'file watching', 'semantic search', 'code parsing')
+   - Technology names (e.g., 'TypeScript', 'Node.js', 'API', 'service')
+   - Architecture patterns (e.g., 'client-server', 'microservice', 'plugin')
+3. AVOID:
+   - Specific file names from external projects (e.g., 'cache-manager.ts' from Roo-Code)
+   - External project paths or directory structures
+   - Implementation details that are specific to other codebases
+4. Focus on WHAT needs to be built/fixed, not HOW it's implemented in other projects
 
-Please analyze this GitHub issue and extract precise technical keywords:
+**Example:**
+- Good: "codebase indexing", "MCP service", "embedding generation", "file processing"
+- Bad: "cache-manager.ts", "Roo-Code/src/services", "orchestrator.ts"
+
+Please analyze this GitHub issue and extract keywords for searching the CURRENT project:
 
 **Issue Title:** ${issue.title}
 
@@ -101,30 +109,36 @@ Please analyze this GitHub issue and extract precise technical keywords:
 
 **Labels:** ${issue.labels.map(l => l.name).join(', ') || 'None'}`;
 
-    // Add URL content if available
+    // Add URL content if available, but focus on concepts not implementation details
     if (issue.urlContent && issue.urlContent.length > 0) {
       const successfulUrls = issue.urlContent.filter(u => u.status === 'success');
       if (successfulUrls.length > 0) {
-        prompt += `\n\n**Additional Context from URLs:**\n`;
+        prompt += `\n\n**Additional Context from URLs (for understanding requirements, NOT for extracting file names):**\n`;
         successfulUrls.forEach((urlData, index) => {
           prompt += `\n${index + 1}. **${urlData.title}** (${urlData.url})\n`;
           const content = urlData.content || '';
           if (content) {
-            // Extract only the first portion to avoid overwhelming the model
-            prompt += `${content.substring(0, 500)}${content.length > 500 ? '...' : ''}\n`;
+            // Extract only the first portion and focus on conceptual understanding
+            prompt += `${content.substring(0, 300)}${content.length > 300 ? '...' : ''}\n`;
           }
         });
+        prompt += `\n**IMPORTANT:** Use this content to understand the REQUIREMENTS and CONCEPTS, but do NOT extract specific file names or implementation details from external projects.`;
       }
     }
 
     prompt += `\n\nRespond ONLY with a JSON object containing the following fields:
 {
-  "primary_keywords": ["keyword1", "keyword2", ...], // Exact technical terms mentioned in the issue (max 5, weight: 0.9)
-  "secondary_keywords": ["keyword1", "keyword2", ...], // Related technical concepts (max 5, weight: 0.6)
-  "tertiary_keywords": ["keyword1", "keyword2", ...], // Implementation-related terms (max 5, weight: 0.3)
+  "primary_keywords": ["keyword1", "keyword2", ...], // Core concepts and technologies mentioned (max 5, weight: 0.9)
+  "secondary_keywords": ["keyword1", "keyword2", ...], // Related functional areas and patterns (max 5, weight: 0.6)
+  "tertiary_keywords": ["keyword1", "keyword2", ...], // Supporting technologies and concepts (max 5, weight: 0.3)
 }
 
-Include any file paths, function names, or code references exactly as they appear in the issue.`;
+Focus on CONCEPTUAL keywords that help find relevant code in the current project, not specific file names from external projects.
+
+**Examples for this type of issue:**
+- Primary: ["indexing", "MCP", "service", "embedding", "codebase"]
+- Secondary: ["file processing", "vector store", "API", "client", "search"]
+- Tertiary: ["TypeScript", "configuration", "integration", "performance", "scalability"]`;
 
     return prompt;
   }
