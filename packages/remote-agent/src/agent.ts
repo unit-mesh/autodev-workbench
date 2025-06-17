@@ -354,16 +354,37 @@ export class AIAgent {
 		const allPreviousResults = allResults || [];
 		const toolTypes = this.categorizeToolResults(allPreviousResults);
 
-		// For documentation/architecture tasks, we need more comprehensive analysis
+		// For comprehensive feature analysis, we need multiple types of analysis
 		const hasIssueAnalysis = toolTypes.issueAnalysis > 0;
 		const hasCodeExploration = toolTypes.codeExploration > 0;
 		const hasStructureAnalysis = toolTypes.structureAnalysis > 0;
 		const hasContentAnalysis = toolTypes.contentAnalysis > 0;
+		const hasCodeGeneration = toolTypes.codeGeneration > 0;
+		const hasFeatureAnalysis = toolTypes.featureAnalysis > 0;
 
-		// Continue if we're missing key analysis types for comprehensive understanding
-		if (!hasIssueAnalysis) {
-			this.log(`Round ${currentRound}: Missing issue analysis, continuing chain`);
-			return true;
+		// For feature requests, we need comprehensive analysis before code generation
+		const isFeatureRequest = this.isFeatureRequestWorkflow(allPreviousResults);
+
+		if (isFeatureRequest) {
+			// Feature request workflow: Analysis -> Discovery -> Planning -> Implementation
+			if (currentRound === 1 && !hasIssueAnalysis && !hasFeatureAnalysis) {
+				this.log(`Round ${currentRound}: Feature request needs initial analysis, continuing chain`);
+				return true;
+			}
+			if (currentRound === 2 && (!hasCodeExploration || !hasStructureAnalysis)) {
+				this.log(`Round ${currentRound}: Feature request needs codebase discovery, continuing chain`);
+				return true;
+			}
+			if (currentRound >= 3 && !hasCodeGeneration && (hasCodeExploration && hasStructureAnalysis)) {
+				this.log(`Round ${currentRound}: Feature request ready for implementation, continuing chain`);
+				return true;
+			}
+		} else {
+			// Standard workflow for bug analysis and other tasks
+			if (!hasIssueAnalysis) {
+				this.log(`Round ${currentRound}: Missing issue analysis, continuing chain`);
+				return true;
+			}
 		}
 
 		if (!hasCodeExploration && currentRound < 3) {
@@ -399,12 +420,16 @@ export class AIAgent {
 		codeExploration: number;
 		structureAnalysis: number;
 		contentAnalysis: number;
+		codeGeneration: number;
+		featureAnalysis: number;
 	} {
 		const categories = {
 			issueAnalysis: 0,
 			codeExploration: 0,
 			structureAnalysis: 0,
-			contentAnalysis: 0
+			contentAnalysis: 0,
+			codeGeneration: 0,
+			featureAnalysis: 0
 		};
 
 		results.forEach(result => {
@@ -420,10 +445,37 @@ export class AIAgent {
 				categories.structureAnalysis++;
 			} else if (toolName.includes('read-file') || toolName.includes('extract-webpage')) {
 				categories.contentAnalysis++;
+			} else if (toolName.includes('str-replace-editor') || toolName.includes('save-file') || toolName.includes('remove-files')) {
+				categories.codeGeneration++;
+			} else if (toolName.includes('search-keywords') || toolName.includes('analyze-basic-context')) {
+				categories.featureAnalysis++;
 			}
 		});
 
 		return categories;
+	}
+
+	/**
+	 * Determine if this is a feature request workflow
+	 */
+	private isFeatureRequestWorkflow(results: ToolResult[]): boolean {
+		// Check if we're using FeatureRequestPlaybook
+		if (this.playbook.constructor.name === 'FeatureRequestPlaybook') {
+			return true;
+		}
+
+		// Check for feature request indicators in tool results or user input
+		const hasFeatureKeywords = results.some(result => {
+			const toolName = result.functionCall.name;
+			const params = JSON.stringify(result.functionCall.parameters).toLowerCase();
+			return params.includes('feature') ||
+				   params.includes('implement') ||
+				   params.includes('add') ||
+				   params.includes('create') ||
+				   toolName.includes('feature');
+		});
+
+		return hasFeatureKeywords;
 	}
 
 	/**
