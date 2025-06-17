@@ -1,47 +1,40 @@
 #!/usr/bin/env node
 
 /**
- * Test script for FeatureRequestPlaybook functionality
- * Tests the enhanced feature request analysis and PR generation capabilities
+ * Test script for feature request analysis functionality
+ * Tests GitHub issue analysis for feature requests using issue IDs
+ *
+ * Usage:
+ *   node test-feature-request.js [issue_id]
+ *   node test-feature-request.js 105
+ *   node test-feature-request.js unit-mesh/autodev-workbench#105
+ *   node test-feature-request.js (runs default test cases)
  */
 
 const { join } = require('node:path')
-require('dotenv').config()
+require('dotenv').config({ path: join(__dirname, '.env') })
 
-// Define feature request test cases
-const featureRequestTests = [
+// Define feature request issues to test
+const featureRequestIssues = [
   {
-    name: 'OAuth2 Authentication Feature',
-    input: 'Implement OAuth2 authentication system for user login with Google and GitHub providers',
-    description: 'Test comprehensive feature analysis and implementation planning for OAuth2 authentication',
-    expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file', 'analyze-basic-context'],
+    owner: 'unit-mesh',
+    repo: 'autodev-workbench',
+    issueNumber: 105,
+    description: 'Analyze feature request in GitHub issue #105',
+    expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file'],
     expectedRounds: 3
   },
-  {
-    name: 'Real-time Chat Feature',
-    input: 'Add real-time chat functionality using WebSocket for user communication',
-    description: 'Test feature analysis for real-time communication system',
-    expectedTools: ['search-keywords', 'grep-search', 'read-file', 'list-directory'],
-    expectedRounds: 3
-  },
-  {
-    name: 'API Rate Limiting',
-    input: 'Implement API rate limiting with Redis backend to prevent abuse',
-    description: 'Test feature analysis for infrastructure enhancement',
-    expectedTools: ['grep-search', 'search-keywords', 'read-file', 'analyze-dependencies'],
-    expectedRounds: 2
-  }
+  // Add more feature request issues here as needed
 ];
 
-async function testFeatureRequestPlaybook(testCase) {
-  console.log(`\n🚀 Testing FeatureRequestPlaybook - ${testCase.name}`)
-  console.log(`📝 Description: ${testCase.description}`)
-  console.log(`💭 Input: ${testCase.input}`)
+async function testFeatureRequestAnalysis(issueConfig) {
+  console.log(`\n🚀 Testing Feature Request Analysis - Issue #${issueConfig.issueNumber} (${issueConfig.owner}/${issueConfig.repo})`)
+  console.log(`📝 Description: ${issueConfig.description}`)
 
   try {
     const { AIAgent } = require('./dist/agent.js')
-    const { FeatureRequestPlaybook } = require('./dist/playbooks/index.js')
-    console.log('✅ FeatureRequestPlaybook loaded successfully')
+    const { IssueAnalysisPlaybook } = require('./dist/playbooks/index.js')
+    console.log('✅ IssueAnalysisPlaybook loaded successfully')
 
     // Check environment
     if (!process.env.GITHUB_TOKEN) {
@@ -57,14 +50,14 @@ async function testFeatureRequestPlaybook(testCase) {
 
     console.log('✅ Environment variables configured')
 
-    // Initialize agent with FeatureRequestPlaybook
+    // Initialize agent with IssueAnalysisPlaybook
     const agent = new AIAgent({
       workspacePath: join(process.cwd(), '../../'),
       githubToken: process.env.GITHUB_TOKEN,
       verbose: true,
-      maxToolRounds: testCase.expectedRounds,
+      maxToolRounds: issueConfig.expectedRounds || 3,
       enableToolChaining: true,
-      playbook: new FeatureRequestPlaybook()
+      playbook: new IssueAnalysisPlaybook()
     })
 
     const llmInfo = agent.getLLMInfo()
@@ -74,12 +67,21 @@ async function testFeatureRequestPlaybook(testCase) {
     // Run feature request analysis
     console.log('🧪 Running feature request analysis...')
     const startTime = Date.now()
-    
-    const response = await agent.start(testCase.input)
-    
+
+    const response = await agent.start(
+      issueConfig.description,
+      {
+        githubContext: {
+          owner: issueConfig.owner,
+          repo: issueConfig.repo,
+          issueNumber: issueConfig.issueNumber
+        }
+      }
+    )
+
     const executionTime = Date.now() - startTime
 
-    console.log(`\n📊 Test Results for ${testCase.name}:`)
+    console.log(`\n📊 Test Results for Issue #${issueConfig.issueNumber}:`)
     console.log(`✅ Success: ${response.success}`)
     console.log(`🔄 Rounds: ${response.totalRounds || 1}`)
     console.log(`🛠️ Tools Used: ${response.toolResults.length}`)
@@ -90,8 +92,8 @@ async function testFeatureRequestPlaybook(testCase) {
     if (response.toolResults.length > 0) {
       console.log('\n🔧 Tools Executed:')
       const toolsByRound = new Map()
-      
-      response.toolResults.forEach((result, i) => {
+
+      response.toolResults.forEach((result) => {
         const round = result.round || 1
         if (!toolsByRound.has(round)) {
           toolsByRound.set(round, [])
@@ -107,18 +109,20 @@ async function testFeatureRequestPlaybook(testCase) {
       }
     }
 
-    // Validate expected tools were used
-    const toolsUsed = response.toolResults.map(r => r.functionCall.name)
-    const expectedToolsUsed = testCase.expectedTools.filter(tool => 
-      toolsUsed.some(used => used.includes(tool))
-    )
-    
-    console.log(`\n🎯 Tool Coverage: ${expectedToolsUsed.length}/${testCase.expectedTools.length} expected tools used`)
-    if (expectedToolsUsed.length < testCase.expectedTools.length) {
-      const missing = testCase.expectedTools.filter(tool => 
-        !toolsUsed.some(used => used.includes(tool))
+    // Validate expected tools were used (if specified)
+    if (issueConfig.expectedTools) {
+      const toolsUsed = response.toolResults.map(r => r.functionCall.name)
+      const expectedToolsUsed = issueConfig.expectedTools.filter(tool =>
+        toolsUsed.some(used => used.includes(tool))
       )
-      console.log(`⚠️ Missing tools: ${missing.join(', ')}`)
+
+      console.log(`\n🎯 Tool Coverage: ${expectedToolsUsed.length}/${issueConfig.expectedTools.length} expected tools used`)
+      if (expectedToolsUsed.length < issueConfig.expectedTools.length) {
+        const missing = issueConfig.expectedTools.filter(tool =>
+          !toolsUsed.some(used => used.includes(tool))
+        )
+        console.log(`⚠️ Missing tools: ${missing.join(', ')}`)
+      }
     }
 
     // Check if response contains key sections for feature analysis
@@ -159,33 +163,69 @@ async function testFeatureRequestPlaybook(testCase) {
   }
 }
 
-// Run all feature request tests
+// Parse command line arguments for issue ID
+function parseIssueFromArgs() {
+  const args = process.argv.slice(2)
+  if (args.length > 0) {
+    const issueArg = args[0]
+    // Support formats like "105", "unit-mesh/autodev-workbench#105", or "#105"
+    const match = issueArg.match(/(?:([^\/]+)\/([^#]+)#)?(\d+)/)
+    if (match) {
+      const [, owner, repo, issueNumber] = match
+      return {
+        owner: owner || 'unit-mesh',
+        repo: repo || 'autodev-workbench',
+        issueNumber: parseInt(issueNumber),
+        description: `Analyze feature request in GitHub issue #${issueNumber}`
+      }
+    }
+  }
+  return null
+}
+
+// Run feature request analysis
 if (require.main === module) {
   (async () => {
-    console.log('🚀 Starting FeatureRequestPlaybook Test Suite')
-    console.log(`📋 Running ${featureRequestTests.length} test cases...`)
-    
+    // Check if issue ID provided via command line
+    const cmdIssue = parseIssueFromArgs()
+    const issuesToTest = cmdIssue ? [cmdIssue] : featureRequestIssues
+
+    if (!cmdIssue && featureRequestIssues.length === 0) {
+      console.log('📋 Usage: node test-feature-request.js [issue_id]')
+      console.log('   Examples:')
+      console.log('     node test-feature-request.js 105')
+      console.log('     node test-feature-request.js unit-mesh/autodev-workbench#105')
+      process.exit(1)
+    }
+
+    console.log('🚀 Starting Feature Request Analysis Test Suite')
+    console.log(`📋 Running ${issuesToTest.length} test case(s)...`)
+    if (cmdIssue) {
+      console.log(`🎯 Testing issue: ${cmdIssue.owner}/${cmdIssue.repo}#${cmdIssue.issueNumber}`)
+    }
+
     let allTestsPassed = true
     const results = []
 
-    for (const testCase of featureRequestTests) {
+    for (const issue of issuesToTest) {
       try {
-        const success = await testFeatureRequestPlaybook(testCase)
-        results.push({ 
-          name: testCase.name, 
-          success,
-          input: testCase.input
+        const success = await testFeatureRequestAnalysis(issue)
+        results.push({
+          issue: `${issue.owner}/${issue.repo}#${issue.issueNumber}`,
+          success
         })
         if (!success) {
           allTestsPassed = false
         }
-        
+
         // Small delay between tests
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        if (issuesToTest.length > 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        }
       } catch (error) {
-        console.error(`❌ Test error for ${testCase.name}:`, error)
-        results.push({ 
-          name: testCase.name, 
+        console.error(`❌ Test error for issue ${issue.owner}/${issue.repo}#${issue.issueNumber}:`, error)
+        results.push({
+          issue: `${issue.owner}/${issue.repo}#${issue.issueNumber}`,
           success: false,
           error: error.message
         })
@@ -193,10 +233,10 @@ if (require.main === module) {
       }
     }
 
-    console.log('\n📋 FeatureRequestPlaybook Test Summary:')
-    console.log('=' * 80)
+    console.log('\n📋 Feature Request Analysis Test Summary:')
+    console.log('='.repeat(80))
     results.forEach(result => {
-      console.log(`  ${result.name}: ${result.success ? '✅ PASSED' : '❌ FAILED'}`)
+      console.log(`  ${result.issue}: ${result.success ? '✅ PASSED' : '❌ FAILED'}`)
       if (result.error) {
         console.log(`    Error: ${result.error}`)
       }
@@ -205,7 +245,7 @@ if (require.main === module) {
     const passedCount = results.filter(r => r.success).length
     console.log(`\n📊 Overall Results: ${passedCount}/${results.length} tests passed`)
     console.log(`${allTestsPassed ? '🎉 ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`)
-    
+
     process.exit(allTestsPassed ? 0 : 1)
   })().catch(error => {
     console.error('❌ Global test execution error:', error)
@@ -213,4 +253,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { testFeatureRequestPlaybook, featureRequestTests }
+module.exports = { testFeatureRequestAnalysis, featureRequestIssues }

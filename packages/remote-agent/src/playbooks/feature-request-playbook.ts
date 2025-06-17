@@ -114,16 +114,35 @@ ${context ? `Context: ${JSON.stringify(context, null, 2)}` : ''}`;
         try {
           const analyzer = new ProjectContextAnalyzer();
           const analysisResult = await analyzer.analyze(workspacePath, "basic");
+
+          // Extract project information from the analysis result
+          const projectName = analysisResult.project_info?.name || 'Unknown Project';
+          const projectType = analysisResult.project_info?.type || 'Unknown Type';
+          const projectDescription = analysisResult.project_info?.description || 'No description available';
+
+          // Build insights and recommendations summary
+          const insightsSummary = analysisResult.insights?.length > 0
+            ? analysisResult.insights.slice(0, 3).join('\n- ')
+            : 'No specific insights available';
+
+          const recommendationsSummary = analysisResult.recommendations?.length > 0
+            ? analysisResult.recommendations.slice(0, 3).join('\n- ')
+            : 'No specific recommendations available';
+
           contextInfo = `
 ## 📋 PROJECT CONTEXT:
 Working in directory: ${workspacePath}
-${analysisResult.summary}
 
-### Project Structure:
-${analysisResult.structure}
+### Project Information:
+- **Name**: ${projectName}
+- **Type**: ${projectType}
+- **Description**: ${projectDescription}
 
-### Key Technologies:
-${analysisResult.technologies.join(', ')}
+### Key Insights:
+- ${insightsSummary}
+
+### Recommendations:
+- ${recommendationsSummary}
 `;
         } catch (error) {
           contextInfo = `
