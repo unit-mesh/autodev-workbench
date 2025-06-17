@@ -2,7 +2,7 @@ import { CoreMessage, generateText } from "ai";
 import { configureLLMProvider, LLMProviderConfig } from "./services/llm";
 import { FunctionParser } from "./agent/function-parser";
 import { AutoDevRemoteAgentTools } from "./capabilities/tools";
-import { PromptBuilder } from "./agent/prompt-builder";
+import { ToolPromptBuilder } from "./agent/tool-prompt-builder";
 import { ToolExecutor, ToolHandler } from "./agent/tool-executor";
 import { GitHubContextManager } from "./agent/github-context-manager";
 import { ToolDefinition, ToolResult } from "./agent/tool-definition";
@@ -79,8 +79,8 @@ export class AIAgent {
 			autoUploadToIssue: this.config.autoUploadToIssue
 		});
 
-		// Extract tool definitions from MCP tools using PromptBuilder
-		AUTODEV_REMOTE_TOOLS = PromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
+		// Extract tool definitions from MCP tools using ToolPromptBuilder
+		AUTODEV_REMOTE_TOOLS = ToolPromptBuilder.extractToolDefinitions(AutoDevRemoteAgentTools);
 		this.playbook.registerTools(AUTODEV_REMOTE_TOOLS);
 
 		// Register real tool handlers

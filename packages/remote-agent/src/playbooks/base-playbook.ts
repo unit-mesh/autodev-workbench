@@ -1,24 +1,22 @@
 import { CoreMessage } from "ai";
-import { PromptBuilder } from "../agent/prompt-builder";
 import { ToolResult } from "../agent/tool-definition";
 
 /**
  * Playbook 是一个管理 AI Agent 提示词策略的基类
  * 不同类型的 Agent 可以使用不同的 Playbook 来管理其特定的提示词和行为模式
- * 所有 Playbook 都基于 PromptBuilder 来构建提示词
+ *
+ * 注意：这个基类现在主要用于向后兼容。推荐使用 IssueAnalysisPlaybook 等具体实现。
  */
 export abstract class Playbook {
-  protected promptBuilder: PromptBuilder;
-
   constructor(protected systemPrompt: string = "") {
-    this.promptBuilder = new PromptBuilder();
+    // Base class for backward compatibility
   }
 
   /**
-   * 注册可用的工具
+   * 注册可用的工具 - 由子类实现
    */
   registerTools(tools: any[]): void {
-    this.promptBuilder.registerTools(tools);
+    // Default implementation - subclasses should override
   }
 
   /**
@@ -36,57 +34,48 @@ export abstract class Playbook {
 
   /**
    * 为多轮对话构建消息
+   * @deprecated 推荐子类直接实现，不依赖基类
    */
   async buildMessagesForRound(
-    input: string, 
+    input: string,
     context: any,
     round: number,
     conversationHistory: CoreMessage[] = [],
     workspacePath?: string
   ): Promise<CoreMessage[]> {
-    return this.promptBuilder.buildMessagesForRound(
-      input,
-      context,
-      [],
-      round,
-      conversationHistory,
-      workspacePath
-    );
+    // Default implementation for backward compatibility
+    // Subclasses should override this method
+    throw new Error('buildMessagesForRound must be implemented by subclass');
   }
 
   /**
    * 构建最终的总结提示词
+   * @deprecated 推荐子类直接实现，不依赖基类
    */
   prepareSummaryPrompt(
-    userInput: string, 
-    toolResults: ToolResult[], 
+    userInput: string,
+    toolResults: ToolResult[],
     currentState: string
   ): string {
-    return this.promptBuilder.buildUserPromptForRound(
-      userInput,
-      {},
-      toolResults,
-      3
-    );
+    // Default implementation for backward compatibility
+    throw new Error('prepareSummaryPrompt must be implemented by subclass');
   }
 
   /**
    * 验证执行结果的提示词
+   * @deprecated 推荐子类直接实现，不依赖基类
    */
   prepareVerificationPrompt(
     userInput: string,
     results: ToolResult[]
   ): string {
-    return this.promptBuilder.buildUserPromptForRound(
-      userInput,
-      {},
-      results,
-      3
-    );
+    // Default implementation for backward compatibility
+    throw new Error('prepareVerificationPrompt must be implemented by subclass');
   }
 
   /**
-   * Generate a comprehensive final response based on all tool results
+   * 生成综合最终回复
+   * @deprecated 推荐子类直接实现，不依赖基类
    */
   async generateComprehensiveFinalResponse(
     userInput: string,
@@ -94,11 +83,7 @@ export abstract class Playbook {
     allToolResults: ToolResult[],
     totalRounds: number
   ): Promise<string> {
-    return this.promptBuilder.generateComprehensiveFinalResponse(
-      userInput,
-      lastLLMResponse,
-      allToolResults,
-      totalRounds
-    );
+    // Default implementation for backward compatibility
+    throw new Error('generateComprehensiveFinalResponse must be implemented by subclass');
   }
 }

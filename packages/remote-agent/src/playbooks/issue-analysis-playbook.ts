@@ -208,18 +208,51 @@ ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
   }
 
   private summarizePreviousResults(results: ToolResult[]): string {
-    const summary = results.map(result => {
-      if (result.success) {
-        return `✅ ${result.functionCall.name}: Completed successfully (Round ${result.round})`;
-      } else {
-        return `❌ ${result.functionCall.name}: Failed - ${result.error} (Round ${result.round})`;
-      }
-    }).join('\n');
+    const successfulResults = results.filter(r => r.success);
+    const failedResults = results.filter(r => !r.success);
 
-    const successCount = results.filter(r => r.success).length;
+    // Build detailed summary with actual tool results content
+    const detailedSummary = successfulResults
+      .map(result => {
+        const toolName = result.functionCall.name;
+        let content = '';
+        let sources = '';
+
+        // Extract content from tool result
+        if (result.result?.content && Array.isArray(result.result.content)) {
+          const textContent = result.result.content
+            .filter((item: any) => item.type === 'text')
+            .map((item: any) => item.text)
+            .join('\n');
+          content = textContent;
+        } else if (result.result?.content) {
+          content = String(result.result.content);
+        }
+
+        // Extract sources from tool results using ToolPromptBuilder
+        sources = (ToolPromptBuilder as any).extractSourcesFromToolResult(result);
+
+        // Truncate very long content to keep prompt manageable
+        const maxContentLength = 2000;
+        if (content.length > maxContentLength) {
+          content = content.substring(0, maxContentLength) + '\n... [content truncated]';
+        }
+
+        return `## ${toolName} (Round ${result.round})
+${content}
+${sources ? `\n**Sources:** ${sources}` : ''}`;
+      })
+      .join('\n\n');
+
+    // Add failed tools summary
+    const failedSummary = failedResults.length > 0
+      ? `\n\n## Failed Tools\n${failedResults.map(r => `❌ ${r.functionCall.name}: ${r.error} (Round ${r.round})`).join('\n')}`
+      : '';
+
+    const successCount = successfulResults.length;
     const totalCount = results.length;
 
-    return `${summary}\n\nSummary: ${successCount}/${totalCount} tools executed successfully`;
+    return `${detailedSummary}${failedSummary}\n\n**Execution Summary:** ${successCount}/${totalCount} tools executed successfully`;
   }
 
   /**
