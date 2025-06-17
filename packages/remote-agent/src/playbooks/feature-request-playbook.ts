@@ -1,41 +1,103 @@
 import { CoreMessage } from "ai";
 import { Playbook } from "./base-playbook";
 import { ToolResult } from "../agent/tool-definition";
+import { ProjectContextAnalyzer } from "../capabilities/tools/analyzers/project-context-analyzer";
+import { LLMLogger } from "../services/llm/llm-logger";
+import { generateText } from "ai";
+import { configureLLMProvider } from "../services/llm";
 
 /**
- * FeatureRequestPlaybook 专注于管理功能请求澄清相关的提示词策略
+ * FeatureRequestPlaybook 专注于管理功能请求分析和自动化 PR 生成的提示词策略
+ * 参考 Augment Agent 的设计理念，提供规划驱动的工作流程
  */
 export class FeatureRequestPlaybook extends Playbook {
+  private logger: LLMLogger;
+  private llmConfig: any;
+  protected basePrompt: string;
+
   constructor() {
-    super(`你是一个功能需求分析专家，擅长澄清和细化功能请求。
-你的主要职责是：
-1. 理解功能请求的核心需求
-2. 分析现有代码库的相关实现
-3. 提出具体的实现建议
-4. 确保新功能与现有系统兼容
-5. 提供清晰的实现路径`);
+    const basePrompt = `You are an expert AI coding agent specialized in feature request analysis and automated PR generation. You have comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
+
+## Core Capabilities & Tool Combinations
+
+Your approach should be **planning-driven**: always create a detailed plan first, then execute it systematically.
+
+### 🎯 Feature Request Analysis Workflow:
+1. **Requirements Analysis**: Understand the core feature request and business value
+2. **Codebase Discovery**: Search and analyze existing related implementations
+3. **Architecture Planning**: Design the implementation approach and identify required components
+4. **Code Generation**: Generate the actual implementation code
+5. **PR Creation**: Create comprehensive pull requests with proper documentation
+
+### 🔧 Recommended Tool Combinations:
+- **Feature analysis**: github-analyze-issue + search-keywords + read-file + analyze-basic-context
+- **Codebase exploration**: grep-search + search-keywords + read-file + list-directory
+- **Implementation planning**: analyze-basic-context + search-keywords + read-file
+- **Code generation**: str-replace-editor + read-file + search-keywords
+- **External research**: google-search + read-file + analyze-basic-context
+- **Architecture analysis**: analyze-dependencies + list-directory + read-file
+
+### 📋 Planning Approach:
+Before executing any implementation:
+1. Create a detailed, low-level plan with specific files to modify/create
+2. Identify all dependencies and integration points
+3. Plan the testing strategy
+4. Consider backward compatibility and migration needs
+5. Outline the PR structure and documentation requirements
+
+### 🎨 Code Quality Standards:
+- Follow existing code patterns and conventions
+- Ensure proper error handling and logging
+- Add comprehensive tests for new functionality
+- Include proper documentation and comments
+- Consider performance and security implications`;
+
+    super(basePrompt);
+    this.basePrompt = basePrompt;
+    this.logger = new LLMLogger('feature-request-playbook.log');
+    this.llmConfig = configureLLMProvider();
+    if (!this.llmConfig) {
+      throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
+    }
   }
 
   /**
-   * 为功能请求澄清准备提示词
+   * 为功能请求分析准备提示词 - 采用规划驱动的方法
    */
   preparePrompt(userInput: string, context?: any): string {
-    return `功能请求澄清任务: 分析以下功能请求并提供实现建议。
+    return `You are continuing a comprehensive feature request analysis and implementation workflow.
 
-用户请求: ${userInput}
+## Analysis Approach:
+To provide a complete solution, follow this systematic approach using multiple tools:
 
-${context ? `上下文信息: ${JSON.stringify(context)}` : ''}
+1. **Feature Requirements Analysis**: Start with understanding the core feature request and business value
+2. **Codebase Discovery**: Explore existing implementations and identify integration points
+3. **Architecture Planning**: Design the implementation approach and identify all required components
+4. **Implementation Strategy**: Plan the specific code changes and file modifications needed
+5. **Testing & Documentation**: Plan comprehensive testing and documentation requirements
 
-分析指南:
-1. 理解功能请求的核心目标和价值
-2. 分析现有代码库中的相关实现
-3. 识别实现新功能所需的关键组件
-4. 评估与现有系统的兼容性
-5. 提供具体的实现建议和步骤`;
+## Tool Usage Strategy:
+- **For GitHub Issues**: Use github-analyze-issue to understand the feature request context
+- **For Code Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations
+- **For Architecture Analysis**: Use analyze-basic-context + list-directory to understand project structure
+- **For Implementation**: Use str-replace-editor to make precise code changes
+- **For External Knowledge**: Use google-search when you need information about technologies, patterns, or best practices
+
+## Planning Requirements:
+Before making any code changes, you must:
+1. Create a detailed implementation plan with specific files to modify/create
+2. Identify all dependencies and integration points
+3. Consider backward compatibility and migration needs
+4. Plan the testing strategy and documentation updates
+5. Outline the PR structure and commit strategy
+
+User Request: ${userInput}
+
+${context ? `Context: ${JSON.stringify(context, null, 2)}` : ''}`;
   }
 
   /**
-   * 为多轮对话构建消息
+   * 为多轮对话构建消息 - 实现规划驱动的工作流程
    */
   async buildMessagesForRound(
     input: string,
@@ -44,57 +106,178 @@ ${context ? `上下文信息: ${JSON.stringify(context)}` : ''}
     conversationHistory: CoreMessage[] = [],
     workspacePath?: string
   ): Promise<CoreMessage[]> {
-    const messages = await super.buildMessagesForRound(
-      input,
-      context,
-      round,
-      conversationHistory,
-      workspacePath
-    );
+    const messages: CoreMessage[] = [];
 
-    // 根据轮次添加特定的提示词
     if (round === 1) {
+      let contextInfo = '';
+      if (workspacePath) {
+        try {
+          const analyzer = new ProjectContextAnalyzer();
+          const analysisResult = await analyzer.analyze(workspacePath, "basic");
+          contextInfo = `
+## 📋 PROJECT CONTEXT:
+Working in directory: ${workspacePath}
+${analysisResult.summary}
+
+### Project Structure:
+${analysisResult.structure}
+
+### Key Technologies:
+${analysisResult.technologies.join(', ')}
+`;
+        } catch (error) {
+          contextInfo = `
+## 📋 PROJECT CONTEXT:
+Working in directory: ${workspacePath}
+(Project analysis unavailable - proceeding with general assistance)
+`;
+        }
+      }
+
       messages.push({
-        role: "user",
-        content: `需求分析阶段: 分析以下功能请求，理解核心需求。
-
-${this.preparePrompt(input, context)}
-
-在此阶段，请专注于：
-1. 理解功能请求的核心目标
-2. 确定关键功能点
-3. 识别潜在的技术挑战
-4. 不要急于提供具体实现方案`
-      });
-    } else if (round === 2) {
-      messages.push({
-        role: "user",
-        content: `技术分析阶段: 基于需求分析，评估技术可行性。
-
-功能请求: ${input}
-
-请执行以下操作：
-1. 分析现有代码库的相关实现
-2. 评估技术可行性
-3. 识别潜在的技术风险
-4. 记录关键发现`
+        role: "system",
+        content: this.basePrompt + contextInfo
       });
     } else {
       messages.push({
-        role: "user",
-        content: `实现建议阶段: 基于分析结果，提供实现建议。
-
-功能请求: ${input}
-
-请执行以下操作：
-1. 总结需求分析结果
-2. 提供具体的实现建议
-3. 说明实现步骤和注意事项
-4. 提供技术选型建议`
+        role: "system",
+        content: this.buildContinuationSystemPrompt(round, context.previousResults || [])
       });
     }
 
+    // Add conversation history (but limit it for multi-round)
+    const historyLimit = Math.max(0, conversationHistory.length - 10);
+    messages.push(...conversationHistory.slice(historyLimit));
+
+    // Add current user input with context
+    const userPrompt = this.buildUserPromptForRound(input, context, context.previousResults || [], round);
+    messages.push({
+      role: "user",
+      content: userPrompt
+    });
+
     return messages;
+  }
+
+  /**
+   * 构建继续对话的系统提示词
+   */
+  private buildContinuationSystemPrompt(round: number, previousResults: ToolResult[]): string {
+    const successfulTools = previousResults.filter(r => r.success);
+    const toolSummary = successfulTools.map(r => `${r.functionCall.name}: ${r.success ? 'Success' : 'Failed'}`).join(', ');
+
+    return `You are continuing a multi-round feature request analysis and implementation workflow.
+
+## Previous Progress:
+- Round: ${round}
+- Tools executed: ${toolSummary}
+- Successful tools: ${successfulTools.length}/${previousResults.length}
+
+## Current Round Focus:
+${this.getRoundFocus(round)}
+
+Continue building upon the previous analysis results to provide comprehensive feature implementation guidance.`;
+  }
+
+  /**
+   * 获取当前轮次的重点
+   */
+  private getRoundFocus(round: number): string {
+    switch (round) {
+      case 2:
+        return `**Codebase Discovery & Architecture Analysis**
+- Explore existing implementations and patterns
+- Identify integration points and dependencies
+- Analyze project structure and conventions
+- Gather technical context for implementation planning`;
+      case 3:
+        return `**Implementation Planning & Code Generation**
+- Create detailed implementation plan
+- Generate specific code changes
+- Plan testing strategy and documentation
+- Prepare for PR creation`;
+      default:
+        return `**Comprehensive Analysis & Final Recommendations**
+- Synthesize all findings into actionable recommendations
+- Provide complete implementation guidance
+- Include testing, documentation, and deployment considerations`;
+    }
+  }
+
+  /**
+   * 构建用户提示词
+   */
+  private buildUserPromptForRound(input: string, context: any, previousResults: ToolResult[], round: number): string {
+    const basePrompt = this.preparePrompt(input, context);
+
+    if (round === 1) {
+      return `${basePrompt}
+
+## Round 1: Feature Requirements Analysis
+Focus on understanding the feature request and gathering initial context. Use tools to:
+1. Analyze the GitHub issue or feature request details
+2. Understand the business value and user requirements
+3. Identify the scope and complexity of the feature
+4. Gather initial project context`;
+    } else if (round === 2) {
+      return `Feature Request: ${input}
+
+## Round 2: Codebase Discovery & Architecture Analysis
+Based on the initial analysis, now focus on technical discovery:
+1. Search for existing related implementations in the codebase
+2. Analyze the project architecture and patterns
+3. Identify integration points and dependencies
+4. Understand the technical constraints and opportunities
+
+Previous findings summary:
+${this.summarizePreviousResults(previousResults)}`;
+    } else {
+      return `Feature Request: ${input}
+
+## Round 3+: Implementation Planning & Code Generation
+Based on all previous analysis, now focus on concrete implementation:
+1. Create a detailed implementation plan with specific files to modify/create
+2. Generate the actual code changes needed
+3. Plan comprehensive testing strategy
+4. Prepare documentation and PR structure
+5. Consider deployment and migration needs
+
+Complete analysis summary:
+${this.summarizePreviousResults(previousResults)}`;
+    }
+  }
+
+  /**
+   * 总结之前的结果
+   */
+  private summarizePreviousResults(results: ToolResult[]): string {
+    const successful = results.filter(r => r.success);
+    if (successful.length === 0) {
+      return "No successful tool executions yet.";
+    }
+
+    return successful.map(result => {
+      const toolName = result.functionCall.name;
+      const summary = this.extractResultSummary(result);
+      return `- ${toolName}: ${summary}`;
+    }).join('\n');
+  }
+
+  /**
+   * 提取结果摘要
+   */
+  private extractResultSummary(result: ToolResult): string {
+    if (!result.result || !result.result.content) {
+      return "Executed successfully";
+    }
+
+    const content = Array.isArray(result.result.content)
+      ? result.result.content[0]?.text || "No text content"
+      : result.result.content;
+
+    // Extract first 100 characters as summary
+    const text = typeof content === 'string' ? content : JSON.stringify(content);
+    return text.substring(0, 100) + (text.length > 100 ? '...' : '');
   }
 
   /**
@@ -104,23 +287,47 @@ ${this.preparePrompt(input, context)}
     const successfulTools = toolResults.filter(r => r.success);
     const failedTools = toolResults.filter(r => !r.success);
 
-    return `请基于以下信息，生成一个详细的功能请求分析报告：
+    return `Based on the comprehensive feature request analysis, generate a detailed implementation report and action plan.
 
-功能请求: ${userInput}
+Feature Request: ${userInput}
 
-分析结果摘要:
-- 成功执行工具数: ${successfulTools.length}
-- 失败执行工具数: ${failedTools.length}
-- 当前分析状态: ${currentState}
+Analysis Results Summary:
+- Successful tool executions: ${successfulTools.length}
+- Failed tool executions: ${failedTools.length}
+- Current analysis state: ${currentState}
 
-报告格式要求:
-1. 需求概述：总结功能请求的核心目标
-2. 技术分析：说明技术可行性和挑战
-3. 实现建议：提供具体的实现方案
-4. 技术选型：推荐合适的技术方案
-5. 实施步骤：说明具体的实施步骤
+## Required Report Structure:
 
-报告应当重点关注技术可行性和实现方案，提供具体的、可操作的信息。`;
+### 1. 🎯 Feature Overview
+- Core feature requirements and business value
+- Scope and complexity assessment
+- Key stakeholders and use cases
+
+### 2. 🔍 Technical Analysis
+- Existing codebase analysis and integration points
+- Architecture considerations and design patterns
+- Technical feasibility and potential challenges
+- Dependencies and compatibility requirements
+
+### 3. 🚀 Implementation Plan
+- Detailed step-by-step implementation approach
+- Specific files to create/modify with rationale
+- Code structure and organization strategy
+- Integration and testing approach
+
+### 4. 🛠️ Technical Specifications
+- API design and data models
+- Component architecture and interfaces
+- Error handling and edge cases
+- Performance and security considerations
+
+### 5. 📋 Action Items & Next Steps
+- Prioritized implementation tasks
+- Testing strategy and coverage requirements
+- Documentation and PR preparation
+- Deployment and rollout considerations
+
+The report should be comprehensive, actionable, and ready for immediate implementation by a development team.`;
   }
 
   /**
@@ -130,19 +337,176 @@ ${this.preparePrompt(input, context)}
     const successfulTools = results.filter(r => r.success);
     const failedTools = results.filter(r => !r.success);
 
-    return `验证阶段：检查功能请求分析的完整性和可行性。
+    return `Verification Phase: Validate the completeness and quality of the feature request analysis.
 
-功能请求: ${userInput}
+Feature Request: ${userInput}
 
-分析结果:
-- 成功执行工具数: ${successfulTools.length}
-- 失败执行工具数: ${failedTools.length}
+Analysis Results:
+- Successful tool executions: ${successfulTools.length}
+- Failed tool executions: ${failedTools.length}
 
-验证检查清单:
-1. 需求理解是否准确
-2. 技术分析是否完整
-3. 实现方案是否可行
-4. 是否有遗漏的关键点
-5. 是否有其他需要注意的问题`;
+## Verification Checklist:
+1. ✅ Requirements Understanding: Are the core requirements clearly identified and understood?
+2. ✅ Technical Feasibility: Is the technical analysis comprehensive and realistic?
+3. ✅ Implementation Plan: Is the implementation approach detailed and actionable?
+4. ✅ Integration Strategy: Are all integration points and dependencies identified?
+5. ✅ Testing & Quality: Is the testing strategy comprehensive and appropriate?
+6. ✅ Documentation: Are documentation requirements clearly specified?
+7. ✅ Risk Assessment: Are potential risks and mitigation strategies identified?
+
+Provide specific feedback on any gaps or areas that need additional analysis.`;
   }
-} 
+
+  /**
+   * Generate a comprehensive final response based on all tool results
+   */
+  async generateComprehensiveFinalResponse(
+    userInput: string,
+    lastLLMResponse: string,
+    allToolResults: ToolResult[],
+    totalRounds: number
+  ): Promise<string> {
+    this.logger.logAnalysisStart('FEATURE REQUEST FINAL RESPONSE', {
+      userInput,
+      lastLLMResponse,
+      totalRounds,
+      toolResultsCount: allToolResults.length
+    });
+
+    const successfulResults = allToolResults.filter(r => r.success);
+    const failedResults = allToolResults.filter(r => !r.success);
+
+    const comprehensivePrompt = `Based on the feature request analysis and the results from various tools, provide a comprehensive implementation guide and action plan.
+
+## Feature Request Analysis Summary
+
+**Original Request:** ${userInput}
+
+**Analysis Rounds Completed:** ${totalRounds}
+**Tools Executed:** ${allToolResults.length} (${successfulResults.length} successful, ${failedResults.length} failed)
+
+## Tool Execution Results:
+
+${successfulResults.map((result, index) => `
+### ${index + 1}. ${result.functionCall.name}
+**Parameters:** ${JSON.stringify(result.functionCall.parameters, null, 2)}
+**Result:** ${this.formatToolResult(result)}
+`).join('\n')}
+
+${failedResults.length > 0 ? `
+## Failed Tool Executions:
+${failedResults.map(result => `- ${result.functionCall.name}: ${result.error}`).join('\n')}
+` : ''}
+
+## Last LLM Analysis:
+${lastLLMResponse}
+
+---
+
+## Required Output:
+
+Provide a comprehensive feature implementation guide that includes:
+
+1. **🎯 Executive Summary**: Clear overview of the feature and its value proposition
+2. **🔍 Technical Analysis**: Detailed analysis of the codebase and integration requirements
+3. **🚀 Implementation Roadmap**: Step-by-step implementation plan with specific tasks
+4. **💻 Code Implementation**: Specific code changes, file modifications, and new components needed
+5. **🧪 Testing Strategy**: Comprehensive testing approach including unit, integration, and e2e tests
+6. **📚 Documentation Plan**: Documentation requirements and structure
+7. **🚀 Deployment & Rollout**: Deployment strategy and rollout considerations
+8. **⚠️ Risk Assessment**: Potential risks and mitigation strategies
+
+Make this guide immediately actionable for a development team to implement the feature successfully.`;
+
+    try {
+      const messages: CoreMessage[] = [
+        {
+          role: "system",
+          content: "You are an expert software architect and feature implementation specialist. Provide clear, comprehensive, and immediately actionable implementation guides based on thorough analysis results. Focus on practical implementation details, code quality, and successful delivery. Use appropriate formatting and include specific code examples when helpful."
+        },
+        { role: "user", content: comprehensivePrompt }
+      ];
+
+      this.logger.log('Sending request to LLM', {
+        messages,
+        temperature: 0.1,
+        maxTokens: 4000
+      });
+
+      const { text } = await generateText({
+        model: this.llmConfig.openai(this.llmConfig.fullModel),
+        messages,
+        temperature: 0.1,
+        maxTokens: 4000
+      });
+
+      this.logger.log('Received response from LLM', {
+        response: text
+      });
+
+      this.logger.logAnalysisSuccess('FEATURE REQUEST FINAL RESPONSE');
+      return text;
+    } catch (error) {
+      this.logger.logAnalysisFailure('FEATURE REQUEST FINAL RESPONSE', error);
+      console.warn('Error generating comprehensive final response:', error);
+      // Fallback to simpler response
+      const fallbackResponse = this.buildFallbackResponse(userInput, allToolResults, totalRounds);
+      this.logger.logAnalysisFallback('FEATURE REQUEST FINAL RESPONSE', error instanceof Error ? error.message : String(error), fallbackResponse);
+      return fallbackResponse;
+    }
+  }
+
+  /**
+   * Format tool result for display
+   */
+  private formatToolResult(result: ToolResult): string {
+    if (!result.result || !result.result.content) {
+      return "No content returned";
+    }
+
+    const content = Array.isArray(result.result.content)
+      ? result.result.content[0]?.text || "No text content"
+      : result.result.content;
+
+    const text = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+
+    // Truncate very long results
+    if (text.length > 500) {
+      return text.substring(0, 500) + '\n... (truncated)';
+    }
+
+    return text;
+  }
+
+  /**
+   * Build fallback response when LLM fails
+   */
+  private buildFallbackResponse(userInput: string, allToolResults: ToolResult[], totalRounds: number): string {
+    const successfulResults = allToolResults.filter(r => r.success);
+
+    return `# Feature Request Analysis Report
+
+## Request: ${userInput}
+
+## Analysis Summary
+- **Rounds Completed:** ${totalRounds}
+- **Tools Executed:** ${allToolResults.length}
+- **Successful Executions:** ${successfulResults.length}
+
+## Tool Results Summary
+${successfulResults.map(result => `
+### ${result.functionCall.name}
+${this.formatToolResult(result)}
+`).join('\n')}
+
+## Next Steps
+Based on the analysis results above, the development team should:
+1. Review the technical findings and integration points
+2. Create detailed implementation tasks
+3. Set up the development environment and dependencies
+4. Begin implementation following the identified patterns
+5. Implement comprehensive testing strategy
+
+*Note: This is a fallback response due to LLM processing limitations. Please review the tool results above for detailed technical information.*`;
+  }
+}
