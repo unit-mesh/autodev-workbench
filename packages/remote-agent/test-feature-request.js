@@ -34,8 +34,8 @@ async function testFeatureRequestImplementation(issueConfig) {
 
   try {
     const { AIAgent } = require('./dist/agent.js')
-    const { IssueAnalysisPlaybook } = require('./dist/playbooks/index.js')
-    console.log('✅ IssueAnalysisPlaybook loaded successfully')
+    const { FeatureRequestPlaybook } = require('./dist/playbooks/index.js')
+    console.log('✅ FeatureRequestPlaybook loaded successfully')
 
     // Check environment
     if (!process.env.GITHUB_TOKEN) {
@@ -51,14 +51,14 @@ async function testFeatureRequestImplementation(issueConfig) {
 
     console.log('✅ Environment variables configured')
 
-    // Initialize agent with IssueAnalysisPlaybook
+    // Initialize agent with FeatureRequestPlaybook
     const agent = new AIAgent({
       workspacePath: join(process.cwd(), '../../'),
       githubToken: process.env.GITHUB_TOKEN,
       verbose: true,
-      maxToolRounds: issueConfig.expectedRounds || 3,
+      maxToolRounds: issueConfig.expectedRounds || 5, // Increase rounds for feature implementation
       enableToolChaining: true,
-      playbook: new IssueAnalysisPlaybook()
+      playbook: new FeatureRequestPlaybook()
     })
 
     const llmInfo = agent.getLLMInfo()
@@ -70,7 +70,16 @@ async function testFeatureRequestImplementation(issueConfig) {
     const startTime = Date.now()
 
     const response = await agent.start(
-      issueConfig.description,
+      `Analyze and implement the feature request from GitHub issue #${issueConfig.issueNumber}.
+
+      Requirements:
+      1. First analyze the issue to understand the feature requirements
+      2. Search the codebase to understand the current implementation
+      3. Plan the implementation approach
+      4. Generate the necessary code changes
+      5. If code modification is not possible, provide detailed implementation guidance
+
+      Please provide a comprehensive analysis and implementation plan.`,
       {
         githubContext: {
           owner: issueConfig.owner,
@@ -273,7 +282,7 @@ function parseIssueFromArgs() {
         issueNumber: parseInt(issueNumber),
         description: `Implement feature request from GitHub issue #${issueNumber}`,
         expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file', 'str-replace-editor'],
-        expectedRounds: 3,
+        expectedRounds: 5, // Increased for feature implementation
         validateCodeChanges: true
       }
     }

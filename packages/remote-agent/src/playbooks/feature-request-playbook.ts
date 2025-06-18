@@ -15,7 +15,7 @@ export class FeatureRequestPlaybook extends Playbook {
   private llmConfig: any;
   protected basePrompt: string;
 
-  constructor() {
+  constructor(options: { skipLLMConfig?: boolean } = {}) {
     const basePrompt = `You are an expert AI coding agent specialized in feature request analysis and automated PR generation. You have comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
 
 ## Core Capabilities & Tool Combinations
@@ -55,9 +55,12 @@ Before executing any implementation:
     super(basePrompt);
     this.basePrompt = basePrompt;
     this.logger = new LLMLogger('feature-request-playbook.log');
-    this.llmConfig = configureLLMProvider();
-    if (!this.llmConfig) {
-      throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
+
+    if (!options.skipLLMConfig) {
+      this.llmConfig = configureLLMProvider();
+      if (!this.llmConfig) {
+        throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
+      }
     }
   }
 
@@ -70,18 +73,24 @@ Before executing any implementation:
 ## Analysis Approach:
 To provide a complete solution, follow this systematic approach using multiple tools:
 
-1. **Feature Requirements Analysis**: Start with understanding the core feature request and business value
-2. **Codebase Discovery**: Explore existing implementations and identify integration points
-3. **Architecture Planning**: Design the implementation approach and identify all required components
-4. **Implementation Strategy**: Plan the specific code changes and file modifications needed
+1. **Feature Requirements Analysis**: Start with github-analyze-issue to understand the core feature request and business value
+2. **Codebase Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations and identify integration points
+3. **Architecture Planning**: Use analyze-basic-context + list-directory to understand project structure and design the implementation approach
+4. **Implementation Strategy**: Use str-replace-editor to make actual code changes and file modifications
 5. **Testing & Documentation**: Plan comprehensive testing and documentation requirements
 
 ## Tool Usage Strategy:
-- **For GitHub Issues**: Use github-analyze-issue to understand the feature request context
+- **For GitHub Issues**: Use github-analyze-issue to understand the feature request context and requirements
 - **For Code Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations
 - **For Architecture Analysis**: Use analyze-basic-context + list-directory to understand project structure
-- **For Implementation**: Use str-replace-editor to make precise code changes
+- **For Implementation**: Use str-replace-editor to make precise code changes - THIS IS CRITICAL for feature implementation
 - **For External Knowledge**: Use google-search when you need information about technologies, patterns, or best practices
+
+## CRITICAL IMPLEMENTATION REQUIREMENTS:
+- **ALWAYS attempt to make actual code changes** using str-replace-editor when implementing features
+- **If code modification fails**, provide detailed implementation guidance with specific file paths and code examples
+- **Focus on practical, working solutions** rather than just theoretical analysis
+- **Ensure code changes follow existing patterns** and maintain code quality standards
 
 ## Planning Requirements:
 Before making any code changes, you must:
@@ -266,38 +275,7 @@ ${this.summarizePreviousResults(previousResults)}`;
     }
   }
 
-  /**
-   * 总结之前的结果
-   */
-  private summarizePreviousResults(results: ToolResult[]): string {
-    const successful = results.filter(r => r.success);
-    if (successful.length === 0) {
-      return "No successful tool executions yet.";
-    }
 
-    return successful.map(result => {
-      const toolName = result.functionCall.name;
-      const summary = this.extractResultSummary(result);
-      return `- ${toolName}: ${summary}`;
-    }).join('\n');
-  }
-
-  /**
-   * 提取结果摘要
-   */
-  private extractResultSummary(result: ToolResult): string {
-    if (!result.result || !result.result.content) {
-      return "Executed successfully";
-    }
-
-    const content = Array.isArray(result.result.content)
-      ? result.result.content[0]?.text || "No text content"
-      : result.result.content;
-
-    // Extract first 100 characters as summary
-    const text = typeof content === 'string' ? content : JSON.stringify(content);
-    return text.substring(0, 100) + (text.length > 100 ? '...' : '');
-  }
 
   /**
    * 构建最终的总结提示词
@@ -404,17 +382,12 @@ Provide specific feedback on any gaps or areas that need additional analysis.`;
 **Analysis Rounds Completed:** ${totalRounds}
 **Tools Executed:** ${allToolResults.length} (${successfulResults.length} successful, ${failedResults.length} failed)
 
-## Tool Execution Results:
+## Analysis Results
+${this.summarizePreviousResults(allToolResults)}
 
-${successfulResults.map((result, index) => `
-### ${index + 1}. ${result.functionCall.name}
-**Parameters:** ${JSON.stringify(result.functionCall.parameters, null, 2)}
-**Result:** ${this.formatToolResult(result)}
-`).join('\n')}
-
-${failedResults.length > 0 ? `
-## Failed Tool Executions:
-${failedResults.map(result => `- ${result.functionCall.name}: ${result.error}`).join('\n')}
+${failedResults.length > 0 ? `## Analysis Limitations
+Some analysis tools encountered issues:
+${failedResults.map(r => `- ${r.functionCall.name}: ${r.error}`).join('\n')}
 ` : ''}
 
 ## Last LLM Analysis:
@@ -430,10 +403,21 @@ Provide a comprehensive feature implementation guide that includes:
 2. **🔍 Technical Analysis**: Detailed analysis of the codebase and integration requirements
 3. **🚀 Implementation Roadmap**: Step-by-step implementation plan with specific tasks
 4. **💻 Code Implementation**: Specific code changes, file modifications, and new components needed
+   - If str-replace-editor was used successfully, highlight the actual code changes made with file references
+   - If code changes weren't made, provide complete, working code examples with exact file paths
+   - Include imports, error handling, and integration with existing code patterns
 5. **🧪 Testing Strategy**: Comprehensive testing approach including unit, integration, and e2e tests
+   - Provide specific test file locations and complete test code examples
 6. **📚 Documentation Plan**: Documentation requirements and structure
 7. **🚀 Deployment & Rollout**: Deployment strategy and rollout considerations
 8. **⚠️ Risk Assessment**: Potential risks and mitigation strategies
+
+## CRITICAL IMPLEMENTATION REQUIREMENTS:
+- **ALWAYS prioritize actual code changes** over theoretical discussions
+- **Reference specific files and line numbers** that were modified or need modification
+- **Include complete, working code examples** with proper syntax and imports
+- **Follow existing code patterns** found in the codebase and maintain consistency
+- **Cite sources for all implementation details** - reference specific files analyzed
 
 Make this guide immediately actionable for a development team to implement the feature successfully.`;
 
@@ -441,7 +425,7 @@ Make this guide immediately actionable for a development team to implement the f
       const messages: CoreMessage[] = [
         {
           role: "system",
-          content: "You are an expert software architect and feature implementation specialist. Provide clear, comprehensive, and immediately actionable implementation guides based on thorough analysis results. Focus on practical implementation details, code quality, and successful delivery. Use appropriate formatting and include specific code examples when helpful."
+          content: "You are an expert software architect and feature implementation specialist. Provide clear, comprehensive, and immediately actionable implementation guides based on thorough analysis results. Focus on practical implementation details, actual code changes, and successful delivery. ALWAYS prioritize showing actual code modifications over theoretical discussions. Include complete, working code examples with proper source citations. Reference specific files and line numbers that were analyzed or modified."
         },
         { role: "user", content: comprehensivePrompt }
       ];
@@ -473,6 +457,52 @@ Make this guide immediately actionable for a development team to implement the f
       this.logger.logAnalysisFallback('FEATURE REQUEST FINAL RESPONSE', error instanceof Error ? error.message : String(error), fallbackResponse);
       return fallbackResponse;
     }
+  }
+
+  /**
+   * Summarize previous tool results for context
+   */
+  private summarizePreviousResults(results: ToolResult[]): string {
+    const successfulResults = results.filter(r => r.success);
+    const failedResults = results.filter(r => !r.success);
+
+    // Build detailed summary with actual tool results content
+    const detailedSummary = successfulResults
+      .map(result => {
+        const toolName = result.functionCall.name;
+        let content = '';
+
+        // Extract content from tool result
+        if (result.result?.content && Array.isArray(result.result.content)) {
+          const textContent = result.result.content
+            .filter((item: any) => item.type === 'text')
+            .map((item: any) => item.text)
+            .join('\n');
+          content = textContent;
+        } else if (result.result?.content) {
+          content = String(result.result.content);
+        }
+
+        // Truncate very long content to keep prompt manageable
+        const maxContentLength = 2000;
+        if (content.length > maxContentLength) {
+          content = content.substring(0, maxContentLength) + '\n... [content truncated]';
+        }
+
+        return `## ${toolName} (Round ${result.round})
+${content}`;
+      })
+      .join('\n\n');
+
+    // Add failed tools summary
+    const failedSummary = failedResults.length > 0
+      ? `\n\n## Failed Tools\n${failedResults.map(r => `❌ ${r.functionCall.name}: ${r.error} (Round ${r.round})`).join('\n')}`
+      : '';
+
+    const successCount = successfulResults.length;
+    const totalCount = results.length;
+
+    return `${detailedSummary}${failedSummary}\n\n**Execution Summary:** ${successCount}/${totalCount} tools executed successfully`;
   }
 
   /**
