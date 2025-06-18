@@ -2,6 +2,7 @@ import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
+import { decodeHtmlEntities } from "../../../utils/html-entities";
 
 export const installStrReplaceEditorTool: ToolLike = (installer) => {
   installer("str-replace-editor", "Edit files with precise changes using placeholders for unchanged code", {
@@ -64,16 +65,19 @@ export const installStrReplaceEditorTool: ToolLike = (installer) => {
       // Read file content
       const originalContent = fs.readFileSync(resolvedPath, 'utf8');
 
+      // Decode HTML entities in the code edit content
+      const decodedCodeEdit = decodeHtmlEntities(codeEdit);
+
       // Process the code edit with placeholders
       let modifiedContent = originalContent;
 
       // Parse the code edit by splitting on {{ ... }} placeholders
       const placeholderPattern = /\{\{\s*\.\.\.\s*\}\}/g;
-      const editParts = codeEdit.split(placeholderPattern);
+      const editParts = decodedCodeEdit.split(placeholderPattern);
 
-      if (editParts.length === 1 && !codeEdit.includes("{{ ... }}")) {
+      if (editParts.length === 1 && !decodedCodeEdit.includes("{{ ... }}")) {
         // If no placeholders found, treat as a full file replacement
-        modifiedContent = codeEdit;
+        modifiedContent = decodedCodeEdit;
       } else {
         // Process edits with placeholders
         let currentPos = 0;

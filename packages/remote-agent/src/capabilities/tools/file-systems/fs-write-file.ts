@@ -2,6 +2,7 @@ import { ToolLike } from "../../_typing";
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
+import { decodeHtmlEntities } from "../../../utils/html-entities";
 
 export const installWriteFileTool: ToolLike = (installer) => {
   installer("write-file", "Write content to a file, creating directories if needed", {
@@ -75,6 +76,12 @@ export const installWriteFileTool: ToolLike = (installer) => {
         }
       }
 
+      // Decode HTML entities in content if it's UTF-8 text
+      let processedContent = content;
+      if (encoding === "utf8") {
+        processedContent = decodeHtmlEntities(content);
+      }
+
       // Prepare content based on encoding
       let writeContent: string | Buffer;
       if (encoding === "base64") {
@@ -82,7 +89,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
       } else if (encoding === "binary") {
         writeContent = Buffer.from(content, "binary");
       } else {
-        writeContent = content;
+        writeContent = processedContent;
       }
 
       // Write file based on mode
@@ -90,7 +97,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
       if (mode === "append") {
         if (encoding === "utf8") {
           fs.appendFileSync(resolvedPath, writeContent, "utf8");
-          bytesWritten = Buffer.byteLength(content, "utf8");
+          bytesWritten = Buffer.byteLength(processedContent, "utf8");
         } else {
           fs.appendFileSync(resolvedPath, writeContent);
           bytesWritten = (writeContent as Buffer).length;
@@ -98,7 +105,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
       } else {
         if (encoding === "utf8") {
           fs.writeFileSync(resolvedPath, writeContent, "utf8");
-          bytesWritten = Buffer.byteLength(content, "utf8");
+          bytesWritten = Buffer.byteLength(processedContent, "utf8");
         } else {
           fs.writeFileSync(resolvedPath, writeContent);
           bytesWritten = (writeContent as Buffer).length;
@@ -120,7 +127,7 @@ export const installWriteFileTool: ToolLike = (installer) => {
         last_modified: stats.mtime.toISOString(),
         backup_created: backup && backupPath ? backupPath : null,
         directories_created: create_dirs && !fs.existsSync(path.dirname(resolvedPath)),
-        line_count: encoding === "utf8" ? content.split('\n').length : null
+        line_count: encoding === "utf8" ? processedContent.split('\n').length : null
       };
 
       return {
