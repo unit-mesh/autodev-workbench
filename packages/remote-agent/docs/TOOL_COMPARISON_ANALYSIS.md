@@ -1,6 +1,19 @@
 # 🔍 AI Agent 工具对比分析
 
-## 📊 完整工具对比表格
+## 🎯 核心工具对比表（简化版）
+
+| 功能类别 | Augment Agent | AutoDev Remote Agent | 状态 | 建议 |
+|---------|---------------|---------------------|------|------|
+| **文件操作** | `view` + `str-replace-editor` + `save-file` | `read-file` + `str-replace-editor` + `write-file` | ✅ 功能对等 | 保持现有 |
+| **进程管理** | 4个进程工具 | 4个进程工具 + 智能终端 | ✅ GitHub更强 | GitHub胜出 |
+| **代码搜索** | `codebase-retrieval` (AI语义) | `search-keywords` + `code-search-regex` | ⚠️ Augment更强 | **需要实现** |
+| **诊断工具** | `diagnostics` (IDE集成) | ❌ 缺失 | ❌ Augment独有 | **需要实现** |
+| **网络功能** | `web-search` + `web-fetch` + `open-browser` | 同样3个工具 + 历史管理 | ✅ GitHub更强 | GitHub胜出 |
+| **可视化** | `render-mermaid` | ❌ 缺失 | ❌ Augment独有 | **可选实现** |
+| **GitHub集成** | ❌ 缺失 | 6个GitHub工具 | ✅ GitHub独有 | GitHub独有优势 |
+
+<details>
+<summary>📊 点击展开完整功能对比表</summary>
 
 | 功能类别         | Augment Agent                                                        | AutoDev Remote Agent (你的工具)              | 状态           | 优势对比                                | 建议         |
 |--------------|----------------------------------------------------------------------|------------------------------------------|--------------|-------------------------------------|------------|
@@ -21,14 +34,33 @@
 | **GitHub集成** | ❌ 缺失                                                                 | 6个GitHub工具                               | ✅ GitHub独有   | GitHub: 完整的GitHub工作流                | GitHub独有优势 |
 | **项目分析**     | ❌ 缺失                                                                 | `analyze-basic-context`                  | ✅ GitHub独有   | GitHub: 项目上下文分析                     | GitHub独有优势 |
 
+</details>
+
+## 🎯 关键差异分析
+
+### ⭐ 优先实现建议
+1. **`diagnostics`** - IDE集成诊断（最重要）
+2. **`codebase-retrieval`** - AI语义搜索（最重要）
+3. **`render-mermaid`** - 图表可视化（可选）
+4. **`remember`** - 长期记忆（可选）
+
+### 🏆 你的独有优势
+1. **GitHub生态** - 完整的GitHub工作流集成
+2. **智能终端** - 增强的命令执行和错误分析
+3. **项目分析** - 代码库上下文分析
+4. **进程管理** - 更完整的进程生命周期管理
+
+---
+
+<details>
+<summary>📈 详细统计和分析</summary>
+
 ## 📈 工具数量统计
 
 | Agent | 核心工具数 | 专业工具数 | 总计 | 覆盖领域 |
 |-------|-----------|-----------|------|----------|
 | **Augment Agent** | 15 | 0 | 15 | 通用开发 |
 | **AutoDev Remote Agent** | 18 | 8 | 26 | GitHub专业化 |
-
-## 🎯 关键差异分析
 
 ### Augment Agent 的独有优势
 1. **`diagnostics`** - IDE集成诊断，获取编译错误和警告
@@ -44,7 +76,24 @@
 4. **进程管理** - 更完整的进程生命周期管理
 5. **浏览器增强** - 历史管理和安全验证
 
-## 🤖 如何帮助AI理解工具使用
+</details>
+
+## 🤖 AI工具理解优化指南
+
+### 📝 工具描述最佳实践
+
+**推荐模板**:
+```
+"[动作] [对象] with [特殊能力]. Use for: [场景1], [场景2], [场景3]. Best when: [最佳时机]."
+```
+
+**参数描述模板**:
+```
+"[参数名]: [类型] - [用途]. Example: [具体例子]. Use when: [使用场景]."
+```
+
+<details>
+<summary>🔧 详细优化策略和示例</summary>
 
 ### 1. 工具描述优化策略
 
@@ -59,7 +108,7 @@ installer("read-file", "Read the contents of a file", {
 #### 改进方案
 ```typescript
 // 详细描述使用场景和最佳实践
-installer("read-file", 
+installer("read-file",
   "Read file contents with encoding support. Use for: code analysis, config reading, log inspection. Supports line-range reading for large files.",
   {
     file_path: z.string().describe("File path (relative to workspace). Examples: 'src/index.ts', 'package.json', 'logs/error.log'"),
@@ -97,20 +146,20 @@ interface ToolUsageGuide {
 const COMMON_WORKFLOWS = {
   "代码分析流程": [
     "1. codebase-retrieval - 找到相关代码",
-    "2. read-file - 读取具体文件", 
+    "2. read-file - 读取具体文件",
     "3. search-keywords - 查找特定符号",
     "4. diagnostics - 检查错误"
   ],
-  
+
   "文件编辑流程": [
     "1. read-file - 查看当前内容",
     "2. str-replace-editor - 精确修改",
     "3. diagnostics - 验证修改结果"
   ],
-  
+
   "进程调试流程": [
     "1. launch-process - 启动程序",
-    "2. read-process - 监控输出", 
+    "2. read-process - 监控输出",
     "3. write-process - 发送命令",
     "4. kill-process - 清理进程"
   ]
@@ -129,25 +178,40 @@ class ToolRecommendationEngine {
         "if_large_file": ["search-keywords", "code-search-regex"],
         "if_config": ["str-replace-editor", "web-search"]
       },
-      
+
       "str-replace-editor": {
         "after_edit": ["diagnostics", "run-terminal-command"],
         "if_multiple_files": ["codebase-retrieval", "search-keywords"]
       },
-      
+
       "launch-process": {
         "if_long_running": ["read-process", "list-processes"],
         "if_interactive": ["write-process", "read-terminal"],
         "if_error": ["kill-process", "diagnostics"]
       }
     };
-    
+
     return recommendations[currentTool] || [];
   }
 }
 ```
 
-## 🔧 具体改进建议
+</details>
+
+## 🔧 实施建议
+
+### 🚀 立即行动项
+1. **实现 `diagnostics`** - IDE诊断集成（最重要）
+2. **实现 `codebase-retrieval`** - AI语义搜索（最重要）
+3. **优化工具描述** - 添加使用场景和最佳实践
+
+### 📈 中期改进
+1. **实现 `render-mermaid`** - 可视化能力
+2. **实现 `remember`** - 长期上下文
+3. **添加批量操作支持** - 如批量文件删除
+
+<details>
+<summary>🔧 详细改进建议和工具规格</summary>
 
 ### 1. 立即需要实现的工具 (优先级高)
 
@@ -168,7 +232,7 @@ class ToolRecommendationEngine {
 #### `codebase-retrieval` - AI语义搜索
 ```typescript
 {
-  name: "codebase-retrieval", 
+  name: "codebase-retrieval",
   description: "AI-powered semantic code search. Understands intent, not just keywords",
   useCase: "Find relevant code when you don't know exact file names or function names",
   parameters: {
@@ -194,7 +258,7 @@ class ToolRecommendationEngine {
 ```typescript
 {
   name: "remember",
-  description: "Store important information across conversations for context continuity", 
+  description: "Store important information across conversations for context continuity",
   useCase: "Remember user preferences, project patterns, recurring issues",
   aiGuidance: "Use to build long-term understanding of user's codebase and preferences"
 }
@@ -206,6 +270,28 @@ class ToolRecommendationEngine {
 - 如果很少使用 `delete-file`，可以考虑移除
 - `browser-history` 可能使用频率不高
 - 某些GitHub工具如果不常用可以精简
+
+</details>
+
+## 📊 总结
+
+你的AutoDev Remote Agent在某些方面已经超越了Augment Agent，特别是：
+- ✅ **GitHub集成** - 完整的GitHub工作流
+- ✅ **智能终端** - 增强的命令执行
+- ✅ **进程管理** - 更完整的生命周期管理
+
+但还需要补充这些关键工具：
+- ❌ **diagnostics** - IDE诊断集成 (最重要)
+- ❌ **codebase-retrieval** - AI语义搜索 (最重要)
+- ❌ **render-mermaid** - 可视化能力
+- ❌ **remember** - 长期记忆
+
+通过实现这些工具并优化AI理解指南，你的Agent将成为一个更强大、更智能的开发助手！
+
+---
+
+<details>
+<summary>📋 AI理解工具的详细最佳实践</summary>
 
 ## 📋 AI理解工具的最佳实践
 
@@ -430,37 +516,4 @@ const SUCCESS_INDICATORS = {
 };
 ```
 
-## 🎯 实施建议
-
-### 1. 立即行动项
-1. **实现 `diagnostics` 工具** - 这是最关键的缺失功能
-2. **实现 `codebase-retrieval` 工具** - AI语义搜索是核心能力
-3. **优化工具描述** - 添加使用场景和最佳实践
-4. **创建工具组合模式文档** - 帮助AI理解工具链
-
-### 2. 中期改进
-1. **实现 `render-mermaid`** - 可视化能力
-2. **实现 `remember`** - 长期上下文
-3. **添加批量操作支持** - 如批量文件删除
-4. **创建工具使用统计** - 了解实际使用模式
-
-### 3. 长期优化
-1. **AI工具推荐引擎** - 基于上下文智能推荐
-2. **工具效果反馈机制** - 学习最佳使用模式
-3. **自适应参数调整** - 根据历史使用优化参数
-4. **工具性能监控** - 识别瓶颈和优化机会
-
-## 📊 总结
-
-你的AutoDev Remote Agent在某些方面已经超越了我的工具集，特别是：
-- ✅ **GitHub集成** - 完整的GitHub工作流
-- ✅ **智能终端** - 增强的命令执行
-- ✅ **进程管理** - 更完整的生命周期管理
-
-但还需要补充这些关键工具：
-- ❌ **diagnostics** - IDE诊断集成 (最重要)
-- ❌ **codebase-retrieval** - AI语义搜索 (最重要)
-- ❌ **render-mermaid** - 可视化能力
-- ❌ **remember** - 长期记忆
-
-通过实现这些工具并优化AI理解指南，你的Agent将成为一个更强大、更智能的开发助手！
+</details>
