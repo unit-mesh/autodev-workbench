@@ -112,28 +112,28 @@ Cascade 具备强大的任务规划与执行能力：
 *   **动态计划调整**: 使用 `update_plan` 工具，能够根据用户的新指令、研究发现或任务进展动态地创建和修改分步计划。这使得 Cascade 能够灵活适应不断变化的需求。
 *   **结构化任务执行**: 计划以结构化的方式呈现，包含任务描述、状态和子任务，确保复杂任务的有序推进。
 *   **协同规划**: 规划过程涉及与内部规划智能体（Plan Mastermind）的协作，以确保计划的全面性和有效性。
-*   **丰富的执行工具**: 结合以下全面的工具集，Cascade 能够有效地执行计划中的各个步骤，覆盖代码操作、文件管理、信息检索等多个方面：
-*   `browser_preview`: 启动 Web 服务器的浏览器预览。
-*   `check_deploy_status`: 检查应用部署状态。
-*   `codebase_search`: 在代码库中搜索相关代码片段。
-*   `command_status`: 获取已执行终端命令的状态。
-*   `create_memory`: 将重要上下文保存到记忆数据库。
-*   `deploy_web_app`: 部署 JavaScript Web 应用。
-*   `find_by_name`: 搜索文件和子目录。
-*   `grep_search`: 在文件或目录中查找精确模式匹配。
-*   `list_dir`: 列出目录内容。
-*   `list_resources`: 列出 MCP 服务器的可用资源。
-*   `read_deployment_config`: 读取 Web 应用的部署配置。
-*   `read_resource`: 检索指定资源的内容。
-*   `replace_file_content`: 通过替换内容来编辑现有文件。
-*   `run_command`: 提议代表用户运行命令。
-*   `search_in_file`: 在指定文件中返回与搜索查询相关的代码片段。
-*   `update_plan`: (已在此处描述其核心功能) 更新当前任务的计划。
-*   `view_code_item`: 查看文件中代码项节点的内容。
-*   `view_content_chunk`: 查看文档内容的特定块。
-*   `view_file_outline`: 查看文件的概要（函数、类）。
-*   `view_line_range`: 查看文件内特定行范围的内容。
-*   `write_to_file`: 创建新文件并将内容写入其中。
+*   **丰富的执行工具**: Cascade possesses a suite of tools to assist with various coding and development tasks. Here's a summary of the available tools, which enable Cascade to effectively execute plan steps, covering code operations, file management, information retrieval, and more:
+    1.  **`browser_preview`**: Spins up a browser preview for a web server.
+    2.  **`check_deploy_status`**: Checks the status of a web application deployment.
+    3.  **`codebase_search`**: Finds relevant code snippets from the codebase based on a search query.
+    4.  **`command_status`**: Gets the status of a previously executed terminal command.
+    5.  **`create_memory`**: Saves important context to a memory database for future reference.
+    6.  **`deploy_web_app`**: Deploys a JavaScript web application.
+    7.  **`find_by_name`**: Searches for files and subdirectories within a specified directory.
+    8.  **`grep_search`**: Finds exact pattern matches within files or directories.
+    9.  **`list_dir`**: Lists the contents of a directory.
+    10. **`list_resources`**: Lists available resources from an MCP server.
+    11. **`read_deployment_config`**: Reads the deployment configuration for a web application.
+    12. **`read_resource`**: Retrieves the content of a specified resource.
+    13. **`replace_file_content`**: Edits an existing file by replacing specified content chunks.
+    14. **`run_command`**: Proposes a command to run on behalf of the user.
+    15. **`search_in_file`**: Returns code snippets in a specified file relevant to a search query.
+    16. **`update_plan`**: Updates the plan of action for the user's project. (Its core functionality is also described in the planning capabilities section above.)
+    17. **`view_code_item`**: Views the content of specific code item nodes (classes, functions) in a file.
+    18. **`view_content_chunk`**: Views a specific chunk of document content.
+    19. **`view_file_outline`**: Views the outline (functions, classes) of a file.
+    20. **`view_line_range`**: Views the contents of a file within a specific line range.
+    21. **`write_to_file`**: Creates new files and writes content to them.
 
 ### Trae AI 核心优势
 1. **全面的文件操作能力** - 支持文件的读、写、创建、删除、重命名和多种编辑方式。
@@ -282,8 +282,5 @@ Cursor Agent为 AI 代码编辑器行业树立了新的标杆：
 
 ### Casade 计划能力
 
-<tool_code> { "plan": [ { "id": "1", "description": "Extract tool information from the system prompt.", "status": "pending", "subtasks": [] }, { "id": "2", "description": "Format the extracted tool information into Markdown.", "status": "pending", "subtasks": [] }, { "id": "3", "description": "Read the current content of 
-README.md
- to determine where to insert the new information.", "status": "pending", "subtasks": [] }, { "id": "4", "description": "Update 
-README.md
- with the formatted tool information.", "status": "pending", "subtasks": [] } ] } </tool_code> 
+<tool_code> { "plan": [ { "id": "1", "description": "list all tool information with parameter requirements in json from the system prompt.", "status": "pending", "subtasks": [] }, { "id": "2", "description": "Format the extracted tool information into Markdown.", "status": "pending", "subtasks": [] }, { "id": "3", "description": "Read the current content of README.md to determine where to insert the new information.", "status": "pending", "subtasks": [] }, { "id": "4", "description": "Update README.md with the formatted tool information.", "status": "pending", "subtasks": [] } ] } </tool_code>
+<tool_code> { "action": "create_plan", "state": "ready", "plan": [ "Extract tool names and descriptions from my capabilities.", "Format the tool information into a Markdown section.", "Identify the correct location in README.md to insert or update the tool information.", "Update README.md with the formatted tool information." ], "user_facing_text": "I have created a plan to update your README.md with my tool capabilities:\n1. Extract tool names and descriptions from my capabilities.\n2. Format the tool information into a Markdown section.\n3. Identify the correct location in README.md to insert or update the tool information.\n4. Update README.md with the formatted tool information.\n\nNext, I will proceed with extracting my tool information." } </tool_code>
