@@ -1,0 +1,698 @@
+{
+  "meta": {
+    "title": "Augment Agent Tools Reference",
+    "description": "Complete specification of Augment Agent's tool capabilities",
+    "version": "1.0.0",
+    "total_tools": 16,
+    "categories": [
+      "file_system",
+      "code_search", 
+      "process_management",
+      "network",
+      "github_integration",
+      "visualization",
+      "memory",
+      "diagnostics"
+    ]
+  },
+  "tools": [
+    {
+      "name": "view",
+      "category": "file_system",
+      "description": "View files and directories with regex search support. Use for: code analysis, directory exploration, pattern matching. Best when: need to examine file contents or find specific code patterns.",
+      "parameters": {
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "File or directory path relative to workspace root",
+          "examples": ["src/index.ts", "package.json", "docs/"]
+        },
+        "type": {
+          "type": "enum",
+          "required": true,
+          "values": ["file", "directory"],
+          "description": "Type of path to view"
+        },
+        "search_query_regex": {
+          "type": "string",
+          "required": false,
+          "description": "Regex pattern to search for in files",
+          "examples": ["function\\s+\\w+", "import.*from", "class\\s+\\w+"]
+        },
+        "case_sensitive": {
+          "type": "boolean",
+          "required": false,
+          "default": false,
+          "description": "Whether regex search should be case-sensitive"
+        },
+        "context_lines_before": {
+          "type": "integer",
+          "required": false,
+          "default": 5,
+          "description": "Number of lines to show before each match"
+        },
+        "context_lines_after": {
+          "type": "integer", 
+          "required": false,
+          "default": 5,
+          "description": "Number of lines to show after each match"
+        },
+        "view_range": {
+          "type": "array",
+          "required": false,
+          "description": "Line range to view [start, end]",
+          "examples": [[1, 100], [501, 1000], [1, -1]]
+        }
+      },
+      "use_cases": [
+        "Examine file contents for code analysis",
+        "List directory structure for project exploration", 
+        "Search for specific code patterns with regex",
+        "View specific line ranges in large files"
+      ],
+      "best_practices": [
+        "Use regex search instead of view_range when looking for specific patterns",
+        "Set appropriate context lines for regex matches",
+        "Use view_range for large files to avoid memory issues"
+      ],
+      "related_tools": ["str-replace-editor", "codebase-retrieval"]
+    },
+    {
+      "name": "str-replace-editor",
+      "category": "file_system",
+      "description": "Precise string replacement and insertion editor. Use for: code modifications, configuration updates, precise edits. Best when: need to make exact changes to existing files.",
+      "parameters": {
+        "command": {
+          "type": "enum",
+          "required": true,
+          "values": ["str_replace", "insert"],
+          "description": "Type of edit operation to perform"
+        },
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "File path to edit",
+          "examples": ["src/main.ts", "package.json", "README.md"]
+        },
+        "instruction_reminder": {
+          "type": "string",
+          "required": true,
+          "value": "ALWAYS BREAK DOWN EDITS INTO SMALLER CHUNKS OF AT MOST 150 LINES EACH.",
+          "description": "Fixed reminder string for edit limitations"
+        },
+        "old_str_1": {
+          "type": "string",
+          "required_for": "str_replace",
+          "description": "Original string to replace (must match exactly)"
+        },
+        "new_str_1": {
+          "type": "string", 
+          "required": true,
+          "description": "New string content (for replace) or content to insert"
+        },
+        "old_str_start_line_number_1": {
+          "type": "integer",
+          "required_for": "str_replace",
+          "description": "Starting line number of original string (1-based)"
+        },
+        "old_str_end_line_number_1": {
+          "type": "integer",
+          "required_for": "str_replace", 
+          "description": "Ending line number of original string (1-based, inclusive)"
+        },
+        "insert_line_1": {
+          "type": "integer",
+          "required_for": "insert",
+          "description": "Line number after which to insert (0 for beginning)"
+        }
+      },
+      "use_cases": [
+        "Modify existing code with precise replacements",
+        "Insert new code at specific locations",
+        "Update configuration files",
+        "Apply multiple edits in sequence"
+      ],
+      "best_practices": [
+        "Always view file content before editing",
+        "Use exact line numbers to avoid ambiguity", 
+        "Break large edits into smaller chunks",
+        "Verify changes with diagnostics after editing"
+      ],
+      "related_tools": ["view", "diagnostics"]
+    },
+    {
+      "name": "save-file",
+      "category": "file_system", 
+      "description": "Create new files with content. Use for: creating new code files, generating configs, writing documentation. Best when: need to create files from scratch.",
+      "parameters": {
+        "instructions_reminder": {
+          "type": "string",
+          "required": true,
+          "value": "LIMIT THE FILE CONTENT TO AT MOST 300 LINES. IF MORE CONTENT NEEDS TO BE ADDED USE THE str-replace-editor TOOL TO EDIT THE FILE AFTER IT HAS BEEN CREATED.",
+          "description": "Fixed reminder for file size limitations"
+        },
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "Path where to save the new file",
+          "examples": ["src/new-component.tsx", "docs/api.md", "config/settings.json"]
+        },
+        "file_content": {
+          "type": "string",
+          "required": true,
+          "description": "Complete content of the new file"
+        },
+        "add_last_line_newline": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "Whether to add newline at end of file"
+        }
+      },
+      "use_cases": [
+        "Create new source code files",
+        "Generate configuration files",
+        "Write documentation and README files",
+        "Create test files and scripts"
+      ],
+      "best_practices": [
+        "Keep initial files under 300 lines",
+        "Use str-replace-editor for additional content",
+        "Include proper file extensions",
+        "Add appropriate newlines for text files"
+      ],
+      "related_tools": ["str-replace-editor", "view"]
+    },
+    {
+      "name": "remove-files",
+      "category": "file_system",
+      "description": "Safely delete files with batch support. Use for: cleanup operations, removing temporary files, batch deletions. Best when: need to remove multiple files safely.",
+      "parameters": {
+        "file_paths": {
+          "type": "array",
+          "required": true,
+          "description": "Array of file paths to delete",
+          "examples": [["temp.txt"], ["build/", "dist/", "node_modules/"]]
+        }
+      },
+      "use_cases": [
+        "Clean up temporary files",
+        "Remove build artifacts", 
+        "Delete obsolete code files",
+        "Batch cleanup operations"
+      ],
+      "best_practices": [
+        "Double-check file paths before deletion",
+        "Use with caution on important files",
+        "Consider backing up before bulk deletions"
+      ],
+      "related_tools": ["view"]
+    },
+    {
+      "name": "codebase-retrieval",
+      "category": "code_search",
+      "description": "AI-powered semantic code search that understands intent, not just keywords. Use for: finding relevant code, understanding codebase structure, locating functionality. Best when: don't know exact file names or function names.",
+      "parameters": {
+        "information_request": {
+          "type": "string",
+          "required": true,
+          "description": "Natural language description of what you're looking for",
+          "examples": [
+            "Find functions that handle user authentication",
+            "Locate components that render data tables", 
+            "Show me error handling patterns in this codebase"
+          ]
+        }
+      },
+      "use_cases": [
+        "Discover relevant code when exploring unfamiliar codebase",
+        "Find implementation patterns and examples",
+        "Locate specific functionality across multiple files",
+        "Understand code relationships and dependencies"
+      ],
+      "best_practices": [
+        "Use descriptive natural language queries",
+        "Be specific about what you're looking for",
+        "Follow up with view tool to examine found code"
+      ],
+      "related_tools": ["view", "str-replace-editor"]
+    },
+    {
+      "name": "launch-process",
+      "category": "process_management",
+      "description": "Launch shell commands as processes with wait/background options. Use for: running dev servers, build tasks, executing commands. Best when: need to start long-running processes or execute system commands.",
+      "parameters": {
+        "command": {
+          "type": "string",
+          "required": true,
+          "description": "Shell command to execute",
+          "examples": ["npm start", "python script.py", "docker build -t myapp ."]
+        },
+        "cwd": {
+          "type": "string",
+          "required": true,
+          "description": "Working directory absolute path"
+        },
+        "wait": {
+          "type": "boolean",
+          "required": true,
+          "description": "Whether to wait for process completion"
+        },
+        "max_wait_seconds": {
+          "type": "number",
+          "required": true,
+          "description": "Maximum time to wait in seconds"
+        }
+      },
+      "use_cases": [
+        "Start development servers (wait=false)",
+        "Run build tasks (wait=true)",
+        "Execute test suites",
+        "Launch background processes"
+      ],
+      "best_practices": [
+        "Use wait=false for long-running servers",
+        "Use wait=true for short commands",
+        "Set appropriate timeout values",
+        "Monitor process output with read-process"
+      ],
+      "related_tools": ["read-process", "write-process", "kill-process", "list-processes"]
+    },
+    {
+      "name": "read-process",
+      "category": "process_management",
+      "description": "Read output from running processes. Use for: monitoring process output, getting command results, checking process status. Best when: need to see what a process is doing.",
+      "parameters": {
+        "terminal_id": {
+          "type": "integer",
+          "required": true,
+          "description": "ID of the terminal/process to read from"
+        },
+        "wait": {
+          "type": "boolean",
+          "required": true,
+          "description": "Whether to wait for process completion"
+        },
+        "max_wait_seconds": {
+          "type": "number",
+          "required": true,
+          "description": "Maximum time to wait for output"
+        }
+      },
+      "use_cases": [
+        "Monitor build process output",
+        "Check server startup logs",
+        "Get command execution results",
+        "Debug process issues"
+      ],
+      "related_tools": ["launch-process", "write-process", "kill-process"]
+    },
+    {
+      "name": "write-process",
+      "category": "process_management",
+      "description": "Send input to running processes. Use for: interacting with interactive programs, sending commands to shells, controlling process behavior. Best when: need to communicate with running processes.",
+      "parameters": {
+        "terminal_id": {
+          "type": "integer",
+          "required": true,
+          "description": "ID of the terminal/process to write to"
+        },
+        "input_text": {
+          "type": "string",
+          "required": true,
+          "description": "Text to send to process stdin",
+          "examples": ["y\\n", "exit\\n", "help\\n"]
+        }
+      },
+      "use_cases": [
+        "Answer interactive prompts",
+        "Send commands to running shells",
+        "Control interactive applications",
+        "Provide input to scripts"
+      ],
+      "related_tools": ["launch-process", "read-process", "kill-process"]
+    },
+    {
+      "name": "kill-process",
+      "category": "process_management",
+      "description": "Terminate running processes. Use for: stopping runaway processes, cleaning up background tasks, ending servers. Best when: need to forcefully stop processes.",
+      "parameters": {
+        "terminal_id": {
+          "type": "integer",
+          "required": true,
+          "description": "ID of the terminal/process to terminate"
+        }
+      },
+      "use_cases": [
+        "Stop development servers",
+        "Kill runaway processes",
+        "Clean up background tasks",
+        "End stuck commands"
+      ],
+      "related_tools": ["launch-process", "list-processes"]
+    },
+    {
+      "name": "list-processes",
+      "category": "process_management",
+      "description": "List all known terminals and their states. Use for: process management, debugging, monitoring active tasks. Best when: need overview of running processes.",
+      "parameters": {},
+      "use_cases": [
+        "Check what processes are running",
+        "Find terminal IDs for other process tools",
+        "Monitor system resource usage",
+        "Debug process management issues"
+      ],
+      "related_tools": ["launch-process", "kill-process", "read-process"]
+    },
+    {
+      "name": "web-search",
+      "category": "network",
+      "description": "Search the web using Google Custom Search API. Use for: finding technical documentation, searching for solutions, getting latest information. Best when: need external information or solutions.",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "Search query string",
+          "examples": ["TypeScript error handling", "React hooks best practices", "Docker deployment guide"]
+        },
+        "num_results": {
+          "type": "integer",
+          "required": false,
+          "default": 5,
+          "min": 1,
+          "max": 10,
+          "description": "Number of search results to return"
+        }
+      },
+      "use_cases": [
+        "Find solutions to error messages",
+        "Research best practices and patterns",
+        "Get documentation for libraries",
+        "Find tutorials and guides"
+      ],
+      "related_tools": ["web-fetch"]
+    },
+    {
+      "name": "web-fetch",
+      "category": "network",
+      "description": "Fetch webpage content and convert to Markdown. Use for: reading documentation, analyzing web content, extracting information. Best when: need to read specific web pages.",
+      "parameters": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "URL to fetch content from",
+          "examples": ["https://docs.example.com/api", "https://github.com/user/repo/blob/main/README.md"]
+        }
+      },
+      "use_cases": [
+        "Read online documentation",
+        "Extract content from web pages",
+        "Analyze README files from repositories",
+        "Get information from technical articles"
+      ],
+      "related_tools": ["web-search"]
+    },
+    {
+      "name": "github-api",
+      "category": "github_integration",
+      "description": "Make GitHub API calls for repository management. Use for: managing repos, handling issues/PRs, accessing GitHub data. Best when: need to interact with GitHub programmatically.",
+      "parameters": {
+        "path": {
+          "type": "string",
+          "required": true,
+          "description": "GitHub API endpoint path",
+          "examples": ["/repos/owner/repo/issues", "/repos/owner/repo/pulls", "/user"]
+        },
+        "method": {
+          "type": "enum",
+          "required": false,
+          "default": "GET",
+          "values": ["GET", "POST", "PATCH", "PUT"],
+          "description": "HTTP method to use"
+        },
+        "data": {
+          "type": "object",
+          "required": false,
+          "description": "Request data (query params for GET, JSON body for POST/PATCH/PUT)"
+        },
+        "details": {
+          "type": "boolean",
+          "required": false,
+          "default": false,
+          "description": "Whether to return detailed response with all fields"
+        },
+        "summary": {
+          "type": "string",
+          "required": false,
+          "description": "Human-readable summary of what this API call does"
+        }
+      },
+      "use_cases": [
+        "Create and manage issues",
+        "Handle pull requests",
+        "Access repository information",
+        "Manage GitHub Actions workflows"
+      ],
+      "related_tools": ["web-search", "web-fetch"]
+    },
+    {
+      "name": "render-mermaid",
+      "category": "visualization",
+      "description": "Render Mermaid diagrams from code definitions. Use for: creating flowcharts, architecture diagrams, process visualization. Best when: need to create visual explanations.",
+      "parameters": {
+        "diagram_definition": {
+          "type": "string",
+          "required": true,
+          "description": "Mermaid diagram definition code",
+          "examples": [
+            "graph TD\\n    A[Start] --> B[Process]\\n    B --> C[End]",
+            "sequenceDiagram\\n    Alice->>Bob: Hello\\n    Bob-->>Alice: Hi"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "required": false,
+          "default": "Mermaid Diagram",
+          "description": "Title for the rendered diagram"
+        }
+      },
+      "use_cases": [
+        "Create flowcharts for processes",
+        "Visualize system architecture",
+        "Document workflows and procedures",
+        "Generate diagrams for documentation"
+      ],
+      "related_tools": ["save-file", "str-replace-editor"]
+    },
+    {
+      "name": "remember",
+      "category": "memory",
+      "description": "Store information for long-term context across conversations. Use for: remembering user preferences, project patterns, recurring issues. Best when: need to maintain context over time.",
+      "parameters": {
+        "information": {
+          "type": "string",
+          "required": true,
+          "description": "Information to remember for future reference"
+        },
+        "context": {
+          "type": "string",
+          "required": false,
+          "description": "Context or category for the information"
+        }
+      },
+      "use_cases": [
+        "Remember user coding preferences",
+        "Store project-specific patterns",
+        "Keep track of recurring issues",
+        "Maintain long-term project context"
+      ],
+      "related_tools": ["codebase-retrieval"]
+    },
+    {
+      "name": "diagnostics",
+      "category": "diagnostics",
+      "description": "Get IDE diagnostics including errors, warnings, and type issues. Use for: code quality checking, error detection, validation. Best when: need to verify code correctness.",
+      "parameters": {
+        "paths": {
+          "type": "array",
+          "required": false,
+          "description": "Array of file paths to check for diagnostics"
+        },
+        "severity": {
+          "type": "enum",
+          "required": false,
+          "values": ["error", "warning", "info"],
+          "description": "Minimum severity level to include"
+        }
+      },
+      "use_cases": [
+        "Check for compilation errors",
+        "Validate code after modifications",
+        "Find type issues in TypeScript",
+        "Get linting warnings and suggestions"
+      ],
+      "best_practices": [
+        "Run after making code changes",
+        "Use as part of debugging workflow",
+        "Check specific files when possible"
+      ],
+      "related_tools": ["str-replace-editor", "view", "codebase-retrieval"]
+    }
+  ],
+  "tool_workflows": {
+    "code_analysis": {
+      "description": "Analyze and understand existing code",
+      "trigger": "User asks about code functionality or structure",
+      "steps": [
+        {"tool": "codebase-retrieval", "purpose": "Find relevant code locations", "when": "Don't know exact file locations"},
+        {"tool": "view", "purpose": "Examine specific code details", "when": "Need to see actual code"},
+        {"tool": "diagnostics", "purpose": "Check for issues", "when": "Suspect problems exist"}
+      ]
+    },
+    "code_modification": {
+      "description": "Modify existing code files",
+      "trigger": "User requests code changes",
+      "steps": [
+        {"tool": "view", "purpose": "Understand current code state", "required": true},
+        {"tool": "str-replace-editor", "purpose": "Make precise changes", "required": true},
+        {"tool": "diagnostics", "purpose": "Verify changes", "when": "After modifications"}
+      ]
+    },
+    "debugging_workflow": {
+      "description": "Debug and fix code issues",
+      "trigger": "User reports errors or problems",
+      "steps": [
+        {"tool": "diagnostics", "purpose": "Get error details", "priority": "high"},
+        {"tool": "codebase-retrieval", "purpose": "Find related code", "when": "Error context unclear"},
+        {"tool": "web-search", "purpose": "Find solutions", "when": "Unknown error patterns"},
+        {"tool": "str-replace-editor", "purpose": "Apply fixes", "when": "Solution identified"}
+      ]
+    },
+    "process_management": {
+      "description": "Manage development processes",
+      "trigger": "Need to run commands or manage processes",
+      "steps": [
+        {"tool": "launch-process", "purpose": "Start process", "required": true},
+        {"tool": "read-process", "purpose": "Monitor output", "when": "Need to check progress"},
+        {"tool": "write-process", "purpose": "Send input", "when": "Interactive process"},
+        {"tool": "kill-process", "purpose": "Clean up", "when": "Process needs termination"}
+      ]
+    },
+    "research_and_documentation": {
+      "description": "Research solutions and create documentation",
+      "trigger": "Need external information or documentation",
+      "steps": [
+        {"tool": "web-search", "purpose": "Find information", "required": true},
+        {"tool": "web-fetch", "purpose": "Get detailed content", "when": "Need specific page content"},
+        {"tool": "render-mermaid", "purpose": "Create diagrams", "when": "Visual explanation needed"},
+        {"tool": "save-file", "purpose": "Document findings", "when": "Need to save information"}
+      ]
+    }
+  },
+  "parameter_patterns": {
+    "file_paths": {
+      "pattern": "Always use relative paths from workspace root",
+      "examples": ["src/components/Button.tsx", "docs/README.md", "package.json"],
+      "best_practices": [
+        "Use forward slashes even on Windows",
+        "Avoid absolute paths",
+        "Include file extensions"
+      ]
+    },
+    "line_numbers": {
+      "pattern": "1-based indexing, inclusive ranges",
+      "examples": [1, 50, [1, 100], [501, -1]],
+      "best_practices": [
+        "Use -1 for end of file",
+        "Ranges are inclusive on both ends",
+        "Line numbers start from 1, not 0"
+      ]
+    },
+    "regex_patterns": {
+      "pattern": "Use JavaScript/Rust compatible regex syntax",
+      "examples": ["function\\s+\\w+", "class\\s+\\w+", "import.*from"],
+      "limitations": [
+        "No lookbehind/lookahead",
+        "No backreferences",
+        "No Unicode property escapes",
+        "Single line mode only"
+      ]
+    }
+  },
+  "ai_guidance": {
+    "tool_selection_strategy": {
+      "description": "How AI should choose which tools to use",
+      "decision_tree": {
+        "user_asks_about_code": ["codebase-retrieval", "view"],
+        "user_wants_to_modify_code": ["view", "str-replace-editor", "diagnostics"],
+        "user_reports_error": ["diagnostics", "codebase-retrieval", "web-search"],
+        "user_needs_to_run_something": ["launch-process", "read-process"],
+        "user_asks_for_information": ["web-search", "web-fetch"],
+        "user_wants_visualization": ["render-mermaid"]
+      }
+    },
+    "parameter_recommendations": {
+      "view": {
+        "large_files": "Use view_range to limit output",
+        "searching": "Prefer search_query_regex over view_range",
+        "directories": "Use type='directory' for exploration"
+      },
+      "str-replace-editor": {
+        "safety": "Always view file before editing",
+        "precision": "Use exact line numbers to avoid ambiguity",
+        "chunking": "Break large edits into smaller pieces"
+      },
+      "launch-process": {
+        "servers": "Use wait=false for long-running processes",
+        "commands": "Use wait=true for short commands",
+        "timeouts": "Set reasonable max_wait_seconds"
+      }
+    },
+    "error_recovery": {
+      "file_not_found": {
+        "next_tools": ["codebase-retrieval", "view"],
+        "explanation": "File might be moved or renamed, search for it"
+      },
+      "permission_denied": {
+        "next_tools": ["diagnostics", "web-search"],
+        "explanation": "Check permissions or search for solutions"
+      },
+      "syntax_error": {
+        "next_tools": ["view", "diagnostics", "web-search"],
+        "explanation": "Examine code and find fix patterns"
+      },
+      "process_timeout": {
+        "next_tools": ["kill-process", "list-processes"],
+        "explanation": "Process may be stuck, consider terminating"
+      }
+    }
+  },
+  "usage_frequency": {
+    "high_frequency": {
+      "tools": ["view", "str-replace-editor", "codebase-retrieval", "diagnostics"],
+      "description": "Core tools used in most development workflows"
+    },
+    "medium_frequency": {
+      "tools": ["launch-process", "web-search", "save-file"],
+      "description": "Common tools for specific tasks"
+    },
+    "low_frequency": {
+      "tools": ["render-mermaid", "remember", "github-api"],
+      "description": "Specialized tools for specific scenarios"
+    }
+  },
+  "implementation_priority": {
+    "critical": {
+      "tools": ["diagnostics", "codebase-retrieval"],
+      "reason": "Essential for code quality and understanding"
+    },
+    "important": {
+      "tools": ["render-mermaid", "remember"],
+      "reason": "Significantly enhance capabilities"
+    },
+    "optional": {
+      "tools": ["github-api"],
+      "reason": "Nice to have but not essential"
+    }
+  }
+}
