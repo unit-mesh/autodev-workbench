@@ -25,6 +25,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
            owner,
            repo,
            issue_number,
+           issueNumber,
            language = 'en',
            include_file_content = false,
            max_files = 10,
@@ -32,7 +33,8 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
          }: {
 			owner: string;
 			repo: string;
-			issue_number: number;
+			issue_number?: number;
+			issueNumber?: number;
 			workspace_path?: string;
 			language?: 'en' | 'zh';
 			include_file_content?: boolean;
@@ -54,6 +56,19 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 
 				const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
 
+				// Handle both parameter naming conventions
+				const actualIssueNumber = issue_number || issueNumber;
+				if (!actualIssueNumber) {
+					return {
+						content: [
+							{
+								type: "text",
+								text: "Error: Issue number is required. Please provide either issue_number or issueNumber parameter."
+							}
+						]
+					};
+				}
+
 				// Get project context analysis
 				console.log(`🔍 Analyzing project context...`);
 				const projectAnalyzer = new ProjectContextAnalyzer();
@@ -64,10 +79,10 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 				const reportGenerator = new AnalysisReportGenerator(githubToken);
 
 				// Get the specific issue
-				const issue = await githubService.getIssue(owner, repo, issue_number);
+				const issue = await githubService.getIssue(owner, repo, actualIssueNumber);
 
 				// Analyze the issue and find related code
-				console.log(`🔍 Analyzing issue #${issue_number}: ${issue.title}`);
+				console.log(`🔍 Analyzing issue #${actualIssueNumber}: ${issue.title}`);
 				const analysisResult = await contextAnalyzer.analyzeIssue(issue);
 
 				// Add project context to analysis result
@@ -76,7 +91,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 
 					// Add URL content summary if available
 					if (analysisResult.issue.urlContent && analysisResult.issue.urlContent.length > 0) {
-						console.log(`🔄 Generating summary for URL content in issue #${issue_number}...`);
+						console.log(`🔄 Generating summary for URL content in issue #${actualIssueNumber}...`);
 						const urlContentSummary = await generateUrlContentSummary(analysisResult);
 						analysisResult.urlContentSummary = urlContentSummary;
 					}
@@ -87,7 +102,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 				const { report, uploadResult } = await reportGenerator.generateAndUploadReport(
 					owner,
 					repo,
-					issue_number,
+					actualIssueNumber,
 					analysisResult,
 					{
 						uploadToGitHub: false,
@@ -107,7 +122,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 								type: "text",
 								text: `✅ Analysis completed and uploaded successfully!
 
-  **Issue:** #${issue_number} - ${issue.title}
+  **Issue:** #${actualIssueNumber} - ${issue.title}
   **Comment ID:** ${uploadResult.commentId}
   **Comment URL:** ${uploadResult.commentUrl}
 
@@ -130,7 +145,7 @@ export const installGitHubAnalyzeIssueTool: ToolLike = (installer) => {
 								type: "text",
 								text: `Analysis completed:
 
-**Issue:** #${issue_number} - ${issue.title}
+**Issue:** #${actualIssueNumber} - ${issue.title}
 **Issue Body:**: #${issue.body}
 
 **Search Results**

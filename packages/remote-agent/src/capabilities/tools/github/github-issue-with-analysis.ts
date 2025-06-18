@@ -88,12 +88,12 @@ export const installGitHubGetIssueWithAnalysisTool: ToolLike = (installer) => {
           body: issue.body,
           state: issue.state,
           user: issue.user?.login,
-          labels: issue.labels.map(label => ({
+          labels: (issue.labels || []).map(label => ({
             name: label.name,
             color: label.color,
             description: label.description,
           })),
-          assignees: issue.assignees.map(assignee => assignee.login),
+          assignees: (issue.assignees || []).map(assignee => assignee.login),
           created_at: issue.created_at,
           updated_at: issue.updated_at,
           closed_at: issue.closed_at,

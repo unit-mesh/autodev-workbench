@@ -5,6 +5,7 @@ import { ProjectContextAnalyzer } from "../capabilities/tools/analyzers/project-
 import { LLMLogger } from "../services/llm/llm-logger";
 import { generateText } from "ai";
 import { configureLLMProvider } from "../services/llm";
+import { ToolPromptBuilder } from "../agent/tool-prompt-builder";
 
 /**
  * FeatureRequestPlaybook 专注于管理功能请求分析和自动化 PR 生成的提示词策略
@@ -14,6 +15,7 @@ export class FeatureRequestPlaybook extends Playbook {
   private logger: LLMLogger;
   private llmConfig: any;
   protected basePrompt: string;
+  private toolPromptBuilder: ToolPromptBuilder;
 
   constructor(options: { skipLLMConfig?: boolean } = {}) {
     const basePrompt = `You are an expert AI coding agent specialized in feature request analysis and automated PR generation. You have comprehensive capabilities for software development, analysis, and automation. You have access to a powerful suite of tools that enable you to work with codebases, manage projects, and provide intelligent assistance.
@@ -55,6 +57,7 @@ Before executing any implementation:
     super(basePrompt);
     this.basePrompt = basePrompt;
     this.logger = new LLMLogger('feature-request-playbook.log');
+    this.toolPromptBuilder = new ToolPromptBuilder();
 
     if (!options.skipLLMConfig) {
       this.llmConfig = configureLLMProvider();
@@ -62,6 +65,14 @@ Before executing any implementation:
         throw new Error('No LLM provider configured. Please set GLM_TOKEN, DEEPSEEK_TOKEN, or OPENAI_API_KEY');
       }
     }
+  }
+
+  /**
+   * 注册可用的工具
+   */
+  registerTools(tools: any[]): void {
+    super.registerTools(tools);
+    this.toolPromptBuilder.registerTools(tools);
   }
 
   /**
@@ -81,10 +92,16 @@ To provide a complete solution, follow this systematic approach using multiple t
 
 ## Tool Usage Strategy:
 - **For GitHub Issues**: Use github-analyze-issue to understand the feature request context and requirements
-- **For Code Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations
-- **For Architecture Analysis**: Use analyze-basic-context + list-directory to understand project structure
+- **For Code Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations in the CURRENT workspace
+- **For Architecture Analysis**: Use analyze-basic-context + list-directory to understand the CURRENT project structure (not external projects)
 - **For Implementation**: Use str-replace-editor to make precise code changes - THIS IS CRITICAL for feature implementation
 - **For External Knowledge**: Use google-search when you need information about technologies, patterns, or best practices
+
+## CRITICAL WORKSPACE AWARENESS:
+- **ALWAYS explore the CURRENT workspace first** - do not assume external project structures exist
+- **Use list-directory to understand the actual project structure** before making assumptions
+- **Search for existing similar functionality** in the current codebase using search-keywords and grep-search
+- **Focus on the autodev-workbench project structure**, not external projects like Roo-Code
 
 ## CRITICAL IMPLEMENTATION REQUIREMENTS:
 - **ALWAYS attempt to make actual code changes** using str-replace-editor when implementing features
@@ -164,7 +181,7 @@ Working in directory: ${workspacePath}
 
       messages.push({
         role: "system",
-        content: this.basePrompt + contextInfo
+        content: this.basePrompt + contextInfo + '\n\n' + this.toolPromptBuilder.buildToolSystemPrompt()
       });
     } else {
       messages.push({
@@ -203,6 +220,8 @@ Working in directory: ${workspacePath}
 
 ## Current Round Focus:
 ${this.getRoundFocus(round)}
+
+${this.toolPromptBuilder.buildToolSystemPrompt()}
 
 Continue building upon the previous analysis results to provide comprehensive feature implementation guidance.`;
   }
@@ -246,19 +265,28 @@ Focus on understanding the feature request and gathering initial context. Use to
 1. Analyze the GitHub issue or feature request details
 2. Understand the business value and user requirements
 3. Identify the scope and complexity of the feature
-4. Gather initial project context`;
+4. Gather initial project context
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     } else if (round === 2) {
       return `Feature Request: ${input}
 
 ## Round 2: Codebase Discovery & Architecture Analysis
-Based on the initial analysis, now focus on technical discovery:
-1. Search for existing related implementations in the codebase
-2. Analyze the project architecture and patterns
-3. Identify integration points and dependencies
-4. Understand the technical constraints and opportunities
+Based on the initial analysis, now focus on technical discovery in the CURRENT workspace:
+
+**CRITICAL**: The issue mentions migrating from "Roo-Code/src/services/code-index" but this directory does NOT exist in the current workspace. Instead:
+
+1. **First explore the CURRENT project structure** using list-directory on "." or "packages/" to understand what exists
+2. **Search for existing code indexing/analysis functionality** in the current autodev-workbench project using search-keywords with terms like "indexing", "embedding", "vector", "context", "analysis"
+3. **Look for MCP service implementations** or similar service patterns in the current codebase
+4. **Identify where to implement the new MCP service** based on the current project structure
+
+**Do NOT try to access Roo-Code directories** - focus on the current autodev-workbench project structure.
 
 Previous findings summary:
-${this.summarizePreviousResults(previousResults)}`;
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     } else {
       return `Feature Request: ${input}
 
@@ -271,7 +299,9 @@ Based on all previous analysis, now focus on concrete implementation:
 5. Consider deployment and migration needs
 
 Complete analysis summary:
-${this.summarizePreviousResults(previousResults)}`;
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     }
   }
 
