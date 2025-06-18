@@ -106,6 +106,35 @@
 4. **图表可视化能力** - 支持流程图和架构图渲染
 5. **跨会话上下文保持** - 长期记忆管理系统
 
+### Windsurf 核心优化
+
+Cascade 具备强大的任务规划与执行能力：
+*   **动态计划调整**: 使用 `update_plan` 工具，能够根据用户的新指令、研究发现或任务进展动态地创建和修改分步计划。这使得 Cascade 能够灵活适应不断变化的需求。
+*   **结构化任务执行**: 计划以结构化的方式呈现，包含任务描述、状态和子任务，确保复杂任务的有序推进。
+*   **协同规划**: 规划过程涉及与内部规划智能体（Plan Mastermind）的协作，以确保计划的全面性和有效性。
+*   **丰富的执行工具**: 结合以下全面的工具集，Cascade 能够有效地执行计划中的各个步骤，覆盖代码操作、文件管理、信息检索等多个方面：
+*   `browser_preview`: 启动 Web 服务器的浏览器预览。
+*   `check_deploy_status`: 检查应用部署状态。
+*   `codebase_search`: 在代码库中搜索相关代码片段。
+*   `command_status`: 获取已执行终端命令的状态。
+*   `create_memory`: 将重要上下文保存到记忆数据库。
+*   `deploy_web_app`: 部署 JavaScript Web 应用。
+*   `find_by_name`: 搜索文件和子目录。
+*   `grep_search`: 在文件或目录中查找精确模式匹配。
+*   `list_dir`: 列出目录内容。
+*   `list_resources`: 列出 MCP 服务器的可用资源。
+*   `read_deployment_config`: 读取 Web 应用的部署配置。
+*   `read_resource`: 检索指定资源的内容。
+*   `replace_file_content`: 通过替换内容来编辑现有文件。
+*   `run_command`: 提议代表用户运行命令。
+*   `search_in_file`: 在指定文件中返回与搜索查询相关的代码片段。
+*   `update_plan`: (已在此处描述其核心功能) 更新当前任务的计划。
+*   `view_code_item`: 查看文件中代码项节点的内容。
+*   `view_content_chunk`: 查看文档内容的特定块。
+*   `view_file_outline`: 查看文件的概要（函数、类）。
+*   `view_line_range`: 查看文件内特定行范围的内容。
+*   `write_to_file`: 创建新文件并将内容写入其中。
+
 ### Trae AI 核心优势
 1. **全面的文件操作能力** - 支持文件的读、写、创建、删除、重命名和多种编辑方式。
 2. **灵活的代码搜索与导航** - 提供语义搜索、正则表达式搜索。
@@ -249,3 +278,12 @@ Cursor Agent为 AI 代码编辑器行业树立了新的标杆：
 4. **个性化是 AI 助手的未来** - 规则系统实现真正的���性化编程体验
 
 通过借鉴各个 Agent 的优势，特别是 **Cursor Agent的创新理念**和 **CodeX Agent的安全设计**，AutoDev Remote Agent 可以进一步完善其工具生态，朝着**预测式、专用化、个性化、安全化**的方向发展，提供更智能、高效、安全的开发辅助能力。
+
+
+### Casade 计划能力
+
+<tool_code> { "plan": [ { "id": "1", "description": "Extract tool information from the system prompt.", "status": "pending", "subtasks": [] }, { "id": "2", "description": "Format the extracted tool information into Markdown.", "status": "pending", "subtasks": [] }, { "id": "3", "description": "Read the current content of 
+README.md
+ to determine where to insert the new information.", "status": "pending", "subtasks": [] }, { "id": "4", "description": "Update 
+README.md
+ with the formatted tool information.", "status": "pending", "subtasks": [] } ] } </tool_code> 
