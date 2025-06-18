@@ -233,21 +233,36 @@ Continue building upon the previous analysis results to provide comprehensive fe
     switch (round) {
       case 2:
         return `**Codebase Discovery & Architecture Analysis**
-- Explore existing implementations and patterns
+- Explore existing implementations and patterns using list-directory and grep-search
 - Identify integration points and dependencies
 - Analyze project structure and conventions
 - Gather technical context for implementation planning`;
       case 3:
         return `**Implementation Planning & Code Generation**
 - Create detailed implementation plan
-- Generate specific code changes
+- **CRITICAL: Use str-replace-editor to make actual code changes**
+- **CRITICAL: Use write-file to create new files if needed**
+- Generate specific code modifications and new components
 - Plan testing strategy and documentation
 - Prepare for PR creation`;
+      case 4:
+        return `**Code Implementation & File Creation**
+- **MANDATORY: Execute str-replace-editor for code modifications**
+- **MANDATORY: Execute write-file for new file creation**
+- Implement the planned code changes
+- Create necessary configuration files
+- Add proper error handling and logging`;
+      case 5:
+        return `**Testing & Documentation**
+- Create test files using write-file
+- Update documentation files
+- Verify implementation completeness
+- Prepare final PR summary`;
       default:
-        return `**Comprehensive Analysis & Final Recommendations**
-- Synthesize all findings into actionable recommendations
-- Provide complete implementation guidance
-- Include testing, documentation, and deployment considerations`;
+        return `**Final Implementation & Quality Assurance**
+- Complete any remaining code changes using str-replace-editor
+- Ensure all files are created and modified as planned
+- Provide comprehensive implementation summary`;
     }
   }
 
@@ -290,13 +305,36 @@ ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
     } else {
       return `Feature Request: ${input}
 
-## Round 3+: Implementation Planning & Code Generation
-Based on all previous analysis, now focus on concrete implementation:
-1. Create a detailed implementation plan with specific files to modify/create
-2. Generate the actual code changes needed
-3. Plan comprehensive testing strategy
-4. Prepare documentation and PR structure
-5. Consider deployment and migration needs
+## Round ${round}: ${round === 3 ? 'MANDATORY Code Implementation' : 'Implementation & Quality Assurance'}
+
+${round === 3 ? `
+**CRITICAL REQUIREMENTS FOR THIS ROUND:**
+1. **MUST use str-replace-editor** to make actual code changes to existing files
+2. **MUST use write-file** to create new files if needed
+3. **MUST implement concrete code solutions** - not just plans or recommendations
+4. **MUST follow the implementation plan** from previous analysis
+
+**MANDATORY ACTIONS:**
+- If creating new services/components: Use write-file to create the files
+- If modifying existing files: Use str-replace-editor to make precise changes
+- If adding configuration: Use write-file or str-replace-editor as appropriate
+- Include proper imports, error handling, and integration code
+
+**FAILURE TO EXECUTE CODE CHANGES WILL BE CONSIDERED A FAILED IMPLEMENTATION**
+` : `
+**CONTINUE IMPLEMENTATION:**
+- Complete any remaining code changes using str-replace-editor
+- Create additional test files using write-file
+- Update documentation and configuration files
+- Ensure implementation completeness
+`}
+
+Based on all previous analysis, implement the concrete code changes:
+1. Execute the planned code modifications using str-replace-editor
+2. Create new files using write-file as needed
+3. Ensure proper integration with existing codebase
+4. Add comprehensive error handling and logging
+5. Include proper imports and dependencies
 
 Complete analysis summary:
 ${this.summarizePreviousResults(previousResults)}

@@ -402,8 +402,8 @@ export class AIAgent {
 			return true;
 		}
 
-		// Stop if we have comprehensive coverage
-		if (hasIssueAnalysis && hasCodeExploration && hasStructureAnalysis) {
+		// Stop if we have comprehensive coverage (but not for feature requests)
+		if (hasIssueAnalysis && hasCodeExploration && hasStructureAnalysis && !isFeatureRequest) {
 			this.log(`Round ${currentRound}: Have comprehensive analysis coverage, stopping chain`);
 			return false;
 		}
@@ -444,7 +444,7 @@ export class AIAgent {
 				categories.structureAnalysis++;
 			} else if (toolName.includes('read-file') || toolName.includes('extract-webpage')) {
 				categories.contentAnalysis++;
-			} else if (toolName.includes('str-replace-editor') || toolName.includes('save-file') || toolName.includes('remove-files')) {
+			} else if (toolName.includes('str-replace-editor') || toolName.includes('write-file') || toolName.includes('save-file') || toolName.includes('remove-files')) {
 				categories.codeGeneration++;
 			} else if (toolName.includes('search-keywords') || toolName.includes('analyze-basic-context')) {
 				categories.featureAnalysis++;

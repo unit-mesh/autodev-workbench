@@ -56,7 +56,7 @@ async function testFeatureRequestImplementation(issueConfig) {
       workspacePath: join(process.cwd(), '../../'),
       githubToken: process.env.GITHUB_TOKEN,
       verbose: true,
-      maxToolRounds: issueConfig.expectedRounds || 5, // Increase rounds for feature implementation
+      maxToolRounds: issueConfig.expectedRounds || 8, // Increase rounds for feature implementation
       enableToolChaining: true,
       playbook: new FeatureRequestPlaybook()
     })
@@ -281,8 +281,8 @@ function parseIssueFromArgs() {
         repo: repo || 'autodev-workbench',
         issueNumber: parseInt(issueNumber),
         description: `Implement feature request from GitHub issue #${issueNumber}`,
-        expectedTools: ['github-analyze-issue', 'search-keywords', 'grep-search', 'read-file', 'str-replace-editor'],
-        expectedRounds: 5, // Increased for feature implementation
+        expectedTools: ['github-analyze-issue', 'list-directory', 'grep-search', 'read-file', 'str-replace-editor', 'write-file'],
+        expectedRounds: 8, // Increased for feature implementation
         validateCodeChanges: true
       }
     }

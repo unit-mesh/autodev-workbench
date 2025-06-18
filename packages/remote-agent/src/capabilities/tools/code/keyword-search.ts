@@ -19,6 +19,28 @@ export const installSearchKeywordsTool: ToolLike = (installer) => {
     file_path: string;
     symbols: string[];
   }) => {
+    // Validate required parameters
+    if (!file_path) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: file_path parameter is required. Please provide the path to the source code file to analyze.`
+          }
+        ]
+      };
+    }
+
+    if (!symbols || symbols.length === 0) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: symbols parameter is required. Please provide an array of symbol names to search for.`
+          }
+        ]
+      };
+    }
     try {
       // Resolve file path
       const workspacePath = process.env.WORKSPACE_PATH || process.cwd();
