@@ -1,6 +1,6 @@
 {
   "name": "@autodev/remote-agent",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "AutoDev Remote Agent - A comprehensive Model Context Protocol (MCP) server that provides advanced GitHub issue analysis capabilities with intelligent code context integration. This server can fetch GitHub issues, analyze them with AI-powered insights, and provide relevant code context from your local workspace using the AutoDev ecosystem.",
   "main": "dist/index.js",
   "bin": {

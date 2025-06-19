@@ -1,3 +1,37 @@
+## 0.8.0 (2025-06-19)
+
+### 🚀 Features
+
+- add caching and performance optimizations for project context analysis ([4445620](https://github.com/unit-mesh/autodev-workbench/commit/4445620))
+- integrate ProjectDetector for enhanced project information collection ([75d89d3](https://github.com/unit-mesh/autodev-workbench/commit/75d89d3))
+- implement GlobalProcessManager and process management tools for enhanced process handling ([dea114a](https://github.com/unit-mesh/autodev-workbench/commit/dea114a))
+- add kill process tool for terminating processes by terminal ID ([ed444a2](https://github.com/unit-mesh/autodev-workbench/commit/ed444a2))
+- optimize FeatureRequestPlaybook with Augment Agent design principles ([29f9c5f](https://github.com/unit-mesh/autodev-workbench/commit/29f9c5f))
+- migrate AIAgent from PromptBuilder to IssueAnalysisPlaybook ([#105](https://github.com/unit-mesh/autodev-workbench/issues/105))
+- update test-feature-request.js for automated feature request implementation ([c144a32](https://github.com/unit-mesh/autodev-workbench/commit/c144a32))
+- improve FeatureRequestPlaybook for automated code modification ([82e35ad](https://github.com/unit-mesh/autodev-workbench/commit/82e35ad))
+- enhance test-feature-request.js for improved automated feature analysis and PR generation ([24a6211](https://github.com/unit-mesh/autodev-workbench/commit/24a6211))
+- enhance README.md with Cascade core optimization and planning capabilities ([4dbb2d9](https://github.com/unit-mesh/autodev-workbench/commit/4dbb2d9))
+- update README.md to enhance tool descriptions and planning capabilities ([55cddb3](https://github.com/unit-mesh/autodev-workbench/commit/55cddb3))
+- enhance README.md with updated tool capabilities and task management features ([d3b801f](https://github.com/unit-mesh/autodev-workbench/commit/d3b801f))
+- add HTML entity decoding to str-replace-editor and write-file tools ([43c31e1](https://github.com/unit-mesh/autodev-workbench/commit/43c31e1))
+- init basic code for datastcuture ([1cfcdde](https://github.com/unit-mesh/autodev-workbench/commit/1cfcdde))
+- add GitHub PR creation tool ([c305193](https://github.com/unit-mesh/autodev-workbench/commit/c305193))
+- enhance FeatureRequestPlaybook with comprehensive 6-round workflow ([8ccae5f](https://github.com/unit-mesh/autodev-workbench/commit/8ccae5f))
+- **playbook:** improve feature request implementation process ([c94fd82](https://github.com/unit-mesh/autodev-workbench/commit/c94fd82))
+
+### 🩹 Fixes
+
+- fix tets ([4cab1a0](https://github.com/unit-mesh/autodev-workbench/commit/4cab1a0))
+- improve keyword generation logic to focus on conceptual terms ([#105](https://github.com/unit-mesh/autodev-workbench/issues/105))
+- update test-feature-request.js to accept issue ID like quick-test-agent ([#105](https://github.com/unit-mesh/autodev-workbench/issues/105))
+- **github:** improve issueNumber parameter alias ([3a6c611](https://github.com/unit-mesh/autodev-workbench/commit/3a6c611))
+
+### ❤️ Thank You
+
+- Fengda Huang @phodal
+- Phodal Huang @phodal
+
 ## 0.7.0 (2025-06-19)
 
 ### 🚀 Features
