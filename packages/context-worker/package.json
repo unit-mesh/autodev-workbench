@@ -1,6 +1,6 @@
 {
   "name": "@autodev/context-worker",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": "AutoDev Context Worker - Code analysis and context extraction library",
   "main": "./dist/index.js",
   "module": "./dist/index.esm.js",
