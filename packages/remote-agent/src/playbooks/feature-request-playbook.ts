@@ -36,6 +36,13 @@ Your approach should be **planning-driven**: always create a detailed plan first
 - **Codebase exploration**: grep-search + search-keywords + read-file + list-directory
 - **Implementation planning**: analyze-basic-context + search-keywords + read-file
 - **Code generation**: str-replace-editor + read-file + search-keywords
+
+### 🚨 CRITICAL: str-replace-editor Tool Usage
+When using str-replace-editor, follow these EXACT rules:
+- Use {{ ... }} ONLY to represent unchanged code sections that should be preserved
+- DO NOT use {{ ... existing code ... }} or similar template syntax
+- Provide the EXACT code you want in the file, with {{ ... }} for unchanged parts
+- Example: If editing a class, show the actual methods you want to add/modify
 - **External research**: google-search + read-file + analyze-basic-context
 - **Architecture analysis**: analyze-dependencies + list-directory + read-file
 
@@ -95,6 +102,9 @@ To provide a complete solution, follow this systematic approach using multiple t
 - **For Code Discovery**: Use search-keywords + grep-search + read-file to explore existing implementations in the CURRENT workspace
 - **For Architecture Analysis**: Use analyze-basic-context + list-directory to understand the CURRENT project structure (not external projects)
 - **For Implementation**: Use str-replace-editor to make precise code changes - THIS IS CRITICAL for feature implementation
+  * NEVER use template syntax like {{ ... existing code ... }}
+  * Use {{ ... }} ONLY for unchanged code sections
+  * Provide EXACT code content, not placeholders
 - **For External Knowledge**: Use google-search when you need information about technologies, patterns, or best practices
 
 ## CRITICAL WORKSPACE AWARENESS:
@@ -319,6 +329,12 @@ ${round === 3 ? `
 - If modifying existing files: Use str-replace-editor to make precise changes
 - If adding configuration: Use write-file or str-replace-editor as appropriate
 - Include proper imports, error handling, and integration code
+
+**CRITICAL str-replace-editor Rules:**
+- NEVER use {{ ... existing code ... }} or similar template syntax
+- Use {{ ... }} ONLY to represent unchanged code sections
+- Provide EXACT code content, not placeholders or comments
+- Example: Instead of "{{ ... existing methods ... }}", show the actual methods
 
 **FAILURE TO EXECUTE CODE CHANGES WILL BE CONSIDERED A FAILED IMPLEMENTATION**
 ` : `
