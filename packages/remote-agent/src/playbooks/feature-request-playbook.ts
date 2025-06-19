@@ -312,12 +312,11 @@ Previous findings summary:
 ${this.summarizePreviousResults(previousResults)}
 
 ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
-    } else {
+    } else if (round === 3) {
       return `Feature Request: ${input}
 
-## Round ${round}: ${round === 3 ? 'MANDATORY Code Implementation' : 'Implementation & Quality Assurance'}
+## Round 3: MANDATORY Code Implementation
 
-${round === 3 ? `
 **CRITICAL REQUIREMENTS FOR THIS ROUND:**
 1. **MUST use str-replace-editor** to make actual code changes to existing files
 2. **MUST use write-file** to create new files if needed
@@ -337,13 +336,6 @@ ${round === 3 ? `
 - Example: Instead of "{{ ... existing methods ... }}", show the actual methods
 
 **FAILURE TO EXECUTE CODE CHANGES WILL BE CONSIDERED A FAILED IMPLEMENTATION**
-` : `
-**CONTINUE IMPLEMENTATION:**
-- Complete any remaining code changes using str-replace-editor
-- Create additional test files using write-file
-- Update documentation and configuration files
-- Ensure implementation completeness
-`}
 
 Based on all previous analysis, implement the concrete code changes:
 1. Execute the planned code modifications using str-replace-editor
@@ -353,6 +345,120 @@ Based on all previous analysis, implement the concrete code changes:
 5. Include proper imports and dependencies
 
 Complete analysis summary:
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
+    } else if (round === 4) {
+      return `Feature Request: ${input}
+
+## Round 4: Git Workflow & Repository Management
+
+**CRITICAL REQUIREMENTS FOR THIS ROUND:**
+1. **MUST use run-terminal-command** to execute git commands
+2. **MUST check git status** to identify any untracked or modified files
+3. **MUST review changes** using git diff before committing
+4. **MUST create meaningful commit messages** following project conventions
+
+**Git Workflow Steps:**
+1. Check current git status: \`git status\`
+2. Review changes: \`git diff\` and \`git diff --staged\`
+3. Add files to staging: \`git add .\` or specific files
+4. Create commit with meaningful message: \`git commit -m "feat: implement [feature description]"\`
+5. Check for any build/test scripts and run them
+6. Create a new branch if needed: \`git checkout -b feature/issue-[number]\`
+
+**Quality Checks:**
+- Verify no unwanted files are being committed
+- Ensure commit message follows conventional commits format
+- Check if any build or test commands should be run
+
+Previous implementation summary:
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
+    } else if (round === 5) {
+      return `Feature Request: ${input}
+
+## Round 5: Testing & Build Verification
+
+**CRITICAL REQUIREMENTS FOR THIS ROUND:**
+1. **MUST run build commands** to verify the implementation compiles
+2. **MUST run tests** if test scripts exist in package.json
+3. **MUST check for linting issues** and fix them if possible
+4. **MUST verify the feature works** as expected
+
+**Testing & Build Steps:**
+1. Check package.json for available scripts: \`cat package.json | grep -A 10 "scripts"\`
+2. Run build command: \`npm run build\` or \`pnpm build\`
+3. Run tests: \`npm test\` or \`pnpm test\`
+4. Run linting: \`npm run lint\` or \`pnpm lint\`
+5. Fix any issues found during build/test/lint
+
+**Verification Focus:**
+- Does the code compile without errors?
+- Do existing tests still pass?
+- Are there any linting issues to fix?
+- Does the new feature work as expected?
+
+Previous workflow summary:
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
+    } else if (round === 6) {
+      return `Feature Request: ${input}
+
+## Round 6: GitHub PR Creation & Documentation
+
+**CRITICAL REQUIREMENTS FOR THIS ROUND:**
+1. **MUST push changes** to a feature branch
+2. **MUST create a GitHub PR** using github-pr-create tool
+3. **MUST write comprehensive PR description** including implementation details
+4. **MUST link the PR to the original issue**
+
+**PR Creation Steps:**
+1. Push the feature branch: \`git push origin feature/issue-[number]\`
+2. Create PR using github-pr-create with:
+   - Clear title referencing the issue
+   - Detailed description of changes
+   - Link to original issue (#[issue-number])
+   - Testing instructions
+   - Screenshots/examples if applicable
+
+**PR Description Template:**
+\`\`\`
+## Description
+Brief description of the feature implementation
+
+## Changes Made
+- List of specific changes
+- Files modified/created
+- Key implementation details
+
+## Testing
+- How to test the feature
+- Test cases covered
+- Build/test results
+
+## Related Issue
+Closes #[issue-number]
+\`\`\`
+
+Previous testing summary:
+${this.summarizePreviousResults(previousResults)}
+
+${this.toolPromptBuilder.buildToolUserPrompt(round)}`;
+    } else {
+      return `Feature Request: ${input}
+
+## Round ${round}: Additional Analysis & Refinement
+
+**QUALITY ASSURANCE & FINALIZATION:**
+1. **Review and refine** any remaining implementation details
+2. **Add missing pieces** like tests, documentation, or configuration
+3. **Verify completeness** against the original requirements
+4. **Suggest next steps** for deployment and testing
+
+Previous workflow summary:
 ${this.summarizePreviousResults(previousResults)}
 
 ${this.toolPromptBuilder.buildToolUserPrompt(round)}`;

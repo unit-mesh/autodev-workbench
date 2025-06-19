@@ -53,7 +53,7 @@ export class AIAgent {
 
 	constructor(config: AgentConfig = {}) {
 		this.config = {
-			maxToolRounds: 5,
+			maxToolRounds: 6, // Increased to support enhanced workflow: Analysis -> Discovery -> Implementation -> Git -> Testing -> PR
 			enableToolChaining: true,
 			toolTimeout: 1200000,
 			autoUploadToIssue: config.autoUploadToIssue || false,
@@ -365,7 +365,7 @@ export class AIAgent {
 		const isFeatureRequest = this.isFeatureRequestWorkflow(allPreviousResults);
 
 		if (isFeatureRequest) {
-			// Feature request workflow: Analysis -> Discovery -> Planning -> Implementation
+			// Enhanced feature request workflow: Analysis -> Discovery -> Implementation -> Git -> Testing -> PR
 			if (currentRound === 1 && !hasIssueAnalysis && !hasFeatureAnalysis) {
 				this.log(`Round ${currentRound}: Feature request needs initial analysis, continuing chain`);
 				return true;
@@ -374,8 +374,20 @@ export class AIAgent {
 				this.log(`Round ${currentRound}: Feature request needs codebase discovery, continuing chain`);
 				return true;
 			}
-			if (currentRound >= 3 && !hasCodeGeneration && (hasCodeExploration && hasStructureAnalysis)) {
+			if (currentRound === 3 && !hasCodeGeneration && (hasCodeExploration && hasStructureAnalysis)) {
 				this.log(`Round ${currentRound}: Feature request ready for implementation, continuing chain`);
+				return true;
+			}
+			if (currentRound === 4 && hasCodeGeneration) {
+				this.log(`Round ${currentRound}: Feature request ready for git workflow, continuing chain`);
+				return true;
+			}
+			if (currentRound === 5 && hasCodeGeneration) {
+				this.log(`Round ${currentRound}: Feature request ready for testing & build verification, continuing chain`);
+				return true;
+			}
+			if (currentRound === 6 && hasCodeGeneration) {
+				this.log(`Round ${currentRound}: Feature request ready for PR creation, continuing chain`);
 				return true;
 			}
 		} else {
