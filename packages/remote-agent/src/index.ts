@@ -18,6 +18,11 @@ export { GitHubContextManager } from "./agent/github-context-manager";
 export * from "./agent/tool-definition";
 
 // =============================================================================
+// Services
+// =============================================================================
+export { FeatureRequestService, type FeatureRequestConfig, type FeatureRequestResult } from "./services/feature-request-service";
+
+// =============================================================================
 // Playbooks
 // =============================================================================
 export { Playbook, IssueAnalysisPlaybook, BugFixPlaybook, FeatureRequestPlaybook } from "./playbooks";

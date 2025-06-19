@@ -1,4 +1,4 @@
-import { CoreMessage } from "ai";
+  import { CoreMessage } from "ai";
 import { Playbook } from "./base-playbook";
 import { ToolResult } from "../agent/tool-definition";
 import { ProjectContextAnalyzer } from "../capabilities/tools/analyzers/project-context-analyzer";

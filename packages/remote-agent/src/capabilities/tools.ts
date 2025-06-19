@@ -66,6 +66,9 @@ import { installFetchContentWithSummaryTool } from "./tools/web/fetch-content-wi
 import { installWebSearchTool } from "./tools/web/web-search";
 import { installProjectMemoryTool } from "./tools/project-memory";
 
+// Feature Development Tools
+import { installFeatureRequestTool } from "./tools/feature/feature-request-tool";
+
 // Tool Categories
 export const FileSystemTools = [
   installListDirectoryTool,
@@ -116,6 +119,10 @@ export const WebTools = [
   installWebSearchTool,
 ] as const;
 
+export const FeatureDevelopmentTools = [
+  installFeatureRequestTool,
+] as const;
+
 export const EnhancedIntelligenceTools = [
   installProjectMemoryTool,
 ] as const;
@@ -147,4 +154,5 @@ export const AutoDevRemoteAgentTools = [
   ),
   ...WebTools,
   ...EnhancedIntelligenceTools,
+  ...FeatureDevelopmentTools,
 ] as const;

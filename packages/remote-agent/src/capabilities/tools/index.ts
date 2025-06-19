@@ -22,3 +22,8 @@ export { installLaunchProcessTool } from "./process/launch-process-tool";
 export { installListProcessesTool } from "./process/list-processes-tool";
 export { installReadProcessTool } from "./process/read-process-tool";
 export { installKillProcessTool } from "./process/kill-process-tool";
+export { installSearchKeywordsTool } from "./code/keyword-search";
+export { installGrepSearchTool } from "./code/code-search-regex";
+export { installWebSearchTool } from "./web/web-search";
+export { installProjectMemoryTool } from "./project-memory";
+export { installFeatureRequestTool } from "./feature/feature-request-tool";
