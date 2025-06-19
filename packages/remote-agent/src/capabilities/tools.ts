@@ -58,6 +58,7 @@ import { installGitHubAddIssueCommentTool } from "./tools/github/github-issue-co
 import { installGitHubListRepositoryIssuesTool } from "./tools/github/github-list-repository-issues";
 import { installGitHubFindCodeByDescriptionTool } from "./tools/github/github-find-code-by-description";
 import { installGitHubCreateNewIssueTool } from "./tools/github/github-issue-create";
+import { installGitHubPrCreateTool } from "./tools/github/github-pr-create";
 
 // Web Tools
 import { installExtractWebpageAsMarkdownTool } from "./tools/web/web-fetch-content";
@@ -106,6 +107,7 @@ export const GitHubTools = [
   installGitHubListRepositoryIssuesTool,
   installGitHubFindCodeByDescriptionTool,
   installGitHubAnalyzeIssueTool,
+  installGitHubPrCreateTool,
 ] as const;
 
 export const WebTools = [
