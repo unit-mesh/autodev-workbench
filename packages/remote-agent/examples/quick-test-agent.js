@@ -30,8 +30,8 @@ async function quickTest (issueConfig) {
 
   // Check if agent is built
   try {
-    const { AIAgent } = require('./dist/agent.js')
-    const { IssueAnalysisPlaybook } = require('./dist/playbooks/index.js')
+    const { AIAgent } = require('../dist/agent.js')
+    const { IssueAnalysisPlaybook } = require('../dist/playbooks')
     console.log('✅ Agent module loaded successfully')
 
     // Check environment

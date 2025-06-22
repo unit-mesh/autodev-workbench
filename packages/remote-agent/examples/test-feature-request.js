@@ -33,8 +33,8 @@ async function testFeatureRequestImplementation(issueConfig) {
   console.log(`📝 Description: ${issueConfig.description}`)
 
   try {
-    const { AIAgent } = require('./dist/agent.js')
-    const { FeatureRequestPlaybook } = require('./dist/playbooks/index.js')
+    const { AIAgent } = require('../dist/agent.js')
+    const { FeatureRequestPlaybook } = require('../dist/playbooks')
     console.log('✅ FeatureRequestPlaybook loaded successfully')
 
     // Check environment
@@ -119,7 +119,7 @@ async function testFeatureRequestImplementation(issueConfig) {
           const status = result.success ? '✅' : '❌'
           const toolName = result.functionCall.name
           console.log(`    ${i + 1}. ${toolName} - ${status}`)
-          
+
           // Show details for important tools
           if (toolName === 'str-replace-editor' && result.success) {
             const params = result.functionCall.parameters
@@ -130,10 +130,10 @@ async function testFeatureRequestImplementation(issueConfig) {
     }
 
     // Check code modification tools
-    const codeModificationTools = response.toolResults.filter(r => 
+    const codeModificationTools = response.toolResults.filter(r =>
       r.functionCall.name === 'str-replace-editor' && r.success
     )
-    
+
     console.log(`\n💻 Code Modifications: ${codeModificationTools.length} file(s) changed`)
     if (codeModificationTools.length > 0) {
       console.log('📝 Modified files:')
@@ -160,13 +160,13 @@ async function testFeatureRequestImplementation(issueConfig) {
     }
 
     // Analyze implementation content
-    const hasRequirements = response.text.toLowerCase().includes('requirement') || 
+    const hasRequirements = response.text.toLowerCase().includes('requirement') ||
                            response.text.toLowerCase().includes('feature')
-    const hasTechnicalAnalysis = response.text.toLowerCase().includes('technical') || 
+    const hasTechnicalAnalysis = response.text.toLowerCase().includes('technical') ||
                                response.text.toLowerCase().includes('implementation')
-    const hasImplementationPlan = response.text.toLowerCase().includes('plan') || 
+    const hasImplementationPlan = response.text.toLowerCase().includes('plan') ||
                                  response.text.toLowerCase().includes('roadmap')
-    const hasCodeChanges = response.text.toLowerCase().includes('code') || 
+    const hasCodeChanges = response.text.toLowerCase().includes('code') ||
                           response.text.toLowerCase().includes('implementation')
 
     console.log(`\n📋 Implementation Analysis:`)
@@ -195,16 +195,16 @@ async function testFeatureRequestImplementation(issueConfig) {
     console.log('='.repeat(80))
 
     // Determine test success
-    const testSuccess = response.success && 
-                       response.totalRounds >= 2 && 
+    const testSuccess = response.success &&
+                       response.totalRounds >= 2 &&
                        response.toolResults.length >= 4 &&
-                       hasRequirements && 
+                       hasRequirements &&
                        hasTechnicalAnalysis &&
                        hasImplementationPlan &&
                        (issueConfig.validateCodeChanges ? codeModificationTools.length > 0 : true)
 
     console.log(`\n${testSuccess ? '🎉 TEST PASSED' : '❌ TEST FAILED'}`)
-    
+
     return {
       success: testSuccess,
       codeModifications: codeModificationTools.length,
@@ -356,7 +356,7 @@ if (require.main === module) {
 
     const passedCount = results.filter(r => r.success).length
     const totalModifications = results.reduce((sum, r) => sum + (r.codeModifications || 0), 0)
-    
+
     console.log(`\n📊 Overall Results:`)
     console.log(`  Tests: ${passedCount}/${results.length} passed`)
     console.log(`  Code modifications: ${totalModifications} file(s) total`)
@@ -370,8 +370,8 @@ if (require.main === module) {
 }
 
 // Export for use in other tests
-module.exports = { 
-  testFeatureRequestImplementation, 
+module.exports = {
+  testFeatureRequestImplementation,
   featureRequestIssues,
   getRoundDescription,
   extractImplementationSections
