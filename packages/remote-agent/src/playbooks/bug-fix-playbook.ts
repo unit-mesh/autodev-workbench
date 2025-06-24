@@ -2,9 +2,6 @@ import { CoreMessage } from "ai";
 import { Playbook } from "./base-playbook";
 import { ToolResult } from "../agent/tool-definition";
 
-/**
- * BugFixPlaybook 专注于管理代码修复和bug修复相关的提示词策略
- */
 export class BugFixPlaybook extends Playbook {
   constructor() {
     super(`你是一个专业的代码修复专家，擅长分析和修复代码中的缺陷。
@@ -103,10 +100,10 @@ ${this.preparePrompt(input, context)}
    */
   prepareSummaryPrompt(userInput: string, toolResults: ToolResult[], currentState: string): string {
     const modifiedFiles = toolResults
-      .filter(r => r.success && 
+      .filter(r => r.success &&
         (r.functionCall.name === 'str-replace-editor' || r.functionCall.name === 'fs-write-file'))
       .map(r => r.functionCall.parameters.targetFile);
-    
+
     const uniqueModifiedFiles = [...new Set(modifiedFiles)];
 
     return `请基于以下信息，生成一个关于代码修复的详细技术报告：
@@ -133,10 +130,10 @@ ${uniqueModifiedFiles.map(file => `- ${file}`).join('\n')}
    */
   prepareVerificationPrompt(userInput: string, results: ToolResult[]): string {
     const modifiedFiles = results
-      .filter(r => r.success && 
+      .filter(r => r.success &&
         (r.functionCall.name === 'str-replace-editor' || r.functionCall.name === 'fs-write-file'))
       .map(r => r.functionCall.parameters.targetFile);
-    
+
     const uniqueModifiedFiles = [...new Set(modifiedFiles)];
 
     return `验证阶段：检查代码修复的质量和完整性。

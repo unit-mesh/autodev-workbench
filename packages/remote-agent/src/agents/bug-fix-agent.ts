@@ -86,13 +86,8 @@ export class BugFixAgent extends AIAgent {
    * 适用于简单更改或用户提供具体指令的情况
    */
   private async processDirectFix(userInput: string, startTime: number, context?: any): Promise<BugFixAgentResponse> {
-    // 增强用户输入，添加特定的代码修复指令
     const directFixPrompt = this.bugFixPlaybook.preparePrompt(userInput, context);
-
-    // 使用现有的工具链处理流程，但使用修改后的提示
     const response = await super.processInputWithToolChaining(directFixPrompt, startTime, context) as AgentResponse;
-
-    // 提取有关修改文件的信息
     const modifiedFiles = this.extractModifiedFiles(response.toolResults);
 
     return {
@@ -107,15 +102,12 @@ export class BugFixAgent extends AIAgent {
    * 更彻底的方法，适用于复杂重构
    */
   private async processAnalysisFirstFix(userInput: string, startTime: number, context?: any): Promise<BugFixAgentResponse> {
-    // 阶段 1: 分析阶段
     this.log('阶段 1: 在修复前分析代码库');
     const analysisMessages = await this.bugFixPlaybook.buildMessagesForRound(userInput, context, 1);
 
-    // 调用 LLM 进行分析
     const analysisResponse = await this.callLLM(analysisMessages);
     const parsedAnalysis = FunctionParser.parseResponse(analysisResponse);
 
-    // 执行分析工具
     const analysisResults = await this.toolExecutor.executeToolsWithContext({
       round: 1,
       previousResults: [],
@@ -123,15 +115,12 @@ export class BugFixAgent extends AIAgent {
       workspacePath: this.config.workspacePath || process.cwd()
     }, parsedAnalysis.functionCalls);
 
-    // 阶段 2: 修复阶段
     this.log('阶段 2: 基于分析应用代码修复');
     const fixMessages = await this.bugFixPlaybook.buildMessagesForRound(userInput, context, 2);
 
-    // 调用 LLM 创建修复方案
     const fixResponse = await this.callLLM(fixMessages);
     const parsedFix = FunctionParser.parseResponse(fixResponse);
 
-    // 执行修复工具
     const fixResults = await this.toolExecutor.executeToolsWithContext({
       round: 2,
       previousResults: analysisResults,
@@ -139,22 +128,15 @@ export class BugFixAgent extends AIAgent {
       workspacePath: this.config.workspacePath || process.cwd()
     }, parsedFix.functionCalls);
 
-    // 组合所有工具结果
     const allToolResults = [...analysisResults, ...fixResults];
 
-    // 阶段 3: 验证（如果启用）
     if (this.bugFixConfig.verifyChanges) {
       this.log('阶段 3: 验证代码修复');
-      const verificationPrompt = this.bugFixPlaybook.prepareVerificationPrompt(userInput, allToolResults);
-
-      // 从 LLM 获取验证响应
       const verificationMessages = await this.bugFixPlaybook.buildMessagesForRound(userInput, context, 3);
       const verificationResponse = await this.callLLM(verificationMessages);
 
-      // 生成最终响应
       const finalText = await this.generateBugFixFinalResponse(userInput, verificationResponse, allToolResults, 3);
 
-      // 提取有关修改文件的信息
       const modifiedFiles = this.extractModifiedFiles(allToolResults);
 
       return {
@@ -168,7 +150,6 @@ export class BugFixAgent extends AIAgent {
       };
     }
 
-    // 如果未启用验证，生成最终响应
     const summaryPrompt = this.bugFixPlaybook.prepareSummaryPrompt(
       userInput,
       allToolResults,
@@ -181,8 +162,6 @@ export class BugFixAgent extends AIAgent {
     ] as CoreMessage[];
 
     const summaryResponse = await this.callLLM(summaryMessages);
-
-    // 提取有关修改文件的信息
     const modifiedFiles = this.extractModifiedFiles(allToolResults);
 
     return {
@@ -196,9 +175,6 @@ export class BugFixAgent extends AIAgent {
     };
   }
 
-  /**
-   * 从工具结果中提取修改的文件列表
-   */
   private extractModifiedFiles(toolResults: ToolResult[]): string[] {
     const modifiedFiles = new Set<string>();
 
