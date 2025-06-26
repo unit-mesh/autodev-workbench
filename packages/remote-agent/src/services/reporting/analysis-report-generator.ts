@@ -149,7 +149,7 @@ export class AnalysisReportGenerator {
     sections.push('');
     sections.push('---');
     sections.push('');
-    sections.push('Powered by [AutoDev Remote AI Agent](https://github.com/unit-mesh/autodev-workbench)');
+    sections.push('Powered by [AutoDev Remote Agent](https://github.com/unit-mesh/autodev-workbench)');
 
     return sections.join('\n');
   }

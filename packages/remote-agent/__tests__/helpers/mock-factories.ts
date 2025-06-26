@@ -94,7 +94,7 @@ Related to authentication module in src/auth/`,
    - Implement retry mechanisms
 
 ---
-**Powered by AutoDev Remote AI Agent**`
+**Powered by AutoDev Remote Agent**`
         }]
       },
       executionTime: 1200,
