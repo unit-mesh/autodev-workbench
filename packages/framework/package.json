@@ -1,0 +1,100 @@
+{
+  "name": "@ai-migration/framework",
+  "version": "1.0.0",
+  "description": "通用AI辅助迁移框架 - 基于Vue迁移工具的成功实践抽象出的轻量级、可扩展的迁移框架",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "bin": {
+    "ai-migration": "bin/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.{js,ts}",
+    "lint:fix": "eslint src/**/*.{js,ts} --fix",
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf lib"
+  },
+  "keywords": [
+    "migration",
+    "ai",
+    "code-migration",
+    "vue",
+    "react",
+    "angular",
+    "framework",
+    "automation",
+    "codemod",
+    "refactoring"
+  ],
+  "author": "AI Migration Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phodal/vue-migrate.git",
+    "directory": "packages/framework"
+  },
+  "bugs": {
+    "url": "https://github.com/phodal/vue-migrate/issues"
+  },
+  "homepage": "https://github.com/phodal/vue-migrate/tree/master/packages/framework#readme",
+  "files": [
+    "lib",
+    "bin",
+    "config",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "fs-extra": "^11.1.1",
+    "ora": "^5.4.1",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.6.7"
+  },
+  "peerDependencies": {
+    "ai": "^3.0.0",
+    "@ai-sdk/openai": "^0.0.24"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    },
+    "@ai-sdk/openai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.6.3",
+    "@types/node-fetch": "^2.6.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.49.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src", "<rootDir>/test"],
+    "testMatch": ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/**/index.ts"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
