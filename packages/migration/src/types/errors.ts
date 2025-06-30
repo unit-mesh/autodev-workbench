@@ -1,7 +1,3 @@
-/**
- * 错误类型定义
- */
-
 export class MigrationError extends Error {
   public readonly code: string;
   public readonly context?: string;

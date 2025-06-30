@@ -1,7 +1,3 @@
-/**
- * 工具执行器
- */
-
 import { ContextAwareComponent } from '../core/ContextAwareComponent';
 import { ToolRegistry } from './ToolRegistry';
 import {
@@ -32,7 +28,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
   protected async onInitialize(): Promise<void> {
     this.log('工具执行器已初始化');
     this.log(`已注册 ${this.registry.getAllTools().length} 个工具`);
-    
+
     if (this.isVerbose()) {
       this.logAvailableTools();
     }
@@ -51,13 +47,13 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
     try {
       this.registry.registerTool(tool);
       this.log(`工具已注册: ${tool.name}`);
-      
+
       this.emit('tool:registered', {
         toolName: tool.name,
         category: tool.category,
         description: tool.description
       });
-      
+
     } catch (error) {
       this.logError(`工具注册失败: ${tool.name}`, error as Error);
       throw error;
@@ -66,10 +62,10 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
   public async executeTool(toolName: string, params: any): Promise<ToolResult> {
     const startTime = Date.now();
-    
+
     try {
       this.log(`执行工具: ${toolName}`);
-      
+
       // 获取工具定义
       const tool = this.registry.getTool(toolName);
       if (!tool) {
@@ -88,7 +84,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
       // 执行工具
       let result: any;
-      
+
       if (tool.executor) {
         // 使用工具自带的执行器
         result = await tool.executor(params, {
@@ -129,8 +125,8 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      const toolError = error instanceof ToolExecutionError 
-        ? error 
+      const toolError = error instanceof ToolExecutionError
+        ? error
         : new ToolExecutionError(
             `工具执行失败: ${error instanceof Error ? error.message : error}`,
             toolName
@@ -169,11 +165,11 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
     switch (toolName) {
       case 'echo':
         return { message: params.message || 'Hello from tool executor!' };
-      
+
       case 'delay':
         await this.delay(params.duration || 1000);
         return { delayed: params.duration || 1000 };
-      
+
       default:
         throw new ToolExecutionError(`工具 ${toolName} 没有可用的执行器`, toolName);
     }
@@ -181,21 +177,21 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
   public async executeToolChain(toolCalls: ToolCall[]): Promise<ToolResult[]> {
     const results: ToolResult[] = [];
-    
+
     this.log(`执行工具链: ${toolCalls.length} 个工具`);
-    
+
     for (let i = 0; i < toolCalls.length; i++) {
       const toolCall = toolCalls[i];
-      
+
       try {
         this.reportProgress(
           (i / toolCalls.length) * 100,
           `执行工具 ${i + 1}/${toolCalls.length}: ${toolCall.name}`
         );
-        
+
         const result = await this.executeTool(toolCall.name, toolCall.parameters);
         results.push(result);
-        
+
       } catch (error) {
         const errorResult: ToolResult = {
           success: false,
@@ -206,9 +202,9 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
             timestamp: new Date()
           }
         };
-        
+
         results.push(errorResult);
-        
+
         // 根据配置决定是否继续执行
         if (this.options.stopOnError !== false) {
           this.logError(`工具链执行中断于第 ${i + 1} 个工具`, error as Error);
@@ -216,7 +212,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
         }
       }
     }
-    
+
     this.reportProgress(100, '工具链执行完成');
     return results;
   }
@@ -257,10 +253,10 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
     const total = this.executionHistory.length;
     const successful = this.executionHistory.filter(entry => entry.result.success).length;
     const failed = total - successful;
-    
+
     const totalDuration = this.executionHistory.reduce((sum, entry) => sum + entry.duration, 0);
     const avgDuration = total > 0 ? totalDuration / total : 0;
-    
+
     const toolUsage = this.executionHistory.reduce((acc, entry) => {
       acc[entry.toolName] = (acc[entry.toolName] || 0) + 1;
       return acc;
@@ -279,7 +275,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
   private logAvailableTools(): void {
     const categories = this.registry.getCategories();
-    
+
     this.log('可用工具分类:');
     categories.forEach(category => {
       const tools = this.registry.getToolsByCategory(category);
@@ -294,7 +290,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
     }
 
     const sanitized = { ...params };
-    
+
     // 移除可能的敏感字段
     const sensitiveFields = ['password', 'token', 'key', 'secret', 'apiKey'];
     sensitiveFields.forEach(field => {
@@ -332,7 +328,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
   public async executeToolsParallel(toolCalls: ToolCall[]): Promise<ToolResult[]> {
     this.log(`并行执行 ${toolCalls.length} 个工具`);
-    
+
     const promises = toolCalls.map(async (toolCall, index) => {
       try {
         return await this.executeTool(toolCall.name, toolCall.parameters);
@@ -351,7 +347,7 @@ export class ToolExecutor extends ContextAwareComponent implements IToolExecutor
 
     const results = await Promise.all(promises);
     this.log('并行工具执行完成');
-    
+
     return results;
   }
 }

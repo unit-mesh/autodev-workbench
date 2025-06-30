@@ -44,8 +44,7 @@
     "lib",
     "bin",
     "config",
-    "README.md",
-    "CHANGELOG.md"
+    "README.md"
   ],
   "engines": {
     "node": ">=14.0.0"
