@@ -1,6 +1,6 @@
 {
-  "name": "@ai-migration/framework",
-  "version": "1.0.0",
+  "name": "@autodev/migration",
+  "version": "0.0.1",
   "description": "通用AI辅助迁移框架 - 基于Vue迁移工具的成功实践抽象出的轻量级、可扩展的迁移框架",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -33,13 +33,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/phodal/vue-migrate.git",
+    "url": "https://github.com/unit-mesh/autodev-workbench.git",
     "directory": "packages/framework"
   },
   "bugs": {
-    "url": "https://github.com/phodal/vue-migrate/issues"
+    "url": "https://github.com/unit-mesh/autodev-workbench/issues"
   },
-  "homepage": "https://github.com/phodal/vue-migrate/tree/master/packages/framework#readme",
+  "homepage": "https://github.com/unit-mesh/autodev-workbench/tree/master/packages/framework#readme",
   "files": [
     "lib",
     "bin",
