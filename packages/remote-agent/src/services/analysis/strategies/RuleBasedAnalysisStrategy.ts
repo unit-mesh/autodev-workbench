@@ -6,7 +6,7 @@
  * Now integrates with SymbolAnalyser for intelligent symbol analysis.
  */
 
-import { GitHubIssue } from "../../../types/index";
+import { GitHubIssue } from "../../../types";
 import {
   BaseAnalysisStrategy,
   SearchKeywords,
@@ -15,7 +15,6 @@ import {
 } from "../interfaces/IAnalysisStrategy";
 import * as path from 'path';
 
-// Import SymbolAnalyser and related types from context-worker
 import {
   SymbolAnalyser,
   CodeCollector,
